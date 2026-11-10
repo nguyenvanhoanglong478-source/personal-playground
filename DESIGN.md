@@ -1,54 +1,50 @@
-# DESIGN.md: Không Gian Tương Tác Cá Nhân (Founder / Builder Playground)
+# DESIGN.md: Ngôn ngữ Thiết kế & Bản đặc tả Kiến trúc
 
-## 1. Design Read & Định hướng (R-37)
+Tài liệu này xác lập định hướng nghệ thuật (Art Direction) và hệ thống quy chuẩn thiết kế theo các bộ skill: `taste-skill` (2.5), `hallmark` (2.0), `impeccable` (4.8), `no-ai-slop` và `antislop`.
 
-> Reading this as: Interactive Founder/Builder Personal Playground & Curated Vault for visitors and collaborators, in an Asymmetric Kinetic Studio style, dial ENERGY 3 / RHYTHM 3 / MOTION 3.
+## 1. Bản sắc & Định vị Nghệ thuật (Art Direction)
 
-- **Identity (Bản sắc)**: Không gian thử nghiệm sáng tạo và góc lưu trữ cá nhân của một Founder / Builder đa lĩnh vực (kết hợp công nghệ, sản phẩm và góc nhìn cá nhân).
-- **Primary Goal (Mục tiêu chính)**: Mang lại trải nghiệm tương tác độc bản để gây ấn tượng mạnh về cá tính sáng tạo, kết hợp góc cá nhân (Sách, âm nhạc, công cụ sử dụng, sở thích) và trình chỉnh sửa trực tiếp dữ liệu thật ngay trên trình duyệt.
-- **Three Dials (Ba chỉ số sống động)**:
-  - **ENERGY: 3 (Bold)**: Nghệ thuật chữ kích thước lớn có cấu trúc bất đối xứng, mô phỏng trường vật lý tương tác (Interactive Kinetic Field Canvas) và bộ phát âm thanh Web Audio API thực tế.
-  - **RHYTHM: 3 (Varied, Asymmetric, Mixed Compositions)**: Bốn phân khu chính đều có cấu trúc bố cục khác biệt hoàn toàn, không lặp lại khuôn mẫu thẻ 3 cột hay bento-grid.
-  - **MOTION: 3 (Choreographed & Interactive)**: Chuyển động phản hồi trực tiếp theo thao tác con trỏ, kéo thả hạt vật lý trên canvas, sóng âm thanh thời gian thực và hiệu ứng chuyển cảnh theo cuộn trang (tôn trọng `prefers-reduced-motion`).
-- **Identity Motif (Dấu ấn nhận diện lặp lại)**: Hệ tọa độ bản vẽ kỹ thuật (`[X, Y]` telemetry coordinates) kết hợp khung góc vát chuẩn xác (chamfered studio frames) và ký hiệu viết tắt hình học (`[LOGO] / N.`).
+- **Định vị**: Trang cá nhân kiêm không gian làm việc số của một Founder & Builder đa lĩnh vực (Công nghệ, Sản phẩm và Đời sống sáng tạo).
+- **Nguyên tắc cốt lõi (Taste & Hallmark Floor)**:
+  - Một ý tưởng rõ ràng cho mỗi khung nhìn (One section per screen at 1280x800).
+  - Tỷ lệ lề hai bên đồng đều tuyệt đối (Equal edges).
+  - Không dùng gradient tím xanh AI, không bento grid nhồi nhét, không thẻ lồng trong thẻ.
+  - Toàn bộ màu sắc và phông chữ đều đi qua hệ thống Token khai báo tại `:root`.
+  - Không dùng `transition: all`, không chuyển động kích thước (`width`, `height`, `top`, `left`).
+  - Thiết lập `overflow-x: clip` cho cả `html` và `body`.
+  - Chữ hiển thị có `overflow-wrap: break-word; min-width: 0`.
 
-## 2. Bảng màu & Độ tương phản đã kiểm chứng (R-01, R-21, R-25, R-29, R-34)
+## 2. Hệ thống Token Thiết kế (:root Tokens)
 
-Giới hạn đúng 2 màu nền cốt lõi + 1 màu nhấn chủ đạo (Acid Chartreuse), hỗ trợ chuyển đổi hoàn chỉnh giữa hai giao diện Tối (Carbon Studio) và Sáng (Paper Studio):
+Toàn bộ thuộc tính màu sắc, kiểu chữ và khoảng cách được quản lý tập trung:
 
-### Chế độ Tối (Carbon Studio - Mặc định cho không gian thử nghiệm sáng tạo)
-- **Nền chính (`--bg-primary`)**: `#111210` (Carbon Black)
-- **Nền nổi (`--bg-elevated`)**: `#1A1C18` (Graphite Surface)
-- **Chữ chính (`--text-primary`)**: `#EDEDEA` (Tỷ lệ tương phản `16.02:1` trên `#111210` và `14.64:1` trên `#1A1C18` -> Đạt chuẩn WCAG AAA)
-- **Chữ phụ (`--text-muted`)**: `#B5B6AE` (Tỷ lệ tương phản `9.18:1` trên `#111210` và `8.39:1` trên `#1A1C18` -> Đạt chuẩn WCAG AAA)
-- **Viền tương tác (`--border-interactive`)**: `#73766D` (Tỷ lệ tương phản `3.71:1` trên `#1A1C18` -> Đạt chuẩn WCAG 1.4.11 Non-Text 3:1)
-- **Màu nhấn duy nhất (`--accent`)**: `#D4FF00` (Acid Chartreuse, tỷ lệ tương phản `16.20:1` với nền/chữ `#111210` -> Chỉ dùng cho điểm nhấn tiêu điểm và nút hành động chính)
+### Bảng màu Carbon Studio (Chế độ Tối - Mặc định)
+- Nền chính: `#111210`
+- Nền khối nâng cao: `#1A1C18`
+- Nền phụ lồng ghép: `#151713`
+- Màu chữ chính: `#EDEDEA` (Đạt chuẩn WCAG AAA 16.02:1)
+- Màu chữ phụ: `#B5B6AE` (Đạt chuẩn WCAG AAA 9.18:1)
+- Viền thành phần: `#73766D` (Đạt chuẩn Non-Text 3.71:1)
+- Điểm nhấn đơn sắc duy nhất: `#D4FF00` (Acid Chartreuse, tương phản 16.20:1)
 
-### Chế độ Sáng (Warm Paper Studio)
-- **Nền chính (`--bg-primary`)**: `#F4F3EE` (Warm Uncoated Paper)
-- **Nền nổi (`--bg-elevated`)**: `#EAE8DF` (Pressed Cardstock)
-- **Chữ chính (`--text-primary`)**: `#111210` (Tỷ lệ tương phản `16.91:1` trên `#F4F3EE` và `15.30:1` trên `#EAE8DF` -> Đạt chuẩn WCAG AAA)
-- **Chữ phụ (`--text-muted`)**: `#484A44` (Tỷ lệ tương phản `8.08:1` trên `#F4F3EE` và `7.32:1` trên `#EAE8DF` -> Đạt chuẩn WCAG AAA)
-- **Viền tương tác (`--border-interactive`)**: `#6B6E65` (Tỷ lệ tương phản `4.23:1` trên `#EAE8DF` -> Đạt chuẩn WCAG 1.4.11 Non-Text 3:1)
-- **Màu nhấn chữ/nhãn trên nền sáng (`--accent-ink`)**: `#3D4D00` (Deep Olive Chartreuse, tỷ lệ tương phản `8.36:1` trên `#F4F3EE`), bề mặt nút chính giữ `#D4FF00` với chữ `#111210` (`16.20:1`).
+### Bảng màu Warm Paper Studio (Chế độ Sáng)
+- Nền chính: `#F4F3EE`
+- Nền khối nâng cao: `#EAE8DF`
+- Nền phụ lồng ghép: `#E2DFD3`
+- Màu chữ chính: `#111210` (Đạt chuẩn WCAG AAA 16.91:1)
+- Màu chữ phụ: `#484A44` (Đạt chuẩn WCAG AAA 8.08:1)
+- Viền thành phần: `#6B6E65` (Đạt chuẩn Non-Text 4.23:1)
+- Điểm nhấn mực: `#3D4D00` (Tương phản 8.36:1)
 
-## 3. Nghệ thuật chữ & Lý do lựa chọn (R-06, R-31)
+## 3. Hệ thống Typography (Be Vietnam Pro, Plus Jakarta Sans, IBM Plex Mono)
 
-- **Tiêu đề trưng bày (`Be Vietnam Pro`, 700-800)**: Chọn vì cấu trúc hình học khỏe khoắn được thiết kế chuyên biệt cho hệ thống dấu tiếng Việt, giúp các tiêu đề kích thước lớn giữ độ đồng nhất tuyệt đối ở mọi ký tự có dấu phức tạp.
-- **Văn bản nội dung (`Plus Jakarta Sans`, 400-600)**: Chọn vì cấu trúc nét rõ ràng, hỗ trợ dấu tiếng Việt sắc nét ở mọi kích thước và giữ độ dễ đọc cao khi thu phóng 200%.
-- **Thông số kỹ thuật & Tọa độ (`IBM Plex Mono`, 400-500)**: Chỉ dùng cho chỉ số tọa độ tương tác, tần số âm thanh (Hz) và nhãn `[REAL DATA]`, gợi liên tưởng đến máy đo trong phòng thí nghiệm kỹ thuật.
+- **Tiêu đề trưng bày (`Be Vietnam Pro`, 800)**: Tối ưu chuyên biệt cho hệ dấu tiếng Việt ở kích thước lớn, hình học sắc nét.
+- **Nội dung đọc (`Plus Jakarta Sans`, 400, 500, 600)**: Rõ ràng, thoáng đãng ở mọi mức thu phóng màn hình.
+- **Thông số kỹ thuật (`IBM Plex Mono`, 500)**: Dành riêng cho tọa độ `[X, Y]`, tần số `Hz` và các nhãn chức năng. Không dùng chữ in hoa giãn cách rộng vô nghĩa.
 
-## 4. Lý do một dòng cho từng quyết định thiết kế chính (R-31)
+## 4. Bốn Phân khu Chức năng Độc bản
 
-- **Why this color (Tại sao dùng bảng màu Carbon `#111210` & Acid Chartreuse `#D4FF00`)?**: Tạo độ tương phản thị giác cực đại (`16.20:1`) làm nổi bật các hạt tương tác vật lý và tia sóng âm thanh mà không cần lạm dụng gradient hay hiệu ứng phát sáng tràn lan.
-- **Why this layout (Tại sao bố cục bất đối xứng 4 phân khu khác biệt)?**: Phản ánh tư duy đa chiều của một Builder qua 4 không gian: Bàn thí nghiệm vật lý (Hero), Bản vẽ kiến trúc (Lab Matrix), Kệ sưu tầm cá nhân có bàn xoay âm thanh (Curated Vault), và Xưởng chỉnh sửa dữ liệu trực tiếp (Live Studio).
-- **Why this typography (Tại sao kết hợp Be Vietnam Pro, Plus Jakarta Sans và IBM Plex Mono)?**: Phân tách rõ 3 tầng thông tin gồm tuyên ngôn sáng tạo bản địa hóa chuẩn xác (Be Vietnam Pro), nội dung tường thuật tiếng Việt dễ đọc (Plus Jakarta Sans) và dữ liệu đo đạc thời gian thực (IBM Plex Mono).
-- **Why this spacing (Tại sao dùng thang khoảng trắng biến thiên theo nhịp điệu)?**: Khoảng trắng lớn ở phần tuyên ngôn giúp mắt tập trung vào khung tương tác, chuyển sang mật độ cô đọng ở bảng bản vẽ kỹ thuật để so sánh thông số nhanh.
-- **Why use interactive panels instead of uniform cards (Tại sao dùng kệ tương tác và bảng tách đôi thay vì lưới thẻ đồng nhất)?**: Mỗi hạng mục (dự án, sách, bản nhạc, công cụ) có cấu trúc thông tin và hành vi tương tác riêng nên không thể nhốt chung vào các ô thẻ giống hệt nhau.
-- **Why use procedural canvas & Web Audio synthesizer (Tại sao dùng đồ họa vector tương tác và bộ tạo âm thanh trực tiếp)?**: Biến người xem từ người đọc thụ động thành người trực tiếp chạm, kéo hạt vật lý và gảy hợp âm ngay trên trang web.
-
-## 5. Chính sách Dữ liệu thật & Nhãn giữ chỗ trung thực (R-17, R-18, R-23, R-36, R-38)
-
-- Không bịa đặt số liệu thống kê, không tạo đánh giá khách hàng giả (testimonials), không dùng ảnh đại diện giả.
-- Biểu trưng dùng ký hiệu hình học kết hợp nhãn `[LOGO]` có thể đổi trực tiếp sang tên thật của chủ nhân.
-- Mọi mục mẫu trong Kệ cá nhân (Sách, Âm nhạc, Công cụ, Sở thích) và Phòng thí nghiệm đều gắn nhãn `[REAL DATA]` rõ ràng và đi kèm chức năng **Chỉnh sửa trực tiếp trên web (Live Studio Editor)** lưu vào `localStorage` hoặc xuất/nhập JSON.
+1. **Sân khấu Vật lý (`#stage`)**: Tiêu đề đanh thép, giới thiệu ngắn gọn trong 1 câu, nút hành động chính, kết hợp bàn thí nghiệm tương tác 5 trụ cột thời gian thực và Web Audio synthesizer.
+2. **Bản vẽ Hệ thống (`#lab`)**: Bố cục Master-Detail kiến trúc mạch SVG, cho phép điều chỉnh tần số xử lý và quan sát dòng dữ liệu luân chuyển.
+3. **Góc Cá Nhân (`#vault`)**: Bàn xoay âm thanh dao động ký, 1 mục Tiêu điểm nổi bật kết hợp Sổ cái chi tiết có ngăn kéo, ô tìm kiếm và trình kiểm thử 3 trạng thái giao diện (Ready, Empty, Loading, Error).
+4. **Xưởng Dữ liệu & Kênh Kết nối (`#studio`)**: Bộ biên tập dữ liệu thật lưu vào LocalStorage và xuất tệp JSON, kèm biểu mẫu liên hệ xác thực đầy đủ.

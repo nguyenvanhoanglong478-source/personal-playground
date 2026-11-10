@@ -1,51 +1,93 @@
-/* Palette limited to 2 core surfaces + 1 Acid Chartreuse accent per R-29, verified for WCAG AAA via contrast-check.py (R-25, R-34). */
+/* Hallmark stamp: v2.0.0; theme: custom-carbon-studio; genre: modern-minimal; material: words-and-code */
+
 :root,
 [data-theme="dark"] {
+  --font-display: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
   --bg-primary: #111210;
   --bg-elevated: #1A1C18;
   --bg-inset: #151713;
+  --bg-modal-overlay: rgba(17, 18, 16, 0.85);
+
   --text-primary: #EDEDEA;
   --text-muted: #B5B6AE;
   --border-subtle: #6A6D64;
   --border-interactive: #73766D;
+
   --accent: #D4FF00;
+  --accent-hover: #C2EB00;
   --accent-ink: #D4FF00;
   --accent-on-surface: #111210;
+
   --status-error-bg: #2D1414;
   --status-error-text: #FFB8B8;
   --status-error-border: #FF7A7A;
+
   --status-ok-bg: #162615;
   --status-ok-text: #B8F5B1;
   --status-ok-border: #6BD660;
+
   --focus-ring: #D4FF00;
-  --elevation-modal: 0 18px 40px rgba(0, 0, 0, 0.65);
+  --elevation-modal: 0 20px 48px rgba(0, 0, 0, 0.7);
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-none: 0px;
+
+  --container-max: 1380px;
+  --header-height: 64px;
 }
 
 [data-theme="light"] {
+  --font-display: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
   --bg-primary: #F4F3EE;
   --bg-elevated: #EAE8DF;
   --bg-inset: #E2DFD3;
+  --bg-modal-overlay: rgba(17, 18, 16, 0.55);
+
   --text-primary: #111210;
   --text-muted: #484A44;
   --border-subtle: #72756C;
   --border-interactive: #6B6E65;
+
   --accent: #D4FF00;
+  --accent-hover: #C2EB00;
   --accent-ink: #3D4D00;
   --accent-on-surface: #111210;
+
   --status-error-bg: #FDECEC;
   --status-error-text: #6E1111;
   --status-error-border: #B32626;
+
   --status-ok-bg: #E9F7E8;
   --status-ok-text: #124D10;
   --status-ok-border: #237A1E;
+
   --focus-ring: #111210;
-  --elevation-modal: 0 18px 40px rgba(17, 18, 16, 0.18);
+  --elevation-modal: 0 20px 48px rgba(17, 18, 16, 0.2);
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-none: 0px;
+
+  --container-max: 1380px;
+  --header-height: 64px;
 }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: clip;
 }
 
 html {
@@ -66,18 +108,15 @@ html {
   }
 }
 
-/* Plus Jakarta Sans improves Vietnamese diacritic legibility at all zoom levels (R-06, R-31). */
 body {
   margin: 0;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
 }
 
-/* High-contrast focus ring (minimum 3:1 against adjacent surface) for keyboard accessibility (R-32). */
 :focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 3px;
@@ -85,47 +124,54 @@ body {
 
 .skip-link {
   position: absolute;
-  top: -100px;
-  left: 1rem;
+  top: -120px;
+  left: 1.5rem;
   z-index: 1000;
-  background: var(--accent);
+  background-color: var(--accent);
   color: var(--accent-on-surface);
   padding: 0.75rem 1.25rem;
   font-weight: 700;
   text-decoration: none;
   border: 2px solid var(--text-primary);
+  transition: top 0.15s ease;
 }
 
 .skip-link:focus {
   top: 1rem;
 }
 
-/* Be Vietnam Pro (800) provides geometric display weight with native Vietnamese diacritic geometry (R-06, R-31). */
 h1, h2, h3, .display-font {
-  font-family: "Be Vietnam Pro", "Plus Jakarta Sans", sans-serif;
+  font-family: var(--font-display);
   font-weight: 800;
-  line-height: 1.14;
+  line-height: 1.15;
   margin-top: 0;
   letter-spacing: -0.025em;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
-/* IBM Plex Mono is restricted to real telemetry coordinates, audio frequencies, and [REAL DATA] markers (R-06, R-31). */
 .mono-meta {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
 }
 
-/* Compact sticky header reserves screen height for content on mobile viewports (R-03, R-24). */
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
 .site-header {
   position: sticky;
   top: 0;
   z-index: 100;
   background-color: var(--bg-primary);
   border-bottom: 1.5px solid var(--border-subtle);
+  min-height: var(--header-height);
 }
 
 .header-inner {
-  max-width: 1380px;
+  max-width: var(--container-max);
   margin: 0 auto;
   padding: 0.65rem 1.5rem;
   display: flex;
@@ -154,10 +200,11 @@ h1, h2, h3, .display-font {
   padding: 0 0.5rem;
   background-color: var(--accent);
   color: var(--accent-on-surface);
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   font-weight: 700;
   font-size: 0.9rem;
   border: 1.5px solid var(--text-primary);
+  border-radius: var(--radius-none);
 }
 
 .brand-name-wrap {
@@ -198,7 +245,7 @@ h1, h2, h3, .display-font {
   font-weight: 600;
   font-size: 0.92rem;
   border: 1.5px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   transition: background-color 0.18s ease, border-color 0.18s ease;
 }
 
@@ -219,14 +266,13 @@ h1, h2, h3, .display-font {
   background-color: var(--bg-elevated);
   color: var(--text-primary);
   border: 1.5px solid var(--border-interactive);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-family: inherit;
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
 }
 
-/* Radius variation distinguishes buttons (8px), inputs (4px), and architectural frames (0px) per R-11. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -239,17 +285,17 @@ h1, h2, h3, .display-font {
   font-size: 0.95rem;
   font-weight: 600;
   text-decoration: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1.5px solid var(--border-interactive);
   background-color: var(--bg-elevated);
   color: var(--text-primary);
   cursor: pointer;
-  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .btn:hover {
   border-color: var(--text-primary);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .btn:active {
@@ -264,7 +310,7 @@ h1, h2, h3, .display-font {
 }
 
 .btn-accent:hover {
-  background-color: #c2eb00;
+  background-color: var(--accent-hover);
   border-color: var(--text-primary);
 }
 
@@ -273,27 +319,20 @@ h1, h2, h3, .display-font {
   font-size: 0.86rem;
 }
 
-/* Honest placeholder badge required by R-23 and R-38 when showing unconfirmed owner data. */
 .real-data-tag {
   display: inline-flex;
   align-items: center;
   padding: 0.15rem 0.5rem;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.76rem;
   font-weight: 600;
   background-color: var(--bg-inset);
   color: var(--accent-ink);
   border: 1.5px solid var(--border-interactive);
-  border-radius: 2px;
+  border-radius: var(--radius-none);
 }
 
-.container {
-  max-width: 1380px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-/* Section 1 (#stage) uses an asymmetric 5:7 split to prioritize the interactive physics workbench (R-05, RHYTHM 3). */
+/* Screen 1: Stage section (Hero on first screen, fits 1280x800) */
 .stage-section {
   padding: 3.5rem 0 4.5rem;
   border-bottom: 1.5px solid var(--border-subtle);
@@ -314,9 +353,8 @@ h1, h2, h3, .display-font {
 }
 
 .stage-title {
-  font-size: clamp(2.1rem, 4vw, 3.55rem);
+  font-size: clamp(2.2rem, 4vw, 3.6rem);
   margin: 0;
-  overflow-wrap: break-word;
 }
 
 .stage-title-highlight {
@@ -385,7 +423,7 @@ h1, h2, h3, .display-font {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   border: 1.5px solid var(--border-interactive);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-family: inherit;
   font-size: 0.95rem;
 }
@@ -395,11 +433,10 @@ h1, h2, h3, .display-font {
   resize: vertical;
 }
 
-/* Interactive physics workbench uses sharp 0px architectural framing as the identity motif (Part 3). */
 .workbench-frame {
   background-color: var(--bg-elevated);
   border: 2px solid var(--border-interactive);
-  border-radius: 0;
+  border-radius: var(--radius-none);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -430,7 +467,7 @@ h1, h2, h3, .display-font {
   gap: 0.45rem;
   padding: 0.2rem 0.6rem;
   border: 1.5px solid var(--border-interactive);
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.78rem;
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -489,7 +526,7 @@ h1, h2, h3, .display-font {
   font-weight: 700;
 }
 
-/* Section 2 (#lab) shifts rhythm to a master-detail architectural blueprint matrix instead of cards (R-05, R-14). */
+/* Screen 2: System Architecture & Lab Blueprints */
 .lab-section {
   padding: 5rem 0;
   border-bottom: 1.5px solid var(--border-subtle);
@@ -530,7 +567,7 @@ h1, h2, h3, .display-font {
 .blueprint-tab {
   width: 100%;
   text-align: left;
-  padding: 1.25rem 1.25rem;
+  padding: 1.25rem;
   background: transparent;
   color: var(--text-primary);
   border: none;
@@ -646,14 +683,14 @@ h1, h2, h3, .display-font {
 }
 
 .note-cell-label {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--text-muted);
   display: block;
   margin-bottom: 0.35rem;
 }
 
-/* Section 3 (#vault) uses a featured spotlight + asymmetric ledger for Books, Music, Tools, and Hobbies (R-05, R-14). */
+/* Screen 3: Curated Vault (Books, Music, Tools, Hobbies) */
 .vault-section {
   padding: 4.5rem 0 5.5rem;
   border-bottom: 1.5px solid var(--border-subtle);
@@ -718,7 +755,6 @@ h1, h2, h3, .display-font {
   font-weight: 700;
 }
 
-/* Sonic turntable bar synthesizes real Web Audio chords when previewing music items in the vault. */
 .sonic-deck {
   background-color: var(--bg-inset);
   border: 1.5px solid var(--border-interactive);
@@ -738,7 +774,6 @@ h1, h2, h3, .display-font {
   display: block;
 }
 
-/* Vault hierarchy: 1 flagship spotlight item + structured ledger rows for remaining items (R-14). */
 .vault-layout {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
@@ -764,7 +799,7 @@ h1, h2, h3, .display-font {
 }
 
 .category-chip {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.8rem;
   font-weight: 600;
   padding: 0.2rem 0.6rem;
@@ -804,6 +839,12 @@ h1, h2, h3, .display-font {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.ledger-row:hover {
+  transform: translateY(-2px);
+  border-color: var(--text-primary);
 }
 
 .ledger-row-main {
@@ -846,7 +887,6 @@ h1, h2, h3, .display-font {
   font-size: 0.95rem;
 }
 
-/* Explicit Empty, Loading, and Error states required by R-27 and C-4. */
 .ui-state-box {
   background-color: var(--bg-elevated);
   border: 2px solid var(--border-interactive);
@@ -879,7 +919,7 @@ h1, h2, h3, .display-font {
   background-color: var(--accent);
 }
 
-/* Section 4 (#studio) combines the Live [REAL DATA] Editor and Direct Signal Contact Form. */
+/* Screen 4: Live Studio & Direct Channel */
 .studio-section {
   padding: 4.5rem 0 5.5rem;
 }
@@ -925,12 +965,11 @@ h1, h2, h3, .display-font {
   border-color: var(--status-ok-border);
 }
 
-/* Modal dialog uses the single allowed elevation shadow to separate the foreground layer (R-12). */
 .modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 500;
-  background-color: rgba(17, 18, 16, 0.8);
+  background-color: var(--bg-modal-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -956,7 +995,6 @@ h1, h2, h3, .display-font {
   gap: 1.15rem;
 }
 
-/* Purposeful single-tier footer structured around real page anchors and export utilities (R-05, R-24). */
 .site-footer {
   border-top: 1.5px solid var(--border-subtle);
   background-color: var(--bg-elevated);
@@ -977,7 +1015,6 @@ h1, h2, h3, .display-font {
   gap: 0.65rem;
 }
 
-/* Intermediate tablet & small-laptop breakpoint (680px to 1080px) prevents stretched stacks or cramped columns (R-03). */
 @media (max-width: 1080px) {
   .stage-grid,
   .section-header-split,
@@ -1007,7 +1044,6 @@ h1, h2, h3, .display-font {
   }
 }
 
-/* Dedicated mobile layout state (< 680px) rescales spacing, collapses grids, and converts navigation (R-03). */
 @media (max-width: 680px) {
   .stage-section,
   .lab-section,

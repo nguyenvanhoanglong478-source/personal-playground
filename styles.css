@@ -1,0 +1,1068 @@
+/* Palette limited to 2 core surfaces + 1 Acid Chartreuse accent per R-29, verified for WCAG AAA via contrast-check.py (R-25, R-34). */
+:root,
+[data-theme="dark"] {
+  --bg-primary: #111210;
+  --bg-elevated: #1A1C18;
+  --bg-inset: #151713;
+  --text-primary: #EDEDEA;
+  --text-muted: #B5B6AE;
+  --border-subtle: #6A6D64;
+  --border-interactive: #73766D;
+  --accent: #D4FF00;
+  --accent-ink: #D4FF00;
+  --accent-on-surface: #111210;
+  --status-error-bg: #2D1414;
+  --status-error-text: #FFB8B8;
+  --status-error-border: #FF7A7A;
+  --status-ok-bg: #162615;
+  --status-ok-text: #B8F5B1;
+  --status-ok-border: #6BD660;
+  --focus-ring: #D4FF00;
+  --elevation-modal: 0 18px 40px rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="light"] {
+  --bg-primary: #F4F3EE;
+  --bg-elevated: #EAE8DF;
+  --bg-inset: #E2DFD3;
+  --text-primary: #111210;
+  --text-muted: #484A44;
+  --border-subtle: #72756C;
+  --border-interactive: #6B6E65;
+  --accent: #D4FF00;
+  --accent-ink: #3D4D00;
+  --accent-on-surface: #111210;
+  --status-error-bg: #FDECEC;
+  --status-error-text: #6E1111;
+  --status-error-border: #B32626;
+  --status-ok-bg: #E9F7E8;
+  --status-ok-text: #124D10;
+  --status-ok-border: #237A1E;
+  --focus-ring: #111210;
+  --elevation-modal: 0 18px 40px rgba(17, 18, 16, 0.18);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Plus Jakarta Sans improves Vietnamese diacritic legibility at all zoom levels (R-06, R-31). */
+body {
+  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* High-contrast focus ring (minimum 3:1 against adjacent surface) for keyboard accessibility (R-32). */
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  z-index: 1000;
+  background: var(--accent);
+  color: var(--accent-on-surface);
+  padding: 0.75rem 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 2px solid var(--text-primary);
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Be Vietnam Pro (800) provides geometric display weight with native Vietnamese diacritic geometry (R-06, R-31). */
+h1, h2, h3, .display-font {
+  font-family: "Be Vietnam Pro", "Plus Jakarta Sans", sans-serif;
+  font-weight: 800;
+  line-height: 1.14;
+  margin-top: 0;
+  letter-spacing: -0.025em;
+}
+
+/* IBM Plex Mono is restricted to real telemetry coordinates, audio frequencies, and [REAL DATA] markers (R-06, R-31). */
+.mono-meta {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.85rem;
+}
+
+/* Compact sticky header reserves screen height for content on mobile viewports (R-03, R-24). */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--bg-primary);
+  border-bottom: 1.5px solid var(--border-subtle);
+}
+
+.header-inner {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 0.65rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.brand-identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--text-primary);
+  min-height: 44px;
+  padding: 0.25rem 0.5rem;
+}
+
+.brand-monogram {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 0.5rem;
+  background-color: var(--accent);
+  color: var(--accent-on-surface);
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: 1.5px solid var(--text-primary);
+}
+
+.brand-name-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name {
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.brand-role {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 0.9rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.92rem;
+  border: 1.5px solid transparent;
+  border-radius: 4px;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.nav-link:hover,
+.nav-link[aria-current="true"] {
+  background-color: var(--bg-elevated);
+  border-color: var(--border-interactive);
+}
+
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem 0.9rem;
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-interactive);
+  border-radius: 4px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* Radius variation distinguishes buttons (8px), inputs (4px), and architectural frames (0px) per R-11. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.65rem 1.2rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-interactive);
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn:hover {
+  border-color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-accent {
+  background-color: var(--accent);
+  color: var(--accent-on-surface);
+  border-color: var(--accent-on-surface);
+  font-weight: 700;
+}
+
+.btn-accent:hover {
+  background-color: #c2eb00;
+  border-color: var(--text-primary);
+}
+
+.btn-compact {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.86rem;
+}
+
+/* Honest placeholder badge required by R-23 and R-38 when showing unconfirmed owner data. */
+.real-data-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background-color: var(--bg-inset);
+  color: var(--accent-ink);
+  border: 1.5px solid var(--border-interactive);
+  border-radius: 2px;
+}
+
+.container {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Section 1 (#stage) uses an asymmetric 5:7 split to prioritize the interactive physics workbench (R-05, RHYTHM 3). */
+.stage-section {
+  padding: 3.5rem 0 4.5rem;
+  border-bottom: 1.5px solid var(--border-subtle);
+}
+
+.stage-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.stage-manifesto {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+  min-width: 0;
+}
+
+.stage-title {
+  font-size: clamp(2.1rem, 4vw, 3.55rem);
+  margin: 0;
+  overflow-wrap: break-word;
+}
+
+.stage-title-highlight {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 6px;
+}
+
+.stage-lead {
+  font-size: clamp(1.02rem, 1.3vw, 1.18rem);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.stage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+
+.identity-quickbar {
+  background-color: var(--bg-elevated);
+  border: 1.5px solid var(--border-interactive);
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.identity-quickbar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.identity-quickbar-form {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: end;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.field-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.input-control,
+.select-control,
+.textarea-control {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.75rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-interactive);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.textarea-control {
+  min-height: 96px;
+  resize: vertical;
+}
+
+/* Interactive physics workbench uses sharp 0px architectural framing as the identity motif (Part 3). */
+.workbench-frame {
+  background-color: var(--bg-elevated);
+  border: 2px solid var(--border-interactive);
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.workbench-topbar {
+  padding: 0.75rem 1rem;
+  border-bottom: 1.5px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background-color: var(--bg-inset);
+}
+
+.telemetry-readout {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  color: var(--text-muted);
+}
+
+.audio-state-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.2rem 0.6rem;
+  border: 1.5px solid var(--border-interactive);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.audio-state-indicator {
+  width: 8px;
+  height: 8px;
+  background-color: var(--border-interactive);
+}
+
+.audio-state-pill[data-active="true"] .audio-state-indicator {
+  background-color: var(--accent);
+}
+
+.canvas-stage-wrapper {
+  position: relative;
+  width: 100%;
+  height: 410px;
+  background-color: var(--bg-primary);
+  overflow: hidden;
+}
+
+#kinetic-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+#kinetic-canvas:active {
+  cursor: grabbing;
+}
+
+.workbench-controls {
+  padding: 0.85rem 1rem;
+  border-top: 1.5px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.mode-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mode-btn[aria-pressed="true"] {
+  background-color: var(--accent);
+  color: var(--accent-on-surface);
+  border-color: var(--accent-on-surface);
+  font-weight: 700;
+}
+
+/* Section 2 (#lab) shifts rhythm to a master-detail architectural blueprint matrix instead of cards (R-05, R-14). */
+.lab-section {
+  padding: 5rem 0;
+  border-bottom: 1.5px solid var(--border-subtle);
+}
+
+.section-header-split {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 2rem;
+  align-items: end;
+  margin-bottom: 2.5rem;
+}
+
+.section-title {
+  font-size: clamp(1.75rem, 3vw, 2.6rem);
+  margin: 0 0 0.5rem 0;
+}
+
+.section-desc {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.blueprint-matrix {
+  display: grid;
+  grid-template-columns: minmax(0, 4.5fr) minmax(0, 7.5fr);
+  border: 2px solid var(--border-interactive);
+  background-color: var(--bg-elevated);
+}
+
+.blueprint-index {
+  border-right: 1.5px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+.blueprint-tab {
+  width: 100%;
+  text-align: left;
+  padding: 1.25rem 1.25rem;
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  border-bottom: 1.5px solid var(--border-subtle);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-family: inherit;
+  transition: background-color 0.15s ease;
+}
+
+.blueprint-tab:last-child {
+  border-bottom: none;
+}
+
+.blueprint-tab:hover {
+  background-color: var(--bg-inset);
+}
+
+.blueprint-tab[aria-selected="true"] {
+  background-color: var(--bg-primary);
+  border-left: 6px solid var(--accent);
+}
+
+.blueprint-tab-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.blueprint-tab-title {
+  font-weight: 700;
+  font-size: 1.08rem;
+}
+
+.blueprint-tab-domain {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.blueprint-inspector {
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.inspector-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 1.5px solid var(--border-subtle);
+  padding-bottom: 1rem;
+}
+
+.inspector-diagram-box {
+  background-color: var(--bg-primary);
+  border: 1.5px solid var(--border-interactive);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.diagram-svg {
+  width: 100%;
+  height: auto;
+  max-height: 180px;
+  display: block;
+}
+
+.simulator-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border-subtle);
+}
+
+.slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 220px;
+}
+
+.range-slider {
+  flex: 1;
+  min-height: 44px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.inspector-notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.note-cell {
+  background-color: var(--bg-primary);
+  border: 1.5px solid var(--border-subtle);
+  padding: 1rem;
+}
+
+.note-cell-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+/* Section 3 (#vault) uses a featured spotlight + asymmetric ledger for Books, Music, Tools, and Hobbies (R-05, R-14). */
+.vault-section {
+  padding: 4.5rem 0 5.5rem;
+  border-bottom: 1.5px solid var(--border-subtle);
+}
+
+.vault-toolbar {
+  background-color: var(--bg-elevated);
+  border: 1.5px solid var(--border-interactive);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.vault-toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-tab[aria-selected="true"] {
+  background-color: var(--accent);
+  color: var(--accent-on-surface);
+  border-color: var(--accent-on-surface);
+  font-weight: 700;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 240px;
+  max-width: 380px;
+}
+
+.state-simulator-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.state-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.state-btn[aria-pressed="true"] {
+  border-color: var(--accent-ink);
+  background-color: var(--bg-primary);
+  font-weight: 700;
+}
+
+/* Sonic turntable bar synthesizes real Web Audio chords when previewing music items in the vault. */
+.sonic-deck {
+  background-color: var(--bg-inset);
+  border: 1.5px solid var(--border-interactive);
+  padding: 1rem 1.25rem;
+  margin-bottom: 2rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) auto;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+#waveform-canvas {
+  width: 100%;
+  height: 56px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  display: block;
+}
+
+/* Vault hierarchy: 1 flagship spotlight item + structured ledger rows for remaining items (R-14). */
+.vault-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.vault-spotlight {
+  background-color: var(--bg-elevated);
+  border: 2px solid var(--border-interactive);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.spotlight-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.category-chip {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  background-color: var(--bg-primary);
+  border: 1.5px solid var(--border-interactive);
+}
+
+.spotlight-title {
+  font-size: clamp(1.45rem, 2.2vw, 2rem);
+  margin: 0;
+}
+
+.spotlight-creator {
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.spotlight-quote {
+  margin: 0;
+  padding: 1rem 1.15rem;
+  background-color: var(--bg-primary);
+  border: 1.5px solid var(--border-subtle);
+  font-size: 1rem;
+}
+
+.vault-ledger {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.ledger-row {
+  background-color: var(--bg-elevated);
+  border: 1.5px solid var(--border-interactive);
+  padding: 1.15rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ledger-row-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ledger-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.ledger-item-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ledger-item-sub {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.ledger-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ledger-drawer {
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border-subtle);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+/* Explicit Empty, Loading, and Error states required by R-27 and C-4. */
+.ui-state-box {
+  background-color: var(--bg-elevated);
+  border: 2px solid var(--border-interactive);
+  padding: 2.5rem 1.75rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.ui-state-box[data-state="error"] {
+  background-color: var(--status-error-bg);
+  color: var(--status-error-text);
+  border-color: var(--status-error-border);
+}
+
+.loading-bar-track {
+  width: 100%;
+  max-width: 360px;
+  height: 10px;
+  background-color: var(--bg-primary);
+  border: 1.5px solid var(--border-interactive);
+  overflow: hidden;
+}
+
+.loading-bar-fill {
+  width: 45%;
+  height: 100%;
+  background-color: var(--accent);
+}
+
+/* Section 4 (#studio) combines the Live [REAL DATA] Editor and Direct Signal Contact Form. */
+.studio-section {
+  padding: 4.5rem 0 5.5rem;
+}
+
+.studio-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 6.5fr) minmax(0, 5.5fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.studio-panel {
+  background-color: var(--bg-elevated);
+  border: 2px solid var(--border-interactive);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.feedback-banner {
+  padding: 0.9rem 1.1rem;
+  border: 1.5px solid var(--border-interactive);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.feedback-banner[data-type="error"] {
+  background-color: var(--status-error-bg);
+  color: var(--status-error-text);
+  border-color: var(--status-error-border);
+}
+
+.feedback-banner[data-type="success"] {
+  background-color: var(--status-ok-bg);
+  color: var(--status-ok-text);
+  border-color: var(--status-ok-border);
+}
+
+/* Modal dialog uses the single allowed elevation shadow to separate the foreground layer (R-12). */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background-color: rgba(17, 18, 16, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.modal-dialog {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 2px solid var(--text-primary);
+  box-shadow: var(--elevation-modal);
+  max-width: 640px;
+  width: 100%;
+  max-height: 90dvh;
+  overflow-y: auto;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+/* Purposeful single-tier footer structured around real page anchors and export utilities (R-05, R-24). */
+.site-footer {
+  border-top: 1.5px solid var(--border-subtle);
+  background-color: var(--bg-elevated);
+  padding: 2.25rem 0;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+/* Intermediate tablet & small-laptop breakpoint (680px to 1080px) prevents stretched stacks or cramped columns (R-03). */
+@media (max-width: 1080px) {
+  .stage-grid,
+  .section-header-split,
+  .blueprint-matrix,
+  .vault-layout,
+  .studio-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .blueprint-index {
+    border-right: none;
+    border-bottom: 1.5px solid var(--border-subtle);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .blueprint-tab {
+    border-right: 1.5px solid var(--border-subtle);
+  }
+
+  .sonic-deck {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sonic-deck-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Dedicated mobile layout state (< 680px) rescales spacing, collapses grids, and converts navigation (R-03). */
+@media (max-width: 680px) {
+  .stage-section,
+  .lab-section,
+  .vault-section,
+  .studio-section {
+    padding: 2.5rem 0;
+  }
+
+  .container,
+  .header-inner {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
+
+  .site-nav {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 0.5rem;
+  }
+
+  .site-nav[data-open="true"] {
+    display: flex;
+  }
+
+  .nav-link {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .identity-quickbar-form,
+  .form-grid-two,
+  .blueprint-index,
+  .sonic-deck {
+    grid-template-columns: 1fr;
+  }
+
+  .blueprint-tab {
+    border-right: none;
+  }
+
+  .canvas-stage-wrapper {
+    height: 320px;
+  }
+
+  .blueprint-inspector,
+  .vault-spotlight,
+  .studio-panel {
+    padding: 1.2rem;
+  }
+}

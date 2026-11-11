@@ -2,7 +2,7 @@
 
 ## 1. Concept & Hệ Thống Thiết Kế
 
-Trang cá nhân của **Long Hoàng** sử dụng phong cách **Editorial & Staggered Showcase** kết hợp bảng hiệu ứng **Google Modern Gradient** (hào quang nền, viền phát quang, hiệu ứng hover và nền nút bấm) cùng **chữ viết đơn sắc trung tính** tuyệt đối trên cả **Light Mode** và **Dark Mode**.
+Trang cá nhân của **Long Hoàng** sử dụng phong cách **Editorial & Staggered Showcase** kết hợp bảng hiệu ứng **Google Modern Gradient** (hào quang nền, viền phát quang, hiệu ứng hover và viền nút bấm chuyển động) cùng **chữ viết đơn sắc trung tính** tuyệt đối trên cả **Light Mode** và **Dark Mode**.
 
 ### Kiến trúc Bố cục Biên tập
 - **Editorial Cover Hero**: Tên `Long Hoàng.` cỡ lớn lệch tâm làm neo thị giác bên trái, cụm khẩu hiệu in nghiêng và phần dẫn lùi lề kèm đường kẻ phân cách mảnh, cân bằng đối trọng với thẻ ảnh đại diện đặt thấp hơn và có hiệu ứng lơ lửng + parallax nhẹ khi cuộn.
@@ -27,8 +27,8 @@ Toàn bộ token màu được khai báo tập trung tại `:root`, `html[data-t
 - `--google-red`: `#EA4335`
 - `--google-yellow`: `#FBBC04`
 - `--google-green`: `#34A853`
-- Áp dụng **Google Aura Mesh Gradient** cho nền trang, viền phát quang (ảnh đại diện ở Hero/About, gạch chân mục điều hướng, huy hiệu monogram), hiệu ứng spotlight/viền khi di chuột trên thẻ dự án và nền của các nút bấm chính / nút GitHub.
-- Toàn bộ hệ thống chữ viết (tên **Long Hoàng**, tiêu đề chính, tiêu đề thẻ dự án, mô tả, nhãn, liên kết) chuyển hoàn toàn về **màu đơn sắc trung tính**, tuyệt đối không dùng chữ màu hoặc Text Gradient.
+- Áp dụng **Google Aura Mesh Gradient** cho nền trang, viền phát quang (ảnh đại diện ở Hero/About, gạch chân mục điều hướng, huy hiệu monogram), hiệu ứng spotlight/viền khi di chuột trên thẻ dự án và **viền xoay conic-gradient kèm hào quang ngoài** cho toàn bộ nút bấm dạng viên thuốc kính mờ (`rgba(255, 255, 255, 0.85)` Light / `rgba(30, 31, 32, 0.85)` Dark, tuyệt đối không tô đặc ruột nút).
+- Toàn bộ hệ thống chữ viết (tên **Long Hoàng**, tiêu đề chính, tiêu đề thẻ dự án, mô tả, nhãn, liên kết và chữ trên nút `#1F1F1F` / `#E3E3E3`) chuyển hoàn toàn về **màu đơn sắc trung tính**, tuyệt đối không dùng chữ màu hoặc Text Gradient.
 
 ### Chế độ Sáng (Google Workspace / Material You)
 - `--bg-primary`: `#F8F9FA` kết hợp các quầng Pastel Mesh Gradient nhẹ ở nền
@@ -48,5 +48,6 @@ Toàn bộ token màu được khai báo tập trung tại `:root`, `html[data-t
 
 ## 4. Chuyển Động & Kiểm Chứng
 
+- Toàn bộ nút bấm tương tác (`.folio-btn-primary`, `.folio-btn-secondary`, `.folio-btn-compact`, `.folio-btn-icon`, `.google-btn-github`) dùng nền kính mờ bán trong suốt `backdrop-filter: blur(14px)` (tuyệt đối không tô màu fill kể cả khi hover), viền mảnh conic-gradient xoay liên tục qua `@property --btn-angle` và hào quang tỏa nhẹ ra mép ngoài (`.google-pill-aura`), tự dừng xoay khi `prefers-reduced-motion: reduce`.
 - Bento Grid 5 dự án hỗ trợ nghiêng 3D theo con trỏ chuột, vệt sáng radial spotlight và viền sáng Gradient Google khi hover.
 - Đồ họa nền (`HeroFolioCanvas.tsx`) vẽ hạt sáng và sóng hài hòa 60fps bằng bảng màu Google, tự tắt hiệu ứng mạnh khi `prefers-reduced-motion: reduce`.

@@ -147,24 +147,30 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
                 initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-8 flex flex-wrap items-center gap-4"
+                className="mt-8 flex flex-wrap items-center gap-5"
               >
-                <a
-                  ref={btnRef}
-                  href="#projects"
+                <span
                   onMouseMove={handleMagneticMove}
                   onMouseLeave={resetMagnetic}
                   style={{
                     transform: `translate3d(${btnOffset.x}px, ${btnOffset.y}px, 0)`,
                   }}
-                  className="folio-btn-primary"
+                  className="inline-block transition-transform duration-200 ease-out"
                 >
-                  <span>{t.ctaProjects}</span>
-                  <ArrowDownRight className="h-4 w-4" aria-hidden="true" />
-                </a>
+                  <a
+                    ref={btnRef}
+                    href="#projects"
+                    className="folio-btn-primary"
+                  >
+                    <span className="google-pill-aura" aria-hidden="true" />
+                    <span>{t.ctaProjects}</span>
+                    <ArrowDownRight className="h-4 w-4" aria-hidden="true" />
+                  </a>
+                </span>
 
                 <a href="#contact" className="folio-btn-secondary">
-                  <Mail className="h-4 w-4 text-folio-ink" aria-hidden="true" />
+                  <span className="google-pill-aura" aria-hidden="true" />
+                  <Mail className="h-4 w-4" aria-hidden="true" />
                   <span>{t.ctaContact}</span>
                 </a>
               </motion.div>

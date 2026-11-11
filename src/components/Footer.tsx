@@ -17,6 +17,7 @@ export const Footer: React.FC<FooterProps> = ({ locale }) => {
         </div>
 
         <a href="#hero" className="folio-btn-compact">
+          <span className="google-pill-aura" aria-hidden="true" />
           <span>{t.backToTop}</span>
           <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
         </a>

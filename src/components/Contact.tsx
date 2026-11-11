@@ -71,10 +71,11 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                 rel="noopener noreferrer"
                 className="google-btn-github group/btn mt-3 w-fit max-w-full"
               >
-                <span className="google-btn-github-label truncate">
+                <span className="google-pill-aura" aria-hidden="true" />
+                <span className="google-btn-github-label min-w-0 truncate">
                   {PROFILE_DATA.contacts.githubUrl}
                 </span>
-                <ExternalLink className="relative z-10 h-3.5 w-3.5 shrink-0 text-folio-ink transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 group-hover/btn:text-white" aria-hidden="true" />
+                <ExternalLink className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" aria-hidden="true" />
               </a>
             </div>
           </motion.div>
@@ -130,6 +131,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
 
             <div className="mt-6">
               <a href={mailtoHref} className="folio-btn-primary">
+                <span className="google-pill-aura" aria-hidden="true" />
                 <Send className="h-4 w-4" aria-hidden="true" />
                 <span>{t.mailtoButton}</span>
               </a>

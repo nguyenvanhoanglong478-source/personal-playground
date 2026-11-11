@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ExternalLink, Github, Mail, Send } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { ExternalLink, Github, Mail, Send, Sparkles } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 
 interface ContactProps {
@@ -7,6 +8,7 @@ interface ContactProps {
 }
 
 export const Contact: React.FC<ContactProps> = ({ locale }) => {
+  const shouldReduceMotion = useReducedMotion();
   const t = UI_LABELS[locale].contact;
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
@@ -23,7 +25,10 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <span className="folio-index-label">{t.sectionIndex}</span>
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="folio-index-label">{t.sectionIndex}</span>
+          </div>
           <h2 id="contact-heading" className="folio-section-heading">
             {t.heading}
           </h2>
@@ -33,8 +38,14 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
         </div>
 
         <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12">
-          <div className="flex flex-col justify-between gap-4 lg:col-span-5">
-            <div className="folio-card flex flex-1 flex-col justify-center">
+          <motion.div
+            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col justify-between gap-4 lg:col-span-5"
+          >
+            <div className="folio-card flex flex-1 flex-col justify-center backdrop-blur-xl transition-all duration-300 hover:border-folio-vermilion/50">
               <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
                 <Mail className="h-4 w-4 text-folio-vermilion" aria-hidden="true" />
                 <span>EMAIL</span>
@@ -47,7 +58,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
               </a>
             </div>
 
-            <div className="folio-card flex flex-1 flex-col justify-center">
+            <div className="folio-card flex flex-1 flex-col justify-center backdrop-blur-xl transition-all duration-300 hover:border-folio-vermilion/50">
               <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
                 <Github className="h-4 w-4 text-folio-spruce" aria-hidden="true" />
                 <span>GITHUB</span>
@@ -62,9 +73,15 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                 <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               </a>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="folio-card flex flex-col justify-between lg:col-span-7">
+          <motion.div
+            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="folio-card flex flex-col justify-between backdrop-blur-xl lg:col-span-7"
+          >
             <div>
               <h3 className="font-serif text-2xl font-bold text-folio-ink">
                 {t.composeLabel}
@@ -113,7 +130,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                 <span>{t.mailtoButton}</span>
               </a>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

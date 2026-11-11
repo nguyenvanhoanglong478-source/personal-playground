@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 export const CustomCursor: React.FC = () => {
   const [enabled, setEnabled] = useState(false);
   const [pos, setPos] = useState({ x: -100, y: -100 });
+  const [trailPos, setTrailPos] = useState({ x: -100, y: -100 });
 
   useEffect(() => {
     const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
@@ -17,23 +18,52 @@ export const CustomCursor: React.FC = () => {
 
     setEnabled(true);
 
+    let rafId = 0;
+    let targetX = -100;
+    let targetY = -100;
+    let currentX = -100;
+    let currentY = -100;
+
     const onMove = (e: MouseEvent) => {
-      setPos({ x: e.clientX, y: e.clientY });
+      targetX = e.clientX;
+      targetY = e.clientY;
+      setPos({ x: targetX, y: targetY });
     };
 
+    const updateTrail = () => {
+      currentX += (targetX - currentX) * 0.22;
+      currentY += (targetY - currentY) * 0.22;
+      setTrailPos({ x: currentX, y: currentY });
+      rafId = requestAnimationFrame(updateTrail);
+    };
+
+    rafId = requestAnimationFrame(updateTrail);
     window.addEventListener('mousemove', onMove, { passive: true });
-    return () => window.removeEventListener('mousemove', onMove);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('mousemove', onMove);
+    };
   }, []);
 
   if (!enabled) return null;
 
   return (
-    <div
-      aria-hidden="true"
-      style={{
-        transform: `translate3d(${pos.x - 14}px, ${pos.y - 14}px, 0)`,
-      }}
-      className="pointer-events-none fixed left-0 top-0 z-[100] hidden h-7 w-7 rounded-full border border-folio-vermilion/60 transition-transform duration-75 ease-out lg:block"
-    />
+    <>
+      <div
+        aria-hidden="true"
+        style={{
+          transform: `translate3d(${pos.x - 4}px, ${pos.y - 4}px, 0)`,
+        }}
+        className="pointer-events-none fixed left-0 top-0 z-[120] hidden h-2 w-2 rounded-full bg-folio-vermilion shadow-sm lg:block"
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          transform: `translate3d(${trailPos.x - 16}px, ${trailPos.y - 16}px, 0)`,
+        }}
+        className="pointer-events-none fixed left-0 top-0 z-[119] hidden h-8 w-8 rounded-full border border-folio-vermilion/50 transition-opacity duration-300 lg:block"
+      />
+    </>
   );
 };

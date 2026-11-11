@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Compass, UserCheck } from 'lucide-react';
+import { Compass, Sparkles, UserCheck } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 
 interface AboutProps {
@@ -19,7 +19,10 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <span className="folio-index-label">{t.sectionIndex}</span>
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="folio-index-label">{t.sectionIndex}</span>
+          </div>
           <h2 id="about-heading" className="folio-section-heading">
             {t.heading}
           </h2>
@@ -27,44 +30,44 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-stretch">
           <motion.div
-            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 18 }}
+            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 22 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="lg:col-span-5"
           >
-            <div className="folio-card flex h-full flex-col justify-between gap-4">
-              <div className="folio-card-inner overflow-hidden !p-0">
+            <div className="folio-card flex h-full flex-col justify-between gap-5 backdrop-blur-xl">
+              <div className="relative overflow-hidden rounded-[var(--radius-inner)] border border-folio-border p-1">
                 <img
                   src={PROFILE_DATA.avatarUrl}
                   alt={t.portraitAlt}
                   loading="lazy"
-                  className="aspect-square w-full object-cover object-top"
+                  className="aspect-square w-full rounded-[var(--radius-inner)] object-cover object-top transition-transform duration-500 hover:scale-105"
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-2 border-t border-folio-border pt-3">
+              <div className="grid grid-cols-3 gap-3 border-t border-folio-border pt-4">
                 <div>
-                  <div className="font-mono text-[10px] text-folio-muted">
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-folio-muted">
                     {t.nameLabel}
                   </div>
-                  <div className="mt-0.5 font-serif text-sm font-bold text-folio-ink">
+                  <div className="mt-1 font-serif text-sm font-bold text-folio-ink">
                     {PROFILE_DATA.name}
                   </div>
                 </div>
                 <div>
-                  <div className="font-mono text-[10px] text-folio-muted">
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-folio-muted">
                     {t.birthLabel}
                   </div>
-                  <div className="mt-0.5 font-serif text-sm font-bold text-folio-ink">
+                  <div className="mt-1 font-serif text-sm font-bold text-folio-ink">
                     {PROFILE_DATA.birthYear}
                   </div>
                 </div>
                 <div>
-                  <div className="font-mono text-[10px] text-folio-muted">
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-folio-muted">
                     {t.roleLabel}
                   </div>
-                  <div className="mt-0.5 font-serif text-sm font-bold text-folio-vermilion">
+                  <div className="mt-1 font-serif text-sm font-bold text-folio-vermilion">
                     {PROFILE_DATA.role[locale]}
                   </div>
                 </div>
@@ -73,13 +76,13 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
           </motion.div>
 
           <motion.div
-            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 18 }}
+            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 22 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
-            transition={{ duration: 0.5, delay: 0.08 }}
+            transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col justify-between gap-6 lg:col-span-7"
           >
-            <div className="folio-card flex-1 space-y-5">
+            <div className="folio-card flex-1 space-y-5 backdrop-blur-xl">
               <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-folio-muted">
                 <UserCheck className="h-4 w-4 text-folio-vermilion" aria-hidden="true" />
                 <span className="font-semibold text-folio-ink">
@@ -102,7 +105,7 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
               </p>
             </div>
 
-            <div className="folio-card">
+            <div className="folio-card backdrop-blur-xl">
               <div className="mb-2 flex items-center gap-2 font-mono text-xs font-semibold text-folio-spruce">
                 <Compass className="h-4 w-4" aria-hidden="true" />
                 <span>{t.methodTitle}</span>

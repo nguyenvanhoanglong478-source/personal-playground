@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, CheckCircle2, GitBranch } from 'lucide-react';
+import { ArrowRight, CheckCircle2, GitBranch, Sparkles } from 'lucide-react';
 import { Locale, UI_LABELS } from '../data/profile';
 import { LIVE_SITE_STACK } from '../data/siteStack';
 
@@ -58,7 +58,10 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <span className="folio-index-label">{t.sectionIndex}</span>
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="folio-index-label">{t.sectionIndex}</span>
+          </div>
           <h2 id="stack-heading" className="folio-section-heading">
             {t.heading}
           </h2>
@@ -67,7 +70,7 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
           </p>
         </div>
 
-        <div className="folio-card mb-8">
+        <div className="folio-card mb-8 backdrop-blur-xl">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-ink">
               <GitBranch
@@ -115,13 +118,11 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
           {LIVE_SITE_STACK.packages.map((pkg, idx) => (
             <motion.div
               key={pkg.pkgName}
-              initial={
-                shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }
-              }
+              initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-30px' }}
-              transition={{ duration: 0.35, delay: idx * 0.04 }}
-              className="folio-card-inner flex h-full flex-col justify-between !p-5"
+              transition={{ duration: 0.4, delay: idx * 0.04, ease: [0.22, 1, 0.36, 1] }}
+              className="folio-card-inner flex h-full flex-col justify-between backdrop-blur-xl !p-5 transition-transform duration-200 hover:-translate-y-1"
             >
               <div>
                 <div className="flex items-center justify-between gap-2">

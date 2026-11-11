@@ -1,6 +1,6 @@
 import React, { Suspense, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowDownRight, BookMarked, Mail } from 'lucide-react';
+import { ArrowDownRight, BookMarked, Mail, Sparkles } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 import { PROJECTS_DATA } from '../data/projects';
 
@@ -48,25 +48,41 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
             <BookMarked className="h-4 w-4" aria-hidden="true" />
             <span>{t.folioTag}</span>
           </div>
+
+          <div className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-mono text-[11px] font-medium text-emerald-400">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            <span>{t.statusAvailable}</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-start lg:gap-8">
-          <div className="lg:col-span-8">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-center">
+          <div className="lg:col-span-7">
             <div className="mb-4 flex flex-wrap items-center gap-3">
+              <span className="folio-chip flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-folio-vermilion" aria-hidden="true" />
+                <span>{PROFILE_DATA.role[locale]}</span>
+              </span>
               <span className="folio-chip">
                 {t.birthLabel}: {PROFILE_DATA.birthYear}
-              </span>
-              <span className="folio-chip text-folio-vermilion">
-                {t.roleLabel}: {PROFILE_DATA.role[locale]}
               </span>
             </div>
 
             <h1
               id="hero-display-heading"
-              className="font-serif text-5xl font-bold leading-[1.06] tracking-tight text-folio-ink sm:text-7xl lg:text-[5rem]"
+              className="font-serif text-5xl font-bold leading-[1.04] tracking-tight text-folio-ink sm:text-7xl lg:text-[5.25rem]"
             >
-              <span className="block text-folio-vermilion">{PROFILE_DATA.name}.</span>
-              <span className="mt-3 block font-serif text-3xl font-normal italic leading-[1.22] text-folio-ink sm:text-5xl lg:text-[3.1rem]">
+              <motion.span
+                initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="block text-folio-vermilion"
+              >
+                {PROFILE_DATA.name}.
+              </motion.span>
+              <span className="mt-3 block font-serif text-3xl font-normal italic leading-[1.2] text-folio-ink sm:text-5xl lg:text-[3.25rem]">
                 {sloganWords.map((word, idx) => (
                   <motion.span
                     key={`${word}-${idx}`}
@@ -76,10 +92,10 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
                       duration: 0.45,
-                      delay: shouldReduceMotion ? 0 : idx * 0.04,
+                      delay: shouldReduceMotion ? 0 : 0.15 + idx * 0.035,
                       ease: [0.22, 1, 0.36, 1],
                     }}
-                    className="mr-[0.26em] inline-block"
+                    className="mr-[0.25em] inline-block"
                   >
                     {word}
                   </motion.span>
@@ -88,18 +104,18 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
             </h1>
 
             <motion.p
-              initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }}
+              initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="mt-7 max-w-2xl text-base leading-relaxed text-folio-ink sm:text-lg"
             >
               {PROFILE_DATA.introMain[locale]}
             </motion.p>
 
             <motion.div
-              initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }}
+              initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              transition={{ duration: 0.5, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
               className="mt-8 flex flex-wrap items-center gap-4"
             >
               <a
@@ -123,42 +139,60 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
             </motion.div>
           </div>
 
-          <motion.aside
-            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, x: 18 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.55, delay: 0.25 }}
-            aria-label={t.indexHeader}
-            className="folio-card lg:col-span-4"
+          <motion.div
+            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col items-center justify-center lg:col-span-5"
           >
-            <div className="mb-4 flex items-center justify-between border-b border-folio-border pb-3">
-              <span className="font-mono text-xs font-semibold text-folio-vermilion">
-                {t.indexHeader}
-              </span>
-            </div>
+            <div className="relative w-full max-w-md">
+              <div
+                className="absolute -inset-1.5 rounded-3xl bg-gradient-to-tr from-folio-vermilion via-teal-400 to-amber-500 opacity-60 blur-xl animate-pulse-ring"
+                aria-hidden="true"
+              />
 
-            <div className="space-y-2.5">
-              {PROJECTS_DATA.map((proj) => (
-                <a
-                  key={proj.id}
-                  href={`#project-${proj.id}`}
-                  className="folio-card-inner group block transition-transform duration-200 hover:-translate-y-0.5 hover:border-folio-vermilion"
-                >
-                  <div className="flex items-center justify-between font-mono text-[11px] text-folio-muted">
-                    <span className="font-semibold text-folio-vermilion">
-                      {proj.indexNumber}
-                    </span>
-                    <span>{proj.technologies[0]?.name}</span>
+              <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-folio-surface/80 p-5 shadow-2xl backdrop-blur-xl animate-float-gentle">
+                <div className="relative overflow-hidden rounded-xl border border-white/10">
+                  <img
+                    src={PROFILE_DATA.avatarUrl}
+                    alt={PROFILE_DATA.name}
+                    className="aspect-square w-full object-cover object-top filter contrast-[1.03] transition-transform duration-500 hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
+                    <div>
+                      <div className="font-serif text-lg font-bold">
+                        {PROFILE_DATA.name}
+                      </div>
+                      <div className="font-mono text-xs text-white/80">
+                        {PROFILE_DATA.role[locale]}
+                      </div>
+                    </div>
+                    <div className="rounded-full bg-black/60 px-3 py-1 font-mono text-xs backdrop-blur-md">
+                      {PROFILE_DATA.birthYear}
+                    </div>
                   </div>
-                  <div className="mt-0.5 font-serif text-base font-bold text-folio-ink group-hover:text-folio-vermilion">
-                    {proj.title}
+                </div>
+
+                <div className="mt-4 border-t border-folio-border pt-3">
+                  <div className="mb-2 font-mono text-[11px] font-semibold text-folio-vermilion">
+                    {t.indexHeader}
                   </div>
-                  <div className="mt-0.5 text-xs text-folio-muted">
-                    {proj.subtitle[locale]}
+                  <div className="flex flex-wrap gap-1.5">
+                    {PROJECTS_DATA.map((proj) => (
+                      <a
+                        key={proj.id}
+                        href={`#project-${proj.id}`}
+                        className="rounded-md border border-folio-border bg-folio-elevated px-2.5 py-1 font-mono text-[11px] text-folio-ink transition-colors hover:border-folio-vermilion hover:text-folio-vermilion"
+                      >
+                        {proj.title}
+                      </a>
+                    ))}
                   </div>
-                </a>
-              ))}
+                </div>
+              </div>
             </div>
-          </motion.aside>
+          </motion.div>
         </div>
       </div>
     </section>

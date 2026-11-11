@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Code2, Cpu, Rocket, Wrench } from 'lucide-react';
+import { Code2, Cpu, Rocket, Sparkles, Wrench } from 'lucide-react';
 import { Locale, UI_LABELS } from '../data/profile';
 import { SYNTHESIZED_SKILLS } from '../data/skills';
 import { SkillCategory } from '../data/projects';
@@ -38,7 +38,10 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <span className="folio-index-label">{t.sectionIndex}</span>
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="folio-index-label">{t.sectionIndex}</span>
+          </div>
           <h2 id="skills-heading" className="folio-section-heading">
             {t.heading}
           </h2>
@@ -48,7 +51,7 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
         </div>
 
         <div
-          className="mb-8 overflow-hidden rounded-[var(--radius-inner)] border border-folio-border bg-folio-surface py-3"
+          className="mb-8 overflow-hidden rounded-[var(--radius-inner)] border border-folio-border bg-folio-surface/60 py-3 backdrop-blur-md"
           aria-label="Technology Marquee"
         >
           <div className="animate-folio-marquee gap-3 px-4">
@@ -70,13 +73,11 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
             return (
               <motion.div
                 key={category}
-                initial={
-                  shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }
-                }
+                initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.4, delay: idx * 0.05 }}
-                className="folio-card grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-start"
+                transition={{ duration: 0.45, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] }}
+                className="folio-card grid grid-cols-1 gap-5 backdrop-blur-xl lg:grid-cols-12 lg:items-start"
               >
                 <div className="flex items-center justify-between border-b border-folio-border pb-3 lg:col-span-3 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
                   <div className="flex items-center gap-2.5">

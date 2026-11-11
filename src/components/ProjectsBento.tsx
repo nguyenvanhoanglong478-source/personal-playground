@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ExternalLink, FolderGit2, Layers } from 'lucide-react';
+import { ExternalLink, FolderGit2, Layers, Sparkles } from 'lucide-react';
 import { Locale, UI_LABELS } from '../data/profile';
 import { PROJECTS_DATA, ProjectItem } from '../data/projects';
 
@@ -24,10 +24,10 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           y="16"
           width="536"
           height="148"
-          rx="4"
+          rx="6"
           fill="var(--bg-surface)"
           stroke="currentColor"
-          strokeWidth="1.75"
+          strokeWidth="1.5"
         />
         <text x="28" y="42" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-primary)">
           06:00 → 22:00 / MỤC TIÊU: 100M VND
@@ -39,21 +39,21 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         <text x="28" y="74" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
           STAMINA
         </text>
-        <rect x="92" y="64" width="120" height="12" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1" />
-        <rect x="94" y="66" width="92" height="8" fill="var(--accent-secondary)" />
+        <rect x="92" y="64" width="120" height="12" rx="2" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1" />
+        <rect x="94" y="66" width="92" height="8" rx="1.5" fill="var(--accent-secondary)" />
 
         <text x="28" y="100" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
           SAVINGS
         </text>
-        <rect x="92" y="90" width="120" height="12" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1" />
-        <rect x="94" y="92" width="76" height="8" fill="var(--accent-primary)" />
+        <rect x="92" y="90" width="120" height="12" rx="2" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1" />
+        <rect x="94" y="92" width="76" height="8" rx="1.5" fill="var(--accent-primary)" />
 
         <rect
           x="244"
           y="56"
           width="284"
           height="66"
-          rx="3"
+          rx="4"
           fill="var(--bg-elevated)"
           stroke="var(--accent-primary)"
           strokeWidth="1.25"
@@ -85,17 +85,17 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           y="14"
           width="135"
           height="182"
-          rx="10"
+          rx="12"
           fill="var(--bg-surface)"
           stroke="currentColor"
-          strokeWidth="1.75"
+          strokeWidth="1.5"
         />
         <rect
           x="32"
           y="32"
           width="111"
           height="68"
-          rx="4"
+          rx="6"
           fill="var(--bg-elevated)"
           stroke="var(--accent-primary)"
           strokeWidth="1.5"
@@ -104,7 +104,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         <text x="42" y="118" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
           CameraX Capture
         </text>
-        <rect x="32" y="128" width="111" height="22" rx="3" fill="var(--bg-elevated)" />
+        <rect x="32" y="128" width="111" height="22" rx="4" fill="var(--bg-elevated)" />
         <text x="42" y="143" fontFamily="var(--font-mono)" fontSize="9" fill="var(--accent-secondary)">
           Room SQLite DB
         </text>
@@ -120,7 +120,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           y="28"
           width="150"
           height="74"
-          rx="6"
+          rx="8"
           fill="var(--bg-surface)"
           stroke="currentColor"
           strokeWidth="1.5"
@@ -129,10 +129,10 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           Jetpack Glance
         </text>
         <text x="206" y="68" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
-          • Focus Widget
+          Focus Widget
         </text>
         <text x="206" y="84" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
-          • Task Stack Widget
+          Task Stack Widget
         </text>
 
         <rect
@@ -140,7 +140,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           y="114"
           width="150"
           height="70"
-          rx="6"
+          rx="8"
           fill="var(--bg-surface)"
           stroke="var(--accent-secondary)"
           strokeWidth="1.5"
@@ -171,7 +171,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           y="16"
           width="396"
           height="142"
-          rx="6"
+          rx="8"
           fill="var(--bg-surface)"
           stroke="currentColor"
           strokeWidth="1.5"
@@ -180,21 +180,21 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           TMS MINI v2.0 · FLEET DISPATCH
         </text>
 
-        <rect x="28" y="52" width="120" height="88" rx="4" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1" />
+        <rect x="28" y="52" width="120" height="88" rx="6" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1" />
         <text x="38" y="72" fontFamily="var(--font-mono)" fontSize="9" fill="var(--accent-secondary)">
-          ● DRIVING
+          DRIVING
         </text>
         <text x="38" y="90" fontFamily="var(--font-mono)" fontSize="9" fill="var(--accent-primary)">
-          ● PAUSE / ISSUE
+          PAUSE / ISSUE
         </text>
         <text x="38" y="108" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
-          ● WAITING / DONE
+          WAITING / DONE
         </text>
         <text x="38" y="128" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
           Driver &amp; Manager Role
         </text>
 
-        <rect x="164" y="52" width="228" height="88" rx="4" fill="var(--bg-elevated)" stroke="var(--accent-secondary)" strokeWidth="1.25" />
+        <rect x="164" y="52" width="228" height="88" rx="6" fill="var(--bg-elevated)" stroke="var(--accent-secondary)" strokeWidth="1.25" />
         <path
           d="M 184 122 C 224 72, 294 128, 368 68"
           fill="none"
@@ -224,12 +224,12 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           y="16"
           width="536"
           height="148"
-          rx="4"
+          rx="6"
           fill="var(--bg-surface)"
           stroke="currentColor"
-          strokeWidth="1.75"
+          strokeWidth="1.5"
         />
-        <rect x="28" y="34" width="132" height="112" rx="3" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1" />
+        <rect x="28" y="34" width="132" height="112" rx="4" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1" />
         <text x="38" y="54" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--accent-primary)">
           EVENT STREAM
         </text>
@@ -246,7 +246,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           APPROVAL_GATE
         </text>
 
-        <rect x="196" y="42" width="110" height="38" rx="2" fill="var(--bg-elevated)" stroke="var(--accent-primary)" strokeWidth="1.5" />
+        <rect x="196" y="42" width="110" height="38" rx="4" fill="var(--bg-elevated)" stroke="var(--accent-primary)" strokeWidth="1.5" />
         <text x="210" y="65" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="currentColor">
           ORCHESTRATOR
         </text>
@@ -254,22 +254,22 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         <line x1="251" y1="80" x2="215" y2="110" stroke="var(--accent-secondary)" strokeWidth="1.5" />
         <line x1="251" y1="80" x2="295" y2="110" stroke="var(--accent-primary)" strokeWidth="1.5" />
 
-        <rect x="176" y="110" width="84" height="32" rx="2" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1.2" />
+        <rect x="176" y="110" width="84" height="32" rx="4" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1.2" />
         <text x="192" y="130" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
           WORKER
         </text>
 
-        <rect x="272" y="110" width="84" height="32" rx="2" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1.2" />
+        <rect x="272" y="110" width="84" height="32" rx="4" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1.2" />
         <text x="290" y="130" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
           CRITIC
         </text>
 
-        <rect x="388" y="34" width="144" height="112" rx="3" fill="var(--bg-elevated)" stroke="var(--accent-secondary)" strokeWidth="1.2" />
+        <rect x="388" y="34" width="144" height="112" rx="4" fill="var(--bg-elevated)" stroke="var(--accent-secondary)" strokeWidth="1.2" />
         <text x="400" y="54" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--accent-secondary)">
           CONTEXT GAUGE
         </text>
-        <rect x="400" y="68" width="118" height="10" fill="var(--bg-surface)" stroke="currentColor" strokeWidth="1" />
-        <rect x="402" y="70" width="82" height="6" fill="var(--accent-primary)" />
+        <rect x="400" y="68" width="118" height="10" rx="2" fill="var(--bg-surface)" stroke="currentColor" strokeWidth="1" />
+        <rect x="402" y="70" width="82" height="6" rx="1" fill="var(--accent-primary)" />
         <text x="400" y="102" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
           HTML5 Canvas + PWA
         </text>
@@ -292,7 +292,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         y="22"
         width="165"
         height="136"
-        rx="4"
+        rx="6"
         fill="var(--bg-surface)"
         stroke="currentColor"
         strokeWidth="1.5"
@@ -302,7 +302,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
       </text>
       <line x1="26" y1="62" x2="155" y2="62" stroke="currentColor" strokeWidth="2" />
       <line x1="26" y1="78" x2="140" y2="78" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.6" />
-      <rect x="26" y="92" width="135" height="24" rx="2" fill="var(--bg-elevated)" stroke="var(--accent-primary)" strokeWidth="1" />
+      <rect x="26" y="92" width="135" height="24" rx="3" fill="var(--bg-elevated)" stroke="var(--accent-primary)" strokeWidth="1" />
       <text x="34" y="108" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
         Web Speech API
       </text>
@@ -326,7 +326,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         y="32"
         width="148"
         height="116"
-        rx="4"
+        rx="6"
         fill="var(--bg-surface)"
         stroke="var(--accent-primary)"
         strokeWidth="1.75"
@@ -360,7 +360,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         y="40"
         width="130"
         height="100"
-        rx="4"
+        rx="6"
         fill="var(--bg-surface)"
         stroke="currentColor"
         strokeWidth="1.5"
@@ -378,8 +378,169 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
   );
 };
 
-export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
+interface TiltProjectCardProps {
+  project: ProjectItem;
+  locale: Locale;
+  idx: number;
+  isFullWidth: boolean;
+  gridSpanClass: string;
+}
+
+const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
+  project,
+  locale,
+  idx,
+  isFullWidth,
+  gridSpanClass,
+}) => {
   const shouldReduceMotion = useReducedMotion();
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [rotation, setRotation] = useState({ x: 0, y: 0 });
+  const [spotlight, setSpotlight] = useState({ x: 150, y: 150 });
+  const [isHovered, setIsHovered] = useState(false);
+  const t = UI_LABELS[locale].projects;
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (shouldReduceMotion || !cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const normX = (x / rect.width - 0.5) * 2;
+    const normY = (y / rect.height - 0.5) * 2;
+    setRotation({
+      x: -normY * 6.5,
+      y: normX * 6.5,
+    });
+    setSpotlight({ x, y });
+  };
+
+  const handleMouseEnter = () => {
+    if (!shouldReduceMotion) setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setRotation({ x: 0, y: 0 });
+  };
+
+  return (
+    <motion.article
+      id={`project-${project.id}`}
+      initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 22 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.5, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] }}
+      className={`perspective-1000 ${gridSpanClass}`}
+    >
+      <div
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          transform:
+            isHovered && !shouldReduceMotion
+              ? `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) scale3d(1.012, 1.012, 1.012)`
+              : 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
+          transition: isHovered
+            ? 'transform 90ms ease-out'
+            : 'transform 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+        }}
+        className="group relative flex h-full flex-col justify-between overflow-hidden rounded-[var(--radius-card)] border border-folio-border bg-folio-surface/90 p-6 shadow-xl backdrop-blur-xl transition-all duration-300 hover:border-folio-vermilion/50 hover:shadow-2xl"
+      >
+        <div
+          className="pointer-events-none absolute -inset-px rounded-[var(--radius-card)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style={{
+            background: `radial-gradient(420px circle at ${spotlight.x}px ${spotlight.y}px, rgba(255, 87, 51, 0.14), transparent 60%)`,
+          }}
+          aria-hidden="true"
+        />
+
+        <div
+          className={
+            isFullWidth
+              ? 'grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center'
+              : ''
+          }
+        >
+          <div className={isFullWidth ? 'lg:col-span-6' : ''}>
+            <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-3">
+              <span className="font-mono text-xs font-bold text-folio-vermilion">
+                {project.indexNumber}
+              </span>
+              <span className="font-mono text-[11px] font-semibold text-folio-spruce">
+                {project.technologies[0]?.name}
+              </span>
+            </div>
+
+            <div className="mt-4">
+              <h3 className="font-serif text-2xl font-bold leading-snug text-folio-ink transition-colors group-hover:text-folio-vermilion sm:text-3xl">
+                {project.title}
+              </h3>
+              <p className="mt-1 font-serif text-sm italic text-folio-muted lg:min-h-[2.5rem]">
+                {project.subtitle[locale]}
+              </p>
+            </div>
+
+            {!isFullWidth && (
+              <div className="folio-card-inner my-4 h-44 w-full overflow-hidden !bg-folio-bg p-2 shadow-inner">
+                <ProjectVisualPreview projectId={project.id} />
+              </div>
+            )}
+
+            <p className="text-sm leading-relaxed text-folio-ink sm:text-base">
+              {project.description[locale]}
+            </p>
+          </div>
+
+          {isFullWidth && (
+            <div className="folio-card-inner h-48 w-full overflow-hidden !bg-folio-bg p-3 shadow-inner lg:col-span-6">
+              <ProjectVisualPreview projectId={project.id} />
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6">
+          <div className="mb-2 flex items-center gap-1.5 font-mono text-[11px] font-semibold text-folio-spruce">
+            <Layers className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{t.techLabel}</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {project.technologies.map((tech) => (
+              <span key={tech.name} className="folio-chip">
+                {tech.name}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-5 flex items-center justify-between gap-3 border-t border-folio-border pt-4">
+            <a
+              href={project.repoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-w-0 flex-1 truncate font-mono text-xs text-folio-spruce underline hover:text-folio-vermilion"
+            >
+              {project.repoUrl}
+            </a>
+
+            <a
+              href={project.repoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative group/btn inline-flex items-center gap-2 rounded-[var(--radius-control)] border border-folio-border bg-folio-elevated px-3 py-1.5 font-mono text-xs font-semibold text-folio-ink shadow-sm transition-all duration-200 hover:border-folio-vermilion hover:bg-folio-vermilion hover:text-white"
+            >
+              <FolderGit2 className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{t.repoLabel}</span>
+              <ExternalLink className="h-3 w-3 transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" aria-hidden="true" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </motion.article>
+  );
+};
+
+export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
   const t = UI_LABELS[locale].projects;
 
   const getGridSpanClass = (idx: number) => {
@@ -398,7 +559,10 @@ export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <span className="folio-index-label">{t.sectionIndex}</span>
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="folio-index-label">{t.sectionIndex}</span>
+          </div>
           <h2 id="projects-heading" className="folio-section-heading">
             {t.heading}
           </h2>
@@ -408,105 +572,16 @@ export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
         </div>
 
         <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12">
-          {PROJECTS_DATA.map((project, idx) => {
-            const isFullWidth = idx === 4;
-
-            return (
-              <motion.article
-                key={project.id}
-                id={`project-${project.id}`}
-                initial={
-                  shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 18 }
-                }
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.45, delay: idx * 0.05 }}
-                className={`folio-card group flex h-full flex-col justify-between transition-transform duration-200 hover:-translate-y-1 ${getGridSpanClass(
-                  idx
-                )}`}
-              >
-                <div
-                  className={
-                    isFullWidth
-                      ? 'grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center'
-                      : ''
-                  }
-                >
-                  <div className={isFullWidth ? 'lg:col-span-6' : ''}>
-                    <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-3">
-                      <span className="font-mono text-xs font-bold text-folio-vermilion">
-                        {project.indexNumber}
-                      </span>
-                      <span className="font-mono text-[11px] text-folio-spruce">
-                        {project.technologies[0]?.name}
-                      </span>
-                    </div>
-
-                    <div className="mt-4">
-                      <h3 className="font-serif text-2xl font-bold leading-snug text-folio-ink group-hover:text-folio-vermilion sm:text-3xl">
-                        {project.title}
-                      </h3>
-                      <p className="mt-1 font-serif text-sm italic text-folio-muted lg:min-h-[2.5rem]">
-                        {project.subtitle[locale]}
-                      </p>
-                    </div>
-
-                    {!isFullWidth && (
-                      <div className="folio-card-inner my-4 h-44 w-full overflow-hidden !bg-folio-bg p-2">
-                        <ProjectVisualPreview projectId={project.id} />
-                      </div>
-                    )}
-
-                    <p className="text-sm leading-relaxed text-folio-ink sm:text-base">
-                      {project.description[locale]}
-                    </p>
-                  </div>
-
-                  {isFullWidth && (
-                    <div className="folio-card-inner h-48 w-full overflow-hidden !bg-folio-bg p-3 lg:col-span-6">
-                      <ProjectVisualPreview projectId={project.id} />
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-6">
-                  <div className="mb-2 flex items-center gap-1.5 font-mono text-[11px] font-semibold text-folio-spruce">
-                    <Layers className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>{t.techLabel}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {project.technologies.map((tech) => (
-                      <span key={tech.name} className="folio-chip">
-                        {tech.name}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 flex items-center justify-between gap-3 border-t border-folio-border pt-4">
-                    <a
-                      href={project.repoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="min-w-0 flex-1 truncate font-mono text-xs text-folio-spruce underline hover:text-folio-vermilion"
-                    >
-                      {project.repoUrl}
-                    </a>
-
-                    <a
-                      href={project.repoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="folio-btn-compact shrink-0"
-                    >
-                      <FolderGit2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>{t.repoLabel}</span>
-                      <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                    </a>
-                  </div>
-                </div>
-              </motion.article>
-            );
-          })}
+          {PROJECTS_DATA.map((project, idx) => (
+            <TiltProjectCard
+              key={project.id}
+              project={project}
+              locale={locale}
+              idx={idx}
+              isFullWidth={idx === 4}
+              gridSpanClass={getGridSpanClass(idx)}
+            />
+          ))}
         </div>
       </div>
     </section>

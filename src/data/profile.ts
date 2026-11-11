@@ -77,6 +77,7 @@ export const UI_LABELS = {
       ctaProjects: 'Xem dự án',
       ctaContact: 'Liên hệ',
       indexHeader: '5 DỰ ÁN TIÊU BIỂU',
+      statusAvailable: 'Sẵn sàng nhận dự án thiết kế',
     },
     about: {
       sectionIndex: '02 / THÔNG TIN CƠ BẢN',
@@ -151,6 +152,7 @@ export const UI_LABELS = {
       ctaProjects: 'View projects',
       ctaContact: 'Contact me',
       indexHeader: 'TOP 5 PROJECTS',
+      statusAvailable: 'Available for freelance design',
     },
     about: {
       sectionIndex: '02 / BASIC PROFILE',

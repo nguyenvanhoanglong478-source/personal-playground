@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Briefcase, Check } from 'lucide-react';
+import { Briefcase, Check, Sparkles } from 'lucide-react';
 import { Locale, UI_LABELS } from '../data/profile';
 import { EXPERIENCE_DATA } from '../data/experience';
 
@@ -20,7 +20,10 @@ export const Experience: React.FC<ExperienceProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <span className="folio-index-label">{t.sectionIndex}</span>
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="folio-index-label">{t.sectionIndex}</span>
+          </div>
           <h2 id="experience-heading" className="folio-section-heading">
             {t.heading}
           </h2>
@@ -33,13 +36,11 @@ export const Experience: React.FC<ExperienceProps> = ({ locale }) => {
           {EXPERIENCE_DATA.map((exp, idx) => (
             <motion.article
               key={exp.id}
-              initial={
-                shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 18 }
-              }
+              initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 22 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.45, delay: idx * 0.06 }}
-              className="folio-card flex h-full flex-col justify-between"
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.45, delay: idx * 0.08, ease: [0.22, 1, 0.36, 1] }}
+              className="folio-card flex h-full flex-col justify-between backdrop-blur-xl transition-all duration-300 hover:border-folio-vermilion/50 hover:shadow-2xl"
             >
               <div>
                 <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-3">
@@ -60,7 +61,7 @@ export const Experience: React.FC<ExperienceProps> = ({ locale }) => {
                   {exp.summary[locale]}
                 </p>
 
-                <ul className="mt-4 space-y-2">
+                <ul className="mt-5 space-y-2.5">
                   {exp.highlights[locale].map((point) => (
                     <li
                       key={point}

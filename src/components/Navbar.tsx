@@ -43,8 +43,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           aria-label="Long Hoàng"
         >
           <span className="google-border-frame flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] p-[1.5px] transition-transform duration-300 group-hover:scale-105">
-            <span className="flex h-full w-full items-center justify-center rounded-[calc(var(--radius-control)-1.5px)] bg-folio-bg font-serif text-lg font-bold">
-              <span className="google-text-gradient">L</span>
+            <span className="flex h-full w-full items-center justify-center rounded-[calc(var(--radius-control)-1.5px)] bg-folio-bg font-serif text-lg font-bold text-folio-ink">
+              <span>L</span>
             </span>
           </span>
           <div className="flex min-w-0 flex-col">
@@ -70,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 aria-current={isActive ? 'page' : undefined}
                 className={`relative whitespace-nowrap rounded-[var(--radius-control)] px-2.5 py-2 font-mono text-xs transition-all duration-200 hover:-translate-y-0.5 ${
                   isActive
-                    ? 'bg-folio-elevated font-semibold text-folio-accent'
+                    ? 'bg-folio-elevated font-semibold text-folio-ink'
                     : 'text-folio-muted hover:text-folio-ink'
                 }`}
               >
@@ -95,7 +95,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               locale === 'vi' ? 'Switch language to English' : 'Chuyển sang Tiếng Việt'
             }
           >
-            <Globe className="h-3.5 w-3.5 text-folio-accent" aria-hidden="true" />
+            <Globe className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
             <span className="sm:hidden">{locale === 'vi' ? 'VI' : 'EN'}</span>
             <span className="hidden sm:inline">
               {locale === 'vi' ? 'VI / EN' : 'EN / VI'}
@@ -114,12 +114,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             {theme === 'dark' ? (
               <>
-                <Sun className="h-3.5 w-3.5 text-folio-gyellow" aria-hidden="true" />
+                <Sun className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
                 <span className="hidden sm:inline">{t.themeLight}</span>
               </>
             ) : (
               <>
-                <Moon className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
+                <Moon className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
                 <span className="hidden sm:inline">{t.themeDark}</span>
               </>
             )}
@@ -152,7 +152,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={handleNavClick}
                   className={`flex min-h-[44px] items-center justify-between rounded-[var(--radius-control)] border px-4 py-2 font-mono text-sm ${
                     isActive
-                      ? 'border-folio-accent bg-folio-surface font-semibold text-folio-accent'
+                      ? 'border-folio-strong bg-folio-surface font-semibold text-folio-ink'
                       : 'border-folio-border bg-folio-elevated text-folio-ink'
                   }`}
                 >

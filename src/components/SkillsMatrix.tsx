@@ -18,13 +18,13 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
   const getCategoryIcon = (cat: SkillCategory) => {
     switch (cat) {
       case 'language':
-        return <Code2 className="h-4 w-4 text-folio-accent" aria-hidden="true" />;
+        return <Code2 className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
       case 'framework':
-        return <Cpu className="h-4 w-4 text-folio-secondary" aria-hidden="true" />;
+        return <Cpu className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
       case 'tool':
-        return <Wrench className="h-4 w-4 text-folio-gpurple" aria-hidden="true" />;
+        return <Wrench className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
       case 'deploy':
-        return <Rocket className="h-4 w-4 text-folio-gcoral" aria-hidden="true" />;
+        return <Rocket className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
     }
   };
 
@@ -38,8 +38,8 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
-            <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
+            <Sparkles className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
             <span className="folio-index-label">{t.sectionIndex}</span>
           </div>
           <h2 id="skills-heading" className="folio-section-heading">
@@ -109,7 +109,7 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
                         {item.projects.map((projName) => (
                           <span
                             key={projName}
-                            className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-surface px-2 py-0.5 font-mono text-[10px] font-medium text-folio-accent"
+                            className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-surface px-2 py-0.5 font-mono text-[10px] font-medium text-folio-ink"
                           >
                             {projName}
                           </span>

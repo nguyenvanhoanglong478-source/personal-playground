@@ -25,8 +25,8 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
-            <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
+            <Sparkles className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
             <span className="folio-index-label">{t.sectionIndex}</span>
           </div>
           <h2 id="contact-heading" className="folio-section-heading">
@@ -47,12 +47,12 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
           >
             <div className="folio-card google-gradient-hover-border flex flex-1 flex-col justify-center">
               <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
-                <Mail className="h-4 w-4 text-folio-accent" aria-hidden="true" />
+                <Mail className="h-4 w-4 text-folio-ink" aria-hidden="true" />
                 <span>EMAIL</span>
               </div>
               <a
                 href={`mailto:${PROFILE_DATA.contacts.email}`}
-                className="mt-2 inline-flex min-h-[36px] items-center break-all font-mono text-sm font-semibold text-folio-ink underline transition-colors hover:text-folio-accent"
+                className="mt-2 inline-flex min-h-[36px] items-center break-all font-mono text-sm font-semibold text-folio-ink underline transition-colors hover:text-folio-muted"
               >
                 {PROFILE_DATA.contacts.email}
               </a>
@@ -60,7 +60,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
 
             <div className="folio-card google-gradient-hover-border flex flex-1 flex-col justify-center">
               <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
-                <Github className="h-4 w-4 text-folio-secondary" aria-hidden="true" />
+                <Github className="h-4 w-4 text-folio-ink" aria-hidden="true" />
                 <span>GITHUB</span>
               </div>
               <a
@@ -72,7 +72,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                 <span className="google-btn-github-label truncate">
                   {PROFILE_DATA.contacts.githubUrl}
                 </span>
-                <ExternalLink className="relative z-10 h-3.5 w-3.5 shrink-0 text-folio-gpurple transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 group-hover/btn:text-white" aria-hidden="true" />
+                <ExternalLink className="relative z-10 h-3.5 w-3.5 shrink-0 text-folio-ink transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 group-hover/btn:text-white" aria-hidden="true" />
               </a>
             </div>
           </motion.div>

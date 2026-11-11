@@ -20,8 +20,8 @@ export const Experience: React.FC<ExperienceProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
-            <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
+            <Sparkles className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
             <span className="folio-index-label">{t.sectionIndex}</span>
           </div>
           <h2 id="experience-heading" className="folio-section-heading">
@@ -44,11 +44,11 @@ export const Experience: React.FC<ExperienceProps> = ({ locale }) => {
             >
               <div>
                 <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-3">
-                  <span className="font-mono text-xs font-bold text-folio-accent">
+                  <span className="font-mono text-xs font-bold text-folio-ink">
                     {exp.index}
                   </span>
-                  <span className="inline-flex items-center gap-1.5 font-mono text-xs font-medium text-folio-secondary">
-                    <Briefcase className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 font-mono text-xs font-medium text-folio-muted">
+                    <Briefcase className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
                     <span>{exp.roleTag[locale]}</span>
                   </span>
                 </div>
@@ -68,7 +68,7 @@ export const Experience: React.FC<ExperienceProps> = ({ locale }) => {
                       className="flex items-start gap-2.5 text-sm leading-relaxed text-folio-ink"
                     >
                       <Check
-                        className="mt-1 h-4 w-4 shrink-0 text-folio-accent"
+                        className="mt-1 h-4 w-4 shrink-0 text-folio-muted"
                         aria-hidden="true"
                       />
                       <span>{point}</span>

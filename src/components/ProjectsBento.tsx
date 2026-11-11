@@ -36,10 +36,10 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           stroke="var(--border-strong)"
           strokeWidth="1.5"
         />
-        <text x="28" y="42" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-primary)">
+        <text x="28" y="42" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-primary)">
           06:00 → 22:00 / MỤC TIÊU: 100M VND
         </text>
-        <text x="412" y="42" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-secondary)">
+        <text x="412" y="42" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-secondary)">
           PWA OFFLINE
         </text>
 
@@ -119,7 +119,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           CameraX Capture
         </text>
         <rect x="32" y="128" width="111" height="22" rx="5" fill="var(--bg-elevated)" />
-        <text x="42" y="143" fontFamily="var(--font-mono)" fontSize="9" fill="var(--accent-secondary)">
+        <text x="42" y="143" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
           Room SQLite DB
         </text>
         <text x="38" y="174" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
@@ -139,7 +139,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           stroke="var(--border-strong)"
           strokeWidth="1.5"
         />
-        <text x="206" y="50" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-primary)">
+        <text x="206" y="50" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-primary)">
           Jetpack Glance
         </text>
         <text x="206" y="68" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
@@ -156,10 +156,10 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           height="70"
           rx="8"
           fill="var(--bg-surface)"
-          stroke="var(--accent-secondary)"
+          stroke="url(#stGrad)"
           strokeWidth="1.5"
         />
-        <text x="206" y="136" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-secondary)">
+        <text x="206" y="136" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-primary)">
           Jetpack Compose
         </text>
         <text x="206" y="154" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
@@ -197,15 +197,15 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           stroke="var(--border-strong)"
           strokeWidth="1.5"
         />
-        <text x="28" y="38" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-primary)">
+        <text x="28" y="38" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-primary)">
           TMS MINI v2.0 · FLEET DISPATCH
         </text>
 
         <rect x="28" y="52" width="120" height="88" rx="6" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
-        <text x="38" y="72" fontFamily="var(--font-mono)" fontSize="9" fill="var(--accent-secondary)">
+        <text x="38" y="72" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-primary)">
           DRIVING
         </text>
-        <text x="38" y="90" fontFamily="var(--font-mono)" fontSize="9" fill="var(--google-coral)">
+        <text x="38" y="90" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
           PAUSE / ISSUE
         </text>
         <text x="38" y="108" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
@@ -258,19 +258,19 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           strokeWidth="1.5"
         />
         <rect x="28" y="34" width="132" height="112" rx="6" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
-        <text x="38" y="54" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--accent-primary)">
+        <text x="38" y="54" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--text-primary)">
           EVENT STREAM
         </text>
         <text x="38" y="74" fontFamily="var(--font-mono)" fontSize="8.5" fill="currentColor">
           AGENT_SPAWN
         </text>
-        <text x="38" y="92" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--accent-secondary)">
+        <text x="38" y="92" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
           TOOL_CALL
         </text>
         <text x="38" y="110" fontFamily="var(--font-mono)" fontSize="8.5" fill="currentColor">
           SUBAGENT_MSG
         </text>
-        <text x="38" y="128" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--google-coral)">
+        <text x="38" y="128" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
           APPROVAL_GATE
         </text>
 
@@ -292,8 +292,8 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           CRITIC
         </text>
 
-        <rect x="388" y="34" width="144" height="112" rx="6" fill="var(--bg-elevated)" stroke="var(--accent-secondary)" strokeWidth="1.2" />
-        <text x="400" y="54" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--accent-secondary)">
+        <rect x="388" y="34" width="144" height="112" rx="6" fill="var(--bg-elevated)" stroke="url(#amGrad)" strokeWidth="1.2" />
+        <text x="400" y="54" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--text-primary)">
           CONTEXT GAUGE
         </text>
         <rect x="400" y="68" width="118" height="10" rx="3" fill="var(--bg-surface)" stroke="var(--border-strong)" strokeWidth="1" />
@@ -332,7 +332,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         stroke="var(--border-strong)"
         strokeWidth="1.5"
       />
-      <text x="26" y="46" fontFamily="var(--font-mono)" fontSize="10" fill="var(--accent-primary)">
+      <text x="26" y="46" fontFamily="var(--font-mono)" fontSize="10" fill="var(--text-primary)">
         ArticleReader.jsx
       </text>
       <line x1="26" y1="62" x2="155" y2="62" stroke="currentColor" strokeWidth="2" />
@@ -372,7 +372,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
       <text x="242" y="78" fontFamily="var(--font-mono)" fontSize="9.5" fill="var(--text-secondary)">
         Durable Object:
       </text>
-      <text x="242" y="94" fontFamily="var(--font-mono)" fontSize="10" fill="var(--accent-secondary)">
+      <text x="242" y="94" fontFamily="var(--font-mono)" fontSize="10" fill="var(--text-primary)">
         GeminiProxy
       </text>
       <text x="242" y="118" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
@@ -400,7 +400,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         stroke="var(--border-strong)"
         strokeWidth="1.5"
       />
-      <text x="432" y="68" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-primary)">
+      <text x="432" y="68" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-primary)">
         GEMINI API
       </text>
       <text x="432" y="88" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
@@ -500,16 +500,16 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
         >
           <div className={isFullWidth ? 'lg:col-span-6' : ''}>
             <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-3">
-              <span className="font-mono text-xs font-bold text-folio-accent">
+              <span className="font-mono text-xs font-bold text-folio-ink">
                 {project.indexNumber}
               </span>
-              <span className="font-mono text-[11px] font-semibold text-folio-secondary">
+              <span className="font-mono text-[11px] font-semibold text-folio-muted">
                 {project.technologies[0]?.name}
               </span>
             </div>
 
             <div className="mt-4">
-              <h3 className="font-serif text-2xl font-bold leading-snug text-folio-ink transition-colors group-hover:text-folio-accent sm:text-3xl">
+              <h3 className="font-serif text-2xl font-bold leading-snug text-folio-ink sm:text-3xl">
                 {project.title}
               </h3>
               <p className="mt-1 font-serif text-sm italic text-folio-muted lg:min-h-[2.5rem]">
@@ -536,7 +536,7 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
         </div>
 
         <div className="relative z-10 mt-6">
-          <div className="mb-2 flex items-center gap-1.5 font-mono text-[11px] font-semibold text-folio-secondary">
+          <div className="mb-2 flex items-center gap-1.5 font-mono text-[11px] font-semibold text-folio-muted">
             <Layers className="h-3.5 w-3.5" aria-hidden="true" />
             <span>{t.techLabel}</span>
           </div>
@@ -553,7 +553,7 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
               href={project.repoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="min-w-0 flex-1 truncate font-mono text-xs text-folio-accent underline transition-colors hover:text-folio-gpurple"
+              className="min-w-0 flex-1 truncate font-mono text-xs text-folio-ink underline transition-colors hover:text-folio-muted"
             >
               {project.repoUrl}
             </a>
@@ -564,9 +564,9 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
               rel="noopener noreferrer"
               className="google-btn-github group/btn shrink-0"
             >
-              <FolderGit2 className="relative z-10 h-3.5 w-3.5 text-folio-accent transition-colors group-hover/btn:text-white" aria-hidden="true" />
+              <FolderGit2 className="relative z-10 h-3.5 w-3.5 text-folio-ink transition-colors group-hover/btn:text-white" aria-hidden="true" />
               <span className="google-btn-github-label">{t.repoLabel}</span>
-              <ExternalLink className="relative z-10 h-3 w-3 text-folio-gpurple transition-all duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 group-hover/btn:text-white" aria-hidden="true" />
+              <ExternalLink className="relative z-10 h-3 w-3 text-folio-ink transition-all duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 group-hover/btn:text-white" aria-hidden="true" />
             </a>
           </div>
         </div>
@@ -594,8 +594,8 @@ export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
-            <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
+            <Sparkles className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
             <span className="folio-index-label">{t.sectionIndex}</span>
           </div>
           <h2 id="projects-heading" className="folio-section-heading">

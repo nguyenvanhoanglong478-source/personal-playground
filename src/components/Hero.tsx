@@ -44,12 +44,12 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
 
       <div className="folio-container relative z-10">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-folio-border pb-4">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
-            <BookMarked className="h-4 w-4" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
+            <BookMarked className="h-4 w-4 text-folio-ink" aria-hidden="true" />
             <span>{t.folioTag}</span>
           </div>
 
-          <div className="flex items-center gap-2 rounded-full border border-folio-secondary/35 bg-folio-secondary/10 px-3 py-1 font-mono text-[11px] font-semibold text-folio-secondary">
+          <div className="flex items-center gap-2 rounded-full border border-folio-border bg-folio-surface px-3 py-1 font-mono text-[11px] font-semibold text-folio-ink">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-folio-ggreen opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-folio-ggreen" />
@@ -62,7 +62,7 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
           <div className="lg:col-span-7">
             <div className="mb-4 flex flex-wrap items-center gap-3">
               <span className="folio-chip flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
+                <Sparkles className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
                 <span>{PROFILE_DATA.role[locale]}</span>
               </span>
               <span className="folio-chip">
@@ -78,7 +78,7 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
                 initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="google-text-gradient block"
+                className="block text-folio-ink"
               >
                 {PROFILE_DATA.name}.
               </motion.span>
@@ -133,7 +133,7 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
               </a>
 
               <a href="#contact" className="folio-btn-secondary">
-                <Mail className="h-4 w-4 text-folio-accent" aria-hidden="true" />
+                <Mail className="h-4 w-4 text-folio-ink" aria-hidden="true" />
                 <span>{t.ctaContact}</span>
               </a>
             </motion.div>
@@ -185,7 +185,7 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
                   </div>
 
                   <div className="mt-4 border-t border-folio-border pt-3">
-                    <div className="mb-2 font-mono text-[11px] font-semibold text-folio-accent">
+                    <div className="mb-2 font-mono text-[11px] font-semibold text-folio-muted">
                       {t.indexHeader}
                     </div>
                     <div className="flex flex-wrap gap-1.5">
@@ -193,7 +193,7 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
                         <a
                           key={proj.id}
                           href={`#project-${proj.id}`}
-                          className="rounded-md border border-folio-border bg-folio-elevated px-2.5 py-1 font-mono text-[11px] text-folio-ink transition-colors hover:border-folio-accent hover:text-folio-accent"
+                          className="rounded-md border border-folio-border bg-folio-elevated px-2.5 py-1 font-mono text-[11px] text-folio-ink transition-colors hover:border-folio-gblue"
                         >
                           {proj.title}
                         </a>

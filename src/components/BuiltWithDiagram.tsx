@@ -58,8 +58,8 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
-            <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
+            <Sparkles className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
             <span className="folio-index-label">{t.sectionIndex}</span>
           </div>
           <h2 id="stack-heading" className="folio-section-heading">
@@ -74,7 +74,7 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
           <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-ink">
               <GitBranch
-                className="h-4 w-4 shrink-0 text-folio-accent"
+                className="h-4 w-4 shrink-0 text-folio-ink"
                 aria-hidden="true"
               />
               <span>{t.pipelineTitle}</span>
@@ -89,7 +89,7 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
               <div key={node.step} className="flex items-stretch">
                 <div className="folio-card-inner flex w-full flex-col justify-between">
                   <div>
-                    <span className="font-mono text-[10px] font-bold text-folio-accent">
+                    <span className="font-mono text-[10px] font-bold text-folio-ink">
                       {node.step}
                     </span>
                     <h3 className="mt-1 font-serif text-lg font-bold text-folio-ink">
@@ -97,13 +97,13 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
                     </h3>
                     <p className="mt-1 text-xs text-folio-muted">{node.sub}</p>
                   </div>
-                  <div className="mt-3 border-t border-folio-border pt-2 font-mono text-[11px] text-folio-secondary">
+                  <div className="mt-3 border-t border-folio-border pt-2 font-mono text-[11px] text-folio-muted">
                     {node.version}
                   </div>
                 </div>
                 {idx < pipelineSteps.length - 1 && (
                   <div
-                    className="hidden items-center justify-center pl-2 text-folio-accent lg:flex"
+                    className="hidden items-center justify-center pl-2 text-folio-muted lg:flex"
                     aria-hidden="true"
                   >
                     <ArrowRight className="h-4 w-4" />
@@ -128,14 +128,14 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <CheckCircle2
-                      className="h-4 w-4 shrink-0 text-folio-secondary"
+                      className="h-4 w-4 shrink-0 text-folio-ink"
                       aria-hidden="true"
                     />
                     <span className="font-mono text-sm font-bold text-folio-ink">
                       {pkg.displayName}
                     </span>
                   </div>
-                  <span className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated px-2 py-0.5 font-mono text-xs font-semibold text-folio-accent">
+                  <span className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated px-2 py-0.5 font-mono text-xs font-semibold text-folio-ink">
                     {pkg.version}
                   </span>
                 </div>

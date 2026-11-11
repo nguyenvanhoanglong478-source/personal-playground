@@ -25,13 +25,13 @@ Cập nhật lần cuối: 2026-11-11
 - **Thẻ 5 Dự án (Bento Grid)**: Hiệu ứng 3D Tilt nghiêng theo góc di chuột, vệt sáng radial spotlight, nút bấm GitHub tương tác mượt mà.
 - **Nền động & Scroll Reveal**: Canvas 2D 60fps, chuyển động `whileInView` cho các phân khu, hỗ trợ `prefers-reduced-motion`.
 
-## 3. Tái Thiết Kế Bảng Màu Google Modern Gradient (Light & Dark Mode)
+## 3. Bảng Màu Google Modern Gradient & Chữ Đơn Sắc Trung Tính (Light & Dark Mode)
 
-- **Dải màu Google Signature**: Tích hợp hệ thống token màu `#4285F4`, `#9B72CB`, `#D96570`, `#EA4335`, `#FBBC04`, `#34A853` trong `src/index.css` và `tailwind.config.js`.
-- **Chế độ Sáng (Google Workspace / Material You)**: Nền `#F8F9FA`, bề mặt `#FFFFFF` kính mờ + `#F0F4F9`, chữ `#1F1F1F` / `#444746`, quầng nền Pastel Gradient Google nhẹ và bóng mềm đa sắc.
-- **Chế độ Tối (Google Gemini Dark)**: Nền `#131314`, bề mặt `#1E1F20` kính mờ + `#282A2C`, chữ `#E3E3E3` / `#C4C7C5`, hào quang Google Aura Mesh Gradient phía sau.
-- **Ứng dụng Chuyển sắc & Chuyển đổi Mượt mà**:
-  - Text Gradient cho tên `Long Hoàng`, tiêu đề các phân khu và các nút liên kết GitHub.
-  - Viền Gradient Google cho ảnh đại diện ở Hero và About, cùng viền phát quang khi hover 5 thẻ dự án Bento.
+- **Dải màu Google Signature**: Giữ hệ thống token `#4285F4`, `#9B72CB`, `#D96570`, `#EA4335`, `#FBBC04`, `#34A853` trong `src/index.css` và `tailwind.config.js` dành riêng cho nền hào quang, viền phát quang, hiệu ứng hover và nền nút bấm.
+- **Chế độ Sáng (Light Mode)**: Nền `#F8F9FA`, bề mặt kính mờ + `#F0F4F9`, toàn bộ chữ đơn sắc đen tuyền `#111111` (tiêu đề) và xám trung tính `#4B4E53` (nội dung).
+- **Chế độ Tối (Dark Mode)**: Nền `#131314`, bề mặt kính mờ trên `#1E1F20` + `#282A2C`, toàn bộ chữ đơn sắc trắng ngà `#F5F5F7` (tiêu đề) và xám nhạt `#C4C7C5` (nội dung).
+- **Chữ Đơn Sắc Tuyệt Đối**:
+  - Loại bỏ toàn bộ Text Gradient và chữ màu ở tất cả component (`Navbar`, `Hero`, `About`, `Experience`, `ProjectsBento`, `SkillsMatrix`, `BuiltWithDiagram`, `Contact`) kể cả nhãn `<text>` trong SVG preview dự án.
+  - Giữ dải Google Gradient trên nền **Google Aura Mesh**, viền phát quang của ảnh đại diện, viền/spotlight khi hover thẻ dự án Bento, gạch chân mục nav đang chọn và nền nút bấm chính / nút GitHub.
   - Chuyển màu mượt mà `360ms` khi đổi giữa chế độ Sáng và Tối, đồng bộ `<meta name="theme-color">`, `public/favicon.svg` và Canvas 2D.
   - Đã tinh chỉnh responsive `Navbar.tsx` để không cắt chữ hoặc đẩy nút menu trên màn hình 360px–375px.

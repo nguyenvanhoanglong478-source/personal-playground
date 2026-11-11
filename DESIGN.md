@@ -22,25 +22,24 @@ Toàn bộ token màu được khai báo tập trung tại `:root`, `html[data-t
 - `--google-red`: `#EA4335`
 - `--google-yellow`: `#FBBC04`
 - `--google-green`: `#34A853`
-- Áp dụng Text Gradient cho tên **Long Hoàng**, tiêu đề chính các phân khu, viền ảnh đại diện và nút liên kết **GitHub**, kết hợp hào quang **Google Aura Mesh Gradient** mờ ảo ở nền.
+- Áp dụng **Google Aura Mesh Gradient** cho nền trang, viền phát quang (ảnh đại diện ở Hero/About, gạch chân mục điều hướng, huy hiệu monogram), hiệu ứng spotlight/viền khi di chuột trên thẻ dự án và nền của các nút bấm chính / nút GitHub.
+- Toàn bộ hệ thống chữ viết (tên **Long Hoàng**, tiêu đề chính, tiêu đề thẻ dự án, mô tả, nhãn, liên kết) chuyển hoàn toàn về **màu đơn sắc trung tính**, tuyệt đối không dùng chữ màu hoặc Text Gradient.
 
 ### Chế độ Sáng (Google Workspace / Material You)
 - `--bg-primary`: `#F8F9FA` kết hợp các quầng Pastel Mesh Gradient nhẹ ở nền
-- `--bg-surface`: `rgba(255, 255, 255, 0.86)` kính mờ kèm đổ bóng mềm nhiều sắc độ
+- `--bg-surface`: `rgba(255, 255, 255, 0.88)` kính mờ kèm đổ bóng mềm nhiều sắc độ
 - `--bg-elevated`: `#F0F4F9`
-- `--text-primary`: `#1F1F1F` (tiêu đề)
-- `--text-secondary`: `#444746` (nội dung)
-- `--accent-primary`: `#1A73E8` (chuẩn tương phản WCAG AA trên nền sáng)
-- `--accent-secondary`: `#188038`
+- `--text-primary`: `#111111` (đen tuyền cho tiêu đề, tên, từ khóa)
+- `--text-secondary`: `#4B4E53` (xám trung tính cho nội dung)
+- `--text-faint`: `#686C73` (chú giải phụ)
 
 ### Chế độ Tối (Google Gemini Dark)
 - `--bg-primary`: `#131314` kết hợp quầng sáng Mesh Gradient Google phía sau
-- `--bg-surface`: `rgba(30, 31, 32, 0.80)` kính mờ trên nền `#1E1F20`
+- `--bg-surface`: `rgba(30, 31, 32, 0.82)` kính mờ trên nền `#1E1F20`
 - `--bg-elevated`: `#282A2C`
-- `--text-primary`: `#E3E3E3` (tiêu đề)
-- `--text-secondary`: `#C4C7C5` (nội dung)
-- `--accent-primary`: `#8AB4F8`
-- `--accent-secondary`: `#81C995`
+- `--text-primary`: `#F5F5F7` (trắng ngà tinh khiết cho tiêu đề, tên, từ khóa)
+- `--text-secondary`: `#C4C7C5` (xám nhạt cho nội dung)
+- `--text-faint`: `#9AA0A6` (chú giải phụ)
 
 ## 4. Chuyển Động & Kiểm Chứng
 

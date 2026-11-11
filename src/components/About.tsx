@@ -19,8 +19,8 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
-            <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
+            <Sparkles className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
             <span className="folio-index-label">{t.sectionIndex}</span>
           </div>
           <h2 id="about-heading" className="folio-section-heading">
@@ -69,7 +69,7 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
                   <div className="font-mono text-[10px] uppercase tracking-wider text-folio-faint">
                     {t.roleLabel}
                   </div>
-                  <div className="mt-1 font-serif text-sm font-bold text-folio-accent">
+                  <div className="mt-1 font-serif text-sm font-bold text-folio-ink">
                     {PROFILE_DATA.role[locale]}
                   </div>
                 </div>
@@ -86,14 +86,14 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
           >
             <div className="folio-card google-gradient-hover-border flex-1 space-y-5">
               <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-folio-muted">
-                <UserCheck className="h-4 w-4 text-folio-accent" aria-hidden="true" />
+                <UserCheck className="h-4 w-4 text-folio-ink" aria-hidden="true" />
                 <span className="font-semibold text-folio-ink">
                   {PROFILE_DATA.name}
                 </span>
                 <span>·</span>
                 <span>{PROFILE_DATA.birthYear}</span>
                 <span>·</span>
-                <span className="font-semibold text-folio-accent">
+                <span className="font-semibold text-folio-ink">
                   {PROFILE_DATA.role[locale]}
                 </span>
               </div>
@@ -108,11 +108,11 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
             </div>
 
             <div className="folio-card google-gradient-hover-border">
-              <div className="mb-2 flex items-center gap-2 font-mono text-xs font-semibold text-folio-secondary">
-                <Compass className="h-4 w-4" aria-hidden="true" />
+              <div className="mb-2 flex items-center gap-2 font-mono text-xs font-semibold text-folio-ink">
+                <Compass className="h-4 w-4 text-folio-ink" aria-hidden="true" />
                 <span>{t.methodTitle}</span>
               </div>
-              <p className="text-sm leading-relaxed text-folio-ink sm:text-base">
+              <p className="text-sm leading-relaxed text-folio-muted sm:text-base">
                 {PROFILE_DATA.methodSummary[locale]}
               </p>
             </div>

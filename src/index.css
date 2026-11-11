@@ -31,21 +31,20 @@
 :root,
 html[data-theme='light'] {
   --bg-primary: #F8F9FA;
-  --bg-surface: rgba(255, 255, 255, 0.86);
+  --bg-surface: rgba(255, 255, 255, 0.88);
   --bg-elevated: #F0F4F9;
-  --bg-glass: rgba(255, 255, 255, 0.78);
-  --text-primary: #1F1F1F;
-  --text-secondary: #444746;
-  --text-faint: #5F6368;
-  --accent-primary: #1A73E8;
+  --bg-glass: rgba(255, 255, 255, 0.80);
+  --text-primary: #111111;
+  --text-secondary: #4B4E53;
+  --text-faint: #686C73;
+  --accent-primary: #111111;
   --accent-primary-contrast: #FFFFFF;
-  --accent-secondary: #188038;
+  --accent-secondary: #4B4E53;
   --accent-glow: rgba(66, 133, 244, 0.24);
   --border-subtle: rgba(68, 71, 70, 0.14);
   --border-strong: rgba(66, 133, 244, 0.34);
   --shadow-soft: 0 4px 24px -4px rgba(66, 133, 244, 0.09), 0 2px 10px -2px rgba(155, 114, 203, 0.06);
   --shadow-glow: 0 10px 32px -6px rgba(66, 133, 244, 0.22), 0 4px 18px -4px rgba(217, 101, 112, 0.16);
-  --google-gradient-text: linear-gradient(115deg, #1A73E8 0%, #7C4DFF 45%, #D93025 82%, #B06000 100%);
   --mesh-lobe-blue: rgba(66, 133, 244, 0.14);
   --mesh-lobe-purple: rgba(155, 114, 203, 0.14);
   --mesh-lobe-coral: rgba(234, 67, 53, 0.10);
@@ -53,26 +52,25 @@ html[data-theme='light'] {
   --mesh-lobe-green: rgba(52, 168, 83, 0.10);
   --spotlight-blue: rgba(66, 133, 244, 0.13);
   --spotlight-purple: rgba(155, 114, 203, 0.10);
-  --overlay-scrim: rgba(19, 19, 20, 0.78);
+  --overlay-scrim: rgba(19, 19, 20, 0.80);
 }
 
 html[data-theme='dark'] {
   --bg-primary: #131314;
-  --bg-surface: rgba(30, 31, 32, 0.80);
+  --bg-surface: rgba(30, 31, 32, 0.82);
   --bg-elevated: #282A2C;
-  --bg-glass: rgba(30, 31, 32, 0.72);
-  --text-primary: #E3E3E3;
+  --bg-glass: rgba(30, 31, 32, 0.74);
+  --text-primary: #F5F5F7;
   --text-secondary: #C4C7C5;
-  --text-faint: #8E918F;
-  --accent-primary: #8AB4F8;
+  --text-faint: #9AA0A6;
+  --accent-primary: #F5F5F7;
   --accent-primary-contrast: #131314;
-  --accent-secondary: #81C995;
+  --accent-secondary: #C4C7C5;
   --accent-glow: rgba(66, 133, 244, 0.32);
   --border-subtle: rgba(227, 227, 227, 0.10);
   --border-strong: rgba(138, 180, 248, 0.34);
   --shadow-soft: 0 10px 34px -6px rgba(0, 0, 0, 0.55), 0 0 24px -8px rgba(66, 133, 244, 0.14);
   --shadow-glow: 0 12px 36px -6px rgba(66, 133, 244, 0.28), 0 6px 22px -4px rgba(155, 114, 203, 0.24);
-  --google-gradient-text: linear-gradient(115deg, #4285F4 0%, #9B72CB 36%, #D96570 72%, #FBBC04 100%);
   --mesh-lobe-blue: rgba(66, 133, 244, 0.17);
   --mesh-lobe-purple: rgba(155, 114, 203, 0.16);
   --mesh-lobe-coral: rgba(217, 101, 112, 0.13);
@@ -80,7 +78,7 @@ html[data-theme='dark'] {
   --mesh-lobe-green: rgba(52, 168, 83, 0.11);
   --spotlight-blue: rgba(66, 133, 244, 0.18);
   --spotlight-purple: rgba(155, 114, 203, 0.14);
-  --overlay-scrim: rgba(19, 19, 20, 0.84);
+  --overlay-scrim: rgba(19, 19, 20, 0.85);
 }
 
 @media (min-width: 1024px) {
@@ -112,7 +110,7 @@ h3,
 }
 
 *:focus-visible {
-  outline: 2px solid var(--accent-primary);
+  outline: 2px solid var(--google-blue);
   outline-offset: 3px;
 }
 
@@ -133,15 +131,6 @@ h3,
     radial-gradient(36% 32% at 22% 76%, var(--mesh-lobe-green) 0%, transparent 72%),
     radial-gradient(34% 30% at 52% 44%, var(--mesh-lobe-yellow) 0%, transparent 74%);
   transition: opacity 360ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.google-text-gradient {
-  background-image: var(--google-gradient-text);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  padding-top: 0.08em;
-  padding-bottom: 0.12em;
 }
 
 .google-border-frame {
@@ -214,7 +203,7 @@ h3,
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.05em;
-  color: var(--accent-primary);
+  color: var(--text-secondary);
   transition: color 360ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -222,15 +211,11 @@ h3,
   margin-top: 0.5rem;
   font-family: var(--font-serif);
   font-size: 2rem;
-  line-height: 1.2;
+  line-height: 1.18;
   font-weight: 700;
   letter-spacing: -0.02em;
-  background-image: var(--google-gradient-text);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  padding-top: 0.06em;
-  padding-bottom: 0.10em;
+  color: var(--text-primary);
+  transition: color 360ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (min-width: 640px) {
@@ -315,6 +300,7 @@ h3,
 }
 
 .folio-btn-secondary {
+  position: relative;
   display: inline-flex;
   min-height: var(--control-height);
   align-items: center;
@@ -361,13 +347,13 @@ h3,
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
-  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms ease, color 200ms ease, background-color 360ms ease;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms ease, color 360ms ease, background-color 360ms ease;
 }
 
 .folio-btn-compact:hover {
   transform: translateY(-1.5px);
   border-color: var(--google-blue);
-  color: var(--accent-primary);
+  box-shadow: var(--shadow-soft);
 }
 
 .google-btn-github {
@@ -378,14 +364,28 @@ h3,
   justify-content: center;
   gap: 0.45rem;
   border-radius: var(--radius-control);
-  border: 1px solid var(--border-strong);
+  border: 1px solid transparent;
   background-color: var(--bg-elevated);
   padding: 0.4rem 0.9rem;
   font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 700;
+  color: var(--text-primary);
   overflow: hidden;
-  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease, border-color 260ms ease, background-color 360ms ease;
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease, background-color 360ms ease, color 220ms ease;
+}
+
+.google-btn-github::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.25px;
+  background-image: var(--google-gradient);
+  -webkit-mask: linear-gradient(#FFFFFF 0 0) content-box, linear-gradient(#FFFFFF 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 .google-btn-github::before {
@@ -399,7 +399,7 @@ h3,
 
 .google-btn-github:hover {
   transform: translateY(-2px);
-  border-color: transparent;
+  color: #FFFFFF;
   box-shadow: var(--shadow-glow);
 }
 
@@ -410,16 +410,7 @@ h3,
 .google-btn-github-label {
   position: relative;
   z-index: 1;
-  background-image: var(--google-gradient-text);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  transition: color 220ms ease;
-}
-
-.google-btn-github:hover .google-btn-github-label {
-  background-image: none;
-  color: #FFFFFF;
+  color: inherit;
 }
 
 .perspective-1000 {

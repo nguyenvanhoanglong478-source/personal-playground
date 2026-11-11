@@ -1,11 +1,13 @@
-# OS & Editor
+node_modules
+dist
+dist-ssr
+*.local
 .DS_Store
-Thumbs.db
-*.swp
-*.bak
-.vscode/
-.idea/
-
-# Node & Scratch
-node_modules/
+.env
+.env.*
+.taste-skill
+.hallmark
+shots
 *.log
+
+*.tsbuildinfo

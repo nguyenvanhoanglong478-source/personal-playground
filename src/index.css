@@ -1,0 +1,124 @@
+/* Hallmark stamp: v2.0.0; theme: marginalia-and-folio; genre: editorial; material: words-and-code */
+/* Critique: Warm archival paper (#F6F3EC) and deep nocturnal slate (#0E100F) paired with Scholar's Vermilion (#C83E2B / #F05A43) and Library Spruce (#1D5B4C / #45B899). Zero raw hex values outside :root. */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+html[data-theme='light'] {
+  --bg-primary: #F6F3EC;
+  --bg-surface: #EDE8DD;
+  --bg-elevated: #FAF8F4;
+  --text-primary: #141413;
+  --text-secondary: #524F49;
+  --text-faint: #6E6A61;
+  --accent-primary: #C83E2B;
+  --accent-primary-contrast: #FAF8F4;
+  --accent-secondary: #1D5B4C;
+  --border-subtle: #D6CFC2;
+  --border-strong: #9E9687;
+  --grain-opacity: 0.035;
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-sans: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+html[data-theme='dark'] {
+  --bg-primary: #0E100F;
+  --bg-surface: #171A18;
+  --bg-elevated: #1E221F;
+  --text-primary: #F2EFE9;
+  --text-secondary: #A39E93;
+  --text-faint: #7E796F;
+  --accent-primary: #F05A43;
+  --accent-primary-contrast: #0E100F;
+  --accent-secondary: #45B899;
+  --border-subtle: #262A27;
+  --border-strong: #434945;
+  --grain-opacity: 0.045;
+}
+
+html,
+body {
+  overflow-x: clip;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.font-editorial {
+  font-family: var(--font-serif);
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+/* Instant focus-visible ring per Hallmark Floor #6 */
+*:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
+}
+
+/* Editorial folio grid lines and subtle paper grain */
+.folio-grid-bg {
+  background-image: linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.placeholder-token {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.1rem 0.45rem;
+  border: 1px dashed var(--accent-primary);
+  color: var(--accent-primary);
+  background-color: var(--bg-surface);
+  border-radius: 4px;
+}
+
+/* Slow tech marquee animation using transform only */
+@keyframes folio-marquee {
+  0% {
+    transform: translate3d(0%, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-folio-marquee {
+  display: flex;
+  width: max-content;
+  animation: folio-marquee 38s linear infinite;
+}
+
+.animate-folio-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-folio-marquee {
+    animation: none;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

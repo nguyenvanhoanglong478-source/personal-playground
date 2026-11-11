@@ -39,7 +39,7 @@ Toàn bộ nội dung văn bản, thông tin cá nhân và dự án được tá
    - Hỗ trợ song ngữ Tiếng Việt (`vi`) và Tiếng Anh (`en`).
 
 2. **`src/data/projects.ts`**:
-   - Chứa thông tin chi tiết của 4 dự án (`Marginal`, `SnapTask`, `Team Quiz Battle`, `Be The Driver`), danh sách tệp bằng chứng (`evidenceFiles`) và mảng công nghệ (`technologies`).
+   - Chứa thông tin chi tiết của 4 dự án (`Marginal`, `SnapTask`, `Team Quiz Battle`, `Be The Driver`), tệp dẫn chứng mã nguồn (`sourceProof`) và mảng công nghệ (`technologies`, tối đa 5-6 mục chính).
    - Thay `linkPlaceholder: '[[link]]'` bằng URL bản chạy thử (live demo) của từng dự án khi sẵn sàng.
 
 3. **`src/data/skills.ts`**:
@@ -70,13 +70,17 @@ Dự án đã cấu hình sẵn `base: './'` trong `vite.config.ts` để tươn
 
 ## 4. Khôi phục code cũ từ nhánh sao lưu (nếu cần)
 
-Trước khi làm lại trang web, toàn bộ trạng thái code cũ đã được lưu an toàn vào nhánh `backup/truoc-khi-lam-lai`. Để xem hoặc khôi phục lại code cũ bất kỳ lúc nào:
+Toàn bộ trạng thái các giai đoạn trước đã được lưu an toàn vào các nhánh sao lưu:
+- `backup/truoc-khi-chinh-sua`: trạng thái ngay trước đợt rà soát đồng bộ layout và biên tập văn phong.
+- `backup/truoc-khi-lam-lai`: trạng thái bản Vanilla trước khi làm lại bằng React + TypeScript.
+
+Để chuyển sang xem hoặc khôi phục lại:
 
 ```bash
-# Chuyển sang xem nhánh code cũ
-git checkout backup/truoc-khi-lam-lai
+# Xem bản trước đợt chỉnh sửa này
+git checkout backup/truoc-khi-chinh-sua
 
-# Hoặc khôi phục nhánh main về đúng trạng thái trước khi làm lại
+# Hoặc đưa nhánh main về đúng trạng thái trước khi chỉnh sửa
 git checkout main
-git reset --hard backup/truoc-khi-lam-lai
+git reset --hard backup/truoc-khi-chinh-sua
 ```

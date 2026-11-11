@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Globe, Moon, Sun, Menu, X } from 'lucide-react';
+import { BookOpen, Globe, Menu, Moon, Sun, X } from 'lucide-react';
 import { Locale, UI_LABELS } from '../data/profile';
 
 interface NavbarProps {
@@ -35,21 +35,21 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-50 border-b border-folio-border bg-folio-bg/95 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+      <div className="folio-container flex items-center justify-between gap-3 py-3">
         {/* Brand Identity */}
         <a
           href="#hero"
-          className="group flex items-center gap-3 text-folio-ink"
-          aria-label="Marcus Marginalia & Folio Home"
+          className="group flex shrink-0 items-center gap-3 text-folio-ink"
+          aria-label="Marcus Home"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded border border-folio-vermilion bg-folio-surface font-serif text-lg font-bold text-folio-vermilion transition-transform duration-300 group-hover:scale-105">
+          <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-folio-vermilion bg-folio-surface font-serif text-lg font-bold text-folio-vermilion transition-transform duration-300 group-hover:scale-105">
             M
           </span>
           <div className="flex flex-col">
             <span className="font-serif text-lg font-semibold leading-none tracking-tight">
               Marcus
             </span>
-            <span className="font-mono text-[11px] text-folio-muted">
+            <span className="font-mono text-[11px] text-folio-muted whitespace-nowrap">
               Marginalia &amp; Folio
             </span>
           </div>
@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Desktop Nav Links */}
         <nav
-          className="hidden md:flex md:items-center md:gap-1 lg:gap-2"
+          className="hidden lg:flex lg:items-center lg:gap-1"
           aria-label={locale === 'vi' ? 'Điều hướng chính' : 'Primary Navigation'}
         >
           {navItems.map((item) => {
@@ -67,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={item.id}
                 href={`#${item.id}`}
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative rounded px-3 py-1.5 font-mono text-xs transition-transform duration-300 hover:-translate-y-0.5 ${
+                className={`relative whitespace-nowrap rounded-[var(--radius-control)] px-3 py-2 font-mono text-xs transition-transform duration-200 hover:-translate-y-0.5 ${
                   isActive
                     ? 'bg-folio-surface font-semibold text-folio-vermilion'
                     : 'text-folio-muted hover:text-folio-ink'
@@ -85,12 +85,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           })}
         </nav>
 
-        {/* Controls: Language + Theme + Mobile Trigger */}
-        <div className="flex items-center gap-2">
+        {/* Controls: Language + Theme + Mobile Menu Trigger */}
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
             onClick={() => setLocale(locale === 'vi' ? 'en' : 'vi')}
-            className="inline-flex min-h-[40px] items-center gap-1.5 rounded border border-folio-border bg-folio-surface px-3 py-1.5 font-mono text-xs font-medium text-folio-ink transition-transform duration-300 hover:-translate-y-0.5"
+            className="folio-btn-compact"
             aria-label={
               locale === 'vi' ? 'Switch language to English' : 'Chuyển sang Tiếng Việt'
             }
@@ -102,11 +102,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={toggleTheme}
-            className="inline-flex min-h-[40px] items-center gap-1.5 rounded border border-folio-border bg-folio-surface px-3 py-1.5 font-mono text-xs font-medium text-folio-ink transition-transform duration-300 hover:-translate-y-0.5"
+            className="folio-btn-compact"
             aria-label={
               theme === 'dark'
-                ? 'Chuyển sang giao diện Sáng'
-                : 'Chuyển sang giao diện Tối'
+                ? 'Chuyển sang giao diện sáng'
+                : 'Chuyển sang giao diện tối'
             }
           >
             {theme === 'dark' ? (
@@ -125,22 +125,22 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="inline-flex min-h-[40px] min-w-[40px] items-center justify-center rounded border border-folio-border bg-folio-surface p-2 text-folio-ink md:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-control)] border border-folio-strong bg-folio-elevated text-folio-ink lg:hidden"
             aria-expanded={mobileOpen}
             aria-label={locale === 'vi' ? 'Mở mục lục' : 'Toggle menu'}
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile / Tablet Navigation Drawer */}
       {mobileOpen && (
         <nav
-          className="border-t border-folio-border bg-folio-bg px-4 py-4 md:hidden"
+          className="border-t border-folio-border bg-folio-bg px-4 py-4 lg:hidden"
           aria-label="Mobile Navigation"
         >
-          <div className="flex flex-col gap-2">
+          <div className="folio-container flex flex-col gap-2 !px-0">
             {navItems.map((item) => {
               const isActive = activeSection === item.id;
               return (
@@ -148,10 +148,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   key={item.id}
                   href={`#${item.id}`}
                   onClick={handleNavClick}
-                  className={`flex min-h-[44px] items-center justify-between rounded border px-4 py-2 font-mono text-sm ${
+                  className={`flex min-h-[44px] items-center justify-between rounded-[var(--radius-control)] border px-4 py-2 font-mono text-sm ${
                     isActive
                       ? 'border-folio-vermilion bg-folio-surface font-semibold text-folio-vermilion'
-                      : 'border-folio-border text-folio-ink'
+                      : 'border-folio-border bg-folio-elevated text-folio-ink'
                   }`}
                 >
                   <span>{item.label}</span>

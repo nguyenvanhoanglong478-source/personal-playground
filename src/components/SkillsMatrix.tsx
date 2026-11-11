@@ -28,60 +28,42 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
     }
   };
 
-  // Duplicate list once for seamless horizontal marquee
   const marqueeList = [...SYNTHESIZED_SKILLS, ...SYNTHESIZED_SKILLS];
 
   return (
     <section
       id="skills"
-      className="border-b border-folio-border py-16 sm:py-24"
+      className="folio-section"
       aria-labelledby="skills-heading"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-4 border-b border-folio-border pb-6">
-          <div className="max-w-3xl">
-            <span className="font-mono text-xs font-semibold text-folio-vermilion">
-              {t.sectionIndex}
-            </span>
-            <h2
-              id="skills-heading"
-              className="mt-2 font-serif text-3xl font-bold text-folio-ink sm:text-5xl"
-            >
-              {t.heading}
-            </h2>
-            <p className="mt-3 text-base text-folio-muted">{t.subheading}</p>
-          </div>
-          <div className="font-mono text-xs text-folio-spruce">
-            <span>
-              [AUTO-DERIVED: {SYNTHESIZED_SKILLS.length} UNIQUE TECHNOLOGIES]
-            </span>
-          </div>
+      <div className="folio-container">
+        <div className="folio-section-header">
+          <span className="folio-index-label">{t.sectionIndex}</span>
+          <h2 id="skills-heading" className="folio-section-heading">
+            {t.heading}
+          </h2>
+          <p className="mt-3 max-w-2xl text-base text-folio-muted">
+            {t.subheading}
+          </p>
         </div>
 
         {/* Slow Tech Marquee Strip */}
         <div
-          className="mb-10 overflow-hidden rounded border border-folio-border bg-folio-surface py-3"
-          aria-label="Synthesized Technology Marquee"
+          className="mb-8 overflow-hidden rounded-[var(--radius-inner)] border border-folio-border bg-folio-surface py-3"
+          aria-label="Technology Marquee"
         >
-          <div className="animate-folio-marquee gap-4 px-4">
+          <div className="animate-folio-marquee gap-3 px-4">
             {marqueeList.map((skill, idx) => (
-              <div
-                key={`${skill.name}-${idx}`}
-                className="inline-flex shrink-0 items-center gap-2 rounded border border-folio-border bg-folio-elevated px-3.5 py-1.5 font-mono text-xs text-folio-ink"
-              >
+              <div key={`${skill.name}-${idx}`} className="folio-chip shrink-0 gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-folio-vermilion" />
                 <span className="font-semibold">{skill.name}</span>
-                <span className="text-[11px] text-folio-muted">
-                  ({skill.projects.join(', ')})
-                </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* 4-Category Grouped Matrix */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* Balanced Category Row Bands (Eliminates uneven blank columns) */}
+        <div className="space-y-4">
           {CATEGORY_ORDER.map((category, idx) => {
             const items = SYNTHESIZED_SKILLS.filter(
               (s) => s.category === category
@@ -91,49 +73,51 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
               <motion.div
                 key={category}
                 initial={
-                  shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }
+                  shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }
                 }
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.48, delay: idx * 0.06 }}
-                className="rounded-md border border-folio-strong bg-folio-surface p-6"
+                transition={{ duration: 0.4, delay: idx * 0.05 }}
+                className="folio-card grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-start"
               >
-                <div className="mb-4 flex items-center justify-between border-b border-folio-border pb-3">
-                  <div className="flex items-center gap-2">
+                {/* Left Category Label (3 cols) */}
+                <div className="flex items-center justify-between border-b border-folio-border pb-3 lg:col-span-3 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
+                  <div className="flex items-center gap-2.5">
                     {getCategoryIcon(category)}
                     <h3 className="font-serif text-xl font-bold text-folio-ink">
                       {t.categories[category]}
                     </h3>
                   </div>
                   <span className="font-mono text-xs text-folio-muted">
-                    [{items.length}]
+                    ({items.length})
                   </span>
                 </div>
 
-                <div className="space-y-3">
+                {/* Right Uniform Card Grid (9 cols) */}
+                <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:col-span-9 xl:grid-cols-3">
                   {items.map((item) => (
                     <div
                       key={item.name}
-                      className="rounded border border-folio-border bg-folio-elevated p-3.5"
+                      className="folio-card-inner flex h-full flex-col justify-between gap-2"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-mono text-sm font-semibold text-folio-ink">
+                      <div>
+                        <div className="font-mono text-sm font-semibold text-folio-ink">
                           {item.name}
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {item.projects.map((projName) => (
-                            <span
-                              key={projName}
-                              className="rounded bg-folio-surface px-2 py-0.5 font-mono text-[10px] font-medium text-folio-vermilion"
-                            >
-                              {projName}
-                            </span>
-                          ))}
                         </div>
+                        <p className="mt-1 text-xs leading-relaxed text-folio-muted">
+                          {item.evidenceSummary[locale]}
+                        </p>
                       </div>
-                      <p className="mt-1.5 text-xs leading-relaxed text-folio-muted">
-                        {item.evidenceSummary[locale]}
-                      </p>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {item.projects.map((projName) => (
+                          <span
+                            key={projName}
+                            className="rounded-[var(--radius-tag)] bg-folio-surface px-2 py-0.5 font-mono text-[10px] font-medium text-folio-vermilion"
+                          >
+                            {projName}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>

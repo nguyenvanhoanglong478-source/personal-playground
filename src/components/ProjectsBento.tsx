@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { ExternalLink, FolderGit2, Layers, Sparkles } from 'lucide-react';
 import { Locale, UI_LABELS } from '../data/profile';
 import { PROJECTS_DATA, ProjectItem } from '../data/projects';
@@ -429,11 +429,23 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
   gridSpanClass,
 }) => {
   const shouldReduceMotion = useReducedMotion();
+  const outerRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [spotlight, setSpotlight] = useState({ x: 150, y: 150 });
   const [isHovered, setIsHovered] = useState(false);
   const t = UI_LABELS[locale].projects;
+
+  const { scrollYProgress } = useScroll({
+    target: outerRef,
+    offset: ['start end', 'end start'],
+  });
+  const isEvenSlot = idx % 2 === 1;
+  const parallaxY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    isEvenSlot ? [20, -16] : [8, -8]
+  );
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (shouldReduceMotion || !cardRef.current) return;
@@ -459,119 +471,130 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
   };
 
   return (
-    <motion.article
-      id={`project-${project.id}`}
-      initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 22 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.5, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] }}
-      className={`perspective-1000 ${gridSpanClass}`}
-    >
-      <div
-        ref={cardRef}
-        onMouseMove={handleMouseMove}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        style={{
-          transform:
-            isHovered && !shouldReduceMotion
-              ? `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) scale3d(1.012, 1.012, 1.012)`
-              : 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
-          transition: isHovered
-            ? 'transform 90ms ease-out, background-color 360ms ease, box-shadow 300ms ease, border-color 300ms ease'
-            : 'transform 450ms cubic-bezier(0.22, 1, 0.36, 1), background-color 360ms ease, box-shadow 300ms ease, border-color 300ms ease',
-        }}
-        className="google-gradient-hover-border group relative flex h-full flex-col justify-between overflow-hidden rounded-[var(--radius-card)] border border-folio-border bg-folio-surface p-6 shadow-[var(--shadow-soft)] backdrop-blur-xl hover:border-transparent hover:shadow-[var(--shadow-glow)]"
-      >
-        <div
-          className="pointer-events-none absolute -inset-px rounded-[var(--radius-card)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{
-            background: `radial-gradient(460px circle at ${spotlight.x}px ${spotlight.y}px, var(--spotlight-blue), var(--spotlight-purple) 40%, transparent 70%)`,
-          }}
-          aria-hidden="true"
-        />
-
-        <div
-          className={
-            isFullWidth
-              ? 'relative z-10 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center'
-              : 'relative z-10'
-          }
+    <div ref={outerRef} className={gridSpanClass}>
+      <motion.div style={{ y: shouldReduceMotion ? 0 : parallaxY }}>
+        <motion.article
+          id={`project-${project.id}`}
+          initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.5, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] }}
+          className="perspective-1000 scroll-mt-24"
         >
-          <div className={isFullWidth ? 'lg:col-span-6' : ''}>
-            <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-3">
-              <span className="font-mono text-xs font-bold text-folio-ink">
-                {project.indexNumber}
-              </span>
-              <span className="font-mono text-[11px] font-semibold text-folio-muted">
-                {project.technologies[0]?.name}
-              </span>
-            </div>
+          <div
+            ref={cardRef}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            style={{
+              transform:
+                isHovered && !shouldReduceMotion
+                  ? `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) scale3d(1.012, 1.012, 1.012)`
+                  : 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
+              transition: isHovered
+                ? 'transform 90ms ease-out, background-color 360ms ease, box-shadow 300ms ease, border-color 300ms ease'
+                : 'transform 450ms cubic-bezier(0.22, 1, 0.36, 1), background-color 360ms ease, box-shadow 300ms ease, border-color 300ms ease',
+            }}
+            className="google-gradient-hover-border group relative flex h-full flex-col justify-between overflow-hidden rounded-[var(--radius-card)] border border-folio-border bg-folio-surface p-6 shadow-[var(--shadow-soft)] backdrop-blur-xl hover:border-transparent hover:shadow-[var(--shadow-glow)] sm:p-7"
+          >
+            <span
+              aria-hidden="true"
+              className="editorial-watermark absolute -right-2 -top-4 z-0 text-[7.5rem] sm:text-[9.5rem] lg:text-[10.5rem]"
+            >
+              {project.indexNumber}
+            </span>
 
-            <div className="mt-4">
-              <h3 className="font-serif text-2xl font-bold leading-snug text-folio-ink sm:text-3xl">
-                {project.title}
-              </h3>
-              <p className="mt-1 font-serif text-sm italic text-folio-muted lg:min-h-[2.5rem]">
-                {project.subtitle[locale]}
-              </p>
-            </div>
+            <div
+              className="pointer-events-none absolute -inset-px rounded-[var(--radius-card)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              style={{
+                background: `radial-gradient(460px circle at ${spotlight.x}px ${spotlight.y}px, var(--spotlight-blue), var(--spotlight-purple) 40%, transparent 70%)`,
+              }}
+              aria-hidden="true"
+            />
 
-            {!isFullWidth && (
-              <div className="folio-card-inner my-4 h-44 w-full overflow-hidden !bg-folio-bg/70 p-2 shadow-inner">
-                <ProjectVisualPreview projectId={project.id} />
+            <div
+              className={
+                isFullWidth
+                  ? 'relative z-10 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center'
+                  : 'relative z-10'
+              }
+            >
+              <div className={isFullWidth ? 'lg:col-span-6' : ''}>
+                <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-3">
+                  <span className="font-mono text-xs font-bold text-folio-ink">
+                    {project.indexNumber}
+                  </span>
+                  <span className="font-mono text-[11px] font-semibold text-folio-muted">
+                    {project.technologies[0]?.name}
+                  </span>
+                </div>
+
+                <div className="mt-4">
+                  <h3 className="font-serif text-2xl font-bold leading-snug text-folio-ink sm:text-3xl">
+                    {project.title}
+                  </h3>
+                  <p className="mt-1 font-serif text-sm italic text-folio-muted lg:min-h-[2.5rem]">
+                    {project.subtitle[locale]}
+                  </p>
+                </div>
+
+                {!isFullWidth && (
+                  <div className="folio-card-inner my-4 h-44 w-full overflow-hidden !bg-folio-bg/70 p-2 shadow-inner">
+                    <ProjectVisualPreview projectId={project.id} />
+                  </div>
+                )}
+
+                <p className="text-sm leading-relaxed text-folio-muted sm:text-base">
+                  {project.description[locale]}
+                </p>
               </div>
-            )}
 
-            <p className="text-sm leading-relaxed text-folio-muted sm:text-base">
-              {project.description[locale]}
-            </p>
-          </div>
-
-          {isFullWidth && (
-            <div className="folio-card-inner h-48 w-full overflow-hidden !bg-folio-bg/70 p-3 shadow-inner lg:col-span-6">
-              <ProjectVisualPreview projectId={project.id} />
+              {isFullWidth && (
+                <div className="folio-card-inner h-48 w-full overflow-hidden !bg-folio-bg/70 p-3 shadow-inner lg:col-span-6">
+                  <ProjectVisualPreview projectId={project.id} />
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        <div className="relative z-10 mt-6">
-          <div className="mb-2 flex items-center gap-1.5 font-mono text-[11px] font-semibold text-folio-muted">
-            <Layers className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>{t.techLabel}</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {project.technologies.map((tech) => (
-              <span key={tech.name} className="folio-chip">
-                {tech.name}
-              </span>
-            ))}
-          </div>
+            <div className="relative z-10 mt-6">
+              <div className="mb-2 flex items-center gap-1.5 font-mono text-[11px] font-semibold text-folio-muted">
+                <Layers className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{t.techLabel}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {project.technologies.map((tech) => (
+                  <span key={tech.name} className="folio-chip">
+                    {tech.name}
+                  </span>
+                ))}
+              </div>
 
-          <div className="mt-5 flex items-center justify-between gap-3 border-t border-folio-border pt-4">
-            <a
-              href={project.repoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="min-w-0 flex-1 truncate font-mono text-xs text-folio-ink underline transition-colors hover:text-folio-muted"
-            >
-              {project.repoUrl}
-            </a>
+              <div className="mt-5 flex items-center justify-between gap-3 border-t border-folio-border pt-4">
+                <a
+                  href={project.repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-w-0 flex-1 truncate font-mono text-xs text-folio-ink underline transition-colors hover:text-folio-muted"
+                >
+                  {project.repoUrl}
+                </a>
 
-            <a
-              href={project.repoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="google-btn-github group/btn shrink-0"
-            >
-              <FolderGit2 className="relative z-10 h-3.5 w-3.5 text-folio-ink transition-colors group-hover/btn:text-white" aria-hidden="true" />
-              <span className="google-btn-github-label">{t.repoLabel}</span>
-              <ExternalLink className="relative z-10 h-3 w-3 text-folio-ink transition-all duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 group-hover/btn:text-white" aria-hidden="true" />
-            </a>
+                <a
+                  href={project.repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="google-btn-github group/btn shrink-0"
+                >
+                  <FolderGit2 className="relative z-10 h-3.5 w-3.5 text-folio-ink transition-colors group-hover/btn:text-white" aria-hidden="true" />
+                  <span className="google-btn-github-label">{t.repoLabel}</span>
+                  <ExternalLink className="relative z-10 h-3 w-3 text-folio-ink transition-all duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 group-hover/btn:text-white" aria-hidden="true" />
+                </a>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </motion.article>
+        </motion.article>
+      </motion.div>
+    </div>
   );
 };
 
@@ -579,11 +602,11 @@ export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
   const t = UI_LABELS[locale].projects;
 
   const getGridSpanClass = (idx: number) => {
-    if (idx === 0) return 'lg:col-span-7';
-    if (idx === 1) return 'lg:col-span-5';
-    if (idx === 2) return 'lg:col-span-5';
-    if (idx === 3) return 'lg:col-span-7';
-    return 'lg:col-span-12';
+    if (idx === 0) return 'lg:col-start-1 lg:col-span-6';
+    if (idx === 1) return 'lg:col-start-7 lg:col-span-6 lg:mt-16';
+    if (idx === 2) return 'lg:col-start-1 lg:col-span-6';
+    if (idx === 3) return 'lg:col-start-7 lg:col-span-6 lg:mt-16';
+    return 'lg:col-start-1 lg:col-span-8';
   };
 
   return (
@@ -593,20 +616,22 @@ export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
       aria-labelledby="projects-heading"
     >
       <div className="folio-container">
-        <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
-            <Sparkles className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
-            <span className="folio-index-label">{t.sectionIndex}</span>
+        <div className="folio-section-header grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-end">
+          <div className="lg:col-span-7">
+            <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
+              <Sparkles className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
+              <span className="folio-index-label">{t.sectionIndex}</span>
+            </div>
+            <h2 id="projects-heading" className="folio-section-heading">
+              {t.heading}
+            </h2>
           </div>
-          <h2 id="projects-heading" className="folio-section-heading">
-            {t.heading}
-          </h2>
-          <p className="mt-3 max-w-2xl text-base text-folio-muted">
+          <p className="text-base leading-relaxed text-folio-muted lg:col-span-5">
             {t.subheading}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-x-10 lg:gap-y-10">
           {PROJECTS_DATA.map((project, idx) => (
             <TiltProjectCard
               key={project.id}

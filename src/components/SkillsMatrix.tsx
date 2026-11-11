@@ -37,15 +37,17 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
       aria-labelledby="skills-heading"
     >
       <div className="folio-container">
-        <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
-            <Sparkles className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
-            <span className="folio-index-label">{t.sectionIndex}</span>
+        <div className="folio-section-header grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-end">
+          <div className="lg:col-span-7">
+            <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
+              <Sparkles className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
+              <span className="folio-index-label">{t.sectionIndex}</span>
+            </div>
+            <h2 id="skills-heading" className="folio-section-heading">
+              {t.heading}
+            </h2>
           </div>
-          <h2 id="skills-heading" className="folio-section-heading">
-            {t.heading}
-          </h2>
-          <p className="mt-3 max-w-2xl text-base text-folio-muted">
+          <p className="text-base leading-relaxed text-folio-muted lg:col-span-5">
             {t.subheading}
           </p>
         </div>

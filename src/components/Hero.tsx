@@ -1,5 +1,5 @@
 import React, { Suspense, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { ArrowDownRight, BookMarked, Mail, Sparkles } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 import { PROJECTS_DATA } from '../data/projects';
@@ -14,8 +14,16 @@ interface HeroProps {
 export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
   const shouldReduceMotion = useReducedMotion();
   const t = UI_LABELS[locale].hero;
+  const heroRef = useRef<HTMLElement | null>(null);
   const btnRef = useRef<HTMLAnchorElement | null>(null);
   const [btnOffset, setBtnOffset] = useState({ x: 0, y: 0 });
+
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  });
+  const portraitParallax = useTransform(scrollYProgress, [0, 1], [0, -32]);
+  const copyParallax = useTransform(scrollYProgress, [0, 1], [0, -12]);
 
   const handleMagneticMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (shouldReduceMotion || !btnRef.current) return;
@@ -34,16 +42,19 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
 
   return (
     <section
+      ref={heroRef}
       id="hero"
-      className="folio-section relative overflow-hidden"
+      className="folio-section relative overflow-x-clip !pt-10 lg:!pt-14"
       aria-labelledby="hero-display-heading"
     >
-      <Suspense fallback={null}>
-        <LazyHeroFolioCanvas theme={theme} />
-      </Suspense>
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <Suspense fallback={null}>
+          <LazyHeroFolioCanvas theme={theme} />
+        </Suspense>
+      </div>
 
       <div className="folio-container relative z-10">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-folio-border pb-4">
+        <div className="mb-10 flex flex-wrap items-center justify-between gap-3 border-b border-folio-border pb-4 lg:mb-14">
           <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
             <BookMarked className="h-4 w-4 text-folio-ink" aria-hidden="true" />
             <span>{t.folioTag}</span>
@@ -58,21 +69,14 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-center">
-          <div className="lg:col-span-7">
-            <div className="mb-4 flex flex-wrap items-center gap-3">
-              <span className="folio-chip flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
-                <span>{PROFILE_DATA.role[locale]}</span>
-              </span>
-              <span className="folio-chip">
-                {t.birthLabel}: {PROFILE_DATA.birthYear}
-              </span>
-            </div>
-
+        <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-12 lg:gap-10">
+          <motion.div
+            style={{ y: shouldReduceMotion ? 0 : copyParallax }}
+            className="lg:col-span-7"
+          >
             <h1
               id="hero-display-heading"
-              className="font-serif text-5xl font-bold leading-[1.12] tracking-tight text-folio-ink sm:text-7xl lg:text-[5.25rem]"
+              className="font-serif text-[3.25rem] font-bold leading-[0.98] tracking-[-0.03em] text-folio-ink sm:text-7xl lg:text-[5.75rem]"
             >
               <motion.span
                 initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
@@ -82,17 +86,20 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
               >
                 {PROFILE_DATA.name}.
               </motion.span>
-              <span className="mt-2 block font-serif text-3xl font-normal italic leading-[1.22] text-folio-ink sm:text-5xl lg:text-[3.2rem]">
+            </h1>
+
+            <div className="mt-7 border-l border-folio-border pl-5 sm:pl-8 lg:ml-10">
+              <p className="font-serif text-2xl font-normal italic leading-[1.28] text-folio-ink sm:text-4xl lg:text-[2.5rem]">
                 {sloganWords.map((word, idx) => (
                   <motion.span
                     key={`${word}-${idx}`}
                     initial={
-                      shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }
+                      shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }
                     }
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
                       duration: 0.45,
-                      delay: shouldReduceMotion ? 0 : 0.15 + idx * 0.035,
+                      delay: shouldReduceMotion ? 0 : 0.14 + idx * 0.03,
                       ease: [0.22, 1, 0.36, 1],
                     }}
                     className="mr-[0.25em] inline-block"
@@ -100,50 +107,76 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
                     {word}
                   </motion.span>
                 ))}
-              </span>
-            </h1>
+              </p>
 
-            <motion.p
-              initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-7 max-w-2xl text-base leading-relaxed text-folio-muted sm:text-lg"
-            >
-              {PROFILE_DATA.introMain[locale]}
-            </motion.p>
-
-            <motion.div
-              initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-8 flex flex-wrap items-center gap-4"
-            >
-              <a
-                ref={btnRef}
-                href="#projects"
-                onMouseMove={handleMagneticMove}
-                onMouseLeave={resetMagnetic}
-                style={{
-                  transform: `translate3d(${btnOffset.x}px, ${btnOffset.y}px, 0)`,
-                }}
-                className="folio-btn-primary"
+              <motion.p
+                initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-6 max-w-xl text-base leading-relaxed text-folio-muted sm:text-lg"
               >
-                <span>{t.ctaProjects}</span>
-                <ArrowDownRight className="h-4 w-4" aria-hidden="true" />
-              </a>
+                {PROFILE_DATA.introMain[locale]}
+              </motion.p>
 
-              <a href="#contact" className="folio-btn-secondary">
-                <Mail className="h-4 w-4 text-folio-ink" aria-hidden="true" />
-                <span>{t.ctaContact}</span>
-              </a>
-            </motion.div>
-          </div>
+              <motion.div
+                initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.34, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-7 grid grid-cols-1 gap-4 border-y border-folio-border py-4 sm:grid-cols-2 sm:gap-0"
+              >
+                <div className="sm:pr-6">
+                  <div className="font-mono text-[11px] uppercase tracking-wider text-folio-faint">
+                    {t.roleLabel}
+                  </div>
+                  <div className="mt-1 flex items-center gap-1.5 font-mono text-sm font-semibold text-folio-ink">
+                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-folio-ink" aria-hidden="true" />
+                    <span>{PROFILE_DATA.role[locale]}</span>
+                  </div>
+                </div>
+                <div className="border-t border-folio-border pt-3 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
+                  <div className="font-mono text-[11px] uppercase tracking-wider text-folio-faint">
+                    {t.birthLabel}
+                  </div>
+                  <div className="mt-1 font-mono text-sm font-semibold text-folio-ink">
+                    {PROFILE_DATA.birthYear}
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-8 flex flex-wrap items-center gap-4"
+              >
+                <a
+                  ref={btnRef}
+                  href="#projects"
+                  onMouseMove={handleMagneticMove}
+                  onMouseLeave={resetMagnetic}
+                  style={{
+                    transform: `translate3d(${btnOffset.x}px, ${btnOffset.y}px, 0)`,
+                  }}
+                  className="folio-btn-primary"
+                >
+                  <span>{t.ctaProjects}</span>
+                  <ArrowDownRight className="h-4 w-4" aria-hidden="true" />
+                </a>
+
+                <a href="#contact" className="folio-btn-secondary">
+                  <Mail className="h-4 w-4 text-folio-ink" aria-hidden="true" />
+                  <span>{t.ctaContact}</span>
+                </a>
+              </motion.div>
+            </div>
+          </motion.div>
 
           <motion.div
-            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.94 }}
+            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
+            style={{ y: shouldReduceMotion ? 0 : portraitParallax }}
             transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col items-center justify-center lg:col-span-5"
+            className="flex flex-col items-center justify-center lg:col-span-5 lg:mt-14 lg:items-end"
           >
             <div className="relative w-full max-w-md">
               <div

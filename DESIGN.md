@@ -2,7 +2,12 @@
 
 ## 1. Concept & Hệ Thống Thiết Kế
 
-Trang cá nhân của **Long Hoàng** kết hợp bố cục Folio / Bento hiện đại theo phong cách **Google Modern Gradient**, lấy cảm hứng từ hệ sinh thái **Google AI / Gemini** và **Material Design 3**, hỗ trợ đầy đủ 2 chế độ **Sáng (Light Mode)** và **Tối (Dark Mode)**.
+Trang cá nhân của **Long Hoàng** sử dụng phong cách **Editorial & Staggered Showcase** kết hợp bảng hiệu ứng **Google Modern Gradient** (hào quang nền, viền phát quang, hiệu ứng hover và nền nút bấm) cùng **chữ viết đơn sắc trung tính** tuyệt đối trên cả **Light Mode** và **Dark Mode**.
+
+### Kiến trúc Bố cục Biên tập
+- **Editorial Cover Hero**: Tên `Long Hoàng.` cỡ lớn lệch tâm làm neo thị giác bên trái, cụm khẩu hiệu in nghiêng và phần dẫn lùi lề kèm đường kẻ phân cách mảnh, cân bằng đối trọng với thẻ ảnh đại diện đặt thấp hơn và có hiệu ứng lơ lửng + parallax nhẹ khi cuộn.
+- **Architectural Columns (`#experience`)**: Cột trái chứa tiêu đề lớn và chỉ mục neo được ghim mượt (`position: sticky`) khi cuộn trên màn hình rộng; cột phải trình bày 4 nhóm kinh nghiệm dọc theo trục kẻ mảnh.
+- **Staggered Zig-Zag Showcase (`#projects`)**: 5 dự án GitHub bố trí so le trái/phải theo nhịp Zig-Zag (`01, 03, 05` lệch trái; `02, 04` lệch phải và hạ thấp độ cao kèm parallax cuộn), tích hợp số thứ tự khổng lồ (`01`–`05`) dạng watermark đơn sắc mờ ở góc mỗi thẻ, giữ nguyên 3D Tilt, radial spotlight và viền sáng Google khi di chuột.
 
 ## 2. Kiểu Chữ (Typography)
 

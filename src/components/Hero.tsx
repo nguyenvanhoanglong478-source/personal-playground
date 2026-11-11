@@ -38,13 +38,11 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
       className="folio-section relative overflow-hidden"
       aria-labelledby="hero-display-heading"
     >
-      {/* Lazy-loaded manuscript curves canvas */}
       <Suspense fallback={null}>
         <LazyHeroFolioCanvas theme={theme} />
       </Suspense>
 
       <div className="folio-container relative z-10">
-        {/* Top Metadata Strip */}
         <div className="mb-8 flex items-center justify-between border-b border-folio-border pb-4">
           <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
             <BookMarked className="h-4 w-4" aria-hidden="true" />
@@ -52,16 +50,14 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
           </div>
         </div>
 
-        {/* Asymmetric 12-Column Editorial Spread */}
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-start lg:gap-8">
-          {/* Left Main Folio Column (8 cols) */}
           <div className="lg:col-span-8">
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs font-semibold text-folio-muted">
-                {t.roleLabel}
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <span className="folio-chip">
+                {t.birthLabel}: {PROFILE_DATA.birthYear}
               </span>
-              <span className="placeholder-token">
-                {PROFILE_DATA.rolePlaceholder[locale]}
+              <span className="folio-chip text-folio-vermilion">
+                {t.roleLabel}: {PROFILE_DATA.role[locale]}
               </span>
             </div>
 
@@ -100,7 +96,6 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
               {PROFILE_DATA.introMain[locale]}
             </motion.p>
 
-            {/* Primary & Secondary CTAs */}
             <motion.div
               initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
@@ -128,21 +123,20 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
             </motion.div>
           </div>
 
-          {/* Right Marginalia Index Rail (4 cols) */}
           <motion.aside
             initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, x: 18 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.55, delay: 0.25 }}
-            aria-label={t.marginaliaHeader}
+            aria-label={t.indexHeader}
             className="folio-card lg:col-span-4"
           >
             <div className="mb-4 flex items-center justify-between border-b border-folio-border pb-3">
               <span className="font-mono text-xs font-semibold text-folio-vermilion">
-                {t.marginaliaHeader}
+                {t.indexHeader}
               </span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {PROJECTS_DATA.map((proj) => (
                 <a
                   key={proj.id}
@@ -155,7 +149,7 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
                     </span>
                     <span>{proj.technologies[0]?.name}</span>
                   </div>
-                  <div className="mt-1 font-serif text-base font-bold text-folio-ink group-hover:text-folio-vermilion">
+                  <div className="mt-0.5 font-serif text-base font-bold text-folio-ink group-hover:text-folio-vermilion">
                     {proj.title}
                   </div>
                   <div className="mt-0.5 text-xs text-folio-muted">
@@ -164,10 +158,6 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
                 </a>
               ))}
             </div>
-
-            <p className="mt-4 border-t border-folio-border pt-3 font-mono text-[11px] text-folio-muted">
-              {t.scrollHint}
-            </p>
           </motion.aside>
         </div>
       </div>

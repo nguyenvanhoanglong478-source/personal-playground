@@ -25,9 +25,7 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
           </h2>
         </div>
 
-        {/* 12-Col Layout: Portrait Frame (5 cols) + Bio & Method (7 cols) */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-stretch">
-          {/* Portrait Frame */}
           <motion.div
             initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -35,75 +33,45 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
             transition={{ duration: 0.5 }}
             className="lg:col-span-5"
           >
-            <div className="folio-card flex h-full flex-col justify-between">
-              <div className="mb-3 font-mono text-xs text-folio-muted">
-                {t.portraitCaption}
+            <div className="folio-card flex h-full flex-col justify-between gap-4">
+              <div className="folio-card-inner overflow-hidden !p-0">
+                <img
+                  src={PROFILE_DATA.avatarUrl}
+                  alt={t.portraitAlt}
+                  loading="lazy"
+                  className="aspect-square w-full object-cover object-top"
+                />
               </div>
 
-              <div className="folio-card-inner flex flex-1 flex-col items-center justify-center p-6 text-center">
-                <svg
-                  viewBox="0 0 320 320"
-                  className="h-44 w-44 text-folio-ink opacity-85 sm:h-52 sm:w-52"
-                  role="img"
-                  aria-label="Marcus Portrait Placeholder"
-                >
-                  <circle
-                    cx="160"
-                    cy="160"
-                    r="134"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1"
-                    strokeDasharray="4 6"
-                  />
-                  <circle
-                    cx="160"
-                    cy="160"
-                    r="108"
-                    fill="none"
-                    stroke="var(--accent-primary)"
-                    strokeWidth="1.5"
-                  />
-                  <circle
-                    cx="160"
-                    cy="118"
-                    r="30"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M106 232 C106 188, 214 188, 214 232"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M98 240 L160 256 L222 240 L222 212 L160 228 L98 212 Z"
-                    fill="var(--bg-surface)"
-                    stroke="var(--accent-primary)"
-                    strokeWidth="2"
-                  />
-                  <line
-                    x1="160"
-                    y1="228"
-                    x2="160"
-                    y2="256"
-                    stroke="var(--accent-primary)"
-                    strokeWidth="2"
-                  />
-                </svg>
-
-                <div className="mt-4 max-w-xs">
-                  <span className="placeholder-token text-xs">
-                    {PROFILE_DATA.portraitPathPlaceholder}
-                  </span>
+              <div className="grid grid-cols-3 gap-2 border-t border-folio-border pt-3">
+                <div>
+                  <div className="font-mono text-[10px] text-folio-muted">
+                    {t.nameLabel}
+                  </div>
+                  <div className="mt-0.5 font-serif text-sm font-bold text-folio-ink">
+                    {PROFILE_DATA.name}
+                  </div>
+                </div>
+                <div>
+                  <div className="font-mono text-[10px] text-folio-muted">
+                    {t.birthLabel}
+                  </div>
+                  <div className="mt-0.5 font-serif text-sm font-bold text-folio-ink">
+                    {PROFILE_DATA.birthYear}
+                  </div>
+                </div>
+                <div>
+                  <div className="font-mono text-[10px] text-folio-muted">
+                    {t.roleLabel}
+                  </div>
+                  <div className="mt-0.5 font-serif text-sm font-bold text-folio-vermilion">
+                    {PROFILE_DATA.role[locale]}
+                  </div>
                 </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Story & Working Principle */}
           <motion.div
             initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -111,26 +79,26 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
             transition={{ duration: 0.5, delay: 0.08 }}
             className="flex flex-col justify-between gap-6 lg:col-span-7"
           >
-            <div className="folio-card flex-1 space-y-4">
-              <div className="flex flex-wrap items-center gap-2 font-mono text-xs text-folio-muted">
+            <div className="folio-card flex-1 space-y-5">
+              <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-folio-muted">
                 <UserCheck className="h-4 w-4 text-folio-vermilion" aria-hidden="true" />
                 <span className="font-semibold text-folio-ink">
                   {PROFILE_DATA.name}
                 </span>
-                <span className="placeholder-token">
-                  {PROFILE_DATA.rolePlaceholder[locale]}
+                <span>·</span>
+                <span>{PROFILE_DATA.birthYear}</span>
+                <span>·</span>
+                <span className="text-folio-vermilion">
+                  {PROFILE_DATA.role[locale]}
                 </span>
               </div>
 
               <p className="text-base leading-relaxed text-folio-ink sm:text-lg">
-                {PROFILE_DATA.aboutStory[locale]}{' '}
-                <span className="placeholder-token">
-                  {PROFILE_DATA.introPlaceholder[locale]}
-                </span>
+                {PROFILE_DATA.aboutStory[locale]}
               </p>
 
-              <p className="border-l-2 border-folio-vermilion pl-4 font-serif text-base italic text-folio-muted">
-                {PROFILE_DATA.marginaliaNote[locale]}
+              <p className="text-base leading-relaxed text-folio-muted">
+                {PROFILE_DATA.introMain[locale]}
               </p>
             </div>
 
@@ -140,7 +108,7 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
                 <span>{t.methodTitle}</span>
               </div>
               <p className="text-sm leading-relaxed text-folio-ink sm:text-base">
-                {t.methodBody}
+                {PROFILE_DATA.methodSummary[locale]}
               </p>
             </div>
           </motion.div>

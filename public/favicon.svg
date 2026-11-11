@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Marcus Folio Seal">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Long Hoàng Logo">
   <rect width="64" height="64" rx="8" fill="#141413"/>
   <rect x="4" y="4" width="56" height="56" rx="5" fill="none" stroke="#C83E2B" stroke-width="2"/>
-  <path d="M16 46V18h6.5l9.5 16.5L41.5 18H48v28h-6V29l-7.5 13h-5L22 29v17h-6z" fill="#F6F3EC"/>
-  <circle cx="50" cy="46" r="3.5" fill="#C83E2B"/>
+  <path d="M22 16h7v26h15v6H22V16z" fill="#F6F3EC"/>
+  <circle cx="48" cy="20" r="3.5" fill="#C83E2B"/>
 </svg>

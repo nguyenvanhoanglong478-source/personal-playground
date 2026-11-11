@@ -16,7 +16,6 @@ interface PackageMeta {
   reason: BilingualText;
 }
 
-// Các gói hỗ trợ biên dịch nội bộ được gộp chung vào công nghệ gốc (React, Vite, Tailwind CSS) để danh sách gọn và không xuất hiện thẻ phụ nhỏ lẻ.
 const INTERNAL_GLUE_PACKAGES = new Set([
   'react-dom',
   '@vitejs/plugin-react',
@@ -53,7 +52,7 @@ const KNOWN_PACKAGE_REASONS: Record<string, PackageMeta> = {
     displayName: 'Tailwind CSS',
     role: 'styling',
     reason: {
-      vi: 'Xây dựng lưới bố cục đáp ứng kết hợp bộ biến màu và khoảng cách trong :root.',
+      vi: 'Xây dựng lưới bố cục đáp ứng kết hợp bộ biến màu và khoảng cách dùng chung.',
       en: 'Builds the responsive grid system anchored to shared CSS design tokens.',
     },
   },
@@ -69,16 +68,12 @@ const KNOWN_PACKAGE_REASONS: Record<string, PackageMeta> = {
     displayName: 'Lucide Icons',
     role: 'icons',
     reason: {
-      vi: 'Cung cấp bộ biểu tượng vector nét mảnh đồng nhất thay cho ký tự emoji.',
+      vi: 'Cung cấp bộ biểu tượng vector nét mảnh đồng nhất trên toàn giao diện.',
       en: 'Supplies uniform stroke-based vector icons across all sections and controls.',
     },
   },
 };
 
-/**
- * Đọc trực tiếp tệp package.json gốc của dự án này (Mục 4.6).
- * Khi thêm hoặc xóa thư viện cốt lõi trong package.json, danh sách này sẽ tự động cập nhật.
- */
 export function getLiveSiteStack(): {
   projectName: string;
   projectVersion: string;
@@ -114,8 +109,8 @@ export function getLiveSiteStack(): {
       role: isDev ? 'build' : 'framework',
       isDevDependency: isDev,
       reason: {
-        vi: `Thư viện được khai báo trong package.json (${isDev ? 'devDependencies' : 'dependencies'}).`,
-        en: `Declared directly in package.json (${isDev ? 'devDependencies' : 'dependencies'}).`,
+        vi: 'Thư viện được khai báo trực tiếp trong tệp package.json của dự án.',
+        en: 'Declared directly in the root package.json manifest.',
       },
     };
   });

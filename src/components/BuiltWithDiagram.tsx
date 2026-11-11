@@ -44,7 +44,7 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
     },
     {
       step: '05. DEPLOY',
-      title: 'GitHub Pages / Vercel',
+      title: 'GitHub Pages',
       version: `v${LIVE_SITE_STACK.projectVersion}`,
       sub: 'Static Hosting',
     },
@@ -67,7 +67,6 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
           </p>
         </div>
 
-        {/* Visual Pipeline Diagram */}
         <div className="folio-card mb-8">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-ink">
@@ -78,7 +77,7 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
               <span>{t.pipelineTitle}</span>
             </div>
             <span className="font-mono text-xs text-folio-muted">
-              package.json ({LIVE_SITE_STACK.packages.length} packages)
+              package.json · {LIVE_SITE_STACK.packages.length}
             </span>
           </div>
 
@@ -112,7 +111,6 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
           </div>
         </div>
 
-        {/* Core Package Ledger (Balanced 3-column grid, 2 full rows) */}
         <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {LIVE_SITE_STACK.packages.map((pkg, idx) => (
             <motion.div

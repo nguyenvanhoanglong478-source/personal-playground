@@ -8,10 +8,6 @@ export interface SynthesizedSkill {
   evidenceSummary: BilingualText;
 }
 
-/**
- * Tự động tổng hợp danh sách Kỹ năng & Công cụ từ chính mảng PROJECTS_DATA (Mục 4.4).
- * Khử trùng lặp hoàn toàn theo tên công nghệ và ghi nhận các dự án thật có sử dụng công nghệ đó.
- */
 export function getSynthesizedSkills(): SynthesizedSkill[] {
   const map = new Map<string, SynthesizedSkill>();
 

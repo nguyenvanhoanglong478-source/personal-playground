@@ -86,7 +86,6 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
       const spruceColor =
         theme === 'dark' ? 'rgba(69, 184, 153, 0.18)' : 'rgba(29, 91, 76, 0.15)';
 
-      // Manuscript vertical margin line
       const marginX = width > 1024 ? width * 0.66 : width * 0.88;
       ctx.strokeStyle = strokeRule;
       ctx.lineWidth = 1;
@@ -95,7 +94,6 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
       ctx.lineTo(marginX, height);
       ctx.stroke();
 
-      // Gentle phonetic / editorial wave curves in the lower & upper margins
       const waveYPositions = [height * 0.14, height * 0.88];
       waveYPositions.forEach((baseWaveY, w) => {
         ctx.strokeStyle = w === 0 ? accentColor : spruceColor;
@@ -112,7 +110,6 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
         ctx.stroke();
       });
 
-      // Subtle architectural registration crosshairs (+)
       ctx.strokeStyle = strokeRule;
       ctx.lineWidth = 1;
       for (const pt of points) {

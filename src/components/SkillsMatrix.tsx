@@ -47,7 +47,6 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
           </p>
         </div>
 
-        {/* Slow Tech Marquee Strip */}
         <div
           className="mb-8 overflow-hidden rounded-[var(--radius-inner)] border border-folio-border bg-folio-surface py-3"
           aria-label="Technology Marquee"
@@ -62,7 +61,6 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
           </div>
         </div>
 
-        {/* Balanced Category Row Bands (Eliminates uneven blank columns) */}
         <div className="space-y-4">
           {CATEGORY_ORDER.map((category, idx) => {
             const items = SYNTHESIZED_SKILLS.filter(
@@ -80,7 +78,6 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
                 transition={{ duration: 0.4, delay: idx * 0.05 }}
                 className="folio-card grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-start"
               >
-                {/* Left Category Label (3 cols) */}
                 <div className="flex items-center justify-between border-b border-folio-border pb-3 lg:col-span-3 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
                   <div className="flex items-center gap-2.5">
                     {getCategoryIcon(category)}
@@ -89,11 +86,10 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
                     </h3>
                   </div>
                   <span className="font-mono text-xs text-folio-muted">
-                    ({items.length})
+                    {items.length}
                   </span>
                 </div>
 
-                {/* Right Uniform Card Grid (9 cols) */}
                 <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:col-span-9 xl:grid-cols-3">
                   {items.map((item) => (
                     <div

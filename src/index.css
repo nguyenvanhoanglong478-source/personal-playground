@@ -1,6 +1,3 @@
-/* Hallmark stamp: v2.0.0; theme: marginalia-and-folio; genre: editorial; material: words-and-code */
-/* Critique: Warm archival paper (#F6F3EC) and deep nocturnal slate (#0E100F) paired with Vermilion (#C83E2B / #F05A43) and Spruce (#1D5B4C / #45B899). Unified spacing, radius, and typography tokens across every component. */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -20,7 +17,6 @@ html[data-theme='light'] {
   --border-strong: #9E9687;
   --shadow-soft: 0 2px 10px -2px rgba(20, 20, 19, 0.06);
 
-  /* Unified Layout & Component Tokens (4/8px scale) */
   --radius-card: 8px;
   --radius-inner: 6px;
   --radius-control: 6px;
@@ -78,13 +74,11 @@ h3,
   min-width: 0;
 }
 
-/* Instant focus-visible ring per Hallmark Floor #6 */
 *:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 3px;
 }
 
-/* Shared Design System Component Primitives */
 .folio-section {
   border-bottom: 1px solid var(--border-subtle);
   padding-top: var(--space-section-y);
@@ -245,18 +239,6 @@ h3,
   border-color: var(--accent-primary);
 }
 
-.placeholder-token {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-  padding: 0.1rem 0.45rem;
-  border: 1px dashed var(--accent-primary);
-  color: var(--accent-primary);
-  background-color: var(--bg-surface);
-  border-radius: var(--radius-tag);
-}
-
-/* Slow tech marquee animation using transform only */
 @keyframes folio-marquee {
   0% {
     transform: translate3d(0%, 0, 0);

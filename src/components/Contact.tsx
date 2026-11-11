@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, Github, Mail, MessageSquareShare, Send } from 'lucide-react';
+import { ExternalLink, Github, Mail, Send } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 
 interface ContactProps {
@@ -11,12 +11,8 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
 
-  const rawEmail = PROFILE_DATA.contacts.email.startsWith('[[')
-    ? ''
-    : PROFILE_DATA.contacts.email;
-
-  const mailtoHref = `mailto:${rawEmail}?subject=${encodeURIComponent(
-    subject || 'Hello Marcus'
+  const mailtoHref = `mailto:${PROFILE_DATA.contacts.email}?subject=${encodeURIComponent(
+    subject || 'Trao đổi công việc với Long Hoàng'
   )}&body=${encodeURIComponent(body)}`;
 
   return (
@@ -37,60 +33,37 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
         </div>
 
         <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12">
-          {/* Left: Contact Channels */}
           <div className="flex flex-col justify-between gap-4 lg:col-span-5">
             <div className="folio-card flex flex-1 flex-col justify-center">
               <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
                 <Mail className="h-4 w-4 text-folio-vermilion" aria-hidden="true" />
                 <span>EMAIL</span>
               </div>
-              <div className="mt-2">
-                <span className="placeholder-token text-sm">
-                  {PROFILE_DATA.contacts.email}
-                </span>
-              </div>
-            </div>
-
-            <div className="folio-card flex flex-1 flex-col justify-center">
-              <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-folio-muted">
-                <span className="flex items-center gap-2">
-                  <Github className="h-4 w-4 text-folio-spruce" aria-hidden="true" />
-                  <span>GITHUB</span>
-                </span>
-                <a
-                  href={PROFILE_DATA.contacts.githubDetectedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-[32px] items-center gap-1 text-folio-spruce underline hover:text-folio-vermilion"
-                >
-                  <span>nguyenvanhoanglong478-source</span>
-                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                </a>
-              </div>
-              <div className="mt-2">
-                <span className="placeholder-token text-sm">
-                  {PROFILE_DATA.contacts.github}
-                </span>
-              </div>
+              <a
+                href={`mailto:${PROFILE_DATA.contacts.email}`}
+                className="mt-2 inline-flex min-h-[36px] items-center break-all font-mono text-sm font-semibold text-folio-ink underline hover:text-folio-vermilion"
+              >
+                {PROFILE_DATA.contacts.email}
+              </a>
             </div>
 
             <div className="folio-card flex flex-1 flex-col justify-center">
               <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
-                <MessageSquareShare
-                  className="h-4 w-4 text-folio-vermilion"
-                  aria-hidden="true"
-                />
-                <span>LINKEDIN / FACEBOOK</span>
+                <Github className="h-4 w-4 text-folio-spruce" aria-hidden="true" />
+                <span>GITHUB</span>
               </div>
-              <div className="mt-2">
-                <span className="placeholder-token text-sm">
-                  {PROFILE_DATA.contacts.social}
-                </span>
-              </div>
+              <a
+                href={PROFILE_DATA.contacts.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex min-h-[36px] items-center gap-1.5 break-all font-mono text-sm font-semibold text-folio-spruce underline hover:text-folio-vermilion"
+              >
+                <span>{PROFILE_DATA.contacts.githubUrl}</span>
+                <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              </a>
             </div>
           </div>
 
-          {/* Right: Mailto Composer */}
           <div className="folio-card flex flex-col justify-between lg:col-span-7">
             <div>
               <h3 className="font-serif text-2xl font-bold text-folio-ink">
@@ -103,7 +76,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                     htmlFor="mailto-subject-input"
                     className="mb-1.5 block font-mono text-xs font-medium text-folio-muted"
                   >
-                    {locale === 'vi' ? 'Tiêu đề thư' : 'Subject'}
+                    {t.subjectLabel}
                   </label>
                   <input
                     id="mailto-subject-input"
@@ -120,7 +93,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                     htmlFor="mailto-body-input"
                     className="mb-1.5 block font-mono text-xs font-medium text-folio-muted"
                   >
-                    {locale === 'vi' ? 'Nội dung trao đổi' : 'Message'}
+                    {t.bodyLabel}
                   </label>
                   <textarea
                     id="mailto-body-input"

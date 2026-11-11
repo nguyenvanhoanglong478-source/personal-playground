@@ -3,6 +3,7 @@ import { Locale } from './data/profile';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { About } from './components/About';
+import { Experience } from './components/Experience';
 import { ProjectsBento } from './components/ProjectsBento';
 import { SkillsMatrix } from './components/SkillsMatrix';
 import { BuiltWithDiagram } from './components/BuiltWithDiagram';
@@ -10,8 +11,8 @@ import { Contact } from './components/Contact';
 import { Footer } from './components/Footer';
 import { CustomCursor } from './components/CustomCursor';
 
-const THEME_STORAGE_KEY = 'marcus_folio_theme_v2';
-const LOCALE_STORAGE_KEY = 'marcus_folio_locale_v2';
+const THEME_STORAGE_KEY = 'longhoang_folio_theme_v1';
+const LOCALE_STORAGE_KEY = 'longhoang_folio_locale_v1';
 
 export function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -19,7 +20,7 @@ export function App() {
       const saved = localStorage.getItem(THEME_STORAGE_KEY);
       if (saved === 'light' || saved === 'dark') return saved;
     } catch {
-      // ignore storage errors
+      return 'dark';
     }
     if (
       typeof window !== 'undefined' &&
@@ -35,7 +36,7 @@ export function App() {
       const saved = localStorage.getItem(LOCALE_STORAGE_KEY);
       if (saved === 'vi' || saved === 'en') return saved;
     } catch {
-      // ignore storage errors
+      return 'vi';
     }
     return 'vi';
   });
@@ -47,7 +48,7 @@ export function App() {
     try {
       localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch {
-      // ignore
+      return;
     }
   }, [theme]);
 
@@ -56,12 +57,20 @@ export function App() {
     try {
       localStorage.setItem(LOCALE_STORAGE_KEY, locale);
     } catch {
-      // ignore
+      return;
     }
   }, [locale]);
 
   useEffect(() => {
-    const sectionIds = ['hero', 'about', 'projects', 'skills', 'stack', 'contact'];
+    const sectionIds = [
+      'hero',
+      'about',
+      'experience',
+      'projects',
+      'skills',
+      'stack',
+      'contact',
+    ];
     const elements = sectionIds
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
@@ -109,6 +118,7 @@ export function App() {
       <main id="main-content">
         <Hero locale={locale} theme={theme} />
         <About locale={locale} />
+        <Experience locale={locale} />
         <ProjectsBento locale={locale} />
         <SkillsMatrix locale={locale} />
         <BuiltWithDiagram locale={locale} />

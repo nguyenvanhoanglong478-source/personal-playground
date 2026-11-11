@@ -7,53 +7,53 @@ export interface BilingualText {
 
 export interface ProfileData {
   name: string;
-  rolePlaceholder: BilingualText;
+  birthYear: string;
+  role: BilingualText;
+  brandSubtitle: BilingualText;
+  avatarUrl: string;
   slogan: BilingualText;
   introMain: BilingualText;
-  introPlaceholder: BilingualText;
   aboutStory: BilingualText;
-  marginaliaNote: BilingualText;
-  portraitPathPlaceholder: string;
+  methodSummary: BilingualText;
   contacts: {
     email: string;
-    github: string;
-    githubDetectedUrl: string;
-    social: string;
+    githubUrl: string;
+    githubHandle: string;
   };
 }
 
 export const PROFILE_DATA: ProfileData = {
-  name: 'Marcus',
-  rolePlaceholder: {
-    vi: '[[ví dụ: Developer tự học / Indie builder]]',
-    en: '[[e.g., Self-taught Developer / Indie builder]]',
+  name: 'Long Hoàng',
+  birthYear: '2007',
+  role: {
+    vi: 'Sinh viên, Design tự do',
+    en: 'Student, Freelance Designer',
   },
+  brandSubtitle: {
+    vi: 'Sinh viên & Design tự do',
+    en: 'Student & Freelance Designer',
+  },
+  avatarUrl: './avatar.jpg',
   slogan: {
-    vi: 'Đọc kỹ tài liệu. Tự xây công cụ cho việc học và làm việc.',
-    en: 'Read deeply. Build small tools for study and work.',
+    vi: 'Thiết kế rõ ràng. Tự tay biến ý tưởng thành sản phẩm chạy thật.',
+    en: 'Clear visual craft. Turning ideas into working software.',
   },
   introMain: {
-    vi: 'Tôi tự xây dựng các dự án cá nhân, tập trung vào công cụ hỗ trợ học ngoại ngữ và đọc tài liệu học thuật.',
-    en: 'I build personal software projects, focusing on tools for learning foreign languages and reading academic articles.',
-  },
-  introPlaceholder: {
-    vi: '[[bổ sung quê quán, sở thích, mục tiêu nghề nghiệp]]',
-    en: '[[add hometown, personal interests, and career goals]]',
+    vi: 'Tôi kết hợp tư duy thiết kế giao diện tự do với lập trình thực chiến để xây dựng ứng dụng web, di động Android và công cụ tương tác trên trình duyệt.',
+    en: 'I combine freelance interface design with hands-on software engineering across web applications, Android mobile apps, and interactive browser tools.',
   },
   aboutStory: {
-    vi: 'Tôi thích học ngoại ngữ trực tiếp qua các bài báo khoa học thay vì học từng từ riêng lẻ. Mỗi dự án của tôi đều bắt đầu từ một nhu cầu cụ thể trong lúc đọc tài liệu, ghi chú công việc hay giải trí cùng bạn bè.',
-    en: 'I prefer learning languages by reading real academic papers instead of memorizing isolated flashcards. Each of my projects starts from a practical need in reading, note-taking, or group play.',
+    vi: 'Sinh năm 2007, hiện tôi đang là sinh viên đồng thời làm thiết kế tự do. Tôi chú trọng cách sắp xếp bố cục, tỷ lệ chữ và độ tương phản, sau đó tự viết mã nguồn để sản phẩm vận hành mượt mà trên nhiều thiết bị.',
+    en: 'Born in 2007, I am currently a student working alongside as a freelance designer. I focus on layout structure, typography hierarchy, and color contrast, then write the full codebase myself so products run reliably across devices.',
   },
-  marginaliaNote: {
-    vi: 'Ghi chú lề: Giữ mọi công cụ gọn nhẹ, rõ mã nguồn và chạy ổn định trên thiết bị phổ thông.',
-    en: 'Margin note: Keep tools lightweight, transparent in code, and reliable on everyday devices.',
+  methodSummary: {
+    vi: 'Từ khâu dựng giao diện bằng Figma và Tailwind CSS đến đóng gói ứng dụng Android hay viết kiểm thử tự động Playwright, tôi luôn ưu tiên tính thực tế, gọn nhẹ và dễ bảo trì.',
+    en: 'From shaping interfaces in Tailwind CSS and Canvas to packaging Android apps and writing Playwright test suites, I prioritize practical performance and maintainable code.',
   },
-  portraitPathPlaceholder: '[[đường dẫn ảnh, nếu không có thì dùng khung placeholder đẹp]]',
   contacts: {
-    email: '[[email]]',
-    github: '[[GitHub]]',
-    githubDetectedUrl: 'https://github.com/nguyenvanhoanglong478-source',
-    social: '[[LinkedIn/Facebook]]',
+    email: 'nguyenvanhoanglong478@gmail.com',
+    githubUrl: 'https://github.com/nguyenvanhoanglong478-source',
+    githubHandle: 'nguyenvanhoanglong478-source',
   },
 };
 
@@ -62,69 +62,73 @@ export const UI_LABELS = {
     nav: {
       hero: '01. Giới thiệu',
       about: '02. Về tôi',
-      projects: '03. Dự án',
-      skills: '04. Kỹ năng',
-      stack: '05. Công nghệ trang',
-      contact: '06. Liên hệ',
+      experience: '03. Kinh nghiệm',
+      projects: '04. Dự án',
+      skills: '05. Kỹ năng',
+      stack: '06. Công nghệ trang',
+      contact: '07. Liên hệ',
       themeLight: 'Sáng',
       themeDark: 'Tối',
     },
     hero: {
-      folioTag: '01 / HỒ SƠ CÁ NHÂN & DỰ ÁN',
-      roleLabel: 'Vai trò:',
+      folioTag: '01 / HỒ SƠ CÁ NHÂN',
+      birthLabel: 'Năm sinh',
+      roleLabel: 'Nghề nghiệp',
       ctaProjects: 'Xem dự án',
       ctaContact: 'Liên hệ',
-      marginaliaHeader: 'DANH MỤC 4 DỰ ÁN',
-      scrollHint: 'Cuộn xuống để xem chi tiết dự án và công nghệ.',
+      indexHeader: '5 DỰ ÁN TIÊU BIỂU',
     },
     about: {
-      sectionIndex: '02 / VỀ TÔI',
-      heading: 'Cách tôi học và xây dựng sản phẩm',
-      portraitCaption: 'Ảnh chân dung',
-      methodTitle: 'Nguyên tắc làm việc',
-      methodBody:
-        'Tôi tách rõ phần giao diện và dữ liệu, ưu tiên chạy nhanh trên máy cấu hình thấp và kiểm thử các luồng chính trước khi phát hành.',
+      sectionIndex: '02 / THÔNG TIN CƠ BẢN',
+      heading: 'Về Long Hoàng',
+      portraitAlt: 'Ảnh chân dung của Long Hoàng',
+      nameLabel: 'Họ tên',
+      birthLabel: 'Năm sinh',
+      roleLabel: 'Nghề nghiệp',
+      methodTitle: 'Định hướng thực hiện',
+    },
+    experience: {
+      sectionIndex: '03 / KINH NGHIỆM',
+      heading: 'Kinh nghiệm thiết kế và lập trình',
+      subheading: 'Tổng hợp từ quá trình thiết kế tự do và phát triển các dự án web, di động, đồ họa tương tác và kiểm thử tự động.',
     },
     projects: {
-      sectionIndex: '03 / DỰ ÁN CÁ NHÂN',
-      heading: 'Các dự án đã thực hiện',
-      subheading:
-        'Bốn dự án cá nhân từ công cụ học tập, ứng dụng Android đến trò chơi thời gian thực. Công nghệ hiển thị được lấy trực tiếp từ mã nguồn.',
-      linkPlaceholderLabel: 'Bản chạy thử:',
-      repoLabel: 'Xem mã nguồn',
-      techLabel: 'Công nghệ chính',
+      sectionIndex: '04 / DỰ ÁN NỔI BẬT',
+      heading: '5 dự án mã nguồn nhiều nhất trên GitHub',
+      subheading: 'Các dự án có dung lượng và khối lượng mã nguồn lớn nhất được xây dựng và lưu trữ trên tài khoản GitHub cá nhân.',
+      repoLabel: 'GitHub',
+      techLabel: 'Công nghệ sử dụng',
     },
     skills: {
-      sectionIndex: '04 / KỸ NĂNG VÀ CÔNG CỤ',
-      heading: 'Kỹ năng từ dự án thực tế',
-      subheading:
-        'Tổng hợp các ngôn ngữ, thư viện và nền tảng triển khai đã sử dụng trong 4 dự án trên.',
+      sectionIndex: '05 / KỸ NĂNG VÀ CÔNG CỤ',
+      heading: 'Công nghệ thành thạo từ dự án thực tế',
+      subheading: 'Tổng hợp các ngôn ngữ, thư viện, công cụ đồ họa và nền tảng triển khai đã áp dụng trực tiếp.',
       categories: {
         language: 'Ngôn ngữ lập trình',
         framework: 'Framework và thư viện',
-        tool: 'Công cụ và lưu trữ',
+        tool: 'Công cụ và kiểm thử',
         deploy: 'Nền tảng triển khai',
       },
     },
     builtWith: {
-      sectionIndex: '05 / CÔNG NGHỆ XÂY DỰNG TRANG',
+      sectionIndex: '06 / KIẾN TRÚC TRANG WEB',
       heading: 'Trang web này được xây dựng bằng gì',
-      subheading:
-        'Danh sách các công nghệ cốt lõi đang chạy trang web này, đọc trực tiếp từ tệp package.json.',
-      pipelineTitle: 'Luồng đóng gói và hiển thị',
+      subheading: 'Danh sách công nghệ cốt lõi đang vận hành trang cá nhân này, trích xuất trực tiếp từ tệp package.json.',
+      pipelineTitle: 'Luồng biên dịch và hiển thị',
     },
     contact: {
-      sectionIndex: '06 / LIÊN HỆ',
+      sectionIndex: '07 / LIÊN HỆ',
       heading: 'Kết nối với tôi',
-      subheading:
-        'Bạn có thể gửi email trực tiếp hoặc liên hệ qua các kênh bên dưới.',
+      subheading: 'Gửi email trực tiếp hoặc ghé thăm kho lưu trữ dự án trên GitHub của tôi.',
       mailtoButton: 'Mở trình gửi thư',
-      composeLabel: 'Soạn nhanh nội dung email',
-      subjectPlaceholder: 'Tiêu đề thư (ví dụ: Trao đổi về dự án Marginal)',
-      bodyPlaceholder: 'Nội dung bạn muốn nhắn...',
+      composeLabel: 'Soạn nhanh email',
+      subjectLabel: 'Tiêu đề thư',
+      bodyLabel: 'Nội dung trao đổi',
+      subjectPlaceholder: 'Nhập tiêu đề trao đổi công việc hoặc thiết kế',
+      bodyPlaceholder: 'Nhập nội dung bạn muốn nhắn cho tôi...',
     },
     footer: {
-      colophon: 'Marcus — Hồ sơ cá nhân và dự án.',
+      colophon: 'Long Hoàng — Sinh viên & Design tự do.',
       backToTop: 'Về đầu trang',
     },
   },
@@ -132,69 +136,73 @@ export const UI_LABELS = {
     nav: {
       hero: '01. Intro',
       about: '02. About',
-      projects: '03. Projects',
-      skills: '04. Skills',
-      stack: '05. Site stack',
-      contact: '06. Contact',
+      experience: '03. Experience',
+      projects: '04. Projects',
+      skills: '05. Skills',
+      stack: '06. Site stack',
+      contact: '07. Contact',
       themeLight: 'Light',
       themeDark: 'Dark',
     },
     hero: {
-      folioTag: '01 / PERSONAL FOLIO & PROJECTS',
-      roleLabel: 'Role:',
+      folioTag: '01 / PERSONAL PORTFOLIO',
+      birthLabel: 'Born',
+      roleLabel: 'Occupation',
       ctaProjects: 'View projects',
       ctaContact: 'Contact me',
-      marginaliaHeader: 'PROJECT INDEX (4)',
-      scrollHint: 'Scroll down to inspect projects and source-verified technologies.',
+      indexHeader: 'TOP 5 PROJECTS',
     },
     about: {
-      sectionIndex: '02 / ABOUT ME',
-      heading: 'How I learn and build software',
-      portraitCaption: 'Portrait',
-      methodTitle: 'Working principles',
-      methodBody:
-        'I keep data separated from UI components, optimize for everyday devices, and test core flows before shipping.',
+      sectionIndex: '02 / BASIC PROFILE',
+      heading: 'About Long Hoàng',
+      portraitAlt: 'Portrait of Long Hoàng',
+      nameLabel: 'Full name',
+      birthLabel: 'Birth year',
+      roleLabel: 'Occupation',
+      methodTitle: 'Working approach',
+    },
+    experience: {
+      sectionIndex: '03 / EXPERIENCE',
+      heading: 'Design and engineering experience',
+      subheading: 'Synthesized from freelance UI design work alongside building web platforms, Android apps, interactive graphics, and automated test suites.',
     },
     projects: {
-      sectionIndex: '03 / PERSONAL PROJECTS',
-      heading: 'Selected projects',
-      subheading:
-        'Four personal projects spanning language learning tools, an Android app, and browser games. Technologies are taken directly from source code.',
-      linkPlaceholderLabel: 'Live link:',
-      repoLabel: 'Source code',
-      techLabel: 'Core technologies',
+      sectionIndex: '04 / FEATURED PROJECTS',
+      heading: 'Top 5 largest repositories on GitHub',
+      subheading: 'Selected projects ranked by source code volume and repository size from my personal GitHub account.',
+      repoLabel: 'GitHub',
+      techLabel: 'Technologies',
     },
     skills: {
-      sectionIndex: '04 / SKILLS AND TOOLS',
-      heading: 'Skills synthesized from real code',
-      subheading:
-        'Languages, frameworks, tools, and deployment platforms used across the four projects above.',
+      sectionIndex: '05 / SKILLS AND TOOLS',
+      heading: 'Technical stack from real projects',
+      subheading: 'Languages, frameworks, graphic engines, and deployment platforms applied across shipped projects.',
       categories: {
-        language: 'Languages',
+        language: 'Programming languages',
         framework: 'Frameworks and libraries',
-        tool: 'Tools and storage',
+        tool: 'Tools and testing',
         deploy: 'Deployment platforms',
       },
     },
     builtWith: {
-      sectionIndex: '05 / SITE ARCHITECTURE',
+      sectionIndex: '06 / SITE ARCHITECTURE',
       heading: 'What this website is built with',
-      subheading:
-        'Core technologies powering this site, read directly from its root package.json file.',
+      subheading: 'Core technologies running this site, synced directly from the root package.json manifest.',
       pipelineTitle: 'Build and runtime pipeline',
     },
     contact: {
-      sectionIndex: '06 / CONTACT',
+      sectionIndex: '07 / CONTACT',
       heading: 'Get in touch',
-      subheading:
-        'Send me an email directly or reach out through the channels below.',
+      subheading: 'Send me an email directly or browse my repositories on GitHub.',
       mailtoButton: 'Open email client',
-      composeLabel: 'Quick-draft an email',
-      subjectPlaceholder: 'Subject (e.g., Discussion about Marginal)',
-      bodyPlaceholder: 'Your message...',
+      composeLabel: 'Quick email draft',
+      subjectLabel: 'Subject',
+      bodyLabel: 'Message',
+      subjectPlaceholder: 'Enter subject for design or engineering work',
+      bodyPlaceholder: 'Write your message here...',
     },
     footer: {
-      colophon: 'Marcus — Personal portfolio & projects.',
+      colophon: 'Long Hoàng — Student & Freelance Designer.',
       backToTop: 'Back to top',
     },
   },

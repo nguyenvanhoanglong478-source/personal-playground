@@ -45,6 +45,13 @@ export function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute(
+        'content',
+        theme === 'dark' ? '#131314' : '#F8F9FA'
+      );
+    }
     try {
       localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch {
@@ -97,10 +104,12 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-folio-bg text-folio-ink selection:bg-folio-vermilion selection:text-[var(--accent-primary-contrast)]">
+    <div className="relative min-h-screen bg-folio-bg text-folio-ink selection:bg-folio-gblue selection:text-white">
+      <div className="google-aura-backdrop" aria-hidden="true" />
+
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-folio-vermilion focus:px-4 focus:py-2 focus:font-mono focus:text-xs focus:font-bold focus:text-[var(--accent-primary-contrast)]"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-folio-accent focus:px-4 focus:py-2 focus:font-mono focus:text-xs focus:font-bold focus:text-[var(--accent-primary-contrast)]"
       >
         {locale === 'vi' ? 'Chuyển đến nội dung chính' : 'Skip to main content'}
       </a>
@@ -115,7 +124,7 @@ export function App() {
         activeSection={activeSection}
       />
 
-      <main id="main-content">
+      <main id="main-content" className="relative z-10">
         <Hero locale={locale} theme={theme} />
         <About locale={locale} />
         <Experience locale={locale} />

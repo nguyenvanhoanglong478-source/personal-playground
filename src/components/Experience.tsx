@@ -20,8 +20,8 @@ export const Experience: React.FC<ExperienceProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
+            <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
             <span className="folio-index-label">{t.sectionIndex}</span>
           </div>
           <h2 id="experience-heading" className="folio-section-heading">
@@ -40,14 +40,14 @@ export const Experience: React.FC<ExperienceProps> = ({ locale }) => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.45, delay: idx * 0.08, ease: [0.22, 1, 0.36, 1] }}
-              className="folio-card flex h-full flex-col justify-between backdrop-blur-xl transition-all duration-300 hover:border-folio-vermilion/50 hover:shadow-2xl"
+              className="folio-card google-gradient-hover-border flex h-full flex-col justify-between transition-all duration-300"
             >
               <div>
                 <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-3">
-                  <span className="font-mono text-xs font-bold text-folio-vermilion">
+                  <span className="font-mono text-xs font-bold text-folio-accent">
                     {exp.index}
                   </span>
-                  <span className="inline-flex items-center gap-1.5 font-mono text-xs font-medium text-folio-spruce">
+                  <span className="inline-flex items-center gap-1.5 font-mono text-xs font-medium text-folio-secondary">
                     <Briefcase className="h-3.5 w-3.5" aria-hidden="true" />
                     <span>{exp.roleTag[locale]}</span>
                   </span>
@@ -68,7 +68,7 @@ export const Experience: React.FC<ExperienceProps> = ({ locale }) => {
                       className="flex items-start gap-2.5 text-sm leading-relaxed text-folio-ink"
                     >
                       <Check
-                        className="mt-1 h-4 w-4 shrink-0 text-folio-vermilion"
+                        className="mt-1 h-4 w-4 shrink-0 text-folio-accent"
                         aria-hidden="true"
                       />
                       <span>{point}</span>

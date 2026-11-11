@@ -21,25 +21,17 @@ Cập nhật lần cuối: 2026-11-11
 
 ## 2. Nâng Cấp Thiết Kế & Chuyển Động (UI/UX & Animations)
 
-- **Hệ thống màu sắc & Thẩm mỹ**:
-  - Phong cách Dark Mode sang trọng, chiều sâu cao với bề mặt kính mờ Glassmorphism (`backdrop-blur-xl`).
-  - Điểm nhấn dải màu Gradient viền sáng Vermilion và Emerald Mint.
-  - Phân cấp Typography rõ ràng giữa phông Serif tiêu đề Newsreader, phông Sans Be Vietnam Pro và phông Mono JetBrains Mono.
-- **Hero Section & Ảnh đại diện**:
-  - Ảnh đại diện đặt trong thẻ thiết kế nổi bật tại Hero với hiệu ứng lơ lửng nhẹ nhàng `animate-float-gentle` và dải hào quang tỏa sáng chuyển động `animate-pulse-ring`.
-  - Huy hiệu trạng thái "Sẵn sàng nhận dự án thiết kế" với đèn hiệu xanh ngọc bích phát xung `animate-ping`.
-  - Tên "Long Hoàng" và tiêu đề nghề nghiệp xuất hiện ấn tượng với chuyển động chữ so le.
-  - Nút kêu gọi hành động với hiệu ứng hút chuột từ tính (magnetic CTA).
-- **Thẻ 5 Dự án (Bento Grid)**:
-  - Hiệu ứng 3D Tilt nghiêng theo góc di chuột mượt mà (`rotateX`, `rotateY`, `perspective 1000px`).
-  - Vệt sáng động (Radial Spotlight Sheen) quét theo chuyển động con trỏ chuột trên mặt thẻ.
-  - Nút bấm xem mã nguồn GitHub có hiệu ứng hover đổi màu, bóng sáng và mũi tên di chuyển.
-- **Nền động tương tác (Background Canvas 2D)**:
-  - Hệ thống các hạt sáng lơ lửng, liên kết chùm sao nhẹ và dải sóng không gian mượt mà 60fps.
-  - Quầng sáng ambient gradient nhẹ nhàng theo sau con trỏ chuột, tôn độ tương phản và không làm rối mắt chữ.
-- **Scroll Reveal & Micro-interactions**:
-  - Toàn bộ các phần nội dung đều xuất hiện mượt mà khi cuộn tới (`whileInView`).
-  - Con trỏ chuột tùy biến (Custom Cursor) nhẹ nhàng trên màn hình máy tính.
-- **Tối ưu & Khả năng truy cập**:
-  - Hỗ trợ đầy đủ `prefers-reduced-motion` tự động ngắt chuyển động mạnh khi người dùng yêu cầu.
-  - Đảm bảo độ mượt 60fps, tương thích hoàn hảo từ mobile 360px đến desktop 1440px.
+- **Hero Section & Ảnh đại diện**: Thẻ ảnh đại diện lơ lửng (`animate-float-gentle`), dải hào quang tỏa sáng (`animate-pulse-ring`), huy hiệu trạng thái nhận việc, nút CTA từ tính.
+- **Thẻ 5 Dự án (Bento Grid)**: Hiệu ứng 3D Tilt nghiêng theo góc di chuột, vệt sáng radial spotlight, nút bấm GitHub tương tác mượt mà.
+- **Nền động & Scroll Reveal**: Canvas 2D 60fps, chuyển động `whileInView` cho các phân khu, hỗ trợ `prefers-reduced-motion`.
+
+## 3. Tái Thiết Kế Bảng Màu Google Modern Gradient (Light & Dark Mode)
+
+- **Dải màu Google Signature**: Tích hợp hệ thống token màu `#4285F4`, `#9B72CB`, `#D96570`, `#EA4335`, `#FBBC04`, `#34A853` trong `src/index.css` và `tailwind.config.js`.
+- **Chế độ Sáng (Google Workspace / Material You)**: Nền `#F8F9FA`, bề mặt `#FFFFFF` kính mờ + `#F0F4F9`, chữ `#1F1F1F` / `#444746`, quầng nền Pastel Gradient Google nhẹ và bóng mềm đa sắc.
+- **Chế độ Tối (Google Gemini Dark)**: Nền `#131314`, bề mặt `#1E1F20` kính mờ + `#282A2C`, chữ `#E3E3E3` / `#C4C7C5`, hào quang Google Aura Mesh Gradient phía sau.
+- **Ứng dụng Chuyển sắc & Chuyển đổi Mượt mà**:
+  - Text Gradient cho tên `Long Hoàng`, tiêu đề các phân khu và các nút liên kết GitHub.
+  - Viền Gradient Google cho ảnh đại diện ở Hero và About, cùng viền phát quang khi hover 5 thẻ dự án Bento.
+  - Chuyển màu mượt mà `360ms` khi đổi giữa chế độ Sáng và Tối, đồng bộ `<meta name="theme-color">`, `public/favicon.svg` và Canvas 2D.
+  - Đã tinh chỉnh responsive `Navbar.tsx` để không cắt chữ hoặc đẩy nút menu trên màn hình 360px–375px.

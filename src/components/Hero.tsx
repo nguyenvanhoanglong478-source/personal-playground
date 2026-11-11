@@ -43,16 +43,16 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
       </Suspense>
 
       <div className="folio-container relative z-10">
-        <div className="mb-8 flex items-center justify-between border-b border-folio-border pb-4">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-folio-border pb-4">
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
             <BookMarked className="h-4 w-4" aria-hidden="true" />
             <span>{t.folioTag}</span>
           </div>
 
-          <div className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-mono text-[11px] font-medium text-emerald-400">
+          <div className="flex items-center gap-2 rounded-full border border-folio-secondary/35 bg-folio-secondary/10 px-3 py-1 font-mono text-[11px] font-semibold text-folio-secondary">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-folio-ggreen opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-folio-ggreen" />
             </span>
             <span>{t.statusAvailable}</span>
           </div>
@@ -62,7 +62,7 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
           <div className="lg:col-span-7">
             <div className="mb-4 flex flex-wrap items-center gap-3">
               <span className="folio-chip flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-folio-vermilion" aria-hidden="true" />
+                <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
                 <span>{PROFILE_DATA.role[locale]}</span>
               </span>
               <span className="folio-chip">
@@ -72,17 +72,17 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
 
             <h1
               id="hero-display-heading"
-              className="font-serif text-5xl font-bold leading-[1.04] tracking-tight text-folio-ink sm:text-7xl lg:text-[5.25rem]"
+              className="font-serif text-5xl font-bold leading-[1.12] tracking-tight text-folio-ink sm:text-7xl lg:text-[5.25rem]"
             >
               <motion.span
                 initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="block text-folio-vermilion"
+                className="google-text-gradient block"
               >
                 {PROFILE_DATA.name}.
               </motion.span>
-              <span className="mt-3 block font-serif text-3xl font-normal italic leading-[1.2] text-folio-ink sm:text-5xl lg:text-[3.25rem]">
+              <span className="mt-2 block font-serif text-3xl font-normal italic leading-[1.22] text-folio-ink sm:text-5xl lg:text-[3.2rem]">
                 {sloganWords.map((word, idx) => (
                   <motion.span
                     key={`${word}-${idx}`}
@@ -107,7 +107,7 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
               initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-7 max-w-2xl text-base leading-relaxed text-folio-ink sm:text-lg"
+              className="mt-7 max-w-2xl text-base leading-relaxed text-folio-muted sm:text-lg"
             >
               {PROFILE_DATA.introMain[locale]}
             </motion.p>
@@ -133,7 +133,7 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
               </a>
 
               <a href="#contact" className="folio-btn-secondary">
-                <Mail className="h-4 w-4 text-folio-vermilion" aria-hidden="true" />
+                <Mail className="h-4 w-4 text-folio-accent" aria-hidden="true" />
                 <span>{t.ctaContact}</span>
               </a>
             </motion.div>
@@ -147,47 +147,58 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
           >
             <div className="relative w-full max-w-md">
               <div
-                className="absolute -inset-1.5 rounded-3xl bg-gradient-to-tr from-folio-vermilion via-teal-400 to-amber-500 opacity-60 blur-xl animate-pulse-ring"
+                style={{ backgroundImage: 'var(--google-gradient-aura)' }}
+                className="animate-pulse-ring absolute -inset-2.5 rounded-3xl blur-2xl"
                 aria-hidden="true"
               />
 
-              <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-folio-surface/80 p-5 shadow-2xl backdrop-blur-xl animate-float-gentle">
-                <div className="relative overflow-hidden rounded-xl border border-white/10">
-                  <img
-                    src={PROFILE_DATA.avatarUrl}
-                    alt={PROFILE_DATA.name}
-                    className="aspect-square w-full object-cover object-top filter contrast-[1.03] transition-transform duration-500 hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
-                    <div>
-                      <div className="font-serif text-lg font-bold">
-                        {PROFILE_DATA.name}
+              <div className="google-border-frame animate-float-gentle relative rounded-2xl p-[1.5px] shadow-[var(--shadow-glow)]">
+                <div className="relative overflow-hidden rounded-[calc(1rem-1.5px)] bg-folio-surface p-5 backdrop-blur-xl transition-colors duration-300">
+                  <div className="google-border-frame relative rounded-xl p-[2px]">
+                    <div className="relative overflow-hidden rounded-[10px] bg-folio-bg">
+                      <img
+                        src={PROFILE_DATA.avatarUrl}
+                        alt={PROFILE_DATA.name}
+                        className="aspect-square w-full object-cover object-top filter contrast-[1.03] transition-transform duration-500 hover:scale-105"
+                      />
+                      <div
+                        style={{
+                          background:
+                            'linear-gradient(to top, var(--overlay-scrim) 0%, transparent 55%)',
+                        }}
+                        className="pointer-events-none absolute inset-0"
+                      />
+                      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
+                        <div>
+                          <div className="font-serif text-lg font-bold">
+                            {PROFILE_DATA.name}
+                          </div>
+                          <div className="font-mono text-xs text-white/85">
+                            {PROFILE_DATA.role[locale]}
+                          </div>
+                        </div>
+                        <div className="rounded-full border border-white/20 bg-black/55 px-3 py-1 font-mono text-xs backdrop-blur-md">
+                          {PROFILE_DATA.birthYear}
+                        </div>
                       </div>
-                      <div className="font-mono text-xs text-white/80">
-                        {PROFILE_DATA.role[locale]}
-                      </div>
-                    </div>
-                    <div className="rounded-full bg-black/60 px-3 py-1 font-mono text-xs backdrop-blur-md">
-                      {PROFILE_DATA.birthYear}
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-4 border-t border-folio-border pt-3">
-                  <div className="mb-2 font-mono text-[11px] font-semibold text-folio-vermilion">
-                    {t.indexHeader}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {PROJECTS_DATA.map((proj) => (
-                      <a
-                        key={proj.id}
-                        href={`#project-${proj.id}`}
-                        className="rounded-md border border-folio-border bg-folio-elevated px-2.5 py-1 font-mono text-[11px] text-folio-ink transition-colors hover:border-folio-vermilion hover:text-folio-vermilion"
-                      >
-                        {proj.title}
-                      </a>
-                    ))}
+                  <div className="mt-4 border-t border-folio-border pt-3">
+                    <div className="mb-2 font-mono text-[11px] font-semibold text-folio-accent">
+                      {t.indexHeader}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {PROJECTS_DATA.map((proj) => (
+                        <a
+                          key={proj.id}
+                          href={`#project-${proj.id}`}
+                          className="rounded-md border border-folio-border bg-folio-elevated px-2.5 py-1 font-mono text-[11px] text-folio-ink transition-colors hover:border-folio-accent hover:text-folio-accent"
+                        >
+                          {proj.title}
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

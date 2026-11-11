@@ -19,44 +19,51 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         role="img"
         aria-label="Deliver Simulator preview"
       >
+        <defs>
+          <linearGradient id="dsGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="var(--google-blue)" />
+            <stop offset="50%" stopColor="var(--google-purple)" />
+            <stop offset="100%" stopColor="var(--google-coral)" />
+          </linearGradient>
+        </defs>
         <rect
           x="12"
           y="16"
           width="536"
           height="148"
-          rx="6"
+          rx="8"
           fill="var(--bg-surface)"
-          stroke="currentColor"
+          stroke="var(--border-strong)"
           strokeWidth="1.5"
         />
         <text x="28" y="42" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-primary)">
           06:00 → 22:00 / MỤC TIÊU: 100M VND
         </text>
-        <text x="412" y="42" fontFamily="var(--font-mono)" fontSize="10" fill="var(--accent-secondary)">
+        <text x="412" y="42" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-secondary)">
           PWA OFFLINE
         </text>
 
         <text x="28" y="74" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
           STAMINA
         </text>
-        <rect x="92" y="64" width="120" height="12" rx="2" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1" />
-        <rect x="94" y="66" width="92" height="8" rx="1.5" fill="var(--accent-secondary)" />
+        <rect x="92" y="64" width="120" height="12" rx="3" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
+        <rect x="94" y="66" width="92" height="8" rx="2" fill="var(--google-green)" />
 
         <text x="28" y="100" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
           SAVINGS
         </text>
-        <rect x="92" y="90" width="120" height="12" rx="2" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1" />
-        <rect x="94" y="92" width="76" height="8" rx="1.5" fill="var(--accent-primary)" />
+        <rect x="92" y="90" width="120" height="12" rx="3" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
+        <rect x="94" y="92" width="76" height="8" rx="2" fill="url(#dsGrad)" />
 
         <rect
           x="244"
           y="56"
           width="284"
           height="66"
-          rx="4"
+          rx="6"
           fill="var(--bg-elevated)"
-          stroke="var(--accent-primary)"
-          strokeWidth="1.25"
+          stroke="url(#dsGrad)"
+          strokeWidth="1.5"
         />
         <text x="258" y="78" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="currentColor">
           HTML5 Canvas 2D + Web Audio API
@@ -80,14 +87,21 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         role="img"
         aria-label="SnapTask Android preview"
       >
+        <defs>
+          <linearGradient id="stGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--google-blue)" />
+            <stop offset="55%" stopColor="var(--google-purple)" />
+            <stop offset="100%" stopColor="var(--google-coral)" />
+          </linearGradient>
+        </defs>
         <rect
           x="20"
           y="14"
           width="135"
           height="182"
-          rx="12"
+          rx="14"
           fill="var(--bg-surface)"
-          stroke="currentColor"
+          stroke="var(--border-strong)"
           strokeWidth="1.5"
         />
         <rect
@@ -95,16 +109,16 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           y="32"
           width="111"
           height="68"
-          rx="6"
+          rx="8"
           fill="var(--bg-elevated)"
-          stroke="var(--accent-primary)"
+          stroke="url(#stGrad)"
           strokeWidth="1.5"
         />
-        <circle cx="87.5" cy="66" r="16" fill="none" stroke="var(--accent-primary)" strokeWidth="1.5" />
+        <circle cx="87.5" cy="66" r="16" fill="none" stroke="url(#stGrad)" strokeWidth="1.75" />
         <text x="42" y="118" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
           CameraX Capture
         </text>
-        <rect x="32" y="128" width="111" height="22" rx="4" fill="var(--bg-elevated)" />
+        <rect x="32" y="128" width="111" height="22" rx="5" fill="var(--bg-elevated)" />
         <text x="42" y="143" fontFamily="var(--font-mono)" fontSize="9" fill="var(--accent-secondary)">
           Room SQLite DB
         </text>
@@ -112,8 +126,8 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           Multi-ABI Split APK
         </text>
 
-        <line x1="155" y1="68" x2="192" y2="68" stroke="var(--accent-primary)" strokeWidth="1.5" />
-        <line x1="155" y1="138" x2="192" y2="138" stroke="var(--accent-secondary)" strokeWidth="1.5" />
+        <line x1="155" y1="68" x2="192" y2="68" stroke="var(--google-blue)" strokeWidth="1.5" />
+        <line x1="155" y1="138" x2="192" y2="138" stroke="var(--google-green)" strokeWidth="1.5" />
 
         <rect
           x="192"
@@ -122,7 +136,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           height="74"
           rx="8"
           fill="var(--bg-surface)"
-          stroke="currentColor"
+          stroke="var(--border-strong)"
           strokeWidth="1.5"
         />
         <text x="206" y="50" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-primary)">
@@ -166,6 +180,13 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         role="img"
         aria-label="TMS Mini preview"
       >
+        <defs>
+          <linearGradient id="tmsGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="var(--google-green)" />
+            <stop offset="50%" stopColor="var(--google-blue)" />
+            <stop offset="100%" stopColor="var(--google-purple)" />
+          </linearGradient>
+        </defs>
         <rect
           x="12"
           y="16"
@@ -173,18 +194,18 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           height="142"
           rx="8"
           fill="var(--bg-surface)"
-          stroke="currentColor"
+          stroke="var(--border-strong)"
           strokeWidth="1.5"
         />
         <text x="28" y="38" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-primary)">
           TMS MINI v2.0 · FLEET DISPATCH
         </text>
 
-        <rect x="28" y="52" width="120" height="88" rx="6" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1" />
+        <rect x="28" y="52" width="120" height="88" rx="6" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
         <text x="38" y="72" fontFamily="var(--font-mono)" fontSize="9" fill="var(--accent-secondary)">
           DRIVING
         </text>
-        <text x="38" y="90" fontFamily="var(--font-mono)" fontSize="9" fill="var(--accent-primary)">
+        <text x="38" y="90" fontFamily="var(--font-mono)" fontSize="9" fill="var(--google-coral)">
           PAUSE / ISSUE
         </text>
         <text x="38" y="108" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
@@ -194,16 +215,16 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
           Driver &amp; Manager Role
         </text>
 
-        <rect x="164" y="52" width="228" height="88" rx="6" fill="var(--bg-elevated)" stroke="var(--accent-secondary)" strokeWidth="1.25" />
+        <rect x="164" y="52" width="228" height="88" rx="6" fill="var(--bg-elevated)" stroke="url(#tmsGrad)" strokeWidth="1.4" />
         <path
           d="M 184 122 C 224 72, 294 128, 368 68"
           fill="none"
-          stroke="var(--accent-primary)"
-          strokeWidth="2"
+          stroke="url(#tmsGrad)"
+          strokeWidth="2.2"
           strokeDasharray="4 3"
         />
-        <circle cx="184" cy="122" r="4" fill="var(--accent-secondary)" />
-        <circle cx="368" cy="68" r="4" fill="var(--accent-primary)" />
+        <circle cx="184" cy="122" r="4" fill="var(--google-green)" />
+        <circle cx="368" cy="68" r="4" fill="var(--google-coral)" />
         <text x="178" y="72" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
           Leaflet Interactive Route Map
         </text>
@@ -219,17 +240,24 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         role="img"
         aria-label="AgentMesh Swarm Visualizer preview"
       >
+        <defs>
+          <linearGradient id="amGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="var(--google-blue)" />
+            <stop offset="50%" stopColor="var(--google-purple)" />
+            <stop offset="100%" stopColor="var(--google-coral)" />
+          </linearGradient>
+        </defs>
         <rect
           x="12"
           y="16"
           width="536"
           height="148"
-          rx="6"
+          rx="8"
           fill="var(--bg-surface)"
-          stroke="currentColor"
+          stroke="var(--border-strong)"
           strokeWidth="1.5"
         />
-        <rect x="28" y="34" width="132" height="112" rx="4" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1" />
+        <rect x="28" y="34" width="132" height="112" rx="6" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
         <text x="38" y="54" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--accent-primary)">
           EVENT STREAM
         </text>
@@ -242,34 +270,34 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         <text x="38" y="110" fontFamily="var(--font-mono)" fontSize="8.5" fill="currentColor">
           SUBAGENT_MSG
         </text>
-        <text x="38" y="128" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--accent-primary)">
+        <text x="38" y="128" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--google-coral)">
           APPROVAL_GATE
         </text>
 
-        <rect x="196" y="42" width="110" height="38" rx="4" fill="var(--bg-elevated)" stroke="var(--accent-primary)" strokeWidth="1.5" />
+        <rect x="196" y="42" width="110" height="38" rx="6" fill="var(--bg-elevated)" stroke="url(#amGrad)" strokeWidth="1.6" />
         <text x="210" y="65" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="currentColor">
           ORCHESTRATOR
         </text>
 
-        <line x1="251" y1="80" x2="215" y2="110" stroke="var(--accent-secondary)" strokeWidth="1.5" />
-        <line x1="251" y1="80" x2="295" y2="110" stroke="var(--accent-primary)" strokeWidth="1.5" />
+        <line x1="251" y1="80" x2="215" y2="110" stroke="var(--google-blue)" strokeWidth="1.5" />
+        <line x1="251" y1="80" x2="295" y2="110" stroke="var(--google-purple)" strokeWidth="1.5" />
 
-        <rect x="176" y="110" width="84" height="32" rx="4" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1.2" />
+        <rect x="176" y="110" width="84" height="32" rx="5" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1.2" />
         <text x="192" y="130" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
           WORKER
         </text>
 
-        <rect x="272" y="110" width="84" height="32" rx="4" fill="var(--bg-elevated)" stroke="currentColor" strokeWidth="1.2" />
+        <rect x="272" y="110" width="84" height="32" rx="5" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1.2" />
         <text x="290" y="130" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
           CRITIC
         </text>
 
-        <rect x="388" y="34" width="144" height="112" rx="4" fill="var(--bg-elevated)" stroke="var(--accent-secondary)" strokeWidth="1.2" />
+        <rect x="388" y="34" width="144" height="112" rx="6" fill="var(--bg-elevated)" stroke="var(--accent-secondary)" strokeWidth="1.2" />
         <text x="400" y="54" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--accent-secondary)">
           CONTEXT GAUGE
         </text>
-        <rect x="400" y="68" width="118" height="10" rx="2" fill="var(--bg-surface)" stroke="currentColor" strokeWidth="1" />
-        <rect x="402" y="70" width="82" height="6" rx="1" fill="var(--accent-primary)" />
+        <rect x="400" y="68" width="118" height="10" rx="3" fill="var(--bg-surface)" stroke="var(--border-strong)" strokeWidth="1" />
+        <rect x="402" y="70" width="82" height="6" rx="2" fill="url(#amGrad)" />
         <text x="400" y="102" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
           HTML5 Canvas + PWA
         </text>
@@ -287,14 +315,21 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
       role="img"
       aria-label="Marginal preview"
     >
+      <defs>
+        <linearGradient id="mgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="var(--google-blue)" />
+          <stop offset="50%" stopColor="var(--google-purple)" />
+          <stop offset="100%" stopColor="var(--google-coral)" />
+        </linearGradient>
+      </defs>
       <rect
         x="12"
         y="22"
         width="165"
         height="136"
-        rx="6"
+        rx="8"
         fill="var(--bg-surface)"
-        stroke="currentColor"
+        stroke="var(--border-strong)"
         strokeWidth="1.5"
       />
       <text x="26" y="46" fontFamily="var(--font-mono)" fontSize="10" fill="var(--accent-primary)">
@@ -302,7 +337,7 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
       </text>
       <line x1="26" y1="62" x2="155" y2="62" stroke="currentColor" strokeWidth="2" />
       <line x1="26" y1="78" x2="140" y2="78" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.6" />
-      <rect x="26" y="92" width="135" height="24" rx="3" fill="var(--bg-elevated)" stroke="var(--accent-primary)" strokeWidth="1" />
+      <rect x="26" y="92" width="135" height="24" rx="4" fill="var(--bg-elevated)" stroke="url(#mgGrad)" strokeWidth="1.2" />
       <text x="34" y="108" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
         Web Speech API
       </text>
@@ -315,20 +350,20 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         y1="90"
         x2="228"
         y2="90"
-        stroke="var(--accent-primary)"
+        stroke="var(--google-blue)"
         strokeWidth="1.5"
         strokeDasharray="4 4"
       />
-      <circle cx="202" cy="90" r="4" fill="var(--accent-primary)" />
+      <circle cx="202" cy="90" r="4" fill="var(--google-blue)" />
 
       <rect
         x="228"
         y="32"
         width="148"
         height="116"
-        rx="6"
+        rx="8"
         fill="var(--bg-surface)"
-        stroke="var(--accent-primary)"
+        stroke="url(#mgGrad)"
         strokeWidth="1.75"
       />
       <text x="242" y="56" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="currentColor">
@@ -349,23 +384,23 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
         y1="90"
         x2="418"
         y2="90"
-        stroke="var(--accent-secondary)"
+        stroke="var(--google-purple)"
         strokeWidth="1.5"
         strokeDasharray="4 4"
       />
-      <circle cx="397" cy="90" r="4" fill="var(--accent-secondary)" />
+      <circle cx="397" cy="90" r="4" fill="var(--google-purple)" />
 
       <rect
         x="418"
         y="40"
         width="130"
         height="100"
-        rx="6"
+        rx="8"
         fill="var(--bg-surface)"
-        stroke="currentColor"
+        stroke="var(--border-strong)"
         strokeWidth="1.5"
       />
-      <text x="432" y="68" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-secondary)">
+      <text x="432" y="68" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--accent-primary)">
         GEMINI API
       </text>
       <text x="432" y="88" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
@@ -443,15 +478,15 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
               ? `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) scale3d(1.012, 1.012, 1.012)`
               : 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
           transition: isHovered
-            ? 'transform 90ms ease-out'
-            : 'transform 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+            ? 'transform 90ms ease-out, background-color 360ms ease, box-shadow 300ms ease, border-color 300ms ease'
+            : 'transform 450ms cubic-bezier(0.22, 1, 0.36, 1), background-color 360ms ease, box-shadow 300ms ease, border-color 300ms ease',
         }}
-        className="group relative flex h-full flex-col justify-between overflow-hidden rounded-[var(--radius-card)] border border-folio-border bg-folio-surface/90 p-6 shadow-xl backdrop-blur-xl transition-all duration-300 hover:border-folio-vermilion/50 hover:shadow-2xl"
+        className="google-gradient-hover-border group relative flex h-full flex-col justify-between overflow-hidden rounded-[var(--radius-card)] border border-folio-border bg-folio-surface p-6 shadow-[var(--shadow-soft)] backdrop-blur-xl hover:border-transparent hover:shadow-[var(--shadow-glow)]"
       >
         <div
           className="pointer-events-none absolute -inset-px rounded-[var(--radius-card)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           style={{
-            background: `radial-gradient(420px circle at ${spotlight.x}px ${spotlight.y}px, rgba(255, 87, 51, 0.14), transparent 60%)`,
+            background: `radial-gradient(460px circle at ${spotlight.x}px ${spotlight.y}px, var(--spotlight-blue), var(--spotlight-purple) 40%, transparent 70%)`,
           }}
           aria-hidden="true"
         />
@@ -459,22 +494,22 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
         <div
           className={
             isFullWidth
-              ? 'grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center'
-              : ''
+              ? 'relative z-10 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center'
+              : 'relative z-10'
           }
         >
           <div className={isFullWidth ? 'lg:col-span-6' : ''}>
             <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-3">
-              <span className="font-mono text-xs font-bold text-folio-vermilion">
+              <span className="font-mono text-xs font-bold text-folio-accent">
                 {project.indexNumber}
               </span>
-              <span className="font-mono text-[11px] font-semibold text-folio-spruce">
+              <span className="font-mono text-[11px] font-semibold text-folio-secondary">
                 {project.technologies[0]?.name}
               </span>
             </div>
 
             <div className="mt-4">
-              <h3 className="font-serif text-2xl font-bold leading-snug text-folio-ink transition-colors group-hover:text-folio-vermilion sm:text-3xl">
+              <h3 className="font-serif text-2xl font-bold leading-snug text-folio-ink transition-colors group-hover:text-folio-accent sm:text-3xl">
                 {project.title}
               </h3>
               <p className="mt-1 font-serif text-sm italic text-folio-muted lg:min-h-[2.5rem]">
@@ -483,25 +518,25 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
             </div>
 
             {!isFullWidth && (
-              <div className="folio-card-inner my-4 h-44 w-full overflow-hidden !bg-folio-bg p-2 shadow-inner">
+              <div className="folio-card-inner my-4 h-44 w-full overflow-hidden !bg-folio-bg/70 p-2 shadow-inner">
                 <ProjectVisualPreview projectId={project.id} />
               </div>
             )}
 
-            <p className="text-sm leading-relaxed text-folio-ink sm:text-base">
+            <p className="text-sm leading-relaxed text-folio-muted sm:text-base">
               {project.description[locale]}
             </p>
           </div>
 
           {isFullWidth && (
-            <div className="folio-card-inner h-48 w-full overflow-hidden !bg-folio-bg p-3 shadow-inner lg:col-span-6">
+            <div className="folio-card-inner h-48 w-full overflow-hidden !bg-folio-bg/70 p-3 shadow-inner lg:col-span-6">
               <ProjectVisualPreview projectId={project.id} />
             </div>
           )}
         </div>
 
-        <div className="mt-6">
-          <div className="mb-2 flex items-center gap-1.5 font-mono text-[11px] font-semibold text-folio-spruce">
+        <div className="relative z-10 mt-6">
+          <div className="mb-2 flex items-center gap-1.5 font-mono text-[11px] font-semibold text-folio-secondary">
             <Layers className="h-3.5 w-3.5" aria-hidden="true" />
             <span>{t.techLabel}</span>
           </div>
@@ -518,7 +553,7 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
               href={project.repoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="min-w-0 flex-1 truncate font-mono text-xs text-folio-spruce underline hover:text-folio-vermilion"
+              className="min-w-0 flex-1 truncate font-mono text-xs text-folio-accent underline transition-colors hover:text-folio-gpurple"
             >
               {project.repoUrl}
             </a>
@@ -527,11 +562,11 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
               href={project.repoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative group/btn inline-flex items-center gap-2 rounded-[var(--radius-control)] border border-folio-border bg-folio-elevated px-3 py-1.5 font-mono text-xs font-semibold text-folio-ink shadow-sm transition-all duration-200 hover:border-folio-vermilion hover:bg-folio-vermilion hover:text-white"
+              className="google-btn-github group/btn shrink-0"
             >
-              <FolderGit2 className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{t.repoLabel}</span>
-              <ExternalLink className="h-3 w-3 transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" aria-hidden="true" />
+              <FolderGit2 className="relative z-10 h-3.5 w-3.5 text-folio-accent transition-colors group-hover/btn:text-white" aria-hidden="true" />
+              <span className="google-btn-github-label">{t.repoLabel}</span>
+              <ExternalLink className="relative z-10 h-3 w-3 text-folio-gpurple transition-all duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 group-hover/btn:text-white" aria-hidden="true" />
             </a>
           </div>
         </div>
@@ -559,8 +594,8 @@ export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
+            <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
             <span className="folio-index-label">{t.sectionIndex}</span>
           </div>
           <h2 id="projects-heading" className="folio-section-heading">

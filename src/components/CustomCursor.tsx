@@ -55,14 +55,14 @@ export const CustomCursor: React.FC = () => {
         style={{
           transform: `translate3d(${pos.x - 4}px, ${pos.y - 4}px, 0)`,
         }}
-        className="pointer-events-none fixed left-0 top-0 z-[120] hidden h-2 w-2 rounded-full bg-folio-vermilion shadow-sm lg:block"
+        className="pointer-events-none fixed left-0 top-0 z-[120] hidden h-2 w-2 rounded-full bg-folio-gblue shadow-sm lg:block"
       />
       <div
         aria-hidden="true"
         style={{
           transform: `translate3d(${trailPos.x - 16}px, ${trailPos.y - 16}px, 0)`,
         }}
-        className="pointer-events-none fixed left-0 top-0 z-[119] hidden h-8 w-8 rounded-full border border-folio-vermilion/50 transition-opacity duration-300 lg:block"
+        className="pointer-events-none fixed left-0 top-0 z-[119] hidden h-8 w-8 rounded-full border border-folio-gpurple/60 transition-opacity duration-300 lg:block"
       />
     </>
   );

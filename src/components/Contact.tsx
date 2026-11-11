@@ -25,8 +25,8 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
+            <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
             <span className="folio-index-label">{t.sectionIndex}</span>
           </div>
           <h2 id="contact-heading" className="folio-section-heading">
@@ -45,32 +45,34 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col justify-between gap-4 lg:col-span-5"
           >
-            <div className="folio-card flex flex-1 flex-col justify-center backdrop-blur-xl transition-all duration-300 hover:border-folio-vermilion/50">
+            <div className="folio-card google-gradient-hover-border flex flex-1 flex-col justify-center">
               <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
-                <Mail className="h-4 w-4 text-folio-vermilion" aria-hidden="true" />
+                <Mail className="h-4 w-4 text-folio-accent" aria-hidden="true" />
                 <span>EMAIL</span>
               </div>
               <a
                 href={`mailto:${PROFILE_DATA.contacts.email}`}
-                className="mt-2 inline-flex min-h-[36px] items-center break-all font-mono text-sm font-semibold text-folio-ink underline hover:text-folio-vermilion"
+                className="mt-2 inline-flex min-h-[36px] items-center break-all font-mono text-sm font-semibold text-folio-ink underline transition-colors hover:text-folio-accent"
               >
                 {PROFILE_DATA.contacts.email}
               </a>
             </div>
 
-            <div className="folio-card flex flex-1 flex-col justify-center backdrop-blur-xl transition-all duration-300 hover:border-folio-vermilion/50">
+            <div className="folio-card google-gradient-hover-border flex flex-1 flex-col justify-center">
               <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
-                <Github className="h-4 w-4 text-folio-spruce" aria-hidden="true" />
+                <Github className="h-4 w-4 text-folio-secondary" aria-hidden="true" />
                 <span>GITHUB</span>
               </div>
               <a
                 href={PROFILE_DATA.contacts.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-flex min-h-[36px] items-center gap-1.5 break-all font-mono text-sm font-semibold text-folio-spruce underline hover:text-folio-vermilion"
+                className="google-btn-github group/btn mt-3 w-fit max-w-full"
               >
-                <span>{PROFILE_DATA.contacts.githubUrl}</span>
-                <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="google-btn-github-label truncate">
+                  {PROFILE_DATA.contacts.githubUrl}
+                </span>
+                <ExternalLink className="relative z-10 h-3.5 w-3.5 shrink-0 text-folio-gpurple transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 group-hover/btn:text-white" aria-hidden="true" />
               </a>
             </div>
           </motion.div>
@@ -80,7 +82,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="folio-card flex flex-col justify-between backdrop-blur-xl lg:col-span-7"
+            className="folio-card google-gradient-hover-border flex flex-col justify-between lg:col-span-7"
           >
             <div>
               <h3 className="font-serif text-2xl font-bold text-folio-ink">
@@ -101,7 +103,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder={t.subjectPlaceholder}
-                    className="w-full rounded-[var(--radius-control)] border border-folio-strong bg-folio-elevated px-4 py-2.5 text-sm text-folio-ink placeholder:text-folio-muted/60"
+                    className="w-full rounded-[var(--radius-control)] border border-folio-strong bg-folio-elevated px-4 py-2.5 text-sm text-folio-ink placeholder:text-folio-faint"
                   />
                 </div>
 
@@ -118,7 +120,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                     placeholder={t.bodyPlaceholder}
-                    className="w-full rounded-[var(--radius-control)] border border-folio-strong bg-folio-elevated px-4 py-2.5 text-sm text-folio-ink placeholder:text-folio-muted/60"
+                    className="w-full rounded-[var(--radius-control)] border border-folio-strong bg-folio-elevated px-4 py-2.5 text-sm text-folio-ink placeholder:text-folio-faint"
                   />
                 </div>
               </div>

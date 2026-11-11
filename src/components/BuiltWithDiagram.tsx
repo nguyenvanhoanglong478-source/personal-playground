@@ -58,8 +58,8 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
+            <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
             <span className="folio-index-label">{t.sectionIndex}</span>
           </div>
           <h2 id="stack-heading" className="folio-section-heading">
@@ -70,11 +70,11 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
           </p>
         </div>
 
-        <div className="folio-card mb-8 backdrop-blur-xl">
+        <div className="folio-card google-gradient-hover-border mb-8">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-ink">
               <GitBranch
-                className="h-4 w-4 shrink-0 text-folio-vermilion"
+                className="h-4 w-4 shrink-0 text-folio-accent"
                 aria-hidden="true"
               />
               <span>{t.pipelineTitle}</span>
@@ -89,7 +89,7 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
               <div key={node.step} className="flex items-stretch">
                 <div className="folio-card-inner flex w-full flex-col justify-between">
                   <div>
-                    <span className="font-mono text-[10px] font-bold text-folio-vermilion">
+                    <span className="font-mono text-[10px] font-bold text-folio-accent">
                       {node.step}
                     </span>
                     <h3 className="mt-1 font-serif text-lg font-bold text-folio-ink">
@@ -97,13 +97,13 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
                     </h3>
                     <p className="mt-1 text-xs text-folio-muted">{node.sub}</p>
                   </div>
-                  <div className="mt-3 border-t border-folio-border pt-2 font-mono text-[11px] text-folio-spruce">
+                  <div className="mt-3 border-t border-folio-border pt-2 font-mono text-[11px] text-folio-secondary">
                     {node.version}
                   </div>
                 </div>
                 {idx < pipelineSteps.length - 1 && (
                   <div
-                    className="hidden items-center justify-center pl-2 text-folio-vermilion lg:flex"
+                    className="hidden items-center justify-center pl-2 text-folio-accent lg:flex"
                     aria-hidden="true"
                   >
                     <ArrowRight className="h-4 w-4" />
@@ -122,20 +122,20 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-30px' }}
               transition={{ duration: 0.4, delay: idx * 0.04, ease: [0.22, 1, 0.36, 1] }}
-              className="folio-card-inner flex h-full flex-col justify-between backdrop-blur-xl !p-5 transition-transform duration-200 hover:-translate-y-1"
+              className="folio-card google-gradient-hover-border flex h-full flex-col justify-between !p-5 hover:-translate-y-1"
             >
               <div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <CheckCircle2
-                      className="h-4 w-4 shrink-0 text-folio-spruce"
+                      className="h-4 w-4 shrink-0 text-folio-secondary"
                       aria-hidden="true"
                     />
                     <span className="font-mono text-sm font-bold text-folio-ink">
                       {pkg.displayName}
                     </span>
                   </div>
-                  <span className="rounded-[var(--radius-tag)] bg-folio-surface px-2 py-0.5 font-mono text-xs font-semibold text-folio-vermilion">
+                  <span className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated px-2 py-0.5 font-mono text-xs font-semibold text-folio-accent">
                     {pkg.version}
                   </span>
                 </div>

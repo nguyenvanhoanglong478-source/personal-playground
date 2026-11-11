@@ -1,6 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Long Hoàng Logo">
-  <rect width="64" height="64" rx="8" fill="#141413"/>
-  <rect x="4" y="4" width="56" height="56" rx="5" fill="none" stroke="#C83E2B" stroke-width="2"/>
-  <path d="M22 16h7v26h15v6H22V16z" fill="#F6F3EC"/>
-  <circle cx="48" cy="20" r="3.5" fill="#C83E2B"/>
+  <defs>
+    <linearGradient id="googleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4285F4"/>
+      <stop offset="42%" stop-color="#9B72CB"/>
+      <stop offset="76%" stop-color="#D96570"/>
+      <stop offset="100%" stop-color="#FBBC04"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#131314"/>
+  <rect x="3.5" y="3.5" width="57" height="57" rx="11" fill="none" stroke="url(#googleGrad)" stroke-width="2.5"/>
+  <path d="M22 17h7v24h14v6H22V17z" fill="#E3E3E3"/>
+  <circle cx="47" cy="20" r="3.5" fill="url(#googleGrad)"/>
 </svg>

@@ -10,7 +10,7 @@ export const Footer: React.FC<FooterProps> = ({ locale }) => {
   const t = UI_LABELS[locale].footer;
 
   return (
-    <footer className="bg-folio-surface py-10 text-folio-muted">
+    <footer className="relative z-10 border-t border-folio-border bg-folio-surface/80 py-10 text-folio-muted backdrop-blur-md transition-colors duration-300">
       <div className="folio-container flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="font-serif text-base font-semibold text-folio-ink">
           {t.colophon}

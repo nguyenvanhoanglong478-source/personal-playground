@@ -35,21 +35,23 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-folio-border bg-folio-bg/95 backdrop-blur-md">
-      <div className="folio-container flex items-center justify-between gap-3 py-3">
+    <header className="sticky top-0 z-50 border-b border-folio-border bg-folio-bg/85 backdrop-blur-xl transition-colors duration-300">
+      <div className="folio-container flex items-center justify-between gap-2 py-3 sm:gap-3">
         <a
           href="#hero"
-          className="group flex shrink-0 items-center gap-3 text-folio-ink"
+          className="group flex min-w-0 items-center gap-2.5 text-folio-ink sm:gap-3"
           aria-label="Long Hoàng"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-folio-vermilion bg-folio-surface font-serif text-lg font-bold text-folio-vermilion transition-transform duration-300 group-hover:scale-105">
-            L
+          <span className="google-border-frame flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] p-[1.5px] transition-transform duration-300 group-hover:scale-105">
+            <span className="flex h-full w-full items-center justify-center rounded-[calc(var(--radius-control)-1.5px)] bg-folio-bg font-serif text-lg font-bold">
+              <span className="google-text-gradient">L</span>
+            </span>
           </span>
-          <div className="flex flex-col">
-            <span className="font-serif text-lg font-semibold leading-none tracking-tight">
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate font-serif text-base font-semibold leading-none tracking-tight text-folio-ink sm:text-lg">
               {PROFILE_DATA.name}
             </span>
-            <span className="whitespace-nowrap font-mono text-[11px] text-folio-muted">
+            <span className="hidden truncate font-mono text-[11px] text-folio-muted sm:block">
               {PROFILE_DATA.brandSubtitle[locale]}
             </span>
           </div>
@@ -66,16 +68,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={item.id}
                 href={`#${item.id}`}
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative whitespace-nowrap rounded-[var(--radius-control)] px-2.5 py-2 font-mono text-xs transition-transform duration-200 hover:-translate-y-0.5 ${
+                className={`relative whitespace-nowrap rounded-[var(--radius-control)] px-2.5 py-2 font-mono text-xs transition-all duration-200 hover:-translate-y-0.5 ${
                   isActive
-                    ? 'bg-folio-surface font-semibold text-folio-vermilion'
+                    ? 'bg-folio-elevated font-semibold text-folio-accent'
                     : 'text-folio-muted hover:text-folio-ink'
                 }`}
               >
                 {item.label}
                 {isActive && (
                   <span
-                    className="absolute bottom-0 left-2.5 right-2.5 h-0.5 bg-folio-vermilion"
+                    className="google-border-frame absolute bottom-0 left-2.5 right-2.5 h-0.5 rounded-full"
                     aria-hidden="true"
                   />
                 )}
@@ -84,23 +86,26 @@ export const Navbar: React.FC<NavbarProps> = ({
           })}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <button
             type="button"
             onClick={() => setLocale(locale === 'vi' ? 'en' : 'vi')}
-            className="folio-btn-compact"
+            className="folio-btn-compact !px-2.5 sm:!px-3.5"
             aria-label={
               locale === 'vi' ? 'Switch language to English' : 'Chuyển sang Tiếng Việt'
             }
           >
-            <Globe className="h-3.5 w-3.5 text-folio-vermilion" aria-hidden="true" />
-            <span>{locale === 'vi' ? 'VI / EN' : 'EN / VI'}</span>
+            <Globe className="h-3.5 w-3.5 text-folio-accent" aria-hidden="true" />
+            <span className="sm:hidden">{locale === 'vi' ? 'VI' : 'EN'}</span>
+            <span className="hidden sm:inline">
+              {locale === 'vi' ? 'VI / EN' : 'EN / VI'}
+            </span>
           </button>
 
           <button
             type="button"
             onClick={toggleTheme}
-            className="folio-btn-compact"
+            className="folio-btn-compact !px-2.5 sm:!px-3.5"
             aria-label={
               theme === 'dark'
                 ? 'Chuyển sang giao diện sáng'
@@ -109,12 +114,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             {theme === 'dark' ? (
               <>
-                <Sun className="h-3.5 w-3.5 text-folio-vermilion" aria-hidden="true" />
+                <Sun className="h-3.5 w-3.5 text-folio-gyellow" aria-hidden="true" />
                 <span className="hidden sm:inline">{t.themeLight}</span>
               </>
             ) : (
               <>
-                <Moon className="h-3.5 w-3.5 text-folio-vermilion" aria-hidden="true" />
+                <Moon className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
                 <span className="hidden sm:inline">{t.themeDark}</span>
               </>
             )}
@@ -147,7 +152,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={handleNavClick}
                   className={`flex min-h-[44px] items-center justify-between rounded-[var(--radius-control)] border px-4 py-2 font-mono text-sm ${
                     isActive
-                      ? 'border-folio-vermilion bg-folio-surface font-semibold text-folio-vermilion'
+                      ? 'border-folio-accent bg-folio-surface font-semibold text-folio-accent'
                       : 'border-folio-border bg-folio-elevated text-folio-ink'
                   }`}
                 >

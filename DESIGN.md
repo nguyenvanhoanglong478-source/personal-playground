@@ -1,44 +1,48 @@
-# DESIGN.md — Marginalia & Folio (Sổ Tay Chú Giải Của Marcus)
+# DESIGN.md — Long Hoàng Portfolio (Google Modern Gradient)
 
-## 1. Concept Chủ Đạo: The Annotated Builder's Folio
+## 1. Concept & Hệ Thống Thiết Kế
 
-Trang web cá nhân của **Marcus** được thiết kế dựa trên hình mẫu một **ấn phẩm học thuật có lề chú giải (Marginalia & Folio)**.
-Thay vì một mẫu portfolio công nghệ chung chung, mỗi phân khu trên trang kết hợp giữa **cột nội dung chính** và **lề chú giải (Marginalia)** dẫn chứng trực tiếp đến các tệp mã nguồn thật của 4 dự án:
-1. **Marginal** (`frontend/package.json`, `worker/wrangler.toml`, `worker/src/index.js`)
-2. **SnapTask** (`app/build.gradle.kts`, `gradle/libs.versions.toml`, `.github/workflows/build_apk.yml`)
-3. **Team Quiz Battle** (`package.json`, `server.js`, `public/js/editor.js`)
-4. **Be The Driver / Một Ngày Làm Shipper** (`index.html`, `build.py`, `src/loop.js`, `sw.js`)
+Trang cá nhân của **Long Hoàng** kết hợp bố cục Folio / Bento hiện đại theo phong cách **Google Modern Gradient**, lấy cảm hứng từ hệ sinh thái **Google AI / Gemini** và **Material Design 3**, hỗ trợ đầy đủ 2 chế độ **Sáng (Light Mode)** và **Tối (Dark Mode)**.
 
-## 2. Hệ Thống Kiểu Chữ (Typography)
+## 2. Kiểu Chữ (Typography)
 
 Hỗ trợ trọn vẹn bảng mã dấu Tiếng Việt:
-- **Display & Editorial Serif**: `Newsreader` (Google Fonts) — mang lại cảm giác trang sách học thuật cổ điển nhưng sắc sảo ở kích thước lớn.
-- **UI & Body Sans**: `Be Vietnam Pro` (Google Fonts) — thiết kế chuyên biệt cho cấu trúc dấu tiếng Việt, dễ đọc ở mọi kích thước màn hình.
-- **Code & Marginalia Mono**: `JetBrains Mono` (Google Fonts) — dùng cho đường dẫn tệp, phiên bản thư viện, chỉ mục chương và các placeholder `[[...]]`.
+- **Display & Editorial Serif**: `Newsreader` (Google Fonts) — dùng cho tiêu đề chính và các đề mục lớn.
+- **UI & Body Sans**: `Be Vietnam Pro` (Google Fonts) — tối ưu cho văn bản Tiếng Việt ở mọi kích thước màn hình.
+- **Code & Technical Mono**: `JetBrains Mono` (Google Fonts) — dùng cho chỉ mục, nhãn công nghệ, nút GitHub và đường dẫn kho lưu trữ.
 
-## 3. Bảng Màu Kép (Dual Theme Tokens)
+## 3. Bảng Màu Kép & Dải Màu Google Signature Gradients
 
-Khai báo 100% trong `:root` tại `src/index.css`, không sử dụng mã màu hex thô rải rác ngoài khối biến:
+Toàn bộ token màu được khai báo tập trung tại `:root`, `html[data-theme='light']` và `html[data-theme='dark']` trong `src/index.css` với chuyển màu mượt mà `360ms cubic-bezier(0.22, 1, 0.36, 1)`.
 
-### Chế độ Sáng (Archival Paper)
-- `--bg-primary`: `#F6F3EC` (Giấy bản thảo ấm)
-- `--bg-surface`: `#EDE8DD` (Giấy lề chú giải)
-- `--bg-elevated`: `#FAF8F4` (Thẻ nổi)
-- `--text-primary`: `#141413` (Mực Iron Gall — độ tương phản `15.4:1` chuẩn WCAG AAA)
-- `--text-secondary`: `#524F49` (Chì than — độ tương phản `7.2:1` chuẩn WCAG AAA)
-- `--accent-primary`: `#C83E2B` (Đỏ Chu Sa / Scholar's Vermilion)
-- `--accent-secondary`: `#1D5B4C` (Xanh Thông Thư Viện / Library Spruce)
+### Dải Màu Chủ Đạo Google Signature
+- `--google-blue`: `#4285F4`
+- `--google-purple`: `#9B72CB`
+- `--google-coral`: `#D96570`
+- `--google-red`: `#EA4335`
+- `--google-yellow`: `#FBBC04`
+- `--google-green`: `#34A853`
+- Áp dụng Text Gradient cho tên **Long Hoàng**, tiêu đề chính các phân khu, viền ảnh đại diện và nút liên kết **GitHub**, kết hợp hào quang **Google Aura Mesh Gradient** mờ ảo ở nền.
 
-### Chế độ Tối (Nocturnal Study)
-- `--bg-primary`: `#0E100F` (Đá phiến đêm)
-- `--bg-surface`: `#171A18` (Bìa sổ tối)
-- `--bg-elevated`: `#1E221F` (Thẻ nổi đêm)
-- `--text-primary`: `#F2EFE9` (Ngà ấm — độ tương phản `16.2:1` chuẩn WCAG AAA)
-- `--text-secondary`: `#A39E93` (Tro ấm — độ tương phản `7.4:1` chuẩn WCAG AAA)
-- `--accent-primary`: `#F05A43` (Đỏ Chu Sa Sáng)
-- `--accent-secondary`: `#45B899` (Xanh Ngọc Bích)
+### Chế độ Sáng (Google Workspace / Material You)
+- `--bg-primary`: `#F8F9FA` kết hợp các quầng Pastel Mesh Gradient nhẹ ở nền
+- `--bg-surface`: `rgba(255, 255, 255, 0.86)` kính mờ kèm đổ bóng mềm nhiều sắc độ
+- `--bg-elevated`: `#F0F4F9`
+- `--text-primary`: `#1F1F1F` (tiêu đề)
+- `--text-secondary`: `#444746` (nội dung)
+- `--accent-primary`: `#1A73E8` (chuẩn tương phản WCAG AA trên nền sáng)
+- `--accent-secondary`: `#188038`
 
-## 4. Quy Tắc Chuyển Động & Hiệu Năng
+### Chế độ Tối (Google Gemini Dark)
+- `--bg-primary`: `#131314` kết hợp quầng sáng Mesh Gradient Google phía sau
+- `--bg-surface`: `rgba(30, 31, 32, 0.80)` kính mờ trên nền `#1E1F20`
+- `--bg-elevated`: `#282A2C`
+- `--text-primary`: `#E3E3E3` (tiêu đề)
+- `--text-secondary`: `#C4C7C5` (nội dung)
+- `--accent-primary`: `#8AB4F8`
+- `--accent-secondary`: `#81C995`
 
-- Chỉ animate `transform` và `opacity` với thời lượng 300ms–600ms.
-- Đồ họa nền Hero (`HeroFolioCanvas.tsx`) được tải trễ (`React.lazy` + `Suspense`), tự giảm mật độ nút trên màn hình di động (`< 768px`) và dừng hoàn toàn khi người dùng bật `prefers-reduced-motion: reduce`.
+## 4. Chuyển Động & Kiểm Chứng
+
+- Bento Grid 5 dự án hỗ trợ nghiêng 3D theo con trỏ chuột, vệt sáng radial spotlight và viền sáng Gradient Google khi hover.
+- Đồ họa nền (`HeroFolioCanvas.tsx`) vẽ hạt sáng và sóng hài hòa 60fps bằng bảng màu Google, tự tắt hiệu ứng mạnh khi `prefers-reduced-motion: reduce`.

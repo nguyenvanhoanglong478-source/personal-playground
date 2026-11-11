@@ -11,7 +11,15 @@ interface Particle {
   vy: number;
   size: number;
   baseAlpha: number;
+  rgb: string;
 }
+
+const GOOGLE_PARTICLE_COLORS = [
+  '66, 133, 244',
+  '155, 114, 203',
+  '217, 101, 112',
+  '52, 168, 83',
+];
 
 const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -49,17 +57,18 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const isMobile = width < 768;
-      const count = isMobile ? 18 : 36;
+      const count = isMobile ? 18 : 34;
       particles.length = 0;
 
       for (let i = 0; i < count; i++) {
         particles.push({
           x: Math.random() * width,
           y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 0.35,
-          vy: (Math.random() - 0.5) * 0.35,
-          size: Math.random() * 1.6 + 0.8,
-          baseAlpha: Math.random() * 0.4 + 0.2,
+          vx: (Math.random() - 0.5) * 0.32,
+          vy: (Math.random() - 0.5) * 0.32,
+          size: Math.random() * 1.7 + 0.9,
+          baseAlpha: Math.random() * 0.35 + 0.2,
+          rgb: GOOGLE_PARTICLE_COLORS[i % GOOGLE_PARTICLE_COLORS.length],
         });
       }
     };
@@ -90,21 +99,18 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
       ctx.clearRect(0, 0, width, height);
 
       const isDark = theme === 'dark';
-      const glowBaseColor = isDark
-        ? 'rgba(255, 87, 51, 0.08)'
-        : 'rgba(200, 62, 43, 0.06)';
-      const particleColor = isDark
-        ? 'rgba(244, 242, 237, '
-        : 'rgba(20, 20, 19, ';
+      const glowInner = isDark
+        ? 'rgba(66, 133, 244, 0.11)'
+        : 'rgba(66, 133, 244, 0.08)';
+      const glowMid = isDark
+        ? 'rgba(155, 114, 203, 0.07)'
+        : 'rgba(155, 114, 203, 0.05)';
       const lineColor = isDark
-        ? 'rgba(255, 87, 51, 0.06)'
-        : 'rgba(200, 62, 43, 0.05)';
-      const waveColor = isDark
-        ? 'rgba(45, 212, 191, 0.12)'
-        : 'rgba(29, 91, 76, 0.08)';
+        ? 'rgba(138, 180, 248, 0.08)'
+        : 'rgba(26, 115, 232, 0.07)';
 
       if (smoothPointerX > -100 && smoothPointerX < width + 100) {
-        const glowRadius = Math.min(width, 340);
+        const glowRadius = Math.min(width, 360);
         const grad = ctx.createRadialGradient(
           smoothPointerX,
           smoothPointerY,
@@ -113,7 +119,8 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
           smoothPointerY,
           glowRadius
         );
-        grad.addColorStop(0, glowBaseColor);
+        grad.addColorStop(0, glowInner);
+        grad.addColorStop(0.45, glowMid);
         grad.addColorStop(1, 'transparent');
         ctx.fillStyle = grad;
         ctx.beginPath();
@@ -121,9 +128,16 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
         ctx.fill();
       }
 
-      const waveY = height * 0.82;
-      ctx.strokeStyle = waveColor;
-      ctx.lineWidth = 1;
+      const waveY = height * 0.84;
+      const waveGrad = ctx.createLinearGradient(0, waveY, width, waveY);
+      const waveAlpha = isDark ? 0.22 : 0.16;
+      waveGrad.addColorStop(0, `rgba(66, 133, 244, ${waveAlpha})`);
+      waveGrad.addColorStop(0.35, `rgba(155, 114, 203, ${waveAlpha})`);
+      waveGrad.addColorStop(0.7, `rgba(217, 101, 112, ${waveAlpha})`);
+      waveGrad.addColorStop(1, `rgba(52, 168, 83, ${waveAlpha})`);
+
+      ctx.strokeStyle = waveGrad;
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
       for (let x = 0; x <= width; x += 16) {
         const dist = Math.hypot(x - smoothPointerX, waveY - smoothPointerY);
@@ -147,12 +161,12 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
         }
 
         const distToMouse = Math.hypot(p.x - smoothPointerX, p.y - smoothPointerY);
-        let currentAlpha = p.baseAlpha;
+        let currentAlpha = isDark ? p.baseAlpha : p.baseAlpha * 0.78;
         if (distToMouse < 180) {
-          currentAlpha += (1 - distToMouse / 180) * 0.4;
+          currentAlpha += (1 - distToMouse / 180) * 0.35;
         }
 
-        ctx.fillStyle = `${particleColor}${currentAlpha})`;
+        ctx.fillStyle = `rgba(${p.rgb}, ${currentAlpha})`;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();

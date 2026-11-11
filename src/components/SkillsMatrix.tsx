@@ -18,13 +18,13 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
   const getCategoryIcon = (cat: SkillCategory) => {
     switch (cat) {
       case 'language':
-        return <Code2 className="h-4 w-4 text-folio-vermilion" aria-hidden="true" />;
+        return <Code2 className="h-4 w-4 text-folio-accent" aria-hidden="true" />;
       case 'framework':
-        return <Cpu className="h-4 w-4 text-folio-spruce" aria-hidden="true" />;
+        return <Cpu className="h-4 w-4 text-folio-secondary" aria-hidden="true" />;
       case 'tool':
-        return <Wrench className="h-4 w-4 text-folio-vermilion" aria-hidden="true" />;
+        return <Wrench className="h-4 w-4 text-folio-gpurple" aria-hidden="true" />;
       case 'deploy':
-        return <Rocket className="h-4 w-4 text-folio-spruce" aria-hidden="true" />;
+        return <Rocket className="h-4 w-4 text-folio-gcoral" aria-hidden="true" />;
     }
   };
 
@@ -38,8 +38,8 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
     >
       <div className="folio-container">
         <div className="folio-section-header">
-          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-vermilion">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-accent">
+            <Sparkles className="h-3.5 w-3.5 text-folio-gpurple" aria-hidden="true" />
             <span className="folio-index-label">{t.sectionIndex}</span>
           </div>
           <h2 id="skills-heading" className="folio-section-heading">
@@ -51,13 +51,13 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
         </div>
 
         <div
-          className="mb-8 overflow-hidden rounded-[var(--radius-inner)] border border-folio-border bg-folio-surface/60 py-3 backdrop-blur-md"
+          className="mb-8 overflow-hidden rounded-[var(--radius-inner)] border border-folio-border bg-folio-surface py-3 shadow-[var(--shadow-soft)] backdrop-blur-md transition-colors duration-300"
           aria-label="Technology Marquee"
         >
           <div className="animate-folio-marquee gap-3 px-4">
             {marqueeList.map((skill, idx) => (
               <div key={`${skill.name}-${idx}`} className="folio-chip shrink-0 gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-folio-vermilion" />
+                <span className="google-border-frame h-2 w-2 rounded-full" />
                 <span className="font-semibold">{skill.name}</span>
               </div>
             ))}
@@ -77,7 +77,7 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ duration: 0.45, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] }}
-                className="folio-card grid grid-cols-1 gap-5 backdrop-blur-xl lg:grid-cols-12 lg:items-start"
+                className="folio-card google-gradient-hover-border grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-start"
               >
                 <div className="flex items-center justify-between border-b border-folio-border pb-3 lg:col-span-3 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
                   <div className="flex items-center gap-2.5">
@@ -86,7 +86,7 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
                       {t.categories[category]}
                     </h3>
                   </div>
-                  <span className="font-mono text-xs text-folio-muted">
+                  <span className="font-mono text-xs text-folio-faint">
                     {items.length}
                   </span>
                 </div>
@@ -109,7 +109,7 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
                         {item.projects.map((projName) => (
                           <span
                             key={projName}
-                            className="rounded-[var(--radius-tag)] bg-folio-surface px-2 py-0.5 font-mono text-[10px] font-medium text-folio-vermilion"
+                            className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-surface px-2 py-0.5 font-mono text-[10px] font-medium text-folio-accent"
                           >
                             {projName}
                           </span>

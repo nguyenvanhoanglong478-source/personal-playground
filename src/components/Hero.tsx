@@ -73,7 +73,7 @@ export const Hero: React.FC<HeroProps> = ({ locale }) => {
             <div className="mt-7 border-l border-folio-border pl-5 sm:pl-8 lg:ml-10">
               <p className="font-serif text-2xl font-normal italic leading-[1.28] text-folio-ink sm:text-4xl lg:text-[2.5rem]">
                 {sloganWords.map((word, idx) => (
-                  <React.Fragment key={`${word}-${idx}`}>
+                  <React.Fragment key={idx}>
                     <motion.span
                       initial={
                         shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }

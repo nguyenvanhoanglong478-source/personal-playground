@@ -83,15 +83,36 @@ export function App() {
 
     if (elements.length === 0) return;
 
+    const ratioMap = new Map<string, number>();
+    sectionIds.forEach((id) => ratioMap.set(id, 0));
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
+          ratioMap.set(
+            entry.target.id,
+            entry.isIntersecting ? entry.intersectionRatio : 0
+          );
+        }
+
+        let bestId = '';
+        let bestRatio = 0;
+        for (const id of sectionIds) {
+          const ratio = ratioMap.get(id) ?? 0;
+          if (ratio > bestRatio) {
+            bestRatio = ratio;
+            bestId = id;
           }
         }
+
+        if (bestId && bestRatio > 0) {
+          setActiveSection((prev) => (prev === bestId ? prev : bestId));
+        }
       },
-      { rootMargin: '-25% 0px -55% 0px', threshold: 0.05 }
+      {
+        rootMargin: '-18% 0px -42% 0px',
+        threshold: [0, 0.08, 0.18, 0.35, 0.55, 0.75, 1],
+      }
     );
 
     elements.forEach((el) => observer.observe(el));

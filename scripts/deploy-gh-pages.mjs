@@ -10,10 +10,20 @@ import path from 'node:path';
 function deployGitHubPages() {
   const repoRoot = process.cwd();
   const distDir = path.join(repoRoot, 'dist');
+  const dirtyStatus = execFileSync('git', ['status', '--porcelain'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  }).trim();
   const shortSha = execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
     cwd: repoRoot,
     encoding: 'utf8',
   }).trim();
+
+  if (dirtyStatus) {
+    console.warn(
+      `[deploy-gh-pages] Warning: Working tree has uncommitted changes; bundle will be tagged with HEAD ${shortSha}.`
+    );
+  }
 
   execSync('npm run build', {
     cwd: repoRoot,
@@ -45,6 +55,9 @@ function deployGitHubPages() {
       cwd: tempWorktree,
       stdio: 'inherit',
     });
+    console.log(
+      `[deploy-gh-pages] Synced gh-pages (${shortSha}) -> https://nguyenvanhoanglong478-source.github.io/personal-playground/`
+    );
   } finally {
     try {
       execFileSync('git', ['worktree', 'remove', '--force', tempWorktree], {

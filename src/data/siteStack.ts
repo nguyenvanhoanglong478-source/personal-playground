@@ -28,8 +28,8 @@ const KNOWN_PACKAGE_REASONS: Record<string, PackageMeta> = {
     displayName: 'Vite',
     role: 'build',
     reason: {
-      vi: 'Khởi chạy máy chủ phát triển nhanh và tách phần đồ họa Canvas thành chunk tải trễ.',
-      en: 'Provides fast local builds and lazy-loads the hero Canvas into a separate chunk.',
+      vi: 'Khởi chạy máy chủ phát triển nhanh, tách vendor/icon và tải trễ phần đồ họa WebGL tương tác.',
+      en: 'Provides fast local builds, splits vendor chunks, and lazy-loads the interactive WebGL pass.',
     },
   },
   react: {

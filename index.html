@@ -18,7 +18,34 @@
     <meta property="og:image" content="./avatar.jpg" />
     <meta property="og:type" content="website" />
     <meta name="theme-color" content="#131314" />
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('longhoang_folio_theme_v1');
+          if (theme !== 'light' && theme !== 'dark') {
+            theme =
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: light)').matches
+                ? 'light'
+                : 'dark';
+          }
+          document.documentElement.setAttribute('data-theme', theme);
+          var metaTheme = document.querySelector('meta[name="theme-color"]');
+          if (metaTheme) {
+            metaTheme.setAttribute(
+              'content',
+              theme === 'dark' ? '#131314' : '#F8F9FA'
+            );
+          }
+          var locale = localStorage.getItem('longhoang_folio_locale_v1');
+          if (locale === 'vi' || locale === 'en') {
+            document.documentElement.lang = locale;
+          }
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="preload" as="image" href="./avatar.jpg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

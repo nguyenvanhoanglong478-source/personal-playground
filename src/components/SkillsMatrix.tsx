@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Layers, Monitor, Palette, Server, Sparkles, Workflow } from 'lucide-react';
 import { Locale, UI_LABELS } from '../data/profile';
@@ -11,6 +11,26 @@ interface SkillsMatrixProps {
 export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
   const shouldReduceMotion = useReducedMotion();
   const t = UI_LABELS[locale].skills;
+  const marqueeBoxRef = useRef<HTMLDivElement | null>(null);
+  const [isMarqueeInView, setIsMarqueeInView] = useState(true);
+
+  useEffect(() => {
+    const el = marqueeBoxRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry) {
+          setIsMarqueeInView(entry.isIntersecting);
+        }
+      },
+      { rootMargin: '80px 0px', threshold: 0.01 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const [selectedByGroup, setSelectedByGroup] = useState<Record<SkillGroupId, string>>({
     platforms: SKILL_GROUPS[0].items[0].id,
@@ -61,10 +81,14 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
         </div>
 
         <div
+          ref={marqueeBoxRef}
           className="mb-8 overflow-hidden rounded-[var(--radius-inner)] border border-folio-border bg-folio-surface py-3 shadow-[var(--shadow-soft)] backdrop-blur-md transition-colors duration-300"
           aria-label="Technology Marquee"
         >
-          <div className="animate-folio-marquee gap-3 px-4">
+          <div
+            className="animate-folio-marquee gap-3 px-4"
+            style={isMarqueeInView ? undefined : { animationPlayState: 'paused' }}
+          >
             {marqueeList.map((skill, idx) => (
               <div key={`${skill.id}-${idx}`} className="folio-chip shrink-0 gap-2">
                 <span className="google-border-frame h-2 w-2 rounded-full" />

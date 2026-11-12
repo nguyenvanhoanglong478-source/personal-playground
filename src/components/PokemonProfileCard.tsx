@@ -272,6 +272,8 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
                 <img
                   src={PROFILE_DATA.avatarUrl}
                   alt={PROFILE_DATA.name}
+                  decoding="async"
+                  fetchPriority="high"
                   className="h-full w-full object-cover object-[50%_18%] filter contrast-[1.04] transition-transform duration-500 group-hover:scale-[1.03]"
                 />
                 <div

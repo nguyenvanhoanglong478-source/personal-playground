@@ -44,9 +44,9 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
     },
     {
       step: '05. DEPLOY',
-      title: 'GitHub Pages',
+      title: 'Cloudflare + GitHub Pages',
       version: `v${LIVE_SITE_STACK.projectVersion}`,
-      sub: 'Static Hosting',
+      sub: 'Dual Static Edge Hosting',
     },
   ];
 

@@ -924,64 +924,74 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
       const damping = mesh.dragActive ? 0.80 : 0.65;
       const cosFlip = Math.cos(mesh.flipAngle);
       const curlSign = cosFlip >= 0 ? 1 : -1;
+      const {
+        x,
+        y,
+        z,
+        oldX,
+        oldY,
+        oldZ,
+        restX,
+        restY,
+        uv,
+        seamBroken,
+      } = mesh;
+      const { i1, i2, restLen, stiffness, isCrossSeam, seamCol, count } =
+        mesh.constraints;
 
       for (let i = 0; i < TOTAL_VERTS; i++) {
         const isStub = i >= BODY_VERTS;
         const col = i % COLS;
 
         if (mesh.isTorn && isStub) {
-          const minY = mesh.restY[i] - 0.115;
-          if (mesh.y[i] > minY) {
+          const minY = restY[i] - 0.115;
+          if (y[i] > minY) {
             const tiltOffset = (col / (COLS - 1) - 0.5) * 0.00025;
             const flutter = Math.sin(now * 0.008 + col * 0.45) * 0.00045;
-            const vx = (mesh.x[i] - mesh.oldX[i]) * 0.85 + tiltOffset;
-            const vy = (mesh.y[i] - mesh.oldY[i]) * 0.85 - 0.0009;
-            const vz = (mesh.z[i] - mesh.oldZ[i]) * 0.85 + flutter;
+            const vx = (x[i] - oldX[i]) * 0.85 + tiltOffset;
+            const vy = (y[i] - oldY[i]) * 0.85 - 0.0009;
+            const vz = (z[i] - oldZ[i]) * 0.85 + flutter;
 
-            mesh.oldX[i] = mesh.x[i];
-            mesh.oldY[i] = mesh.y[i];
-            mesh.oldZ[i] = mesh.z[i];
+            oldX[i] = x[i];
+            oldY[i] = y[i];
+            oldZ[i] = z[i];
 
-            mesh.x[i] += vx;
-            mesh.y[i] = Math.max(minY, mesh.y[i] + vy);
-            mesh.z[i] += vz;
+            x[i] += vx;
+            y[i] = Math.max(minY, y[i] + vy);
+            z[i] += vz;
           }
         } else if (!mesh.dragActive) {
-          const tx = mesh.restX[i];
-          const ty = mesh.restY[i];
+          const tx = restX[i];
+          const ty = restY[i];
 
-          mesh.x[i] += (tx - mesh.x[i]) * 0.16;
-          mesh.y[i] += (ty - mesh.y[i]) * 0.16;
-          mesh.z[i] += (0 - mesh.z[i]) * 0.18;
+          x[i] += (tx - x[i]) * 0.16;
+          y[i] += (ty - y[i]) * 0.16;
+          z[i] += (0 - z[i]) * 0.18;
 
-          mesh.oldX[i] = mesh.x[i] - (mesh.x[i] - mesh.oldX[i]) * 0.4;
-          mesh.oldY[i] = mesh.y[i] - (mesh.y[i] - mesh.oldY[i]) * 0.4;
-          mesh.oldZ[i] = mesh.z[i] - (mesh.z[i] - mesh.oldZ[i]) * 0.4;
+          oldX[i] = x[i] - (x[i] - oldX[i]) * 0.4;
+          oldY[i] = y[i] - (y[i] - oldY[i]) * 0.4;
+          oldZ[i] = z[i] - (z[i] - oldZ[i]) * 0.4;
         } else {
-          let vx = (mesh.x[i] - mesh.oldX[i]) * damping;
-          let vy = (mesh.y[i] - mesh.oldY[i]) * damping;
-          let vz = (mesh.z[i] - mesh.oldZ[i]) * damping;
+          let vx = (x[i] - oldX[i]) * damping;
+          let vy = (y[i] - oldY[i]) * damping;
+          let vz = (z[i] - oldZ[i]) * damping;
 
-          const u = mesh.uv[i * 2];
-          const v = mesh.uv[i * 2 + 1];
+          const u = uv[i * 2];
+          const v = uv[i * 2 + 1];
           const distFromGrab = Math.hypot(u - mesh.grabU, v - mesh.grabV);
           const spring = Math.min(0.045, 0.005 + distFromGrab * 0.035);
 
-          const targetX = mesh.restX[i];
-          const targetY = mesh.restY[i];
-          const targetZ = 0;
+          vx += (restX[i] - x[i]) * spring;
+          vy += (restY[i] - y[i]) * spring;
+          vz += (0 - z[i]) * spring;
 
-          vx += (targetX - mesh.x[i]) * spring;
-          vy += (targetY - mesh.y[i]) * spring;
-          vz += (targetZ - mesh.z[i]) * spring;
+          oldX[i] = x[i];
+          oldY[i] = y[i];
+          oldZ[i] = z[i];
 
-          mesh.oldX[i] = mesh.x[i];
-          mesh.oldY[i] = mesh.y[i];
-          mesh.oldZ[i] = mesh.z[i];
-
-          mesh.x[i] += vx;
-          mesh.y[i] += vy;
-          mesh.z[i] += vz;
+          x[i] += vx;
+          y[i] += vy;
+          z[i] += vz;
         }
       }
 
@@ -992,12 +1002,16 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         const dragDist = Math.hypot(deltaScreenX, deltaScreenY);
 
         if (dragDist > 1e-4) {
+          const pullX = Math.max(-0.11, Math.min(0.11, deltaScreenX * HALF_W * 0.36));
+          const pullY = Math.max(-0.14, Math.min(0.12, deltaScreenY * HALF_H * 0.36));
+          const effectiveDrag = Math.min(1.15, dragDist);
+
           for (let i = 0; i < TOTAL_VERTS; i++) {
             const isStub = i >= BODY_VERTS;
             if (mesh.isTorn && isStub) continue;
 
-            const u = mesh.uv[i * 2];
-            const v = mesh.uv[i * 2 + 1];
+            const u = uv[i * 2];
+            const v = uv[i * 2 + 1];
             const du = u - mesh.grabU;
             const dv = v - mesh.grabV;
             const dist = Math.hypot(du, dv * (PASS_HEIGHT / PASS_WIDTH));
@@ -1005,10 +1019,6 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
             const peelWeight = Math.exp(-dist * 2.2);
 
             if (peelWeight > 0.005) {
-              const pullX = Math.max(-0.11, Math.min(0.11, deltaScreenX * HALF_W * 0.36));
-              const pullY = Math.max(-0.14, Math.min(0.12, deltaScreenY * HALF_H * 0.36));
-
-              const effectiveDrag = Math.min(1.15, dragDist);
               const curlZ =
                 (effectiveDrag * 0.24 +
                   Math.sin(Math.min(Math.PI, dist * 3.2)) *
@@ -1018,10 +1028,9 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
                 curlSign;
 
               const grabStrength = 0.48 * peelWeight;
-              mesh.x[i] +=
-                (mesh.restX[i] + pullX - mesh.x[i]) * grabStrength;
-              mesh.y[i] += (mesh.restY[i] + pullY - mesh.y[i]) * grabStrength;
-              mesh.z[i] += (curlZ - mesh.z[i]) * grabStrength;
+              x[i] += (restX[i] + pullX - x[i]) * grabStrength;
+              y[i] += (restY[i] + pullY - y[i]) * grabStrength;
+              z[i] += (curlZ - z[i]) * grabStrength;
             }
           }
         }
@@ -1045,12 +1054,12 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
 
         if (mesh.tearStartSide === 'left') {
           for (let c = 0; c < COLS; c++) {
-            mesh.seamBroken[c] = c < mesh.maxTornCols ? 1 : 0;
+            seamBroken[c] = c < mesh.maxTornCols ? 1 : 0;
           }
         } else {
           for (let c = 0; c < COLS; c++) {
             const colFromRight = COLS - 1 - c;
-            mesh.seamBroken[c] = colFromRight < mesh.maxTornCols ? 1 : 0;
+            seamBroken[c] = colFromRight < mesh.maxTornCols ? 1 : 0;
           }
         }
 
@@ -1064,29 +1073,28 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
             const rowFactor = (r - 23) / 4.0;
             for (let c = 0; c < COLS; c++) {
               const bIdx = r * COLS + c;
-              mesh.y[bIdx] += 0.005 * rowFactor;
-              mesh.oldY[bIdx] = mesh.y[bIdx] - 0.002 * rowFactor;
-              mesh.z[bIdx] +=
+              y[bIdx] += 0.005 * rowFactor;
+              oldY[bIdx] = y[bIdx] - 0.002 * rowFactor;
+              z[bIdx] +=
                 (Math.sin(c * 0.5) * 0.005 + 0.003) * rowFactor * curlSign;
             }
           }
         }
       }
 
-      const { i1, i2, restLen, stiffness, isCrossSeam, seamCol, count } =
-        mesh.constraints;
+      const iterations =
+        mesh.dragActive || mesh.bendIntensity > 0.12 ? PBD_ITERATIONS : 8;
 
-      for (let it = 0; it < PBD_ITERATIONS; it++) {
+      for (let it = 0; it < iterations; it++) {
         for (let c = 0; c < count; c++) {
-          if (isCrossSeam[c] === 1 && mesh.seamBroken[seamCol[c]] === 1)
-            continue;
+          if (isCrossSeam[c] === 1 && seamBroken[seamCol[c]] === 1) continue;
 
           const a = i1[c];
           const b = i2[c];
 
-          const dx = mesh.x[b] - mesh.x[a];
-          const dy = mesh.y[b] - mesh.y[a];
-          const dz = mesh.z[b] - mesh.z[a];
+          const dx = x[b] - x[a];
+          const dy = y[b] - y[a];
+          const dz = z[b] - z[a];
 
           let dist = Math.hypot(dx, dy, dz);
           if (dist < 1e-6) dist = 1e-6;
@@ -1099,13 +1107,13 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
           const corrY = dy * diff * 0.5 * stiff;
           const corrZ = dz * diff * 0.5 * stiff;
 
-          mesh.x[a] += corrX;
-          mesh.y[a] += corrY;
-          mesh.z[a] += corrZ;
+          x[a] += corrX;
+          y[a] += corrY;
+          z[a] += corrZ;
 
-          mesh.x[b] -= corrX;
-          mesh.y[b] -= corrY;
-          mesh.z[b] -= corrZ;
+          x[b] -= corrX;
+          y[b] -= corrY;
+          z[b] -= corrZ;
         }
       }
 
@@ -1124,14 +1132,14 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         Math.abs(mesh.flipVel) + Math.abs(mesh.targetFlipAngle - mesh.flipAngle);
       for (let i = 0; i < BODY_VERTS; i++) {
         const disp =
-          Math.abs(mesh.x[i] - mesh.restX[i]) +
-          Math.abs(mesh.y[i] - mesh.restY[i]) +
-          Math.abs(mesh.z[i]);
+          Math.abs(x[i] - restX[i]) +
+          Math.abs(y[i] - restY[i]) +
+          Math.abs(z[i]);
         if (disp > maxDisp) maxDisp = disp;
         const vel =
-          Math.abs(mesh.x[i] - mesh.oldX[i]) +
-          Math.abs(mesh.y[i] - mesh.oldY[i]) +
-          Math.abs(mesh.z[i]);
+          Math.abs(x[i] - oldX[i]) +
+          Math.abs(y[i] - oldY[i]) +
+          Math.abs(z[i]);
         kinetic += vel;
       }
 
@@ -1190,18 +1198,37 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     renderFrame();
   }, [edition, locale, renderFrame, theme]);
 
+  const syncTexturesRef = useRef(syncTextures);
+  syncTexturesRef.current = syncTextures;
+
   useEffect(() => {
     frontTexCanvasRef.current = document.createElement('canvas');
     backTexCanvasRef.current = document.createElement('canvas');
 
+    let mounted = true;
+    let initialAvatarReady = false;
+
     const img = new Image();
-    img.src = PROFILE_DATA.avatarUrl;
     img.onload = () => {
       avatarImgRef.current = img;
-      syncTextures();
+      if (mounted && !initialAvatarReady) {
+        syncTexturesRef.current();
+      }
     };
+    img.onerror = () => {
+      avatarImgRef.current = null;
+      if (mounted) {
+        syncTexturesRef.current();
+      }
+    };
+    img.src = PROFILE_DATA.avatarUrl;
     if (img.complete) {
-      avatarImgRef.current = img;
+      if (img.naturalWidth > 0) {
+        avatarImgRef.current = img;
+        initialAvatarReady = true;
+      } else {
+        avatarImgRef.current = null;
+      }
     }
 
     const canvas = canvasRef.current;
@@ -1296,11 +1323,11 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     }
 
     syncCanvasSize();
-    syncTextures();
-    let mounted = true;
-    document.fonts?.ready.then(() => {
-      if (mounted) syncTextures();
-    });
+    if (document.fonts && document.fonts.status !== 'loaded') {
+      document.fonts.ready.then(() => {
+        if (mounted) syncTexturesRef.current();
+      });
+    }
 
     return () => {
       mounted = false;
@@ -1309,8 +1336,22 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         pendingTouchRef.current = null;
       }
       stopLoop();
+      const currentGlState = glStateRef.current;
+      if (currentGlState) {
+        const ctx = currentGlState.gl;
+        ctx.deleteBuffer(currentGlState.posBuffer);
+        ctx.deleteBuffer(currentGlState.normBuffer);
+        ctx.deleteBuffer(currentGlState.uvBuffer);
+        ctx.deleteBuffer(currentGlState.seamBuffer);
+        ctx.deleteBuffer(currentGlState.bodyIdxBuffer);
+        ctx.deleteBuffer(currentGlState.stubIdxBuffer);
+        ctx.deleteTexture(currentGlState.frontTex);
+        ctx.deleteTexture(currentGlState.backTex);
+        ctx.deleteProgram(currentGlState.program);
+        glStateRef.current = null;
+      }
     };
-  }, [stopLoop, syncCanvasSize, syncTextures]);
+  }, [stopLoop, syncCanvasSize]);
 
   useEffect(() => {
     syncTextures();

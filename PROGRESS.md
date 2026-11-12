@@ -216,3 +216,27 @@ Cập nhật lần cuối: 2026-11-12
   - `npm.cmd run build` (`tsc -b && vite build`): thành công với 0 lỗi (`dist/assets/index-B3YLel8y.js`, không còn bundle `HeroFolioCanvas`).
   - `impeccable detect --json` trên các file đã sửa: trả về `[]` (0 vấn đề).
   - Playwright trên preview server (`1440×900`, `820×1180`, `375×812`, `360×780`, `430×932`; cả Dark/Light và VI/EN): `dx=0, dy=0, dw=0, dh=0` khóa chặt canvas trong `slotRef` trước và sau cuộn nhanh, `scrollWidth === innerWidth` trên tất cả viewport, `navbar_stays_above_canvas: true`, `body_touch_action: "pan-y"`, `stub_touch_action: "none"`, xé cuống bằng chuột/chạm (`data-torn="true"`), khôi phục vé (`data-torn="false"`), lật mặt vé (`data-flipped="true"`), uốn 3D (`data-drag-bent="true"`), hai nút `>= 44×44px` và 0 lỗi console/page.
+
+## 17. Tối Ưu Toàn Diện Tải Trang, WebGL/React Runtime, Workflow & Đồng Bộ Tài Liệu
+
+- **Nhóm 1 — Tải trang, chống FOUC & tách Bundle (`index.html`, `src/main.tsx`, `src/App.tsx`, `src/components/About.tsx`, `vite.config.ts`)**:
+  - Thêm `<link rel="preload" as="image" href="./avatar.jpg" />` và inline script đồng bộ trong `<head>` đọc `localStorage` (`longhoang_folio_theme_v1` kèm fallback `prefers-color-scheme: light`, và `longhoang_folio_locale_v1`) để đặt `data-theme`, `<meta name="theme-color">` và `lang` lên `<html>` trước lần vẽ đầu tiên.
+  - Bọc `<App />` trong `<MotionConfig reducedMotion="user">` tại `src/main.tsx`.
+  - Lazy-load `<AboutFoilPass />` qua `React.lazy` + `<Suspense>` với `AboutFoilPassFallback` giữ đúng tỷ lệ `aspect-[360/560]`, caption và hàng 2 nút `44px` tại `src/components/About.tsx`; tách thêm chunk `icons: ['lucide-react']` trong `vite.config.ts`.
+  - Nâng cấp scroll spy tại `src/App.tsx` bằng `IntersectionObserver` theo `ratioMap` nhiều ngưỡng (`[0, 0.08, 0.18, 0.35, 0.55, 0.75, 1]`, `rootMargin: '-18% 0px -42% 0px'`) để chọn chính xác section có tỷ lệ hiển thị cao nhất trên cả màn hình cao và mobile.
+- **Nhóm 2 — Hiệu năng WebGL, GPU & React Runtime (`AboutFoilPass.tsx`, `PokemonProfileCard.tsx`, `SkillsMatrix.tsx`, `Experience.tsx`, `Hero.tsx`)**:
+  - Tách phần khởi tạo WebGL context một lần khỏi hook `syncTextures()` theo `locale`/`edition`/`theme` trong `AboutFoilPass.tsx`, bổ sung dọn dẹp tài nguyên WebGL khi unmount, tránh chạy trùng `syncTextures()` khi mount, và thêm `img.onerror` fallback sạch về chữ lồng `LH`.
+  - Trích biến local cho các typed array (`x, y, z, oldX, oldY, oldZ, restX, restY, uv, seamBroken, i1, i2, restLen, stiffness`) trong `stepPhysicsAndRender` và áp dụng số vòng PBD thích ứng (`16` iterations khi kéo hoặc biến dạng lớn, `8` iterations khi đang thả hồi phục nhẹ).
+  - Gắn `decoding="async"` và `fetchPriority="high"` cho ảnh avatar thẻ Hero tại `PokemonProfileCard.tsx`.
+  - Thêm `IntersectionObserver` cho khung marquee công nghệ tại `SkillsMatrix.tsx` (`rootMargin: '80px 0px'`, tạm dừng `animationPlayState: 'paused'` khi ngoài viewport).
+  - Đổi key danh sách phụ thuộc `locale` sang chỉ số ổn định (`key={pointIdx}` trong `Experience.tsx` và `key={idx}` trên `sloganWords` trong `Hero.tsx`) để đổi ngôn ngữ không unmount DOM node.
+- **Nhóm 3 — Workflow & Scripts (`package.json`, `.github/workflows/deploy.yml`, `scripts/deploy-gh-pages.mjs`)**:
+  - Bổ sung `"typecheck": "tsc -b --noEmit"` và `"verify": "npm run typecheck && npm run build"` vào `package.json`.
+  - Thêm bước `Run typecheck` trước build và xuất bảng tóm tắt trạng thái Cloudflare Pages + GitHub Pages vào `$GITHUB_STEP_SUMMARY` trong `.github/workflows/deploy.yml`.
+  - Bổ sung kiểm tra `git status --porcelain` cảnh báo working tree bẩn trước build và in URL GitHub Pages sau khi push tại `scripts/deploy-gh-pages.mjs`.
+- **Nhóm 4 — Đồng bộ Tài liệu & Sơ đồ (`src/data/siteStack.ts`, `src/components/BuiltWithDiagram.tsx`, `DESIGN.md`, `PROGRESS.md`)**:
+  - Cập nhật mô tả gói `vite` trong `siteStack.ts` phản ánh việc tách chunk và lazy-load khối WebGL tương tác; cập nhật bước `05. DEPLOY` trong `BuiltWithDiagram.tsx` thành `Cloudflare + GitHub Pages`; đồng bộ `DESIGN.md` khớp 100% kiến trúc 6 dự án và `AboutFoilPass` cố định trong `slotRef`.
+- **Kiểm chứng**:
+  - `npm.cmd run verify` (`tsc -b --noEmit` + `vite build`): Bundle chính `index` giảm từ `158.81 kB` (`gzip 47.77 kB`) xuống `106.69 kB` (`gzip 30.95 kB`), tách riêng lazy chunk `AboutFoilPass` `41.52 kB` (`gzip 14.36 kB`) và `icons` `14.20 kB` (`gzip 3.35 kB`), kèm `motion` `127.37 kB` (`gzip 42.29 kB`), `vendor` `133.92 kB` (`gzip 43.12 kB`), `index.css` `55.03 kB` (`gzip 11.83 kB`), `index.html` `2.91 kB` (`gzip 1.21 kB`).
+  - `impeccable detect --json`: `[]`; `node --check scripts/deploy-gh-pages.mjs` đạt; kiểm tra zero code comments trong `src/`: `ZERO_COMMENTS_OK`.
+  - Playwright (`375×812` cảm ứng, `820×1180`, `1440×900`; Light/Dark, VI/EN): 0 lỗi console/page, 0 overflow ngang, `data-theme`/`lang` đồng bộ ngay từ `readystatechange:interactive` & `domcontentloaded` trước khi React mount (kể cả khi `reload`), `About` lazy chunk CLS `0.0000` (tổng CLS `0.02`–`0.15` do webfont swap ở Hero), marquee chạy khi in-view và paused ngoài viewport, đầy đủ thao tác Pokemon card, vé WebGL, 6 dự án Bento, Skills chip, Contact mailto và Navbar scroll spy cả 7 section.

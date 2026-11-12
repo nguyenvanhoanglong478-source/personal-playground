@@ -108,9 +108,9 @@ export const Experience: React.FC<ExperienceProps> = ({ locale }) => {
                       </p>
 
                       <ul className="mt-5 space-y-2.5 border-t border-folio-border pt-4">
-                        {exp.highlights[locale].map((point) => (
+                        {exp.highlights[locale].map((point, pointIdx) => (
                           <li
-                            key={point}
+                            key={pointIdx}
                             className="flex items-start gap-2.5 text-sm leading-relaxed text-folio-ink"
                           >
                             <Check

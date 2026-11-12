@@ -1,13 +1,30 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Compass, Sparkles, UserCheck } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
-import { AboutFoilPass } from './AboutFoilPass';
+
+const LazyAboutFoilPass = lazy(() =>
+  import('./AboutFoilPass').then((module) => ({ default: module.AboutFoilPass }))
+);
 
 interface AboutProps {
   locale: Locale;
   theme: 'light' | 'dark';
 }
+
+const AboutFoilPassFallback: React.FC = () => (
+  <div
+    aria-hidden="true"
+    className="mx-auto flex w-full max-w-[360px] flex-col items-center gap-3.5 lg:mx-0"
+  >
+    <div className="aspect-[360/560] w-full rounded-[18px] border border-folio-border bg-folio-surface/50" />
+    <div className="h-[16.5px] w-56 rounded bg-folio-elevated/60" />
+    <div className="flex w-full justify-center gap-2.5">
+      <div className="h-[44px] w-[124px] rounded-full border border-folio-border bg-folio-surface/50" />
+      <div className="h-[44px] w-[138px] rounded-full border border-folio-border bg-folio-surface/50" />
+    </div>
+  </div>
+);
 
 export const About: React.FC<AboutProps> = ({ locale, theme }) => {
   const shouldReduceMotion = useReducedMotion();
@@ -44,7 +61,9 @@ export const About: React.FC<AboutProps> = ({ locale, theme }) => {
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="relative z-20 overflow-visible lg:col-span-4"
           >
-            <AboutFoilPass locale={locale} theme={theme} />
+            <Suspense fallback={<AboutFoilPassFallback />}>
+              <LazyAboutFoilPass locale={locale} theme={theme} />
+            </Suspense>
           </motion.div>
 
           <motion.div

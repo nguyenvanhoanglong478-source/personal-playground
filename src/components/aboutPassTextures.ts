@@ -27,7 +27,7 @@ export interface EditionStyle {
 
 export const PASS_WIDTH = 640;
 export const PASS_HEIGHT = 1040;
-export const STUB_SPLIT_RATIO = 0.75;
+export const STUB_SPLIT_RATIO = 0.775;
 
 export const EDITION_STYLES: Record<FoilEdition, EditionStyle> = {
   'silver-holo': {

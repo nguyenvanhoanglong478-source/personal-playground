@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import { RefreshCw, Repeat2, Scissors, Sparkles } from 'lucide-react';
+import { RefreshCw, Repeat2 } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 import {
   EDITION_STYLES,
-  FOIL_EDITIONS_ORDER,
   FoilEdition,
   PASS_HEIGHT,
   PASS_WIDTH,
+  STUB_SPLIT_RATIO,
   renderBackPassTexture,
   renderFrontPassTexture,
 } from './aboutPassTextures';
@@ -30,11 +30,7 @@ const CARD_H = 1.48;
 const CARD_W = CARD_H * (PASS_WIDTH / PASS_HEIGHT);
 const HALF_W = CARD_W * 0.5;
 const HALF_H = CARD_H * 0.5;
-const CANVAS_SCALE_X = 2.2;
-const CANVAS_SCALE_Y = 1.9;
-const FOV_SCALE_BASE = 1.18;
-const FOV_SCALE = FOV_SCALE_BASE / CANVAS_SCALE_Y;
-const STUB_SPLIT_RATIO = 0.775;
+const SEAM_OVERLAP = 0.012;
 const PBD_ITERATIONS = 16;
 
 interface ConstraintsData {
@@ -81,8 +77,6 @@ interface MeshState {
   flipVel: number;
   targetFlipAngle: number;
   isTorn: boolean;
-  tearWaveActive: boolean;
-  tearWaveStartTime: number;
   stubAlpha: number;
   bendIntensity: number;
 }
@@ -95,6 +89,7 @@ const VERT_SHADER_SRC = `
   attribute vec2 aUv;
   attribute float aSeamBroken;
 
+  uniform vec2 uSlotOffset;
   uniform float uFlipAngle;
   uniform float uTiltX;
   uniform float uTiltY;
@@ -151,8 +146,8 @@ const VERT_SHADER_SRC = `
     vSeamBroken = aSeamBroken;
 
     gl_Position = vec4(
-      fPos.x * camDist * (uFovScale / uAspect),
-      fPos.y * camDist * uFovScale,
+      (fPos.x * camDist * (uFovScale / uAspect)) + uSlotOffset.x * w,
+      (fPos.y * camDist * uFovScale) + uSlotOffset.y * w,
       clamp(-fPos.z * 0.12, -0.95, 0.95) * w,
       w
     );
@@ -178,8 +173,8 @@ const FRAG_SHADER_SRC = `
   varying float vSeamBroken;
 
   float tornEdgeOffset(float u) {
-    float tooth = abs(sin(u * 28.0 * 3.14159265)) * 0.0085;
-    float fiber = (sin(u * 97.0) * 0.5 + sin(u * 211.0) * 0.35 + cos(u * 347.0) * 0.15) * 0.0055;
+    float tooth = (abs(sin(u * 28.0 * 3.14159265)) - 0.5) * 0.012;
+    float fiber = (sin(u * 97.0) * 0.5 + sin(u * 211.0) * 0.35 + cos(u * 347.0) * 0.15) * 0.004;
     return tooth + fiber;
   }
 
@@ -221,14 +216,20 @@ const FRAG_SHADER_SRC = `
     if (tex.a < 0.03) discard;
 
     float distToCut = 999.0;
+    float cutY = 0.775 + tornEdgeOffset(vUv.x);
     if (vSeamBroken > 0.45) {
-      float cutY = 0.775 - 0.012 + tornEdgeOffset(vUv.x);
       if (uIsStub < 0.5) {
         if (vUv.y > cutY) discard;
         distToCut = abs(vUv.y - cutY);
       } else {
         if (vUv.y < cutY) discard;
         distToCut = abs(vUv.y - cutY);
+      }
+    } else {
+      if (uIsStub < 0.5) {
+        if (vUv.y > 0.775) discard;
+      } else {
+        if (vUv.y < 0.775) discard;
       }
     }
 
@@ -391,8 +392,9 @@ function createMeshState(): MeshState {
   const seamBroken = new Uint8Array(COLS);
 
   for (let r = 0; r < BODY_ROWS; r++) {
-    const v = (r / (BODY_ROWS - 1)) * STUB_SPLIT_RATIO;
-    const py = HALF_H - v * CARD_H;
+    const vNorm = r / (BODY_ROWS - 1);
+    const v = vNorm * (STUB_SPLIT_RATIO + SEAM_OVERLAP);
+    const py = HALF_H - vNorm * STUB_SPLIT_RATIO * CARD_H;
     for (let c = 0; c < COLS; c++) {
       const u = c / (COLS - 1);
       const px = -HALF_W + u * CARD_W;
@@ -414,9 +416,13 @@ function createMeshState(): MeshState {
   }
 
   for (let r = 0; r < STUB_ROWS; r++) {
+    const vNorm = r / (STUB_ROWS - 1);
     const v =
-      STUB_SPLIT_RATIO + (r / (STUB_ROWS - 1)) * (1.0 - STUB_SPLIT_RATIO);
-    const py = HALF_H - v * CARD_H;
+      STUB_SPLIT_RATIO -
+      SEAM_OVERLAP +
+      vNorm * (1.0 - (STUB_SPLIT_RATIO - SEAM_OVERLAP));
+    const py =
+      HALF_H - (STUB_SPLIT_RATIO + vNorm * (1.0 - STUB_SPLIT_RATIO)) * CARD_H;
     for (let c = 0; c < COLS; c++) {
       const u = c / (COLS - 1);
       const px = -HALF_W + u * CARD_W;
@@ -507,8 +513,6 @@ function createMeshState(): MeshState {
     flipVel: 0,
     targetFlipAngle: 0,
     isTorn: false,
-    tearWaveActive: false,
-    tearWaveStartTime: 0,
     stubAlpha: 1.0,
     bendIntensity: 0,
   };
@@ -659,6 +663,7 @@ interface GlContextState {
     aNormal: number;
     aUv: number;
     aSeamBroken: number;
+    uSlotOffset: WebGLUniformLocation | null;
     uFrontTex: WebGLUniformLocation | null;
     uBackTex: WebGLUniformLocation | null;
     uFlipAngle: WebGLUniformLocation | null;
@@ -682,7 +687,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
 }) => {
   const shouldReduceMotion = useReducedMotion();
   const stageRef = useRef<HTMLDivElement | null>(null);
-  const hitBoxRef = useRef<HTMLDivElement | null>(null);
+  const slotRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frontTexCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const backTexCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -698,7 +703,6 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
   const [edition, setEdition] = useState<FoilEdition>(() =>
     theme === 'dark' ? 'obsidian-gold' : 'silver-holo'
   );
-  const [manualEditionChosen, setManualEditionChosen] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isTorn, setIsTorn] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
@@ -712,10 +716,24 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
   const labels = UI_LABELS[locale].about;
 
   useEffect(() => {
-    if (!manualEditionChosen) {
-      setEdition(theme === 'dark' ? 'obsidian-gold' : 'silver-holo');
-    }
-  }, [theme, manualEditionChosen]);
+    const detectTheme = () => {
+      const isDark =
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.documentElement.classList.contains('dark') ||
+        theme === 'dark';
+      setEdition(isDark ? 'obsidian-gold' : 'silver-holo');
+    };
+
+    detectTheme();
+
+    const observer = new MutationObserver(detectTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'class'],
+    });
+
+    return () => observer.disconnect();
+  }, [theme]);
 
   const renderFrame = useCallback(() => {
     const glState = glStateRef.current;
@@ -723,13 +741,38 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
 
     const { gl, locs } = glState;
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const mesh = meshRef.current;
-    const aspect = canvas.width / Math.max(1, canvas.height);
+    const slot = slotRef.current;
+    if (!canvas || !slot) return;
+
+    const rect = slot.getBoundingClientRect();
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
+    const targetW = Math.round(w * dpr);
+    const targetH = Math.round(h * dpr);
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
+    }
 
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    const isVisible = rect.bottom > -120 && rect.top < h + 120;
+    const mesh = meshRef.current;
+    if (!isVisible && !mesh.dragActive) {
+      return;
+    }
+
+    const cx = rect.left + rect.width * 0.5;
+    const cy = rect.top + rect.height * 0.5;
+    const ndcSlotX = (cx / w) * 2.0 - 1.0;
+    const ndcSlotY = 1.0 - (cy / h) * 2.0;
+
+    const uFovScale = ((rect.height / h) * 2.0) / CARD_H;
+    const uAspect = canvas.width / Math.max(1, canvas.height);
 
     const packedPos = new Float32Array(TOTAL_VERTS * 3);
     const packedNorm = new Float32Array(TOTAL_VERTS * 3);
@@ -778,11 +821,12 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     const tiltX = mesh.hovering && !mesh.dragActive ? mesh.hoverNdcY * 0.12 : 0;
     const tiltY = mesh.hovering && !mesh.dragActive ? -mesh.hoverNdcX * 0.12 : 0;
 
+    gl.uniform2f(locs.uSlotOffset, ndcSlotX, ndcSlotY);
     gl.uniform1f(locs.uFlipAngle, mesh.flipAngle);
     gl.uniform1f(locs.uTiltX, tiltX);
     gl.uniform1f(locs.uTiltY, tiltY);
-    gl.uniform1f(locs.uAspect, aspect);
-    gl.uniform1f(locs.uFovScale, FOV_SCALE);
+    gl.uniform1f(locs.uAspect, uAspect);
+    gl.uniform1f(locs.uFovScale, uFovScale);
     gl.uniform1f(
       locs.uHoloIntensity,
       EDITION_STYLES[editionRef.current].holoIntensity
@@ -790,12 +834,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     gl.uniform2f(locs.uPointer, mesh.hoverNdcX, mesh.hoverNdcY);
     gl.uniform1f(locs.uBend, mesh.bendIntensity);
 
-    const editionIndex =
-      editionRef.current === 'silver-holo'
-        ? 0.0
-        : editionRef.current === 'obsidian-gold'
-          ? 1.0
-          : 2.0;
+    const editionIndex = editionRef.current === 'silver-holo' ? 0.0 : 1.0;
     gl.uniform1f(locs.uEdition, editionIndex);
 
     gl.disable(gl.DEPTH_TEST);
@@ -1003,39 +1042,6 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         }
       }
 
-      if (mesh.tearWaveActive && !mesh.isTorn) {
-        const elapsed = (now - mesh.tearWaveStartTime) * 0.001;
-        const waveDuration = 0.32;
-        const progress = Math.min(1.0, elapsed / waveDuration);
-        const targetCol = Math.floor(progress * COLS);
-
-        for (let c = 0; c <= targetCol && c < COLS; c++) {
-          if (mesh.seamBroken[c] === 0) {
-            mesh.seamBroken[c] = 1;
-            const sIdx = BODY_VERTS + c;
-            mesh.z[sIdx] += 0.045 * curlSign;
-            mesh.y[sIdx] -= 0.025;
-          }
-        }
-
-        if (progress >= 1.0) {
-          mesh.tearWaveActive = false;
-          mesh.isTorn = true;
-          setIsTorn(true);
-
-          for (let r = 24; r < BODY_ROWS; r++) {
-            const rowFactor = (r - 23) / 4.0;
-            for (let c = 0; c < COLS; c++) {
-              const bIdx = r * COLS + c;
-              mesh.y[bIdx] += 0.005 * rowFactor;
-              mesh.oldY[bIdx] = mesh.y[bIdx] - 0.002 * rowFactor;
-              mesh.z[bIdx] +=
-                (Math.sin(c * 0.5) * 0.005 + 0.003) * rowFactor * curlSign;
-            }
-          }
-        }
-      }
-
       const { i1, i2, restLen, stiffness, isCrossSeam, seamCol, count } =
         mesh.constraints;
 
@@ -1104,14 +1110,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
       renderFrame();
 
       const stubActive = mesh.isTorn && mesh.stubAlpha > 0.01;
-      const tearWaveRunning = mesh.tearWaveActive && !mesh.isTorn;
-      if (
-        mesh.dragActive ||
-        mesh.hovering ||
-        stubActive ||
-        tearWaveRunning ||
-        kinetic > 0.003
-      ) {
+      if (mesh.dragActive || mesh.hovering || stubActive || kinetic > 0.003) {
         rafRef.current = requestAnimationFrame(stepPhysicsAndRender);
       } else {
         mesh.flipAngle = mesh.targetFlipAngle;
@@ -1238,6 +1237,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
               aNormal: gl.getAttribLocation(program, 'aNormal'),
               aUv: gl.getAttribLocation(program, 'aUv'),
               aSeamBroken: gl.getAttribLocation(program, 'aSeamBroken'),
+              uSlotOffset: gl.getUniformLocation(program, 'uSlotOffset'),
               uFrontTex: gl.getUniformLocation(program, 'uFrontTex'),
               uBackTex: gl.getUniformLocation(program, 'uBackTex'),
               uFlipAngle: gl.getUniformLocation(program, 'uFlipAngle'),
@@ -1275,26 +1275,20 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
   }, [syncTextures]);
 
   useEffect(() => {
-    const stage = stageRef.current;
-    const canvas = canvasRef.current;
-    if (!stage || !canvas) return;
-
-    const updateSize = () => {
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-      const targetW = Math.round(rect.width * dpr);
-      const targetH = Math.round(rect.height * dpr);
-      if (canvas.width !== targetW || canvas.height !== targetH) {
-        canvas.width = targetW;
-        canvas.height = targetH;
-        renderFrame();
-      }
+    const handleScrollOrResize = () => {
+      renderFrame();
     };
+    window.addEventListener('scroll', handleScrollOrResize, { passive: true });
+    window.addEventListener('resize', handleScrollOrResize, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScrollOrResize);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [renderFrame]);
 
-    updateSize();
-    const ro = new ResizeObserver(updateSize);
-    ro.observe(canvas);
+  useEffect(() => {
+    const slot = slotRef.current;
+    if (!slot) return;
 
     const io = new IntersectionObserver(
       (entries) => {
@@ -1306,24 +1300,23 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
           stopLoop();
         }
       },
-      { rootMargin: '120px' }
+      { rootMargin: '160px' }
     );
-    io.observe(stage);
+    io.observe(slot);
 
     return () => {
-      ro.disconnect();
       io.disconnect();
     };
   }, [renderFrame, stopLoop]);
 
   const mapPointerToNdc = useCallback((clientX: number, clientY: number) => {
-    const box = hitBoxRef.current;
-    if (!box) return { ndcX: 0, ndcY: 0, u: 0.5, v: 0.5 };
-    const rect = box.getBoundingClientRect();
-    const centerX = rect.left + rect.width * 0.5;
-    const centerY = rect.top + rect.height * 0.5;
-    const ndcX = (clientX - centerX) / (rect.width * 0.5);
-    const ndcY = (centerY - clientY) / (rect.height * 0.5);
+    const slot = slotRef.current;
+    if (!slot) return { ndcX: 0, ndcY: 0, u: 0.5, v: 0.5 };
+    const rect = slot.getBoundingClientRect();
+    const cx = rect.left + rect.width * 0.5;
+    const cy = rect.top + rect.height * 0.5;
+    const ndcX = (clientX - cx) / (rect.width * 0.5);
+    const ndcY = (cy - clientY) / (rect.height * 0.5);
 
     const mesh = meshRef.current;
     const cosFlip = Math.cos(mesh.flipAngle);
@@ -1446,25 +1439,9 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     }
   };
 
-  const handleTearOrReset = () => {
+  const handleRestore = () => {
     const mesh = meshRef.current;
-    if (!isTorn) {
-      if (shouldReduceMotion) {
-        for (let c = 0; c < COLS; c++) mesh.seamBroken[c] = 1;
-        mesh.isTorn = true;
-        mesh.stubAlpha = 0;
-        setIsTorn(true);
-        renderFrame();
-      } else {
-        mesh.tearWaveActive = true;
-        mesh.tearWaveStartTime = performance.now();
-        startLoop();
-      }
-      return;
-    }
-
     mesh.isTorn = false;
-    mesh.tearWaveActive = false;
     mesh.maxTornCols = 0;
     mesh.stubAlpha = 1.0;
     for (let c = 0; c < COLS; c++) {
@@ -1487,118 +1464,74 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     if (!shouldReduceMotion) startLoop();
   };
 
-  const handleSelectEdition = (nextEdition: FoilEdition) => {
-    setManualEditionChosen(true);
-    setEdition(nextEdition);
-  };
-
   return (
-    <div
-      ref={stageRef}
-      data-flipped={isFlipped ? 'true' : 'false'}
-      data-torn={isTorn ? 'true' : 'false'}
-      data-edition={edition}
-      data-interacting={isInteracting ? 'true' : 'false'}
-      data-drag-bent={isDragBent ? 'true' : 'false'}
-      className="about-foil-stage relative z-30 mx-auto flex w-full max-w-[360px] flex-col items-center gap-3.5 overflow-visible data-[interacting=true]:z-40 lg:mx-0"
-    >
-      <div className="relative aspect-[360/560] w-full overflow-visible">
-        <canvas
-          ref={canvasRef}
-          aria-hidden="true"
-          className="about-foil-canvas pointer-events-none absolute left-[-60%] top-[-45%] h-[190%] w-[220%]"
-        />
-        <div
-          ref={hitBoxRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerLeave={handlePointerLeave}
-          aria-label={
-            locale === 'vi'
-              ? 'Vé định danh Hologram tương tác của Long Hoàng, có thể kéo uốn cong, lật hai mặt và xé cuống vé'
-              : 'Interactive holographic creator pass for Long Hoàng with 3D bending, two-sided flip, and tearable stub'
-          }
-          role="region"
-          className="pointer-events-auto absolute inset-0 cursor-grab active:cursor-grabbing"
-        />
-        <img
-          src={PROFILE_DATA.avatarUrl}
-          alt={labels.portraitAlt}
-          className="sr-only"
-        />
-      </div>
-
-      <p className="text-center font-mono text-[11px] text-folio-faint">
-        {locale === 'vi'
-          ? 'Kéo trên vé để uốn nếp · Kéo cuống dưới để xé'
-          : 'Drag pass to bend foil · Pull bottom stub to tear'}
-      </p>
-
-      <div className="flex w-full flex-wrap items-center justify-center gap-2">
-        <button
-          type="button"
-          onClick={handleFlip}
-          className="folio-btn-compact"
-        >
-          <span className="google-pill-aura" aria-hidden="true" />
-          <Repeat2 className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>{locale === 'vi' ? 'Lật vé' : 'Flip Pass'}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={handleTearOrReset}
-          className="folio-btn-compact"
-        >
-          <span className="google-pill-aura" aria-hidden="true" />
-          {isTorn ? (
-            <>
-              <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>
-                {locale === 'vi' ? 'Cấp lại vé nguyên vẹn' : 'Issue Fresh Pass'}
-              </span>
-            </>
-          ) : (
-            <>
-              <Scissors className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{locale === 'vi' ? 'Xé cuống vé' : 'Tear Stub'}</span>
-            </>
-          )}
-        </button>
-      </div>
+    <>
+      <canvas
+        ref={canvasRef}
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-50 h-screen w-screen"
+      />
 
       <div
-        role="group"
-        aria-label={
-          locale === 'vi' ? 'Chọn chất liệu Foil' : 'Select Foil Edition'
-        }
-        className="flex w-full flex-wrap items-center justify-center gap-2 pt-0.5"
+        ref={stageRef}
+        data-flipped={isFlipped ? 'true' : 'false'}
+        data-torn={isTorn ? 'true' : 'false'}
+        data-edition={edition}
+        data-interacting={isInteracting ? 'true' : 'false'}
+        data-drag-bent={isDragBent ? 'true' : 'false'}
+        className="about-foil-stage mx-auto flex w-full max-w-[360px] flex-col items-center gap-3.5 lg:mx-0"
       >
-        {FOIL_EDITIONS_ORDER.map((edKey) => {
-          const item = EDITION_STYLES[edKey];
-          const isActive = edition === edKey;
-          return (
-            <button
-              key={edKey}
-              type="button"
-              onClick={() => handleSelectEdition(edKey)}
-              aria-pressed={isActive}
-              data-active={isActive ? 'true' : 'false'}
-              className={`folio-btn-compact about-edition-pill !px-3 ${
-                isActive ? 'about-edition-pill--active' : ''
-              }`}
-            >
-              <span className="google-pill-aura" aria-hidden="true" />
-              {isActive && (
-                <Sparkles className="h-3 w-3 shrink-0" aria-hidden="true" />
-              )}
-              <span>
-                {item.code} {item.label[locale]}
-              </span>
-            </button>
-          );
-        })}
+        <div
+          ref={slotRef}
+          className="relative aspect-[360/560] w-full"
+        >
+          <div
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerLeave={handlePointerLeave}
+            aria-label={
+              locale === 'vi'
+                ? 'Vé định danh Hologram tương tác của Long Hoàng, có thể kéo uốn cong, lật hai mặt và xé cuống vé'
+                : 'Interactive holographic creator pass for Long Hoàng with 3D bending, two-sided flip, and tearable stub'
+            }
+            role="region"
+            className="pointer-events-auto absolute inset-0 cursor-grab active:cursor-grabbing"
+          />
+          <img
+            src={PROFILE_DATA.avatarUrl}
+            alt={labels.portraitAlt}
+            className="sr-only"
+          />
+        </div>
+
+        <p className="text-center font-mono text-[11px] text-folio-faint">
+          {locale === 'vi'
+            ? 'Kéo trên vé để uốn nếp · Nắm cuống dưới để xé'
+            : 'Drag pass to bend foil · Pull bottom stub to tear'}
+        </p>
+
+        <div className="flex w-full flex-wrap items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={handleFlip}
+            className="folio-btn-compact"
+          >
+            <span className="google-pill-aura" aria-hidden="true" />
+            <Repeat2 className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{locale === 'vi' ? 'Lật mặt vé' : 'Flip Pass'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleRestore}
+            className="folio-btn-compact"
+          >
+            <span className="google-pill-aura" aria-hidden="true" />
+            <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{locale === 'vi' ? 'Khôi phục vé' : 'Restore Pass'}</span>
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };

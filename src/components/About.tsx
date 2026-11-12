@@ -2,12 +2,14 @@ import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Compass, Sparkles, UserCheck } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
+import { AboutFoilPass } from './AboutFoilPass';
 
 interface AboutProps {
   locale: Locale;
+  theme: 'light' | 'dark';
 }
 
-export const About: React.FC<AboutProps> = ({ locale }) => {
+export const About: React.FC<AboutProps> = ({ locale, theme }) => {
   const shouldReduceMotion = useReducedMotion();
   const t = UI_LABELS[locale].about;
   const paragraphs = PROFILE_DATA.aboutParagraphs[locale];
@@ -42,45 +44,7 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="lg:col-span-4"
           >
-            <div className="folio-card google-gradient-hover-border flex flex-col gap-5 !p-5">
-              <div className="google-border-frame rounded-[var(--radius-inner)] p-[2px] shadow-[var(--shadow-soft)]">
-                <div className="overflow-hidden rounded-[calc(var(--radius-inner)-2px)] bg-folio-bg">
-                  <img
-                    src={PROFILE_DATA.avatarUrl}
-                    alt={t.portraitAlt}
-                    loading="lazy"
-                    className="aspect-square w-full object-cover object-top transition-transform duration-500 hover:scale-105"
-                  />
-                </div>
-              </div>
-
-              <div className="divide-y divide-folio-border border-t border-folio-border">
-                <div className="flex items-center justify-between py-2.5">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-folio-faint">
-                    {t.nameLabel}
-                  </span>
-                  <span className="font-serif text-sm font-bold text-folio-ink">
-                    {PROFILE_DATA.name}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2.5">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-folio-faint">
-                    {t.birthLabel}
-                  </span>
-                  <span className="font-mono text-sm font-bold text-folio-ink">
-                    {PROFILE_DATA.birthYear}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2 pt-2.5">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-folio-faint">
-                    {t.roleLabel}
-                  </span>
-                  <span className="text-right font-serif text-sm font-bold text-folio-ink">
-                    {PROFILE_DATA.role[locale]}
-                  </span>
-                </div>
-              </div>
-            </div>
+            <AboutFoilPass locale={locale} theme={theme} />
           </motion.div>
 
           <motion.div

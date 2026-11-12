@@ -155,3 +155,13 @@ Cập nhật lần cuối: 2026-11-12
   - Tạo dự án Cloudflare Pages `longhoang` (`--production-branch=main --force`) và triển khai thư mục `dist/` (8 tệp) lên nhánh production `main`.
 - **Liên kết & Tài liệu (`README.md`, `PROGRESS.md`)**:
   - Cập nhật đường dẫn Live Demo chính thức (`https://longhoang.pages.dev/`) và bản deploy kiểm tra (`https://9db9997f.longhoang.pages.dev`) sau khi xác nhận HTTP `200` cho trang chủ, `avatar.jpg` và `favicon.svg`.
+
+## 15. Vé Định Danh Hologram Uốn Dẻo & Xé Cuống Vé (AboutFoilPass.tsx)
+
+- **Thay thế cột trái mục `02. Về tôi` (`src/components/AboutFoilPass.tsx`, `src/components/aboutPassTextures.ts`, `src/components/About.tsx`, `src/App.tsx`, `src/index.css`)**:
+  - Giữ nguyên toàn bộ cột bên phải của `About.tsx` (5 đoạn văn tự sự và lưới 4 nguyên tắc làm việc) và chỉ thay khung thẻ chân dung tĩnh cột trái (`lg:col-span-4`) bằng `AboutFoilPass`.
+  - Dựng hệ texture 2× Retina (`640×1040`) song ngữ `vi`/`en` từ `PROFILE_DATA` cho **Mặt trước** (dải Hologram trên cùng, ảnh `./avatar.jpg` kèm khung bát giác lăng kính, bảng thông số `HỌ TÊN / NĂM SINH / NGÔN NGỮ / LĨNH VỰC`, mã ma trận QR 11×11 và barcode `NO. 2007-LH-02`) và **Mặt sau** (sơ đồ Radar kỹ thuật plotting 4 nguyên tắc làm việc cùng con dấu tròn Linh thú Capybara `VERIFIED PRODUCT MAKER // 2007`).
+- **Động lực học Lưới Lò Xo & Shader Quang Phổ**:
+  - Xây dựng lưới lò xo đàn hồi `16×18` (thân vé) + `16×7` (cuống vé) chạy qua WebGL1 (tính toán ánh sáng pháp tuyến động, bóng nếp gấp và dải cầu vồng Foil) kèm nhánh dự phòng Canvas 2D tự động; hỗ trợ kéo uốn vé, lật 180° không ngược chữ, kéo xé rời cuống vé rơi tự do (`Xé cuống vé` / `Tear Stub` và `Cấp lại vé nguyên vẹn` / `Issue Fresh Pass`).
+  - Bổ sung 3 tùy chọn chất liệu Foil (`01 Silver Holo`, `02 Obsidian Gold` mặc định theo Dark Mode, `03 Google Prism`), dừng render khi rời khung nhìn qua `IntersectionObserver` và tôn trọng `prefers-reduced-motion: reduce`.
+- **Kiểm chứng**: Xác nhận `impeccable detect --json` trả về `[]`, `tsc -b && vite build` thành công, và kiểm thử Playwright trên `1440px`, `820px`, `375px`, `360px` cho `Light/Dark` và `VI/EN` (0 lỗi console/page, 0 tràn ngang, vùng chạm >= 44px trên di động).

@@ -27,7 +27,7 @@ Toàn bộ token màu được khai báo tập trung tại `:root`, `html[data-t
 - `--google-red`: `#EA4335`
 - `--google-yellow`: `#FBBC04`
 - `--google-green`: `#34A853`
-- Áp dụng **Google Aura Mesh Gradient** cho nền trang, viền phát quang (ảnh đại diện ở Hero/About, gạch chân mục điều hướng, huy hiệu monogram), hiệu ứng spotlight/viền khi di chuột trên thẻ dự án và **viền xoay conic-gradient kèm hào quang ngoài** cho toàn bộ nút bấm dạng viên thuốc kính mờ (`rgba(255, 255, 255, 0.85)` Light / `rgba(30, 31, 32, 0.85)` Dark, tuyệt đối không tô đặc ruột nút).
+- Áp dụng **Google Aura Mesh Gradient** cho nền trang, viền phát quang (ảnh đại diện ở Hero/About, gạch chân mục điều hướng, hào quang và tinh tú đỉnh đầu trên biểu tượng **Linh thú Capybara**), hiệu ứng khi di chuột trên thẻ dự án và **viền xoay conic-gradient kèm hào quang ngoài** cho toàn bộ nút bấm dạng viên thuốc kính mờ (`rgba(255, 255, 255, 0.85)` Light / `rgba(30, 31, 32, 0.85)` Dark, tuyệt đối không tô đặc ruột nút).
 - Toàn bộ hệ thống chữ viết (tên **Long Hoàng**, tiêu đề chính, tiêu đề thẻ dự án, mô tả, nhãn, liên kết và chữ trên nút `#1F1F1F` / `#E3E3E3`) chuyển hoàn toàn về **màu đơn sắc trung tính**, tuyệt đối không dùng chữ màu hoặc Text Gradient.
 
 ### Chế độ Sáng (Google Workspace / Material You)
@@ -52,3 +52,4 @@ Toàn bộ token màu được khai báo tập trung tại `:root`, `html[data-t
 - Toàn bộ nút bấm tương tác (`.folio-btn-primary`, `.folio-btn-secondary`, `.folio-btn-compact`, `.folio-btn-icon`, `.google-btn-github`) đứng yên tĩnh lặng ở trạng thái mặc định với nền kính mờ `backdrop-filter: blur(14px)` và viền tĩnh mảnh `--btn-border-static`. Chỉ khi di chuột trực tiếp vào từng nút (`:hover`), viền conic-gradient Google xoay theo `--btn-angle`, hào quang ngoài (`.google-pill-aura`) và hiệu ứng nâng nhẹ `translateY(-2px) scale(1.015)` mới xuất hiện rồi chuyển mượt về trạng thái tĩnh khi rời chuột.
 - Bento Grid 5 dự án hỗ trợ nghiêng 3D khi hover thẻ và viền sáng Google (`.google-gradient-hover-border`).
 - Đồ họa nền (`HeroFolioCanvas.tsx`) vẽ hạt sáng và sóng hài hòa nhẹ nhàng theo bảng màu Google, không bám theo chuyển động chuột toàn trang và tự dừng khi `prefers-reduced-motion: reduce`.
+- Biểu tượng thương hiệu (`CapybaraLogo.tsx` & `public/favicon.svg`) thiết kế theo phong cách **Editorial Sacred Geometry / Monoline Emblem** khắc họa góc nghiêng Linh thú Capybara điềm tĩnh với đôi mắt Zen và tinh tú 4 cánh trên đỉnh đầu; đường nét chính kế thừa `currentColor` (`#111111` Sáng / `#F5F5F7` Tối), điểm nhấn tinh tú và vòng hào quang dùng **Google Modern Gradient** với ID riêng biệt (`useId()`), chỉ chuyển động nhẹ khi di chuột (`group-hover`) và tôn trọng `prefers-reduced-motion: reduce`.

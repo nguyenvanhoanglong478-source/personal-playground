@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Globe, Menu, Moon, Sun, X } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
+import { CapybaraLogo } from './CapybaraLogo';
 
 interface NavbarProps {
   locale: Locale;
@@ -39,14 +40,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="folio-container flex items-center justify-between gap-2 py-3 sm:gap-3">
         <a
           href="#hero"
-          className="group flex min-w-0 items-center gap-2.5 text-folio-ink sm:gap-3"
+          className="group flex min-w-0 cursor-pointer items-center gap-2.5 text-folio-ink sm:gap-3"
           aria-label="Long Hoàng"
         >
-          <span className="google-border-frame flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] p-[1.5px] transition-transform duration-300 group-hover:scale-105">
-            <span className="flex h-full w-full items-center justify-center rounded-[calc(var(--radius-control)-1.5px)] bg-folio-bg font-serif text-lg font-bold text-folio-ink">
-              <span>L</span>
-            </span>
-          </span>
+          <CapybaraLogo size={38} showAura className="text-folio-ink" />
           <div className="flex min-w-0 flex-col">
             <span className="truncate font-serif text-base font-semibold leading-none tracking-tight text-folio-ink sm:text-lg">
               {PROFILE_DATA.name}

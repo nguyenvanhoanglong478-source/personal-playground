@@ -1,14 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Long Hoàng Logo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Biểu tượng Linh thú Capybara">
   <defs>
-    <linearGradient id="googleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="capyFavGrad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#4285F4"/>
-      <stop offset="42%" stop-color="#9B72CB"/>
-      <stop offset="76%" stop-color="#D96570"/>
-      <stop offset="100%" stop-color="#FBBC04"/>
+      <stop offset="24%" stop-color="#9B72CB"/>
+      <stop offset="48%" stop-color="#D96570"/>
+      <stop offset="66%" stop-color="#EA4335"/>
+      <stop offset="84%" stop-color="#FBBC04"/>
+      <stop offset="100%" stop-color="#34A853"/>
     </linearGradient>
+    <style>
+      .badge-bg { fill: #F8F9FA; }
+      .ink-stroke { stroke: #111111; }
+      @media (prefers-color-scheme: dark) {
+        .badge-bg { fill: #131314; }
+        .ink-stroke { stroke: #F5F5F7; }
+      }
+    </style>
   </defs>
-  <rect width="64" height="64" rx="14" fill="#131314"/>
-  <rect x="3.5" y="3.5" width="57" height="57" rx="11" fill="none" stroke="url(#googleGrad)" stroke-width="2.5"/>
-  <path d="M22 17h7v24h14v6H22V17z" fill="#E3E3E3"/>
-  <circle cx="47" cy="20" r="3.5" fill="url(#googleGrad)"/>
+  <rect class="badge-bg" width="48" height="48" rx="12"/>
+  <rect x="2" y="2" width="44" height="44" rx="10" fill="none" stroke="url(#capyFavGrad)" stroke-width="2.1"/>
+  <path d="M 24 6.0 C 24.45 9.0 25.55 10.1 28.5 10.55 C 25.55 11.0 24.45 12.1 24 15.1 C 23.55 12.1 22.45 11.0 19.5 10.55 C 22.45 10.1 23.55 9.0 24 6.0 Z" fill="url(#capyFavGrad)"/>
+  <g class="ink-stroke" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 13.8 36.8 C 13.1 30.8 13.6 25.0 15.6 21.5 C 14.5 18.7 15.0 16.3 17.1 16.2 C 18.7 16.1 19.4 17.8 19.0 19.7 C 22.8 18.4 28.4 19.0 32.8 20.8 C 34.8 21.6 35.7 23.0 35.7 25.4 L 35.4 29.3 C 35.3 31.8 33.5 33.1 30.3 33.1 C 27.9 33.1 26.2 33.7 25.5 35.0 C 25.1 35.7 25.1 36.2 25.2 36.8" stroke-width="2.6"/>
+    <path d="M 12.2 36.8 Q 19.5 37.7 26.8 36.8" stroke-width="2.4"/>
+    <path d="M 23.2 22.5 Q 25.5 24.4 27.8 22.5" stroke-width="2.35"/>
+    <path d="M 31.8 24.2 C 32.3 24.7 32.6 25.2 32.7 25.8" stroke-width="2.15"/>
+    <path d="M 35.3 29.1 C 33.4 29.3 32.0 30.1 31.2 31.2" stroke-width="2.1"/>
+  </g>
 </svg>

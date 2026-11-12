@@ -156,18 +156,24 @@ Cập nhật lần cuối: 2026-11-12
 - **Liên kết & Tài liệu (`README.md`, `PROGRESS.md`)**:
   - Cập nhật đường dẫn Live Demo chính thức (`https://longhoang.pages.dev/`) và bản deploy kiểm tra (`https://9db9997f.longhoang.pages.dev`) sau khi xác nhận HTTP `200` cho trang chủ, `avatar.jpg` và `favicon.svg`.
 
-## 15. Vé Định Danh Hologram Uốn Dẻo 3D & Xé Cuống Vé (AboutFoilPass.tsx)
+## 15. Vé Định Danh Hologram Uốn Dẻo 3D & Xé Cuống Vé Răng Cưa (AboutFoilPass.tsx)
 
 - **Thay thế cột trái mục `02. Về tôi` (`src/components/AboutFoilPass.tsx`, `src/components/aboutPassTextures.ts`, `src/components/About.tsx`, `src/App.tsx`, `src/index.css`)**:
   - Giữ nguyên toàn bộ cột bên phải của `About.tsx` (5 đoạn văn tự sự và lưới 4 nguyên tắc làm việc) và thay khung thẻ chân dung tĩnh cột trái (`lg:col-span-4`) bằng `AboutFoilPass`.
   - Dựng hệ texture 2× Retina (`640×1040`) song ngữ `vi`/`en` từ `PROFILE_DATA` cho **Mặt trước** (dải Hologram trên cùng, ảnh `./avatar.jpg` kèm khung bát giác lăng kính, bảng thông số `HỌ TÊN / NĂM SINH / NGÔN NGỮ / LĨNH VỰC`, mã ma trận QR 11×11 và barcode `NO. 2007-LH-02`) và **Mặt sau** (sơ đồ Radar kỹ thuật plotting 4 nguyên tắc làm việc cùng con dấu tròn Linh thú Capybara `VERIFIED PRODUCT MAKER // 2007`).
 - **Nâng cấp Toàn diện Engine Vật lý Giấy 3D Không Co Giãn (3D Verlet + PBD)**:
-  - Lưới 3D mịn `COLS = 24`, `ROWS = 36` (864 đỉnh: Thân 28 hàng + Cuống 8 hàng) tích hợp chuyển động Verlet với `damping = 0.94` và lực hồi phục mềm `restSpring` (`0.028` khi kéo, `0.085` khi thả tay).
+  - Lưới 3D mịn `COLS = 24`, `ROWS = 36` (864 đỉnh: Thân 28 hàng + Cuống 8 hàng) tích hợp chuyển động Verlet với `damping = 0.94` và lực hồi phục mềm `restSpring` (`0.008–0.065` khi kéo, `0.085` khi thả tay).
   - Bộ giải ràng buộc khoảng cách PBD (Position-Based Dynamics) 16 iterations/frame gồm: Structural Constraints (độ cứng `0.98`, giữ diện tích không đổi và kích hoạt hiện tượng phồng uốn 3D Buckling khi kéo gập), Shear Constraints (độ cứng `0.85`, chống méo xiên khung giấy) và Bending Constraints 2-bước & 3-bước (độ cứng `0.42` và `0.28`, tạo đường cong mượt mà như giấy tráng bạc cao cấp).
-  - Cơ chế Kéo & Cuộn Nếp Gấp 3D (Grab & 3D Curl): Vùng ảnh hưởng Gaussian Falloff kết hợp nâng trục `Z` theo độ dài kéo và hướng kéo vào tâm (`curlHeight`), cùng mô-men uốn vểnh mép giấy (`edgeRoll`) về phía camera.
-  - Phép xé cuống vé trực tiếp trên lưới 3D (Mesh-Level Tear): Cắt đứt toàn bộ liên kết dọc và chéo qua `TEAR_ROW = 28`, cuống vé rơi và lộn nghiêng tự do trong không gian 3D dưới gia tốc trọng lực, thân vé giật nảy nhẹ ngược lên giải phóng thế năng đàn hồi; nút `Cấp lại vé nguyên vẹn` khôi phục liên kết và hình dạng vé phẳng ban đầu.
-- **WebGL Normal Shader: Bóng Nếp Gấp, Phản Quang Cầu Vồng & Dynamic Drop-Shadow Pass**:
-  - Tính toán vector pháp tuyến 3D ($\vec{N}$) qua tích có hướng tiếp tuyến mỗi frame, đổ bóng tự thân nếp gấp (Paper Crease Self-Shading: rãnh khuất sáng tối sẫm, sống nếp gấp bắt sáng specular ridge).
-  - Khúc xạ màng mỏng cầu vồng theo độ cong (Curvature-Driven Thin-Film Iridescence) bám sát các đường gấp uốn lượn cho 3 chất liệu: `01 Silver Holo`, `02 Obsidian Gold` (mặc định Dark Mode) và `03 Google Prism`.
-  - Pass đổ bóng động phía sau vé (Dynamic Drop-Shadow Pass) dịch chuyển và khuếch tán theo độ cao trục `Z` của từng đỉnh, ôm sát đường viền bo góc và rãnh bán nguyệt của tờ vé.
+  - Cơ chế Kéo & Cuộn Nếp Gấp 3D (Analytical + PBD Hybrid Sheet Curl & Corner Peel): Đồng bộ hướng kéo chuột với góc quay lật `Math.cos(mesh.flipAngle)`, cuộn góc vé nâng lên trục `Z` và uốn cong parabol mượt mà không bị kéo giãn cục bộ kiểu cao su.
+- **Cơ chế Xé Cuống Vé Răng Cưa Từng Cột (Per-Column Progressive Zipper Tear & Jagged Edge)**:
+  - Mảng `seamBroken: Uint8Array(COLS)` và WebGL attribute `aSeamBroken` -> varying `vSeamBroken` quản lý độc lập từng cột trên đường răng cưa `TEAR_ROW = 28`.
+  - Khi kéo trực tiếp cuống vé: Cột gần điểm nắm căng quá ngưỡng sẽ đứt trước, chuyển lực căng sang cột liền kề toạc dần sang bên kia tạo khe rách chữ V chân thực; khi đứt > 55% số cột sẽ tự động rách nốt theo quán tính.
+  - Khi bấm nút `Xé cuống vé`: Sóng xé kéo khoá quét từ trái sang phải trong 320ms kèm xung lực bóc nhấc nhẹ ra trước và xuống dưới tại từng cột.
+  - Mép rách răng cưa & viền xơ giấy trắng nhám: GLSL Fragment Shader kết hợp hàm chu kỳ lỗ đục răng cưa (`abs(sin(u * 28 * PI)) * 0.0085`) và nhiễu xơ giấy tự nhiên để `discard` tạo mép răng cưa nhấp nhô, pha màu ruột giấy trắng `vec3(0.95, 0.94, 0.91)` và triệt tiêu độ bóng Hologram sát vết rách; bóng đổ của vé cũng tự động mang hình mép rách răng cưa.
+  - Phản lực giật nảy thân vé (Upper Body Recoil) khi đứt hẳn cuống vé và cuống vé rơi nghiêng tự do chao lượn trong không khí (`air flutter`).
+- **Sửa Lỗi Phối Cảnh WebGL & Khử Đường Gãy Pháp Tuyến**:
+  - Dùng chuẩn Perspective-Correct Clip Space `w = max(0.8, camDist - fPos.z)` khử hoàn toàn méo chữ Affine Mapping theo đường chéo tam giác.
+  - Thiết lập `gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)` và chuẩn hóa alpha xuất ra `vec4(clamp(lit, 0.0, 1.0), outAlpha)` loại bỏ viền đen Premultiplied Alpha.
+  - Tính pháp tuyến liên tục (`computeNormals`) xuyên qua đường răng cưa cho các cột chưa đứt giữa hàng 27 của thân và hàng 0 của cuống vé, xoá sạch vệt gãy bóng ngang bụng vé khi chưa xé.
+  - Xoá bỏ hoàn toàn các đoạn mã Canvas 2D rasterizer cũ (`drawSection`, `toScreen`).
 - **Kiểm chứng**: Xác nhận `impeccable detect --json` trả về `[]`, `tsc -b && vite build` thành công, và bộ kiểm thử Playwright trên `1440px`, `820px`, `375px`, `360px` cho `Light/Dark` và `VI/EN` vượt qua 100% (0 lỗi console/page, 0 tràn ngang, vùng chạm >= 44px trên di động).

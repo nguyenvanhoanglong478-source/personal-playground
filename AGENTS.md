@@ -26,3 +26,7 @@ Khi nhận bất kỳ yêu cầu nào thuộc các nhóm tác vụ bên dưới,
 - Không dùng số liệu thống kê hoặc lời chứng thực bịa đặt.
 - Kiểm chứng độ tương phản màu đạt chuẩn WCAG AA (tối thiểu 4.5:1 cho chữ thường, 3:1 cho thành phần đồ họa).
 - Kiểm tra trực tiếp trên trình duyệt ở 3 dải màn hình (Mobile 375px, Tablet 820px, Desktop 1440px) để đảm bảo không tràn chiều ngang và mọi nút bấm đều hoạt động thực tế.
+
+### 5. Tự động Cập nhật GitHub Pages
+- GitHub Pages của dự án phục vụ từ nhánh `gh-pages` (`https://nguyenvanhoanglong478-source.github.io/personal-playground/`).
+- Sau mỗi lần chỉnh sửa và đẩy thay đổi lên nhánh `main`, AI hoặc người dùng cần chạy `npm run deploy` (`scripts/deploy-gh-pages.mjs`) để build lại bản production và cập nhật đồng bộ nhánh `gh-pages` (hoặc kích hoạt GitHub Actions qua `.github/workflows/deploy.yml` sau khi token được cấp quyền `workflow`).

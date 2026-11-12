@@ -81,21 +81,23 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
             <div className="mt-7 border-l border-folio-border pl-5 sm:pl-8 lg:ml-10">
               <p className="font-serif text-2xl font-normal italic leading-[1.28] text-folio-ink sm:text-4xl lg:text-[2.5rem]">
                 {sloganWords.map((word, idx) => (
-                  <motion.span
-                    key={`${word}-${idx}`}
-                    initial={
-                      shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }
-                    }
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.45,
-                      delay: shouldReduceMotion ? 0 : 0.14 + idx * 0.03,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
-                    className="mr-[0.25em] inline-block"
-                  >
-                    {word}
-                  </motion.span>
+                  <React.Fragment key={`${word}-${idx}`}>
+                    <motion.span
+                      initial={
+                        shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }
+                      }
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.45,
+                        delay: shouldReduceMotion ? 0 : 0.14 + idx * 0.03,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      className="inline-block"
+                    >
+                      {word}
+                    </motion.span>
+                    {idx < sloganWords.length - 1 ? ' ' : ''}
+                  </React.Fragment>
                 ))}
               </p>
 
@@ -105,7 +107,7 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
                 transition={{ duration: 0.5, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
                 className="mt-6 max-w-xl text-base leading-relaxed text-folio-muted sm:text-lg"
               >
-                {PROFILE_DATA.introMain[locale]}
+                {PROFILE_DATA.heroIntro[locale]}
               </motion.p>
 
               <motion.div

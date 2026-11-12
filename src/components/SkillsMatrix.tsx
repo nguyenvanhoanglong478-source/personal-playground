@@ -1,34 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Code2, Cpu, Rocket, Sparkles, Wrench } from 'lucide-react';
+import { Layers, Monitor, Palette, Server, Sparkles, Workflow } from 'lucide-react';
 import { Locale, UI_LABELS } from '../data/profile';
-import { SYNTHESIZED_SKILLS } from '../data/skills';
-import { SkillCategory } from '../data/projects';
+import { SKILL_GROUPS, SkillGroupId } from '../data/skills';
 
 interface SkillsMatrixProps {
   locale: Locale;
 }
 
-const CATEGORY_ORDER: SkillCategory[] = ['language', 'framework', 'tool', 'deploy'];
-
 export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
   const shouldReduceMotion = useReducedMotion();
   const t = UI_LABELS[locale].skills;
 
-  const getCategoryIcon = (cat: SkillCategory) => {
+  const [selectedByGroup, setSelectedByGroup] = useState<Record<SkillGroupId, string>>({
+    platforms: SKILL_GROUPS[0].items[0].id,
+    design: SKILL_GROUPS[1].items[0].id,
+    frontend: SKILL_GROUPS[2].items[0].id,
+    backend: SKILL_GROUPS[3].items[0].id,
+    workflow: SKILL_GROUPS[4].items[0].id,
+  });
+
+  const getCategoryIcon = (cat: SkillGroupId) => {
     switch (cat) {
-      case 'language':
-        return <Code2 className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
-      case 'framework':
-        return <Cpu className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
-      case 'tool':
-        return <Wrench className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
-      case 'deploy':
-        return <Rocket className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
+      case 'platforms':
+        return <Layers className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
+      case 'design':
+        return <Palette className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
+      case 'frontend':
+        return <Monitor className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
+      case 'backend':
+        return <Server className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
+      case 'workflow':
+        return <Workflow className="h-4 w-4 text-folio-ink" aria-hidden="true" />;
     }
   };
 
-  const marqueeList = [...SYNTHESIZED_SKILLS, ...SYNTHESIZED_SKILLS];
+  const allSkills = SKILL_GROUPS.flatMap((group) => group.items);
+  const marqueeList = [...allSkills, ...allSkills];
 
   return (
     <section
@@ -58,23 +66,23 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
         >
           <div className="animate-folio-marquee gap-3 px-4">
             {marqueeList.map((skill, idx) => (
-              <div key={`${skill.name}-${idx}`} className="folio-chip shrink-0 gap-2">
+              <div key={`${skill.id}-${idx}`} className="folio-chip shrink-0 gap-2">
                 <span className="google-border-frame h-2 w-2 rounded-full" />
-                <span className="font-semibold">{skill.name}</span>
+                <span className="font-semibold">{skill.label[locale]}</span>
               </div>
             ))}
           </div>
         </div>
 
         <div className="space-y-4">
-          {CATEGORY_ORDER.map((category, idx) => {
-            const items = SYNTHESIZED_SKILLS.filter(
-              (s) => s.category === category
-            );
+          {SKILL_GROUPS.map((group, idx) => {
+            const activeItem =
+              group.items.find((item) => item.id === selectedByGroup[group.id]) ||
+              group.items[0];
 
             return (
               <motion.div
-                key={category}
+                key={group.id}
                 initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
@@ -83,42 +91,67 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
               >
                 <div className="flex items-center justify-between border-b border-folio-border pb-3 lg:col-span-3 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
                   <div className="flex items-center gap-2.5">
-                    {getCategoryIcon(category)}
+                    {getCategoryIcon(group.id)}
                     <h3 className="font-serif text-xl font-bold text-folio-ink">
-                      {t.categories[category]}
+                      {t.categories[group.id]}
                     </h3>
                   </div>
                   <span className="font-mono text-xs text-folio-faint">
-                    {items.length}
+                    {group.items.length}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:col-span-9 xl:grid-cols-3">
-                  {items.map((item) => (
-                    <div
-                      key={item.name}
-                      className="folio-card-inner flex h-full flex-col justify-between gap-2"
-                    >
-                      <div>
-                        <div className="font-mono text-sm font-semibold text-folio-ink">
-                          {item.name}
-                        </div>
-                        <p className="mt-1 text-xs leading-relaxed text-folio-muted">
-                          {item.evidenceSummary[locale]}
-                        </p>
+                <div className="flex flex-col gap-4 lg:col-span-9">
+                  <div className="flex flex-wrap gap-2">
+                    {group.items.map((item) => {
+                      const isSelected = activeItem.id === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          aria-pressed={isSelected}
+                          onClick={() =>
+                            setSelectedByGroup((prev) => ({
+                              ...prev,
+                              [group.id]: item.id,
+                            }))
+                          }
+                          className={`folio-chip min-h-[44px] cursor-pointer px-3.5 py-2 transition-all sm:min-h-[34px] sm:px-3 sm:py-1.5 ${
+                            isSelected
+                              ? '!border-folio-ink !bg-folio-surface font-semibold shadow-sm'
+                              : ''
+                          }`}
+                        >
+                          <span>{item.label[locale]}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="folio-card-inner flex flex-col justify-between gap-2.5 sm:flex-row sm:items-center">
+                    <div className="min-w-0">
+                      <div className="font-mono text-xs font-bold text-folio-ink">
+                        {activeItem.label[locale]}
                       </div>
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {item.projects.map((projName) => (
-                          <span
-                            key={projName}
-                            className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-surface px-2 py-0.5 font-mono text-[10px] font-medium text-folio-ink"
-                          >
-                            {projName}
-                          </span>
-                        ))}
-                      </div>
+                      <p className="mt-0.5 text-xs leading-relaxed text-folio-muted sm:text-sm">
+                        {activeItem.evidence[locale]}
+                      </p>
                     </div>
-                  ))}
+
+                    <div className="flex shrink-0 flex-wrap items-center gap-1.5 sm:max-w-[46%] sm:justify-end">
+                      <span className="font-mono text-[10px] font-medium text-folio-faint">
+                        {t.evidencePrefix}:
+                      </span>
+                      {activeItem.projects.map((projName) => (
+                        <span
+                          key={projName}
+                          className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-surface px-2 py-0.5 font-mono text-[10px] font-medium text-folio-ink"
+                        >
+                          {projName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             );

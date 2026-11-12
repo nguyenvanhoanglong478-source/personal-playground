@@ -14,7 +14,10 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
   const [body, setBody] = useState('');
 
   const mailtoHref = `mailto:${PROFILE_DATA.contacts.email}?subject=${encodeURIComponent(
-    subject || 'Trao đổi công việc với Long Hoàng'
+    subject ||
+      (locale === 'vi'
+        ? 'Trao đổi công việc với Long Hoàng'
+        : 'Project inquiry for Long Hoàng')
   )}&body=${encodeURIComponent(body)}`;
 
   return (

@@ -10,6 +10,7 @@ interface AboutProps {
 export const About: React.FC<AboutProps> = ({ locale }) => {
   const shouldReduceMotion = useReducedMotion();
   const t = UI_LABELS[locale].about;
+  const paragraphs = PROFILE_DATA.aboutParagraphs[locale];
 
   return (
     <section
@@ -89,7 +90,7 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
             transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col gap-6 lg:col-span-8 lg:border-l lg:border-folio-border lg:pl-10"
           >
-            <div className="folio-card google-gradient-hover-border space-y-5">
+            <div className="folio-card google-gradient-hover-border space-y-4">
               <div className="flex flex-wrap items-center gap-3 border-b border-folio-border pb-4 font-mono text-xs text-folio-muted">
                 <UserCheck className="h-4 w-4 text-folio-ink" aria-hidden="true" />
                 <span className="font-semibold text-folio-ink">
@@ -103,23 +104,55 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
                 </span>
               </div>
 
-              <p className="font-serif text-xl leading-relaxed text-folio-ink sm:text-2xl">
-                {PROFILE_DATA.aboutStory[locale]}
-              </p>
-
-              <p className="border-t border-folio-border pt-4 text-base leading-relaxed text-folio-muted">
-                {PROFILE_DATA.introMain[locale]}
-              </p>
+              {paragraphs.map((paragraph, idx) =>
+                idx === 0 ? (
+                  <p
+                    key={idx}
+                    className="font-serif text-xl leading-relaxed text-folio-ink sm:text-[1.4rem]"
+                  >
+                    {paragraph}
+                  </p>
+                ) : (
+                  <p
+                    key={idx}
+                    className={`text-sm leading-relaxed sm:text-base ${
+                      idx === paragraphs.length - 1
+                        ? 'border-t border-folio-border pt-4 font-medium text-folio-ink'
+                        : 'text-folio-muted'
+                    }`}
+                  >
+                    {paragraph}
+                  </p>
+                )
+              )}
             </div>
 
             <div className="folio-card google-gradient-hover-border">
-              <div className="mb-3 flex items-center gap-2 font-mono text-xs font-semibold text-folio-ink">
+              <div className="mb-4 flex items-center gap-2 font-mono text-xs font-semibold text-folio-ink">
                 <Compass className="h-4 w-4 text-folio-ink" aria-hidden="true" />
                 <span>{t.methodTitle}</span>
               </div>
-              <p className="text-sm leading-relaxed text-folio-muted sm:text-base">
-                {PROFILE_DATA.methodSummary[locale]}
-              </p>
+
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                {PROFILE_DATA.methodology.map((item) => (
+                  <div
+                    key={item.index}
+                    className="folio-card-inner flex flex-col gap-2"
+                  >
+                    <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-2">
+                      <span className="font-mono text-[11px] font-bold text-folio-faint">
+                        {item.index}
+                      </span>
+                    </div>
+                    <h3 className="font-serif text-base font-bold leading-snug text-folio-ink sm:text-lg">
+                      {item.title[locale]}
+                    </h3>
+                    <p className="text-sm leading-relaxed text-folio-muted">
+                      {item.description[locale]}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </motion.div>
         </div>

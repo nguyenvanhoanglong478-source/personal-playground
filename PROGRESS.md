@@ -115,3 +115,20 @@ Cập nhật lần cuối: 2026-11-12
   - Dưới `@media (pointer: coarse), (max-width: 1023px)`: nâng `--control-height-sm` lên `44px`, `.folio-btn-icon` `44×44px`, `.google-btn-github` `min-height: 44px`, thương hiệu `Navbar` `min-h-[44px]`, và `.pokemon-project-chip` `min-height: 44px` với khoảng cách `gap-2` (`8px`).
 - **Kiểm chứng thực tế**: Đã chạy Playwright chế độ `has_touch=True, is_mobile=True` trên `375px` (Dark Mode) & `820px` (Light Mode), kiểm tra `prefers-reduced-motion: reduce` trên cảm ứng, `1440px` Desktop Dark/Light và build production sạch (`ALL PLAYWRIGHT CHECKS PASSED: 0 console errors, 0 page errors, 0 overflow`).
 - **Skill áp dụng**: `taste-skill`, `hallmark`, `impeccable`, `no-ai-slop`.
+
+## 12. Cập Nhật Toàn Diện Nội Dung Hồ Sơ Cá Nhân & Danh Mục Dự Án
+
+- **Hero & Giới thiệu (`src/data/profile.ts`, `src/components/Hero.tsx`, `src/components/PokemonProfileCard.tsx`)**:
+  - Cập nhật `role` (`Designer tự do & Người làm sản phẩm` / `Freelance Designer & Product Maker`), `slogan` (`Mình thiết kế cho đẹp, rồi tự code cho nó chạy thật.` / `I design it to look right, then code it until it actually works.`) và bổ sung trường `heroIntro` trong `ProfileInfo`, sửa hiển thị khoảng trắng giữa các từ của `slogan` trên `Hero.tsx` bằng `React.Fragment`.
+  - Tinh chỉnh `.pokemon-dex-ribbon` trên `PokemonProfileCard.tsx` cho phép xuống dòng gọn gàng trên màn hình hẹp dưới `640px` và giữ `.slice(0, 5)` cho 5 chip dự án trên lá bài.
+- **Câu chuyện 5 đoạn & 4 Nguyên tắc làm việc (`src/data/profile.ts`, `src/components/About.tsx`)**:
+  - Cập nhật `aboutParagraphs` gồm 5 đoạn văn song ngữ (`vi`/`en`) nguyên văn, cùng mảng `methodology` gồm 4 nguyên tắc có số thứ tự `01`–`04`, tiêu đề ngắn và mô tả chi tiết hiển thị dạng lưới 2×2.
+- **Kinh nghiệm 4 mảng & 6 Dự án (`src/data/experience.ts`, `src/data/projects.ts`, `src/components/ProjectsBento.tsx`)**:
+  - Cập nhật trọn vẹn 4 nhóm kinh nghiệm thực tế (`01` Thiết kế & Pixel Art, `02` Web App & Game Tương Tác, `03` Di động Android & PWA Offline, `04` Back-end, Proxy Đám Mây, AI & Kiểm Thử).
+  - Cập nhật 6 dự án song ngữ nguyên văn (`01` `Một ngày làm shipper`, `02` `Marginal`, `03` `Team Quiz Battle`, `04` `SnapTask Android`, `05` `TMS Mini v2.0`, `06` `AgentMesh`) kèm đường dẫn GitHub thật, SVG minh họa mới cho `Team Quiz Battle` và lưới so le Zig-Zag 3 cặp cân đối.
+- **5 Nhóm Nền Tảng & Kỹ Năng (`src/data/skills.ts`, `src/components/SkillsMatrix.tsx`)**:
+  - Thay thế phân loại cũ bằng đúng 5 nhóm (`Nền tảng và triển khai`, `Thiết kế và sáng tạo`, `Front-end, đồ họa và âm thanh`, `Back-end, thời gian thực và AI`, `Quy trình, kiểm thử và công cụ`), hiển thị dạng chip tương tác kết hợp thanh đối chiếu dự án đã áp dụng (`Áp dụng trong dự án` / `Applied in`), tuyệt đối không dùng thanh phần trăm.
+- **Liên hệ & Hợp tác (`src/data/profile.ts`, `src/components/Contact.tsx`)**:
+  - Cập nhật tiêu đề và lời nhắn phần Liên hệ nguyên văn (`Cùng làm một thứ chạy được nhé` / `Let's build something that works`), giữ nguyên email `nguyenvanhoanglong478@gmail.com` và GitHub cá nhân.
+- **Kiểm chứng**: Chạy `impeccable detect --json` (`[]`), `tsc -b && vite build` và kiểm thử Playwright trên `1440px`, `820px`, `375px`, `360px` cho cả `VI/EN` và `Light/Dark` (`ALL PLAYWRIGHT CHECKS PASSED: 0 console errors, 0 page errors, 0 overflow`).
+- **Skill áp dụng**: `taste-skill`, `hallmark`, `impeccable`, `no-ai-slop`.

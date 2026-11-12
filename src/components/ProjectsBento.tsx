@@ -308,6 +308,74 @@ const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
     );
   }
 
+  if (projectId === 'team-quiz-battle') {
+    return (
+      <svg
+        viewBox="0 0 460 175"
+        className="h-full w-full text-folio-ink"
+        role="img"
+        aria-label="Team Quiz Battle preview"
+      >
+        <defs>
+          <linearGradient id="tqbGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="var(--google-blue)" />
+            <stop offset="50%" stopColor="var(--google-yellow)" />
+            <stop offset="100%" stopColor="var(--google-green)" />
+          </linearGradient>
+        </defs>
+        <rect
+          x="12"
+          y="16"
+          width="436"
+          height="142"
+          rx="8"
+          fill="var(--bg-surface)"
+          stroke="var(--border-strong)"
+          strokeWidth="1.5"
+        />
+        <text x="28" y="38" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-primary)">
+          LIVE LOBBY · SOCKET.IO SYNC
+        </text>
+        <text x="336" y="38" fontFamily="var(--font-mono)" fontSize="9.5" fill="var(--text-secondary)">
+          TIMER: 5s – 300s
+        </text>
+
+        <rect x="28" y="54" width="136" height="84" rx="6" fill="var(--bg-elevated)" stroke="url(#tqbGrad)" strokeWidth="1.4" />
+        <text x="40" y="76" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--text-primary)">
+          TEAM ALPHA
+        </text>
+        <text x="40" y="96" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
+          Host Question Tab
+        </text>
+        <text x="40" y="116" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
+          Per-Question Clock
+        </text>
+
+        <rect x="180" y="66" width="100" height="60" rx="6" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1.2" />
+        <text x="196" y="92" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="currentColor">
+          REAL-TIME
+        </text>
+        <text x="196" y="110" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
+          Node.js + Render
+        </text>
+
+        <line x1="164" y1="96" x2="180" y2="96" stroke="var(--google-blue)" strokeWidth="1.5" />
+        <line x1="280" y1="96" x2="296" y2="96" stroke="var(--google-green)" strokeWidth="1.5" />
+
+        <rect x="296" y="54" width="136" height="84" rx="6" fill="var(--bg-elevated)" stroke="url(#tqbGrad)" strokeWidth="1.4" />
+        <text x="308" y="76" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--text-primary)">
+          TEAM BETA
+        </text>
+        <text x="308" y="96" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
+          Browser Quiz Client
+        </text>
+        <text x="308" y="116" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
+          VI / EN Guide
+        </text>
+      </svg>
+    );
+  }
+
   return (
     <svg
       viewBox="0 0 560 180"
@@ -595,13 +663,10 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
 export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
   const t = UI_LABELS[locale].projects;
 
-  const getGridSpanClass = (idx: number) => {
-    if (idx === 0) return 'lg:col-start-1 lg:col-span-6';
-    if (idx === 1) return 'lg:col-start-7 lg:col-span-6 lg:mt-16';
-    if (idx === 2) return 'lg:col-start-1 lg:col-span-6';
-    if (idx === 3) return 'lg:col-start-7 lg:col-span-6 lg:mt-16';
-    return 'lg:col-start-1 lg:col-span-8';
-  };
+  const getGridSpanClass = (idx: number) =>
+    idx % 2 === 0
+      ? 'lg:col-start-1 lg:col-span-6'
+      : 'lg:col-start-7 lg:col-span-6 lg:mt-16';
 
   return (
     <section
@@ -632,7 +697,7 @@ export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
               project={project}
               locale={locale}
               idx={idx}
-              isFullWidth={idx === 4}
+              isFullWidth={false}
               gridSpanClass={getGridSpanClass(idx)}
             />
           ))}

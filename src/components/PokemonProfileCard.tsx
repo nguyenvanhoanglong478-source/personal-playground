@@ -289,7 +289,7 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
             </div>
 
             <div className="pokemon-card-layer-elevated relative z-20 -mt-1.5 px-1 sm:px-1.5">
-              <div className="pokemon-dex-ribbon whitespace-nowrap px-2 py-1 text-center font-mono text-[8.5px] font-medium tracking-wide text-folio-muted sm:px-3 sm:text-[10px]">
+              <div className="pokemon-dex-ribbon px-2 py-1 text-center font-mono text-[8px] font-medium leading-tight tracking-normal text-folio-muted sm:whitespace-nowrap sm:px-3 sm:text-[9.5px] sm:tracking-wide">
                 {statsLabels.dex}
               </div>
             </div>
@@ -313,7 +313,7 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
             </div>
 
             <div className="mt-2.5 flex flex-wrap gap-2">
-              {PROJECTS_DATA.map((proj) => (
+              {PROJECTS_DATA.slice(0, 5).map((proj) => (
                 <a
                   key={proj.id}
                   href={proj.repoUrl}

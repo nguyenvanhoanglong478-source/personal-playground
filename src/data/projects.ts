@@ -1,15 +1,21 @@
 import { BilingualText } from './profile';
 
-export type SkillCategory = 'language' | 'framework' | 'tool' | 'deploy';
+export type TechCategory = 'language' | 'framework' | 'tool' | 'deploy';
 
 export interface TechItem {
   name: string;
-  category: SkillCategory;
+  category: TechCategory;
   detail: BilingualText;
 }
 
 export interface ProjectItem {
-  id: 'deliver-simulator' | 'snaptask-android' | 'mini-tms-project' | 'agent-mesh' | 'marginal';
+  id:
+    | 'deliver-simulator'
+    | 'marginal'
+    | 'team-quiz-battle'
+    | 'snaptask-android'
+    | 'mini-tms-project'
+    | 'agent-mesh';
   indexNumber: string;
   title: string;
   subtitle: BilingualText;
@@ -22,246 +28,78 @@ export const PROJECTS_DATA: ProjectItem[] = [
   {
     id: 'deliver-simulator',
     indexNumber: '01',
-    title: 'Deliver Simulator',
+    title: 'Một ngày làm shipper',
     subtitle: {
-      vi: 'Trò chơi mô phỏng cuộc sống tài xế giao hàng 8-bit',
-      en: '8-bit delivery rider and urban life simulation game',
+      vi: 'Game mô phỏng cuộc sống tài xế giao hàng',
+      en: 'A delivery driver life simulation game',
     },
     description: {
-      vi: 'Mô phỏng hành trình 24 tháng của một tài xế giao hàng với mục tiêu tích lũy 100 triệu đồng. Trò chơi kết hợp vòng lặp ngày đêm trên Canvas 2D, âm thanh tổng hợp Web Audio và chế độ chơi ngoại tuyến.',
-      en: 'Simulates a 24-month delivery rider career targeting 100M VND in savings. Features a day-night Canvas 2D streetscape, synthesized 8-bit Web Audio sound effects, and offline PWA play.',
+      vi: 'Bạn vào vai một tài xế từ quê lên thành phố, nhận đơn, lo thể lực, xăng xe và gia đình để tiết kiệm 100 triệu đồng trong 24 tháng. Điểm đặc biệt là hệ thống đời sống với sự kiện ngẫu nhiên và nhiều kết thúc. Mình tự làm toàn bộ phần thiết kế, code, âm thanh và kiểm thử.',
+      en: 'You play a driver who moves from the countryside to the city, taking orders and managing stamina, fuel and family to save 100 million dong in 24 months. Its standout feature is a life system with random events and multiple endings. I did all of the design, code, sound and testing myself.',
     },
     repoUrl: 'https://github.com/nguyenvanhoanglong478-source/Deliver-Simulator',
     technologies: [
       {
-        name: 'JavaScript',
+        name: 'HTML, CSS, JavaScript',
         category: 'language',
         detail: {
-          vi: 'Điều khiển vòng lặp đồng hồ trò chơi, kinh tế và lưu trạng thái cục bộ.',
-          en: 'Powers the unified game loop, delivery mechanics, and local state persistence.',
+          vi: 'Viết toàn bộ game thành các module nhỏ rồi ghép lại bằng một script Python thành một trang chạy được.',
+          en: 'Used to write the whole game as small modules, merged by a Python script into one playable page.',
         },
       },
       {
-        name: 'Python',
-        category: 'language',
+        name: 'Canvas',
+        category: 'framework',
         detail: {
-          vi: 'Đóng gói trò chơi thành tệp HTML độc lập và chạy kịch bản kiểm thử.',
-          en: 'Bundles assets into a standalone HTML build and drives test automation.',
+          vi: 'Vẽ hiệu ứng hạt trong các màn chơi có chuyển động.',
+          en: 'Draws particle effects in the animated scenes.',
         },
       },
       {
-        name: 'HTML5 Canvas',
-        category: 'tool',
+        name: 'WebAudio',
+        category: 'framework',
         detail: {
-          vi: 'Kết xuất đồ họa đường phố ngày đêm, thời tiết mưa và chuyển động xe.',
-          en: 'Renders dynamic streetscapes, rain weather, and delivery tracks.',
+          vi: 'Tạo âm thanh hiệu ứng, có công tắc và âm lượng riêng cho nhạc nền.',
+          en: 'Generates sound effects, with separate switches and volume for background music.',
         },
       },
       {
-        name: 'Web Audio API',
-        category: 'tool',
+        name: 'Service Worker',
+        category: 'deploy',
         detail: {
-          vi: 'Tổng hợp âm thanh 8-bit trực tiếp không cần tải tệp âm thanh lớn.',
-          en: 'Synthesizes retro sound effects directly in the browser.',
+          vi: 'Giúp game cài được và chơi offline.',
+          en: 'Lets the game be installed and played offline.',
         },
       },
       {
         name: 'Playwright',
         category: 'tool',
         detail: {
-          vi: 'Tự động kiểm thử luồng chơi, lưu tiến trình và trạng thái ngoại tuyến.',
-          en: 'Automates 13 end-to-end browser test suites including offline play.',
+          vi: 'Chạy kiểm thử tự động cho từng nhóm tính năng.',
+          en: 'Runs automated tests for each feature group.',
         },
       },
       {
         name: 'GitHub Pages',
         category: 'deploy',
         detail: {
-          vi: 'Phân phối bản dựng PWA nhẹ kèm Service Worker cài đặt lên màn hình.',
-          en: 'Hosts the lightweight PWA build with Service Worker caching.',
-        },
-      },
-    ],
-  },
-  {
-    id: 'snaptask-android',
-    indexNumber: '02',
-    title: 'SnapTask Android',
-    subtitle: {
-      vi: 'Ứng dụng Android ghi chú việc cần làm bằng ảnh',
-      en: 'Android photo-first task note and reminder app',
-    },
-    description: {
-      vi: 'Giúp chụp nhanh hình ảnh công việc thay vì gõ tay, phân loại theo thư mục và đặt lịch nhắc nhở. Tích hợp ba mẫu widget màn hình chính và tối ưu dung lượng cài đặt cho điện thoại phổ thông.',
-      en: 'Lets users capture daily tasks with instant camera photos, organize folders, and schedule reminders. Includes three home screen widgets and multi-ABI APK optimization.',
-    },
-    repoUrl: 'https://github.com/nguyenvanhoanglong478-source/snaptask-android',
-    technologies: [
-      {
-        name: 'Kotlin',
-        category: 'language',
-        detail: {
-          vi: 'Ngôn ngữ chính phát triển ứng dụng Android cùng Coroutines.',
-          en: 'Core Android language paired with Kotlin Coroutines.',
-        },
-      },
-      {
-        name: 'Jetpack Compose',
-        category: 'framework',
-        detail: {
-          vi: 'Xây dựng toàn bộ giao diện Material 3, bảng việc và lịch biểu.',
-          en: 'Drives the declarative Material 3 UI, board, and calendar views.',
-        },
-      },
-      {
-        name: 'CameraX',
-        category: 'framework',
-        detail: {
-          vi: 'Chụp và gắn ảnh trực tiếp vào từng đầu việc ngay trong ứng dụng.',
-          en: 'Provides fast in-app camera capture attached to task items.',
-        },
-      },
-      {
-        name: 'Jetpack Glance',
-        category: 'framework',
-        detail: {
-          vi: 'Xây dựng ba mẫu widget hiển thị trực tiếp trên màn hình chính.',
-          en: 'Powers three customizable home screen widgets.',
-        },
-      },
-      {
-        name: 'Room Database',
-        category: 'tool',
-        detail: {
-          vi: 'Lưu trữ cục bộ dữ liệu công việc và đường dẫn ảnh bằng SQLite.',
-          en: 'Persists tasks and photo links offline using SQLite.',
-        },
-      },
-      {
-        name: 'GitHub Actions',
-        category: 'deploy',
-        detail: {
-          vi: 'Tự động biên dịch và xuất tệp cài đặt APK cho mỗi lần cập nhật.',
-          en: 'Automates multi-architecture APK builds on every push.',
-        },
-      },
-    ],
-  },
-  {
-    id: 'mini-tms-project',
-    indexNumber: '03',
-    title: 'TMS Mini v2.0',
-    subtitle: {
-      vi: 'Hệ thống quản lý vận tải và theo dõi đội xe',
-      en: 'Transportation management and fleet tracking web system',
-    },
-    description: {
-      vi: 'Hệ thống web phân quyền riêng cho tài xế và quản lý điều phối. Hỗ trợ theo dõi trạng thái vận hành đội xe, xem bản đồ tuyến đường trực quan và xuất báo cáo chuyến đi.',
-      en: 'Role-based web portal separating driver workflows and dispatcher controls. Supports live fleet status monitoring, interactive route mapping, and trip analytics.',
-    },
-    repoUrl: 'https://github.com/nguyenvanhoanglong478-source/mini-tms-project',
-    technologies: [
-      {
-        name: 'HTML5',
-        category: 'language',
-        detail: {
-          vi: 'Cấu trúc giao diện cho cổng quản lý, tài xế, đội xe và báo cáo.',
-          en: 'Structures multi-screen portals for dispatchers, drivers, and reports.',
-        },
-      },
-      {
-        name: 'CSS3',
-        category: 'language',
-        detail: {
-          vi: 'Hệ thống biến màu trạng thái đội xe và bố cục bảng điều khiển.',
-          en: 'Defines status color tokens and responsive dashboard layouts.',
-        },
-      },
-      {
-        name: 'JavaScript',
-        category: 'language',
-        detail: {
-          vi: 'Xử lý phân quyền đăng nhập, trạng thái đơn hàng và cập nhật dữ liệu.',
-          en: 'Manages role authentication, order filtering, and live dashboard state.',
-        },
-      },
-      {
-        name: 'Leaflet',
-        category: 'framework',
-        detail: {
-          vi: 'Hiển thị bản đồ số trực quan phục vụ giám sát lộ trình di chuyển.',
-          en: 'Renders interactive route maps for real-time fleet tracking.',
-        },
-      },
-    ],
-  },
-  {
-    id: 'agent-mesh',
-    indexNumber: '04',
-    title: 'AgentMesh',
-    subtitle: {
-      vi: 'Trình mô phỏng và giám sát mạng lưới đa tác nhân AI',
-      en: 'Multi-agent AI swarm visualizer and telemetry monitor',
-    },
-    description: {
-      vi: 'Mô phỏng sự phối hợp giữa nhiều tác nhân AI theo phong cách giao diện công nghiệp. Tích hợp dòng sự kiện thời gian thực, thước đo ngữ cảnh và cổng kiểm duyệt thủ công trước tác vụ nhạy cảm.',
-      en: 'Visualizes multi-agent AI coordination in a precision industrial interface. Includes real-time telemetry logs, context window meters, and a human approval gate.',
-    },
-    repoUrl: 'https://github.com/nguyenvanhoanglong478-source/AgentMesh',
-    technologies: [
-      {
-        name: 'HTML5 Canvas',
-        category: 'tool',
-        detail: {
-          vi: 'Vẽ sơ đồ nút mạng tác nhân, kéo thả và luồng hạt truyền thông điệp.',
-          en: 'Draws interactive agent graphs, zoom controls, and message particle flows.',
-        },
-      },
-      {
-        name: 'JavaScript',
-        category: 'language',
-        detail: {
-          vi: 'Mô phỏng bốn kịch bản điều phối đa tác nhân và bộ lọc sự kiện.',
-          en: 'Runs four multi-agent simulation scenarios and event filtering.',
-        },
-      },
-      {
-        name: 'Service Worker',
-        category: 'tool',
-        detail: {
-          vi: 'Hỗ trợ lưu đệm ngoại tuyến và cài đặt dạng ứng dụng web độc lập.',
-          en: 'Provides offline PWA caching and installable app manifest.',
-        },
-      },
-      {
-        name: 'Python',
-        category: 'language',
-        detail: {
-          vi: 'Viết bộ kiểm thử tự động kiểm tra toàn bộ thành phần mô phỏng.',
-          en: 'Powers automated end-to-end verification tests.',
-        },
-      },
-      {
-        name: 'Playwright',
-        category: 'tool',
-        detail: {
-          vi: 'Kiểm định tự động mười hạng mục tương tác không phát sinh lỗi.',
-          en: 'Verifies ten UI and simulation interaction suites automatically.',
+          vi: 'Nơi đưa game lên mạng.',
+          en: 'Where the game is hosted online.',
         },
       },
     ],
   },
   {
     id: 'marginal',
-    indexNumber: '05',
+    indexNumber: '02',
     title: 'Marginal',
     subtitle: {
-      vi: 'Ứng dụng web đọc bài báo học thuật và học ngoại ngữ',
-      en: 'Academic article reader for foreign language learning',
+      vi: 'Học ngoại ngữ qua bài báo học thuật',
+      en: 'Learn languages through academic articles',
     },
     description: {
-      vi: 'Công cụ giúp người tự học đọc trực tiếp tài liệu khoa học bằng tiếng nước ngoài. Hỗ trợ dịch từng câu theo ngữ cảnh, hỏi đáp thuật ngữ với AI, sửa ngữ pháp bài viết và luyện phát âm ngay trên trình duyệt.',
-      en: 'Helps self-learners read domain papers in a foreign language. Provides contextual translation, AI terminology chat, grammar feedback, and browser-native speech practice.',
+      vi: 'Web app để đọc bài báo học thuật bằng ngoại ngữ, kèm luyện viết, luyện phát âm và khung chat hỗ trợ bằng AI. Mình tự làm giao diện, viết phần proxy tới Gemini, chọn giọng đọc tự nhiên của trình duyệt và tinh chỉnh bản dịch tiếng Việt cho tự nhiên hơn.',
+      en: 'A web app for reading academic articles in a foreign language, with writing practice, pronunciation practice and an AI-assisted chat. I built the interface, wrote the proxy to Gemini, picked natural-sounding browser voices and refined the Vietnamese translation to read more naturally.',
     },
     repoUrl: 'https://github.com/nguyenvanhoanglong478-source/Marginal',
     technologies: [
@@ -269,48 +107,240 @@ export const PROJECTS_DATA: ProjectItem[] = [
         name: 'React',
         category: 'framework',
         detail: {
-          vi: 'Phân tách rõ các khu vực đọc bài, hỏi đáp, luyện viết và phát âm.',
-          en: 'Separates the article reader, chat panel, writing, and speech tabs.',
-        },
-      },
-      {
-        name: 'Tailwind CSS',
-        category: 'framework',
-        detail: {
-          vi: 'Định hình không gian đọc chữ sạch sẽ trên máy tính và điện thoại.',
-          en: 'Styles an uncluttered reading surface across desktop and mobile.',
+          vi: 'Dựng các màn đọc bài, luyện viết, luyện phát âm và chat.',
+          en: 'Builds the reading, writing, pronunciation and chat screens.',
         },
       },
       {
         name: 'Vite',
         category: 'tool',
         detail: {
-          vi: 'Biên dịch và đóng gói giao diện tĩnh siêu nhanh.',
-          en: 'Compiles and bundles the static frontend cleanly.',
+          vi: 'Chạy và đóng gói dự án nhanh.',
+          en: 'Runs and bundles the project quickly.',
         },
       },
       {
-        name: 'Gemini API',
-        category: 'tool',
+        name: 'Tailwind CSS',
+        category: 'framework',
         detail: {
-          vi: 'Cung cấp khả năng dịch thuật ngữ cảnh và chấm lỗi ngữ pháp tự động.',
-          en: 'Delivers contextual translation and grammar correction.',
+          vi: 'Định kiểu giao diện nhất quán.',
+          en: 'Keeps the styling consistent.',
         },
       },
       {
         name: 'Cloudflare Workers',
         category: 'deploy',
         detail: {
-          vi: 'Làm máy chủ trung gian bảo vệ khóa API và tải bài báo từ URL ngoài.',
-          en: 'Acts as an edge proxy isolating API keys and fetching external URLs.',
+          vi: 'Làm proxy nhận yêu cầu từ web và gọi Gemini API.',
+          en: 'Acts as a proxy that takes requests from the site and calls the Gemini API.',
+        },
+      },
+      {
+        name: 'Durable Objects',
+        category: 'deploy',
+        detail: {
+          vi: 'Giữ kết nối tới Gemini ở một khu vực cố định để tránh bị chặn theo vùng.',
+          en: 'Keeps the Gemini connection in a fixed region to avoid regional blocking.',
+        },
+      },
+      {
+        name: 'Gemini API',
+        category: 'tool',
+        detail: {
+          vi: 'Xử lý dịch và hỗ trợ học qua chat.',
+          en: 'Handles translation and chat-based learning help.',
         },
       },
       {
         name: 'GitHub Pages',
         category: 'deploy',
         detail: {
-          vi: 'Lưu trữ và phục vụ toàn bộ ứng dụng giao diện tĩnh.',
-          en: 'Serves the static production web application.',
+          vi: 'Nơi đưa phần giao diện lên mạng.',
+          en: 'Hosts the front end.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'team-quiz-battle',
+    indexNumber: '03',
+    title: 'Team Quiz Battle',
+    subtitle: {
+      vi: 'Game trắc nghiệm hai đội chơi trực tiếp',
+      en: 'A live two-team quiz game',
+    },
+    description: {
+      vi: 'Hai đội đấu trắc nghiệm theo thời gian thực, mọi người cùng chơi trên trình duyệt. Chủ phòng tự soạn bộ câu hỏi ngay trong sảnh chờ và chỉnh thời gian trả lời từ 5 đến 300 giây cho cả phòng hoặc từng câu. Mình làm cả giao diện, máy chủ và phần hướng dẫn song ngữ.',
+      en: 'Two teams compete in a real-time quiz, everyone playing in the browser. The host writes question sets right in the lobby and sets answer time from 5 to 300 seconds for the whole room or per question. I built the interface, the server and the bilingual guide.',
+    },
+    repoUrl: 'https://github.com/nguyenvanhoanglong478-source',
+    technologies: [
+      {
+        name: 'Node.js',
+        category: 'framework',
+        detail: {
+          vi: 'Chạy máy chủ của game.',
+          en: 'Runs the game server.',
+        },
+      },
+      {
+        name: 'Express',
+        category: 'framework',
+        detail: {
+          vi: 'Phục vụ trang web và đường kiểm tra sức khỏe cho Render.',
+          en: 'Serves the site and the health check route for Render.',
+        },
+      },
+      {
+        name: 'Socket.IO',
+        category: 'framework',
+        detail: {
+          vi: 'Đồng bộ câu hỏi, đáp án và điểm số giữa mọi người chơi theo thời gian thực.',
+          en: 'Syncs questions, answers and scores between all players in real time.',
+        },
+      },
+      {
+        name: 'Render',
+        category: 'deploy',
+        detail: {
+          vi: 'Nơi triển khai máy chủ.',
+          en: 'Hosts the server.',
+        },
+      },
+      {
+        name: 'Git & GitHub',
+        category: 'tool',
+        detail: {
+          vi: 'Lưu mã nguồn và nhật ký thay đổi.',
+          en: 'Stores the code and the changelog.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'snaptask-android',
+    indexNumber: '04',
+    title: 'SnapTask Android',
+    subtitle: {
+      vi: 'Ghi chú việc cần làm bằng ảnh',
+      en: 'Photo-based to-do notes',
+    },
+    description: {
+      vi: 'Ứng dụng Android cho phép chụp một tấm ảnh và biến nó thành việc cần nhớ. Mình đang làm lại bộ nhận diện với logo nút chụp có dấu tick và giao diện Ink & Flash, có cả bản sáng lẫn tối.',
+      en: "An Android app that lets you snap a photo and turn it into something to remember. I'm redoing its identity with a capture-button-and-tick logo and an Ink & Flash interface, in both light and dark versions.",
+    },
+    repoUrl: 'https://github.com/nguyenvanhoanglong478-source/snaptask-android',
+    technologies: [
+      {
+        name: 'Android',
+        category: 'framework',
+        detail: {
+          vi: 'Nền tảng chạy ứng dụng.',
+          en: 'The platform the app runs on.',
+        },
+      },
+      {
+        name: 'Kotlin',
+        category: 'language',
+        detail: {
+          vi: 'Ngôn ngữ chính xử lý logic ứng dụng và trạng thái công việc.',
+          en: 'Primary language handling app logic and task states.',
+        },
+      },
+      {
+        name: 'Antigravity',
+        category: 'tool',
+        detail: {
+          vi: 'Công cụ mình dùng để chỉnh sửa code và giao diện.',
+          en: 'The tool I use to edit the code and interface.',
+        },
+      },
+      {
+        name: 'Git & GitHub',
+        category: 'tool',
+        detail: {
+          vi: 'Quản lý mã nguồn trong repo snaptask-android.',
+          en: 'Manage the code in the snaptask-android repo.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'mini-tms-project',
+    indexNumber: '05',
+    title: 'TMS Mini v2.0',
+    subtitle: {
+      vi: 'Hệ thống quản lý vận tải và theo dõi đội xe',
+      en: 'Transportation management and fleet tracking web system',
+    },
+    description: {
+      vi: 'Mình làm hệ thống web này với phân quyền riêng cho tài xế và quản lý điều phối. Người dùng có thể theo dõi trạng thái đội xe, xem bản đồ tuyến đường và kiểm tra báo cáo chuyến đi ngay trên trình duyệt.',
+      en: 'I built this web portal with separate workflows for drivers and dispatch managers. Users can monitor fleet status, view interactive route maps and review trip reports in the browser.',
+    },
+    repoUrl: 'https://github.com/nguyenvanhoanglong478-source/mini-tms-project',
+    technologies: [
+      {
+        name: 'HTML, CSS, JavaScript',
+        category: 'language',
+        detail: {
+          vi: 'Cấu trúc giao diện điều phối, phân quyền và quản lý trạng thái chuyến xe.',
+          en: 'Structures the dispatch portals, role auth and live trip states.',
+        },
+      },
+      {
+        name: 'Leaflet',
+        category: 'framework',
+        detail: {
+          vi: 'Hiển thị bản đồ tuyến đường phục vụ theo dõi lộ trình đội xe.',
+          en: 'Renders interactive route maps for real-time fleet tracking.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'agent-mesh',
+    indexNumber: '06',
+    title: 'AgentMesh',
+    subtitle: {
+      vi: 'Trình mô phỏng và giám sát mạng lưới đa tác nhân AI',
+      en: 'Multi-agent AI swarm visualizer and telemetry monitor',
+    },
+    description: {
+      vi: 'Mình thiết kế và lập trình trình mô phỏng cách các tác nhân AI phối hợp với nhau. Giao diện hiển thị sơ đồ nút mạng trên Canvas, luồng sự kiện trực tiếp và bước duyệt thủ công trước các tác vụ quan trọng.',
+      en: 'I designed and built a simulator showing how multiple AI agents coordinate. It combines an interactive Canvas node graph, a live event stream and a manual approval gate before sensitive actions.',
+    },
+    repoUrl: 'https://github.com/nguyenvanhoanglong478-source/AgentMesh',
+    technologies: [
+      {
+        name: 'Canvas',
+        category: 'framework',
+        detail: {
+          vi: 'Vẽ sơ đồ nút mạng tác nhân và luồng truyền thông điệp.',
+          en: 'Draws interactive agent graphs and message particle flows.',
+        },
+      },
+      {
+        name: 'HTML, CSS, JavaScript',
+        category: 'language',
+        detail: {
+          vi: 'Chạy kịch bản điều phối đa tác nhân và bộ lọc sự kiện.',
+          en: 'Runs multi-agent scenarios and telemetry filtering.',
+        },
+      },
+      {
+        name: 'Service Worker',
+        category: 'deploy',
+        detail: {
+          vi: 'Lưu đệm ngoại tuyến để ứng dụng chạy được khi không có mạng.',
+          en: 'Provides offline caching and installable PWA support.',
+        },
+      },
+      {
+        name: 'Playwright',
+        category: 'tool',
+        detail: {
+          vi: 'Kiểm thử tự động các kịch bản tương tác và luồng sự kiện.',
+          en: 'Verifies simulation interactions and event flows automatically.',
         },
       },
     ],

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   MotionStyle,
   motion,
@@ -61,7 +61,9 @@ const PrismTypeOrb: React.FC = () => (
 export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }) => {
   const shouldReduceMotion = useReducedMotion();
   const stageRef = useRef<HTMLDivElement | null>(null);
+  const isInteractingRef = useRef(false);
   const [isHoloActive, setIsHoloActive] = useState(false);
+  const [isInteracting, setIsInteracting] = useState(false);
 
   const t = UI_LABELS[locale].hero;
   const statsLabels =
@@ -111,39 +113,44 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
     '--card-scale': shouldReduceMotion ? '1' : cssScale,
   } as unknown as MotionStyle;
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const stage = stageRef.current;
-    if (!stage) return;
+  const updateCardPointer = useCallback(
+    (clientX: number, clientY: number, isTouchInput: boolean) => {
+      const stage = stageRef.current;
+      if (!stage) return;
 
-    const rect = stage.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
+      const rect = stage.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
 
-    const nx = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
-    const ny = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
-    const dx = nx - 0.5;
-    const dy = ny - 0.5;
-    const centerDist = Math.min(1, Math.hypot(dx * 2, dy * 2));
+      const nx = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
+      const ny = Math.min(Math.max((clientY - rect.top) / rect.height, 0), 1);
+      const dx = nx - 0.5;
+      const dy = ny - 0.5;
+      const centerDist = Math.min(1, Math.hypot(dx * 2, dy * 2));
 
-    rawPointerX.set(nx * 100);
-    rawPointerY.set(ny * 100);
-    rawCenterDist.set(centerDist);
+      rawPointerX.set(nx * 100);
+      rawPointerY.set(ny * 100);
+      rawCenterDist.set(centerDist);
 
-    if (shouldReduceMotion) {
-      rawRotateX.set(0);
-      rawRotateY.set(0);
-      rawScale.set(1);
-    } else {
-      rawRotateX.set(-dy * 24);
-      rawRotateY.set(dx * 24);
-      rawScale.set(1.018);
-    }
+      if (shouldReduceMotion) {
+        rawRotateX.set(0);
+        rawRotateY.set(0);
+        rawScale.set(1);
+      } else if (isTouchInput) {
+        rawRotateX.set(-dy * 18);
+        rawRotateY.set(dx * 18);
+        rawScale.set(1.012);
+      } else {
+        rawRotateX.set(-dy * 24);
+        rawRotateY.set(dx * 24);
+        rawScale.set(1.018);
+      }
+    },
+    [rawCenterDist, rawPointerX, rawPointerY, rawRotateX, rawRotateY, rawScale, shouldReduceMotion]
+  );
 
-    if (!isHoloActive) {
-      setIsHoloActive(true);
-    }
-  };
-
-  const handlePointerLeave = () => {
+  const resetCard = useCallback(() => {
+    isInteractingRef.current = false;
+    setIsInteracting(false);
     setIsHoloActive(false);
     rawPointerX.set(50);
     rawPointerY.set(50);
@@ -151,20 +158,62 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
     rawRotateX.set(0);
     rawRotateY.set(0);
     rawScale.set(1);
+  }, [rawCenterDist, rawPointerX, rawPointerY, rawRotateX, rawRotateY, rawScale]);
+
+  useEffect(() => {
+    if (!isInteracting) return;
+    const handleWindowRelease = () => resetCard();
+    window.addEventListener('pointerup', handleWindowRelease);
+    window.addEventListener('pointercancel', handleWindowRelease);
+    return () => {
+      window.removeEventListener('pointerup', handleWindowRelease);
+      window.removeEventListener('pointercancel', handleWindowRelease);
+    };
+  }, [isInteracting, resetCard]);
+
+  const handlePointerEnter = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse') return;
+    setIsHoloActive(true);
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('a')) return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+    const isTouchInput = event.pointerType !== 'mouse';
+    isInteractingRef.current = true;
+    setIsInteracting(true);
+    setIsHoloActive(true);
+    updateCardPointer(event.clientX, event.clientY, isTouchInput);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const isTouchInput = event.pointerType !== 'mouse';
+    if (isTouchInput && !isInteractingRef.current) return;
+
+    if (!isHoloActive) {
+      setIsHoloActive(true);
+    }
+    updateCardPointer(event.clientX, event.clientY, isTouchInput);
   };
 
   return (
     <div
       ref={stageRef}
-      onPointerEnter={() => setIsHoloActive(true)}
+      onPointerEnter={handlePointerEnter}
+      onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-      className="animate-float-gentle relative w-full max-w-[430px]"
+      onPointerUp={resetCard}
+      onPointerCancel={resetCard}
+      onPointerLeave={resetCard}
+      className="pokemon-card-stage animate-float-gentle relative w-full max-w-[430px]"
     >
       <div className="pokemon-card-perspective">
         <motion.article
           aria-label={`${PROFILE_DATA.name} EX Pokémon Profile Card`}
           data-holo-active={isHoloActive ? 'true' : 'false'}
+          data-interacting={isInteracting ? 'true' : 'false'}
           style={rotatorStyle}
           className="pokemon-card-rotator pokemon-card-shell group relative w-full p-[8px] sm:p-[11px]"
         >
@@ -263,14 +312,14 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
               </span>
             </div>
 
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
+            <div className="mt-2.5 flex flex-wrap gap-2">
               {PROJECTS_DATA.map((proj) => (
                 <a
                   key={proj.id}
                   href={proj.repoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="pokemon-project-chip pointer-events-auto inline-flex cursor-pointer items-center gap-1 rounded-[6px] px-2.5 py-1 font-mono text-[11px] font-medium text-folio-ink transition-all duration-200 hover:-translate-y-0.5"
+                  className="pokemon-project-chip pointer-events-auto inline-flex cursor-pointer items-center gap-1.5 rounded-[6px] font-mono text-[11px] font-medium text-folio-ink transition-all duration-200"
                 >
                   <span>{proj.title}</span>
                   <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-65" aria-hidden="true" />

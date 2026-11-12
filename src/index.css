@@ -263,6 +263,20 @@ p {
   outline-offset: 3px;
 }
 
+a,
+a[href],
+button,
+[role='button'],
+input,
+textarea,
+select,
+summary,
+.folio-chip,
+.pokemon-project-chip {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
 a[href],
 button,
 [role='button'] {
@@ -311,8 +325,10 @@ button,
   transition: opacity 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.google-gradient-hover-border:hover::before {
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  .google-gradient-hover-border:hover::before {
+    opacity: 1;
+  }
 }
 
 .folio-section {
@@ -396,13 +412,15 @@ html[data-theme='dark'] .editorial-watermark {
   opacity: 0.065;
 }
 
-.group:hover .editorial-watermark {
-  opacity: 0.095;
-  transform: translate3d(-4px, 4px, 0);
-}
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .editorial-watermark {
+    opacity: 0.095;
+    transform: translate3d(-4px, 4px, 0);
+  }
 
-html[data-theme='dark'] .group:hover .editorial-watermark {
-  opacity: 0.125;
+  html[data-theme='dark'] .group:hover .editorial-watermark {
+    opacity: 0.125;
+  }
 }
 
 .editorial-spine-dot {
@@ -421,9 +439,11 @@ html[data-theme='dark'] .group:hover .editorial-watermark {
   transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), background-color 360ms cubic-bezier(0.22, 1, 0.36, 1), border-color 280ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.folio-card:hover {
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-glow);
+@media (hover: hover) and (pointer: fine) {
+  .folio-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-glow);
+  }
 }
 
 .folio-card-inner {
@@ -450,9 +470,16 @@ html[data-theme='dark'] .group:hover .editorial-watermark {
   transition: border-color 200ms ease, transform 200ms ease, background-color 360ms ease, color 360ms ease;
 }
 
-.folio-chip:hover {
+@media (hover: hover) and (pointer: fine) {
+  .folio-chip:hover {
+    border-color: var(--google-blue);
+    transform: translateY(-1px);
+  }
+}
+
+.folio-chip:active {
   border-color: var(--google-blue);
-  transform: translateY(-1px);
+  transform: scale(0.97);
 }
 
 @keyframes google-btn-spin {
@@ -584,40 +611,42 @@ html[data-theme='dark'] .group:hover .editorial-watermark {
   color: inherit;
 }
 
-.folio-btn-primary:hover,
-.folio-btn-secondary:hover,
-.folio-btn-compact:hover,
-.folio-btn-icon:hover,
-.google-btn-github:hover {
-  transform: translateY(-2px) scale(1.015);
-  animation: google-btn-spin 7.5s linear infinite;
-}
+@media (hover: hover) and (pointer: fine) {
+  .folio-btn-primary:hover,
+  .folio-btn-secondary:hover,
+  .folio-btn-compact:hover,
+  .folio-btn-icon:hover,
+  .google-btn-github:hover {
+    transform: translateY(-2px) scale(1.015);
+    animation: google-btn-spin 7.5s linear infinite;
+  }
 
-.folio-btn-primary:hover::before,
-.folio-btn-secondary:hover::before,
-.folio-btn-compact:hover::before,
-.folio-btn-icon:hover::before,
-.google-btn-github:hover::before {
-  background-color: var(--btn-glass-bg-hover);
-  border-color: transparent;
-}
+  .folio-btn-primary:hover::before,
+  .folio-btn-secondary:hover::before,
+  .folio-btn-compact:hover::before,
+  .folio-btn-icon:hover::before,
+  .google-btn-github:hover::before {
+    background-color: var(--btn-glass-bg-hover);
+    border-color: transparent;
+  }
 
-.folio-btn-primary:hover::after,
-.folio-btn-secondary:hover::after,
-.folio-btn-compact:hover::after,
-.folio-btn-icon:hover::after,
-.google-btn-github:hover::after {
-  opacity: 1;
-  filter: brightness(1.18) saturate(1.18);
-}
+  .folio-btn-primary:hover::after,
+  .folio-btn-secondary:hover::after,
+  .folio-btn-compact:hover::after,
+  .folio-btn-icon:hover::after,
+  .google-btn-github:hover::after {
+    opacity: 1;
+    filter: brightness(1.18) saturate(1.18);
+  }
 
-.folio-btn-primary:hover .google-pill-aura,
-.folio-btn-secondary:hover .google-pill-aura,
-.folio-btn-compact:hover .google-pill-aura,
-.folio-btn-icon:hover .google-pill-aura,
-.google-btn-github:hover .google-pill-aura {
-  opacity: var(--btn-glow-opacity-hover);
-  transform: scale(1.03);
+  .folio-btn-primary:hover .google-pill-aura,
+  .folio-btn-secondary:hover .google-pill-aura,
+  .folio-btn-compact:hover .google-pill-aura,
+  .folio-btn-icon:hover .google-pill-aura,
+  .google-btn-github:hover .google-pill-aura {
+    opacity: var(--btn-glow-opacity-hover);
+    transform: scale(1.03);
+  }
 }
 
 .folio-btn-primary:active,
@@ -625,7 +654,35 @@ html[data-theme='dark'] .group:hover .editorial-watermark {
 .folio-btn-compact:active,
 .folio-btn-icon:active,
 .google-btn-github:active {
-  transform: translateY(0) scale(0.985);
+  transform: scale(0.97);
+  animation: google-btn-spin 7.5s linear infinite;
+}
+
+.folio-btn-primary:active::before,
+.folio-btn-secondary:active::before,
+.folio-btn-compact:active::before,
+.folio-btn-icon:active::before,
+.google-btn-github:active::before {
+  background-color: var(--btn-glass-bg-hover);
+  border-color: transparent;
+}
+
+.folio-btn-primary:active::after,
+.folio-btn-secondary:active::after,
+.folio-btn-compact:active::after,
+.folio-btn-icon:active::after,
+.google-btn-github:active::after {
+  opacity: 1;
+  filter: brightness(1.18) saturate(1.18);
+}
+
+.folio-btn-primary:active .google-pill-aura,
+.folio-btn-secondary:active .google-pill-aura,
+.folio-btn-compact:active .google-pill-aura,
+.folio-btn-icon:active .google-pill-aura,
+.google-btn-github:active .google-pill-aura {
+  opacity: var(--btn-glow-opacity-hover);
+  transform: scale(1.03);
 }
 
 .folio-btn-primary {
@@ -694,6 +751,14 @@ html[data-theme='dark'] .group:hover .editorial-watermark {
   color: inherit;
 }
 
+.pokemon-card-stage {
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .pokemon-card-perspective {
   perspective: 900px;
   transform-style: preserve-3d;
@@ -706,6 +771,11 @@ html[data-theme='dark'] .group:hover .editorial-watermark {
   --rotate-x: 0deg;
   --rotate-y: 0deg;
   --card-scale: 1;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
   transform-style: preserve-3d;
   transform-origin: center center;
   transform: rotateX(var(--rotate-x)) rotateY(var(--rotate-y)) scale3d(var(--card-scale), var(--card-scale), 1);
@@ -832,14 +902,25 @@ html[data-theme='dark'] .group:hover .editorial-watermark {
 }
 
 .pokemon-project-chip {
+  min-height: 32px;
+  padding: 0.32rem 0.7rem;
   background-color: var(--poke-chip-bg);
   border: 1px solid var(--poke-chip-border);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-.pokemon-project-chip:hover {
+@media (hover: hover) and (pointer: fine) {
+  .pokemon-project-chip:hover {
+    border-color: var(--google-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px -3px rgba(66, 133, 244, 0.34);
+  }
+}
+
+.pokemon-project-chip:active {
   border-color: var(--google-blue);
-  box-shadow: 0 4px 12px -3px rgba(66, 133, 244, 0.34);
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px -2px rgba(66, 133, 244, 0.36);
 }
 
 .pokemon-rarity-badge {
@@ -962,6 +1043,82 @@ html[data-theme='dark'] .group:hover .editorial-watermark {
   opacity: var(--poke-glare-surface-opacity);
 }
 
+@keyframes pokemon-ambient-shimmer {
+  0% {
+    background-position: 12% 18%, 88% 82%;
+  }
+  50% {
+    background-position: 64% 58%, 22% 28%;
+  }
+  100% {
+    background-position: 12% 18%, 88% 82%;
+  }
+}
+
+@keyframes pokemon-ambient-opacity-art {
+  0%, 100% {
+    opacity: 0.14;
+  }
+  50% {
+    opacity: 0.32;
+  }
+}
+
+@keyframes pokemon-ambient-opacity-surface {
+  0%, 100% {
+    opacity: 0.07;
+  }
+  50% {
+    opacity: 0.16;
+  }
+}
+
+@keyframes pokemon-ambient-bezel {
+  0%, 100% {
+    opacity: 0.24;
+    background-position: 18% 18%;
+  }
+  50% {
+    opacity: 0.54;
+    background-position: 78% 72%;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .pokemon-card-rotator[data-interacting='false'] .pokemon-card-bezel-sheen {
+    animation: pokemon-ambient-bezel 9s ease-in-out infinite;
+  }
+  .pokemon-card-rotator[data-interacting='false'] .pokemon-card__shine--art {
+    animation: pokemon-ambient-shimmer 9s ease-in-out infinite, pokemon-ambient-opacity-art 9s ease-in-out infinite;
+  }
+  .pokemon-card-rotator[data-interacting='false'] .pokemon-card__shine--surface {
+    animation: pokemon-ambient-shimmer 9s ease-in-out infinite, pokemon-ambient-opacity-surface 9s ease-in-out infinite;
+  }
+  .pokemon-card-rotator[data-interacting='true'] .pokemon-card-bezel-sheen,
+  .pokemon-card-rotator[data-interacting='true'] .pokemon-card__shine--art,
+  .pokemon-card-rotator[data-interacting='true'] .pokemon-card__shine--surface {
+    animation: none;
+  }
+}
+
+@media (pointer: coarse), (max-width: 1023px) {
+  :root {
+    --control-height-sm: 44px;
+  }
+  .folio-btn-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  .google-btn-github {
+    min-height: 44px;
+    padding: 0.5rem 1.1rem;
+  }
+  .pokemon-project-chip {
+    min-height: 44px;
+    padding: 0.5rem 0.85rem;
+  }
+}
+
 @keyframes float-gentle {
   0%, 100% {
     transform: translateY(0px);
@@ -1009,8 +1166,10 @@ html[data-theme='dark'] .group:hover .editorial-watermark {
   animation: folio-marquee 36s linear infinite;
 }
 
-.animate-folio-marquee:hover {
-  animation-play-state: paused;
+@media (hover: hover) and (pointer: fine) {
+  .animate-folio-marquee:hover {
+    animation-play-state: paused;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1028,13 +1187,27 @@ html[data-theme='dark'] .group:hover .editorial-watermark {
   .folio-btn-secondary:hover,
   .folio-btn-compact:hover,
   .folio-btn-icon:hover,
-  .google-btn-github:hover {
+  .google-btn-github:hover,
+  .folio-btn-primary:active,
+  .folio-btn-secondary:active,
+  .folio-btn-compact:active,
+  .folio-btn-icon:active,
+  .google-btn-github:active {
     animation: none;
   }
   .pokemon-card-rotator,
   .pokemon-card-inner,
   .pokemon-card-layer-elevated {
     transform: none !important;
+  }
+  .pokemon-card-bezel-sheen,
+  .pokemon-card__shine--art,
+  .pokemon-card__shine--surface {
+    animation: none !important;
+  }
+  .pokemon-card-rotator[data-interacting='false'][data-holo-active='false'] .pokemon-card__shine,
+  .pokemon-card-rotator[data-interacting='false'][data-holo-active='false'] .pokemon-card__glare {
+    opacity: 0 !important;
   }
   *,
   *::before,

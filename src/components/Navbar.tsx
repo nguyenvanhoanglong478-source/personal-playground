@@ -40,7 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="folio-container flex items-center justify-between gap-2 py-3 sm:gap-3">
         <a
           href="#hero"
-          className="group flex min-w-0 cursor-pointer items-center gap-2.5 text-folio-ink sm:gap-3"
+          className="group flex min-h-[44px] min-w-0 cursor-pointer items-center gap-2.5 text-folio-ink sm:gap-3"
           aria-label="Long Hoàng"
         >
           <CapybaraLogo size={38} showAura className="text-folio-ink" />
@@ -150,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   key={item.id}
                   href={`#${item.id}`}
                   onClick={handleNavClick}
-                  className={`flex min-h-[44px] items-center justify-between rounded-[var(--radius-control)] border px-4 py-2 font-mono text-sm ${
+                  className={`flex min-h-[44px] items-center justify-between rounded-[var(--radius-control)] border px-4 py-2 font-mono text-sm transition-transform duration-150 active:scale-[0.985] ${
                     isActive
                       ? 'border-folio-strong bg-folio-surface font-semibold text-folio-ink'
                       : 'border-folio-border bg-folio-elevated text-folio-ink'

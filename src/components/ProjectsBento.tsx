@@ -446,8 +446,8 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
     isEvenSlot ? [20, -16] : [8, -8]
   );
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (shouldReduceMotion || !cardRef.current) return;
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (shouldReduceMotion || e.pointerType !== 'mouse' || !cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -459,11 +459,13 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
     });
   };
 
-  const handleMouseEnter = () => {
-    if (!shouldReduceMotion) setIsHovered(true);
+  const handlePointerEnter = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!shouldReduceMotion && e.pointerType === 'mouse') {
+      setIsHovered(true);
+    }
   };
 
-  const handleMouseLeave = () => {
+  const handlePointerLeave = () => {
     setIsHovered(false);
     setRotation({ x: 0, y: 0 });
   };
@@ -481,9 +483,10 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
         >
           <div
             ref={cardRef}
-            onMouseMove={handleMouseMove}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
+            onPointerMove={handlePointerMove}
+            onPointerEnter={handlePointerEnter}
+            onPointerLeave={handlePointerLeave}
+            onPointerCancel={handlePointerLeave}
             style={{
               transform:
                 isHovered && !shouldReduceMotion

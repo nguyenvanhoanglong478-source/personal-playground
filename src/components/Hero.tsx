@@ -1,4 +1,4 @@
-import React, { Suspense, useRef } from 'react';
+import React, { useRef } from 'react';
 import {
   motion,
   useReducedMotion,
@@ -9,14 +9,11 @@ import { ArrowDownRight, BookMarked, Mail, Sparkles } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 import { PokemonProfileCard } from './PokemonProfileCard';
 
-const LazyHeroFolioCanvas = React.lazy(() => import('./HeroFolioCanvas'));
-
 interface HeroProps {
   locale: Locale;
-  theme: 'light' | 'dark';
 }
 
-export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
+export const Hero: React.FC<HeroProps> = ({ locale }) => {
   const shouldReduceMotion = useReducedMotion();
   const t = UI_LABELS[locale].hero;
   const heroRef = useRef<HTMLElement | null>(null);
@@ -37,11 +34,6 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
       className="folio-section relative overflow-x-clip !pt-10 lg:!pt-14"
       aria-labelledby="hero-display-heading"
     >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <Suspense fallback={null}>
-          <LazyHeroFolioCanvas theme={theme} />
-        </Suspense>
-      </div>
 
       <div className="folio-container relative z-10">
         <div className="mb-10 flex flex-wrap items-center justify-between gap-3 border-b border-folio-border pb-4 lg:mb-14">

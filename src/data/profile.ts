@@ -175,7 +175,7 @@ export const UI_LABELS = {
       roleLabel: 'Vai trò',
       ctaProjects: 'Xem dự án',
       ctaContact: 'Liên hệ',
-      indexHeader: '5 DỰ ÁN TIÊU BIỂU',
+      indexHeader: '5 DỰ ÁN NỔI BẬT',
       statusAvailable: 'Sẵn sàng nhận dự án thiết kế',
     },
     about: {
@@ -252,7 +252,7 @@ export const UI_LABELS = {
       roleLabel: 'Role',
       ctaProjects: 'View projects',
       ctaContact: 'Contact me',
-      indexHeader: 'TOP 5 PROJECTS',
+      indexHeader: 'FEATURED PROJECTS',
       statusAvailable: 'Available for freelance design',
     },
     about: {

@@ -17,7 +17,7 @@ export const About: React.FC<AboutProps> = ({ locale, theme }) => {
   return (
     <section
       id="about"
-      className="folio-section"
+      className="folio-section overflow-x-clip"
       aria-labelledby="about-heading"
     >
       <div className="folio-container">
@@ -42,7 +42,7 @@ export const About: React.FC<AboutProps> = ({ locale, theme }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-30 overflow-visible lg:col-span-4"
+            className="relative z-20 overflow-visible lg:col-span-4"
           >
             <AboutFoilPass locale={locale} theme={theme} />
           </motion.div>

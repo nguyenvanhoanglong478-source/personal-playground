@@ -122,7 +122,7 @@ export function App() {
       />
 
       <main id="main-content" className="relative z-10">
-        <Hero locale={locale} theme={theme} />
+        <Hero locale={locale} />
         <About locale={locale} theme={theme} />
         <Experience locale={locale} />
         <ProjectsBento locale={locale} />

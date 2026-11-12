@@ -308,7 +308,7 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
                 {t.indexHeader}
               </h2>
               <span className="font-serif text-lg font-extrabold leading-none tracking-tight text-folio-ink sm:text-xl">
-                5×
+                5 / 6
               </span>
             </div>
 
@@ -361,7 +361,7 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
               Illus. {PROFILE_DATA.name}
             </span>
             <span className="pokemon-rarity-badge rounded-[4px] px-2 py-0.5 font-mono text-[10px] font-bold tracking-[0.08em] text-folio-ink">
-              001/005 ★ SAR
+              001/006 ★ SAR
             </span>
           </footer>
         </div>

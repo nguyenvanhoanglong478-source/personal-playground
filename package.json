@@ -1,8 +1,8 @@
 {
-  "name": "marcus-annotated-folio",
+  "name": "long-hoang-portfolio",
   "private": true,
   "version": "2.0.0",
-  "description": "Marginalia & Folio - Trang cá nhân và hồ sơ dự án của Marcus",
+  "description": "Hồ sơ cá nhân và danh mục dự án của Long Hoàng",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173",

@@ -42,6 +42,14 @@ interface ConstraintsData {
   count: number;
 }
 
+interface PendingTouch {
+  pointerId: number;
+  startClientX: number;
+  startClientY: number;
+  timerId: number;
+  zone: 'body' | 'stub';
+}
+
 interface MeshState {
   x: Float32Array;
   y: Float32Array;
@@ -55,6 +63,9 @@ interface MeshState {
   ny: Float32Array;
   nz: Float32Array;
   uv: Float32Array;
+  packedPos: Float32Array;
+  packedNorm: Float32Array;
+  packedSeam: Float32Array;
   seamBroken: Uint8Array;
   bodyIndices: Uint16Array;
   stubIndices: Uint16Array;
@@ -88,7 +99,6 @@ const VERT_SHADER_SRC = `
   attribute vec2 aUv;
   attribute float aSeamBroken;
 
-  uniform vec2 uSlotOffset;
   uniform float uFlipAngle;
   uniform float uTiltX;
   uniform float uTiltY;
@@ -145,8 +155,8 @@ const VERT_SHADER_SRC = `
     vSeamBroken = aSeamBroken;
 
     gl_Position = vec4(
-      (fPos.x * camDist * (uFovScale / uAspect)) + uSlotOffset.x * w,
-      (fPos.y * camDist * uFovScale) + uSlotOffset.y * w,
+      fPos.x * camDist * (uFovScale / uAspect),
+      fPos.y * camDist * uFovScale,
       clamp(-fPos.z * 0.12, -0.95, 0.95) * w,
       w
     );
@@ -388,6 +398,9 @@ function createMeshState(): MeshState {
   const ny = new Float32Array(TOTAL_VERTS);
   const nz = new Float32Array(TOTAL_VERTS);
   const uv = new Float32Array(TOTAL_VERTS * 2);
+  const packedPos = new Float32Array(TOTAL_VERTS * 3);
+  const packedNorm = new Float32Array(TOTAL_VERTS * 3);
+  const packedSeam = new Float32Array(TOTAL_VERTS);
   const seamBroken = new Uint8Array(COLS);
 
   for (let r = 0; r < BODY_ROWS; r++) {
@@ -487,6 +500,9 @@ function createMeshState(): MeshState {
     ny,
     nz,
     uv,
+    packedPos,
+    packedNorm,
+    packedSeam,
     seamBroken,
     bodyIndices,
     stubIndices,
@@ -658,7 +674,6 @@ interface GlContextState {
     aNormal: number;
     aUv: number;
     aSeamBroken: number;
-    uSlotOffset: WebGLUniformLocation | null;
     uFrontTex: WebGLUniformLocation | null;
     uBackTex: WebGLUniformLocation | null;
     uFlipAngle: WebGLUniformLocation | null;
@@ -683,6 +698,9 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
   const shouldReduceMotion = useReducedMotion();
   const stageRef = useRef<HTMLDivElement | null>(null);
   const slotRef = useRef<HTMLDivElement | null>(null);
+  const bodyHitRef = useRef<HTMLDivElement | null>(null);
+  const stubHitRef = useRef<HTMLDivElement | null>(null);
+  const activeCaptureTargetRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frontTexCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const backTexCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -694,6 +712,9 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
   const lastFrameRef = useRef<number>(0);
   const inViewRef = useRef<boolean>(true);
   const activePointerIdRef = useRef<number | null>(null);
+  const activePointerTypeRef = useRef<string>('mouse');
+  const pendingTouchRef = useRef<PendingTouch | null>(null);
+  const dragBentRef = useRef<boolean>(false);
 
   const [edition, setEdition] = useState<FoilEdition>(() =>
     theme === 'dark' ? 'obsidian-gold' : 'silver-holo'
@@ -730,6 +751,24 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     return () => observer.disconnect();
   }, [theme]);
 
+  const syncCanvasSize = useCallback(() => {
+    const slot = slotRef.current;
+    const canvas = canvasRef.current;
+    if (!slot || !canvas) return;
+
+    const cw = canvas.clientWidth || slot.clientWidth;
+    const ch = canvas.clientHeight || slot.clientHeight;
+    if (cw < 2 || ch < 2) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const targetW = Math.round(cw * dpr);
+    const targetH = Math.round(ch * dpr);
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
+    }
+  }, []);
+
   const renderFrame = useCallback(() => {
     const glState = glStateRef.current;
     if (!glState) return;
@@ -739,13 +778,13 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     const slot = slotRef.current;
     if (!canvas || !slot) return;
 
-    const rect = slot.getBoundingClientRect();
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    const cw = canvas.clientWidth || slot.clientWidth;
+    const ch = canvas.clientHeight || slot.clientHeight;
+    if (cw < 2 || ch < 2) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
-    const targetW = Math.round(w * dpr);
-    const targetH = Math.round(h * dpr);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const targetW = Math.round(cw * dpr);
+    const targetH = Math.round(ch * dpr);
     if (canvas.width !== targetW || canvas.height !== targetH) {
       canvas.width = targetW;
       canvas.height = targetH;
@@ -755,23 +794,15 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const isVisible = rect.bottom > -120 && rect.top < h + 120;
-    const mesh = meshRef.current;
-    if (!isVisible && !mesh.dragActive) {
+    if (!inViewRef.current && !meshRef.current.dragActive) {
       return;
     }
 
-    const cx = rect.left + rect.width * 0.5;
-    const cy = rect.top + rect.height * 0.5;
-    const ndcSlotX = (cx / w) * 2.0 - 1.0;
-    const ndcSlotY = 1.0 - (cy / h) * 2.0;
-
-    const uFovScale = ((rect.height / h) * 2.0) / CARD_H;
+    const mesh = meshRef.current;
     const uAspect = canvas.width / Math.max(1, canvas.height);
+    const uFovScale = (2.0 / CARD_H) * 0.82;
 
-    const packedPos = new Float32Array(TOTAL_VERTS * 3);
-    const packedNorm = new Float32Array(TOTAL_VERTS * 3);
-    const packedSeam = new Float32Array(TOTAL_VERTS);
+    const { packedPos, packedNorm, packedSeam } = mesh;
 
     for (let i = 0; i < TOTAL_VERTS; i++) {
       packedPos[i * 3] = mesh.x[i];
@@ -813,10 +844,9 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     gl.bindTexture(gl.TEXTURE_2D, glState.backTex);
     gl.uniform1i(locs.uBackTex, 1);
 
-    const tiltX = mesh.hovering && !mesh.dragActive ? mesh.hoverNdcY * 0.12 : 0;
-    const tiltY = mesh.hovering && !mesh.dragActive ? -mesh.hoverNdcX * 0.12 : 0;
+    const tiltX = mesh.hovering && !mesh.dragActive ? mesh.hoverNdcY * 0.09 : 0;
+    const tiltY = mesh.hovering && !mesh.dragActive ? -mesh.hoverNdcX * 0.09 : 0;
 
-    gl.uniform2f(locs.uSlotOffset, ndcSlotX, ndcSlotY);
     gl.uniform1f(locs.uFlipAngle, mesh.flipAngle);
     gl.uniform1f(locs.uTiltX, tiltX);
     gl.uniform1f(locs.uTiltY, tiltY);
@@ -900,19 +930,22 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         const col = i % COLS;
 
         if (mesh.isTorn && isStub) {
-          const tiltOffset = (col / (COLS - 1) - 0.5) * 0.0006;
-          const flutter = Math.sin(now * 0.009 + col * 0.45) * 0.0008;
-          const vx = (mesh.x[i] - mesh.oldX[i]) * 0.96 + tiltOffset;
-          const vy = (mesh.y[i] - mesh.oldY[i]) * 0.96 - 0.0028;
-          const vz = (mesh.z[i] - mesh.oldZ[i]) * 0.96 + flutter;
+          const minY = mesh.restY[i] - 0.115;
+          if (mesh.y[i] > minY) {
+            const tiltOffset = (col / (COLS - 1) - 0.5) * 0.00025;
+            const flutter = Math.sin(now * 0.008 + col * 0.45) * 0.00045;
+            const vx = (mesh.x[i] - mesh.oldX[i]) * 0.85 + tiltOffset;
+            const vy = (mesh.y[i] - mesh.oldY[i]) * 0.85 - 0.0009;
+            const vz = (mesh.z[i] - mesh.oldZ[i]) * 0.85 + flutter;
 
-          mesh.oldX[i] = mesh.x[i];
-          mesh.oldY[i] = mesh.y[i];
-          mesh.oldZ[i] = mesh.z[i];
+            mesh.oldX[i] = mesh.x[i];
+            mesh.oldY[i] = mesh.y[i];
+            mesh.oldZ[i] = mesh.z[i];
 
-          mesh.x[i] += vx;
-          mesh.y[i] += vy;
-          mesh.z[i] += vz;
+            mesh.x[i] += vx;
+            mesh.y[i] = Math.max(minY, mesh.y[i] + vy);
+            mesh.z[i] += vz;
+          }
         } else if (!mesh.dragActive) {
           const tx = mesh.restX[i];
           const ty = mesh.restY[i];
@@ -972,12 +1005,15 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
             const peelWeight = Math.exp(-dist * 2.2);
 
             if (peelWeight > 0.005) {
-              const pullX = deltaScreenX * HALF_W * 1.35;
-              const pullY = deltaScreenY * HALF_H * 1.35;
+              const pullX = Math.max(-0.11, Math.min(0.11, deltaScreenX * HALF_W * 0.36));
+              const pullY = Math.max(-0.14, Math.min(0.12, deltaScreenY * HALF_H * 0.36));
 
+              const effectiveDrag = Math.min(1.15, dragDist);
               const curlZ =
-                (dragDist * 0.72 +
-                  Math.sin(Math.min(Math.PI, dist * 3.5)) * 0.35) *
+                (effectiveDrag * 0.24 +
+                  Math.sin(Math.min(Math.PI, dist * 3.2)) *
+                    0.13 *
+                    Math.min(1.0, effectiveDrag * 1.45)) *
                 peelWeight *
                 curlSign;
 
@@ -995,7 +1031,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         const deltaX =
           (mesh.curScreenX - mesh.startScreenX) * Math.cos(mesh.flipAngle);
         const deltaY = mesh.startScreenY - mesh.curScreenY;
-        const pullDistance = Math.hypot(deltaX * 0.6, Math.max(0, deltaY));
+        const pullDistance = Math.hypot(deltaX * 0.8, Math.max(0, deltaY));
 
         const TEAR_START_DEADZONE = 0.035;
         const FULL_TEAR_DRAG_DISTANCE = 0.38;
@@ -1078,7 +1114,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
       mesh.flipAngle += mesh.flipVel * dt;
 
       if (mesh.isTorn && mesh.stubAlpha > 0) {
-        mesh.stubAlpha = Math.max(0, mesh.stubAlpha - 1.15 * dt);
+        mesh.stubAlpha = Math.max(0, mesh.stubAlpha - 2.2 * dt);
       }
 
       computeNormals(mesh);
@@ -1099,8 +1135,12 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         kinetic += vel;
       }
 
-      mesh.bendIntensity = Math.min(1.0, maxDisp * 3.5);
-      setIsDragBent(maxDisp > 0.035);
+      mesh.bendIntensity = Math.min(1.0, maxDisp * 3.8);
+      const nextBent = maxDisp > 0.028;
+      if (dragBentRef.current !== nextBent) {
+        dragBentRef.current = nextBent;
+        setIsDragBent(nextBent);
+      }
 
       renderFrame();
 
@@ -1110,7 +1150,10 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
       } else {
         mesh.flipAngle = mesh.targetFlipAngle;
         mesh.bendIntensity = 0;
-        setIsDragBent(false);
+        if (dragBentRef.current) {
+          dragBentRef.current = false;
+          setIsDragBent(false);
+        }
         rafRef.current = null;
       }
     },
@@ -1232,7 +1275,6 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
               aNormal: gl.getAttribLocation(program, 'aNormal'),
               aUv: gl.getAttribLocation(program, 'aUv'),
               aSeamBroken: gl.getAttribLocation(program, 'aSeamBroken'),
-              uSlotOffset: gl.getUniformLocation(program, 'uSlotOffset'),
               uFrontTex: gl.getUniformLocation(program, 'uFrontTex'),
               uBackTex: gl.getUniformLocation(program, 'uBackTex'),
               uFlipAngle: gl.getUniformLocation(program, 'uFlipAngle'),
@@ -1253,6 +1295,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
       }
     }
 
+    syncCanvasSize();
     syncTextures();
     let mounted = true;
     document.fonts?.ready.then(() => {
@@ -1261,25 +1304,38 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
 
     return () => {
       mounted = false;
+      if (pendingTouchRef.current !== null) {
+        window.clearTimeout(pendingTouchRef.current.timerId);
+        pendingTouchRef.current = null;
+      }
       stopLoop();
     };
-  }, [stopLoop, syncTextures]);
+  }, [stopLoop, syncCanvasSize, syncTextures]);
 
   useEffect(() => {
     syncTextures();
   }, [syncTextures]);
 
   useEffect(() => {
-    const handleScrollOrResize = () => {
+    const slot = slotRef.current;
+    if (!slot) return;
+
+    const handleResize = () => {
+      syncCanvasSize();
       renderFrame();
     };
-    window.addEventListener('scroll', handleScrollOrResize, { passive: true });
-    window.addEventListener('resize', handleScrollOrResize, { passive: true });
+
+    handleResize();
+
+    const ro = new ResizeObserver(handleResize);
+    ro.observe(slot);
+    window.addEventListener('resize', handleResize, { passive: true });
+
     return () => {
-      window.removeEventListener('scroll', handleScrollOrResize);
-      window.removeEventListener('resize', handleScrollOrResize);
+      ro.disconnect();
+      window.removeEventListener('resize', handleResize);
     };
-  }, [renderFrame]);
+  }, [renderFrame, syncCanvasSize]);
 
   useEffect(() => {
     const slot = slotRef.current;
@@ -1290,28 +1346,41 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         const visible = entries.some((entry) => entry.isIntersecting);
         inViewRef.current = visible;
         if (visible) {
+          syncCanvasSize();
           renderFrame();
+          const mesh = meshRef.current;
+          if (
+            mesh.dragActive ||
+            mesh.hovering ||
+            (mesh.isTorn && mesh.stubAlpha > 0.01) ||
+            Math.abs(mesh.targetFlipAngle - mesh.flipAngle) > 0.001
+          ) {
+            startLoop();
+          }
         } else {
           stopLoop();
         }
       },
-      { rootMargin: '160px' }
+      { rootMargin: '120px' }
     );
     io.observe(slot);
 
     return () => {
       io.disconnect();
     };
-  }, [renderFrame, stopLoop]);
+  }, [renderFrame, startLoop, stopLoop, syncCanvasSize]);
 
   const mapPointerToNdc = useCallback((clientX: number, clientY: number) => {
     const slot = slotRef.current;
     if (!slot) return { ndcX: 0, ndcY: 0, u: 0.5, v: 0.5 };
     const rect = slot.getBoundingClientRect();
+    const scale = 0.82;
+    const cardH = Math.max(1, rect.height * scale);
+    const cardW = Math.max(1, cardH * (PASS_WIDTH / PASS_HEIGHT));
     const cx = rect.left + rect.width * 0.5;
     const cy = rect.top + rect.height * 0.5;
-    const ndcX = (clientX - cx) / (rect.width * 0.5);
-    const ndcY = (cy - clientY) / (rect.height * 0.5);
+    const ndcX = (clientX - cx) / (cardW * 0.5);
+    const ndcY = (cy - clientY) / (cardH * 0.5);
 
     const mesh = meshRef.current;
     const cosFlip = Math.cos(mesh.flipAngle);
@@ -1327,14 +1396,79 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     };
   }, []);
 
+  const clearPendingTouch = useCallback(() => {
+    if (pendingTouchRef.current !== null) {
+      window.clearTimeout(pendingTouchRef.current.timerId);
+      pendingTouchRef.current = null;
+    }
+  }, []);
+
+  const activatePassDrag = useCallback(
+    (
+      pointerId: number,
+      pointerType: string,
+      clientX: number,
+      clientY: number,
+      forcedZone?: 'body' | 'stub',
+      captureTarget?: HTMLDivElement | null
+    ) => {
+      clearPendingTouch();
+      const mapped = mapPointerToNdc(clientX, clientY);
+      const mesh = meshRef.current;
+      activePointerIdRef.current = pointerId;
+      activePointerTypeRef.current = pointerType;
+      activeCaptureTargetRef.current = captureTarget || null;
+      mesh.dragActive = true;
+      mesh.dragZone =
+        forcedZone === 'stub' && !mesh.isTorn
+          ? 'stub'
+          : mapped.v >= STUB_SPLIT_RATIO - 0.03 && !mesh.isTorn
+            ? 'stub'
+            : 'body';
+      mesh.tearStartSide = mapped.u <= 0.5 ? 'left' : 'right';
+      mesh.grabU = mapped.u;
+      mesh.grabV = mapped.v;
+      mesh.startScreenX = mapped.ndcX;
+      mesh.startScreenY = mapped.ndcY;
+      mesh.curScreenX = mapped.ndcX;
+      mesh.curScreenY = mapped.ndcY;
+      mesh.hoverNdcX = mapped.ndcX;
+      mesh.hoverNdcY = mapped.ndcY;
+      try {
+        captureTarget?.setPointerCapture(pointerId);
+      } catch {
+        activePointerIdRef.current = pointerId;
+      }
+      setIsInteracting(true);
+      startLoop();
+    },
+    [clearPendingTouch, mapPointerToNdc, startLoop]
+  );
+
   const releaseDrag = useCallback(() => {
+    clearPendingTouch();
     const mesh = meshRef.current;
+    if (activePointerTypeRef.current !== 'mouse') {
+      mesh.hovering = false;
+      mesh.hoverNdcX = 0;
+      mesh.hoverNdcY = 0;
+    }
+    if (activePointerIdRef.current !== null) {
+      try {
+        activeCaptureTargetRef.current?.releasePointerCapture(
+          activePointerIdRef.current
+        );
+      } catch {
+        activeCaptureTargetRef.current = null;
+      }
+    }
+    activeCaptureTargetRef.current = null;
     if (!mesh.dragActive) return;
     mesh.dragActive = false;
     activePointerIdRef.current = null;
     setIsInteracting(false);
     startLoop();
-  }, [startLoop]);
+  }, [clearPendingTouch, startLoop]);
 
   useEffect(() => {
     if (!isInteracting) return;
@@ -1376,48 +1510,130 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     };
   }, [isInteracting, mapPointerToNdc, releaseDrag, startLoop]);
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (shouldReduceMotion || (e.pointerType === 'mouse' && e.button !== 0))
+  const handleBodyPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (shouldReduceMotion || (e.pointerType === 'mouse' && e.button !== 0)) {
       return;
+    }
+
+    if (e.pointerType === 'mouse') {
+      activatePassDrag(
+        e.pointerId,
+        e.pointerType,
+        e.clientX,
+        e.clientY,
+        undefined,
+        bodyHitRef.current
+      );
+      return;
+    }
+
+    clearPendingTouch();
+    activePointerTypeRef.current = e.pointerType;
     const mapped = mapPointerToNdc(e.clientX, e.clientY);
     const mesh = meshRef.current;
-    activePointerIdRef.current = e.pointerId;
-    mesh.dragActive = true;
-    mesh.dragZone =
+    const zone: 'body' | 'stub' =
       mapped.v >= STUB_SPLIT_RATIO - 0.03 && !mesh.isTorn ? 'stub' : 'body';
-    mesh.tearStartSide = mapped.u <= 0.5 ? 'left' : 'right';
-    mesh.grabU = mapped.u;
-    mesh.grabV = mapped.v;
-    mesh.startScreenX = mapped.ndcX;
-    mesh.startScreenY = mapped.ndcY;
-    mesh.curScreenX = mapped.ndcX;
-    mesh.curScreenY = mapped.ndcY;
-    mesh.hoverNdcX = mapped.ndcX;
-    mesh.hoverNdcY = mapped.ndcY;
-    setIsInteracting(true);
-    startLoop();
+    const pointerId = e.pointerId;
+    const pointerType = e.pointerType;
+    const startClientX = e.clientX;
+    const startClientY = e.clientY;
+    const holdDelay = 130;
+
+    const timerId = window.setTimeout(() => {
+      const pending = pendingTouchRef.current;
+      if (!pending || pending.pointerId !== pointerId) return;
+      activatePassDrag(
+        pointerId,
+        pointerType,
+        startClientX,
+        startClientY,
+        zone,
+        bodyHitRef.current
+      );
+    }, holdDelay);
+
+    pendingTouchRef.current = {
+      pointerId,
+      startClientX,
+      startClientY,
+      timerId,
+      zone,
+    };
+  };
+
+  const handleStubPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (shouldReduceMotion || (e.pointerType === 'mouse' && e.button !== 0)) {
+      return;
+    }
+    activatePassDrag(
+      e.pointerId,
+      e.pointerType,
+      e.clientX,
+      e.clientY,
+      meshRef.current.isTorn ? 'body' : 'stub',
+      stubHitRef.current
+    );
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (shouldReduceMotion || meshRef.current.dragActive) return;
+
+    const pending = pendingTouchRef.current;
+    if (pending && e.pointerId === pending.pointerId) {
+      const dx = e.clientX - pending.startClientX;
+      const dy = e.clientY - pending.startClientY;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > 8 && Math.abs(dy) > Math.abs(dx) * 1.15) {
+        clearPendingTouch();
+        return;
+      }
+
+      if (dist > 10 && Math.abs(dx) >= Math.abs(dy) * 0.7) {
+        activatePassDrag(
+          e.pointerId,
+          e.pointerType,
+          pending.startClientX,
+          pending.startClientY,
+          pending.zone,
+          bodyHitRef.current
+        );
+        const mapped = mapPointerToNdc(e.clientX, e.clientY);
+        meshRef.current.curScreenX = mapped.ndcX;
+        meshRef.current.curScreenY = mapped.ndcY;
+      }
+      return;
+    }
+
+    if (e.pointerType !== 'mouse') return;
+
     const mapped = mapPointerToNdc(e.clientX, e.clientY);
     const mesh = meshRef.current;
     mesh.hoverNdcX = Math.max(-1.2, Math.min(1.2, mapped.ndcX));
     mesh.hoverNdcY = Math.max(-1.2, Math.min(1.2, mapped.ndcY));
-
-    if (e.pointerType === 'mouse') {
-      mesh.hovering = true;
-    }
+    mesh.hovering = true;
     startLoop();
   };
 
   const handlePointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
     const mesh = meshRef.current;
     mesh.hovering = false;
+    if (e.pointerType !== 'mouse') {
+      clearPendingTouch();
+    }
     if (e.pointerType !== 'mouse' || !mesh.dragActive) {
       mesh.hoverNdcX = 0;
       mesh.hoverNdcY = 0;
       startLoop();
+    }
+  };
+
+  const handlePendingPointerEnd = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (
+      pendingTouchRef.current !== null &&
+      e.pointerId === pendingTouchRef.current.pointerId
+    ) {
+      clearPendingTouch();
     }
   };
 
@@ -1435,6 +1651,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
   };
 
   const handleRestore = () => {
+    clearPendingTouch();
     const mesh = meshRef.current;
     mesh.isTorn = false;
     mesh.maxTornCols = 0;
@@ -1460,73 +1677,90 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
   };
 
   return (
-    <>
-      <canvas
-        ref={canvasRef}
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-50 h-screen w-screen"
-      />
-
+    <div
+      ref={stageRef}
+      data-flipped={isFlipped ? 'true' : 'false'}
+      data-torn={isTorn ? 'true' : 'false'}
+      data-edition={edition}
+      data-interacting={isInteracting ? 'true' : 'false'}
+      data-drag-bent={isDragBent ? 'true' : 'false'}
+      className="about-foil-stage relative mx-auto flex w-full max-w-[360px] flex-col items-center gap-3.5 lg:mx-0"
+    >
       <div
-        ref={stageRef}
-        data-flipped={isFlipped ? 'true' : 'false'}
-        data-torn={isTorn ? 'true' : 'false'}
-        data-edition={edition}
-        data-interacting={isInteracting ? 'true' : 'false'}
-        data-drag-bent={isDragBent ? 'true' : 'false'}
-        className="about-foil-stage mx-auto flex w-full max-w-[360px] flex-col items-center gap-3.5 lg:mx-0"
+        ref={slotRef}
+        className="relative z-10 aspect-[360/560] w-full overflow-hidden"
       >
+        <canvas
+          ref={canvasRef}
+          aria-hidden="true"
+          className="about-foil-canvas pointer-events-none absolute inset-0 block h-full w-full"
+        />
+
         <div
-          ref={slotRef}
-          className="relative aspect-[360/560] w-full"
-        >
-          <div
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerLeave={handlePointerLeave}
-            aria-label={
-              locale === 'vi'
-                ? 'Vé định danh Hologram tương tác của Long Hoàng, có thể kéo uốn cong, lật hai mặt và xé cuống vé'
-                : 'Interactive holographic creator pass for Long Hoàng with 3D bending, two-sided flip, and tearable stub'
-            }
-            role="region"
-            className="pointer-events-auto absolute inset-0 cursor-grab active:cursor-grabbing"
-          />
-          <img
-            src={PROFILE_DATA.avatarUrl}
-            alt={labels.portraitAlt}
-            className="sr-only"
-          />
-        </div>
+          ref={bodyHitRef}
+          onPointerDown={handleBodyPointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePendingPointerEnd}
+          onPointerCancel={handlePendingPointerEnd}
+          onPointerLeave={handlePointerLeave}
+          aria-label={
+            locale === 'vi'
+              ? 'Vé định danh Hologram tương tác của Long Hoàng, có thể kéo uốn cong và lật hai mặt'
+              : 'Interactive holographic creator pass for Long Hoàng with 3D bending and two-sided flip'
+          }
+          role="region"
+          className="pointer-events-auto absolute inset-x-0 top-0 z-10 h-[77.5%] cursor-grab touch-pan-y active:cursor-grabbing"
+        />
 
-        <p className="text-center font-mono text-[11px] text-folio-faint">
-          {locale === 'vi'
-            ? 'Kéo trên vé để uốn nếp · Nắm cuống dưới để xé'
-            : 'Drag pass to bend foil · Pull bottom stub to tear'}
-        </p>
+        <div
+          ref={stubHitRef}
+          onPointerDown={handleStubPointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePendingPointerEnd}
+          onPointerCancel={handlePendingPointerEnd}
+          onPointerLeave={handlePointerLeave}
+          aria-label={
+            locale === 'vi'
+              ? 'Cuống vé định danh có thể kéo xuống để xé theo đường răng cưa'
+              : 'Tearable ticket stub region along the perforated edge'
+          }
+          className="pointer-events-auto absolute inset-x-0 bottom-0 z-10 h-[22.5%] cursor-grab touch-none active:cursor-grabbing"
+        />
 
-        <div className="flex w-full flex-wrap items-center justify-center gap-2">
-          <button
-            type="button"
-            onClick={handleFlip}
-            className="folio-btn-compact"
-          >
-            <span className="google-pill-aura" aria-hidden="true" />
-            <Repeat2 className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>{locale === 'vi' ? 'Lật mặt vé' : 'Flip Pass'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleRestore}
-            className="folio-btn-compact"
-          >
-            <span className="google-pill-aura" aria-hidden="true" />
-            <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>{locale === 'vi' ? 'Khôi phục vé' : 'Restore Pass'}</span>
-          </button>
-        </div>
+        <img
+          src={PROFILE_DATA.avatarUrl}
+          alt={labels.portraitAlt}
+          className="sr-only"
+        />
       </div>
-    </>
+
+      <p className="relative z-20 text-center font-mono text-[11px] text-folio-faint">
+        {locale === 'vi'
+          ? 'Kéo trên vé để uốn nếp · Nắm cuống dưới để xé'
+          : 'Drag pass to bend foil · Pull bottom stub to tear'}
+      </p>
+
+      <div className="relative z-20 flex w-full flex-wrap items-center justify-center gap-2.5">
+        <button
+          type="button"
+          onClick={handleFlip}
+          className="folio-btn-compact min-h-[44px] min-w-[44px]"
+        >
+          <span className="google-pill-aura" aria-hidden="true" />
+          <Repeat2 className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>{locale === 'vi' ? 'Lật mặt vé' : 'Flip Pass'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleRestore}
+          className="folio-btn-compact min-h-[44px] min-w-[44px]"
+        >
+          <span className="google-pill-aura" aria-hidden="true" />
+          <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>{locale === 'vi' ? 'Khôi phục vé' : 'Restore Pass'}</span>
+        </button>
+      </div>
+    </div>
   );
 };

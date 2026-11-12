@@ -156,12 +156,18 @@ Cập nhật lần cuối: 2026-11-12
 - **Liên kết & Tài liệu (`README.md`, `PROGRESS.md`)**:
   - Cập nhật đường dẫn Live Demo chính thức (`https://longhoang.pages.dev/`) và bản deploy kiểm tra (`https://9db9997f.longhoang.pages.dev`) sau khi xác nhận HTTP `200` cho trang chủ, `avatar.jpg` và `favicon.svg`.
 
-## 15. Vé Định Danh Hologram Uốn Dẻo & Xé Cuống Vé (AboutFoilPass.tsx)
+## 15. Vé Định Danh Hologram Uốn Dẻo 3D & Xé Cuống Vé (AboutFoilPass.tsx)
 
 - **Thay thế cột trái mục `02. Về tôi` (`src/components/AboutFoilPass.tsx`, `src/components/aboutPassTextures.ts`, `src/components/About.tsx`, `src/App.tsx`, `src/index.css`)**:
-  - Giữ nguyên toàn bộ cột bên phải của `About.tsx` (5 đoạn văn tự sự và lưới 4 nguyên tắc làm việc) và chỉ thay khung thẻ chân dung tĩnh cột trái (`lg:col-span-4`) bằng `AboutFoilPass`.
+  - Giữ nguyên toàn bộ cột bên phải của `About.tsx` (5 đoạn văn tự sự và lưới 4 nguyên tắc làm việc) và thay khung thẻ chân dung tĩnh cột trái (`lg:col-span-4`) bằng `AboutFoilPass`.
   - Dựng hệ texture 2× Retina (`640×1040`) song ngữ `vi`/`en` từ `PROFILE_DATA` cho **Mặt trước** (dải Hologram trên cùng, ảnh `./avatar.jpg` kèm khung bát giác lăng kính, bảng thông số `HỌ TÊN / NĂM SINH / NGÔN NGỮ / LĨNH VỰC`, mã ma trận QR 11×11 và barcode `NO. 2007-LH-02`) và **Mặt sau** (sơ đồ Radar kỹ thuật plotting 4 nguyên tắc làm việc cùng con dấu tròn Linh thú Capybara `VERIFIED PRODUCT MAKER // 2007`).
-- **Động lực học Lưới Lò Xo & Shader Quang Phổ**:
-  - Xây dựng lưới lò xo đàn hồi `16×18` (thân vé) + `16×7` (cuống vé) chạy qua WebGL1 (tính toán ánh sáng pháp tuyến động, bóng nếp gấp và dải cầu vồng Foil) kèm nhánh dự phòng Canvas 2D tự động; hỗ trợ kéo uốn vé, lật 180° không ngược chữ, kéo xé rời cuống vé rơi tự do (`Xé cuống vé` / `Tear Stub` và `Cấp lại vé nguyên vẹn` / `Issue Fresh Pass`).
-  - Bổ sung 3 tùy chọn chất liệu Foil (`01 Silver Holo`, `02 Obsidian Gold` mặc định theo Dark Mode, `03 Google Prism`), dừng render khi rời khung nhìn qua `IntersectionObserver` và tôn trọng `prefers-reduced-motion: reduce`.
-- **Kiểm chứng**: Xác nhận `impeccable detect --json` trả về `[]`, `tsc -b && vite build` thành công, và kiểm thử Playwright trên `1440px`, `820px`, `375px`, `360px` cho `Light/Dark` và `VI/EN` (0 lỗi console/page, 0 tràn ngang, vùng chạm >= 44px trên di động).
+- **Nâng cấp Toàn diện Engine Vật lý Giấy 3D Không Co Giãn (3D Verlet + PBD)**:
+  - Lưới 3D mịn `COLS = 24`, `ROWS = 36` (864 đỉnh: Thân 28 hàng + Cuống 8 hàng) tích hợp chuyển động Verlet với `damping = 0.94` và lực hồi phục mềm `restSpring` (`0.028` khi kéo, `0.085` khi thả tay).
+  - Bộ giải ràng buộc khoảng cách PBD (Position-Based Dynamics) 16 iterations/frame gồm: Structural Constraints (độ cứng `0.98`, giữ diện tích không đổi và kích hoạt hiện tượng phồng uốn 3D Buckling khi kéo gập), Shear Constraints (độ cứng `0.85`, chống méo xiên khung giấy) và Bending Constraints 2-bước & 3-bước (độ cứng `0.42` và `0.28`, tạo đường cong mượt mà như giấy tráng bạc cao cấp).
+  - Cơ chế Kéo & Cuộn Nếp Gấp 3D (Grab & 3D Curl): Vùng ảnh hưởng Gaussian Falloff kết hợp nâng trục `Z` theo độ dài kéo và hướng kéo vào tâm (`curlHeight`), cùng mô-men uốn vểnh mép giấy (`edgeRoll`) về phía camera.
+  - Phép xé cuống vé trực tiếp trên lưới 3D (Mesh-Level Tear): Cắt đứt toàn bộ liên kết dọc và chéo qua `TEAR_ROW = 28`, cuống vé rơi và lộn nghiêng tự do trong không gian 3D dưới gia tốc trọng lực, thân vé giật nảy nhẹ ngược lên giải phóng thế năng đàn hồi; nút `Cấp lại vé nguyên vẹn` khôi phục liên kết và hình dạng vé phẳng ban đầu.
+- **WebGL Normal Shader: Bóng Nếp Gấp, Phản Quang Cầu Vồng & Dynamic Drop-Shadow Pass**:
+  - Tính toán vector pháp tuyến 3D ($\vec{N}$) qua tích có hướng tiếp tuyến mỗi frame, đổ bóng tự thân nếp gấp (Paper Crease Self-Shading: rãnh khuất sáng tối sẫm, sống nếp gấp bắt sáng specular ridge).
+  - Khúc xạ màng mỏng cầu vồng theo độ cong (Curvature-Driven Thin-Film Iridescence) bám sát các đường gấp uốn lượn cho 3 chất liệu: `01 Silver Holo`, `02 Obsidian Gold` (mặc định Dark Mode) và `03 Google Prism`.
+  - Pass đổ bóng động phía sau vé (Dynamic Drop-Shadow Pass) dịch chuyển và khuếch tán theo độ cao trục `Z` của từng đỉnh, ôm sát đường viền bo góc và rãnh bán nguyệt của tờ vé.
+- **Kiểm chứng**: Xác nhận `impeccable detect --json` trả về `[]`, `tsc -b && vite build` thành công, và bộ kiểm thử Playwright trên `1440px`, `820px`, `375px`, `360px` cho `Light/Dark` và `VI/EN` vượt qua 100% (0 lỗi console/page, 0 tràn ngang, vùng chạm >= 44px trên di động).

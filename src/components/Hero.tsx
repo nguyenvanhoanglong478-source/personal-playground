@@ -1,16 +1,13 @@
-import React, { Suspense, useRef, useState } from 'react';
+import React, { Suspense, useRef } from 'react';
 import {
-  MotionStyle,
   motion,
-  useMotionValue,
   useReducedMotion,
   useScroll,
-  useSpring,
   useTransform,
 } from 'framer-motion';
 import { ArrowDownRight, BookMarked, Mail, Sparkles } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
-import { PROJECTS_DATA } from '../data/projects';
+import { PokemonProfileCard } from './PokemonProfileCard';
 
 const LazyHeroFolioCanvas = React.lazy(() => import('./HeroFolioCanvas'));
 
@@ -19,82 +16,10 @@ interface HeroProps {
   theme: 'light' | 'dark';
 }
 
-const HOLO_SPRING = { stiffness: 260, damping: 22 };
-
 export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
   const shouldReduceMotion = useReducedMotion();
   const t = UI_LABELS[locale].hero;
   const heroRef = useRef<HTMLElement | null>(null);
-  const holoStageRef = useRef<HTMLDivElement | null>(null);
-  const [isHoloActive, setIsHoloActive] = useState(false);
-
-  const rawPointerX = useMotionValue(50);
-  const rawPointerY = useMotionValue(50);
-  const rawCenterDist = useMotionValue(0);
-  const rawRotateX = useMotionValue(0);
-  const rawRotateY = useMotionValue(0);
-
-  const smoothPointerX = useSpring(rawPointerX, HOLO_SPRING);
-  const smoothPointerY = useSpring(rawPointerY, HOLO_SPRING);
-  const smoothCenterDist = useSpring(rawCenterDist, HOLO_SPRING);
-  const smoothRotateX = useSpring(rawRotateX, HOLO_SPRING);
-  const smoothRotateY = useSpring(rawRotateY, HOLO_SPRING);
-
-  const cssPointerX = useTransform(smoothPointerX, (val) => `${val.toFixed(2)}%`);
-  const cssPointerY = useTransform(smoothPointerY, (val) => `${val.toFixed(2)}%`);
-  const cssCenterDist = useTransform(smoothCenterDist, (val) => val.toFixed(3));
-  const cssRotateX = useTransform(smoothRotateX, (val) => `${val.toFixed(2)}deg`);
-  const cssRotateY = useTransform(smoothRotateY, (val) => `${val.toFixed(2)}deg`);
-
-  const holoCardStyle = {
-    rotateX: shouldReduceMotion ? 0 : smoothRotateX,
-    rotateY: shouldReduceMotion ? 0 : smoothRotateY,
-    transformStyle: 'preserve-3d',
-    '--pointer-x': cssPointerX,
-    '--pointer-y': cssPointerY,
-    '--pointer-from-center': cssCenterDist,
-    '--rotate-x': cssRotateX,
-    '--rotate-y': cssRotateY,
-  } as unknown as MotionStyle;
-
-  const handleHoloPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const stage = holoStageRef.current;
-    if (!stage) return;
-
-    const rect = stage.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-
-    const nx = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
-    const ny = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
-    const dx = nx - 0.5;
-    const dy = ny - 0.5;
-    const centerDist = Math.min(1, Math.hypot(dx * 2, dy * 2));
-
-    rawPointerX.set(nx * 100);
-    rawPointerY.set(ny * 100);
-    rawCenterDist.set(centerDist);
-
-    if (shouldReduceMotion) {
-      rawRotateX.set(0);
-      rawRotateY.set(0);
-    } else {
-      rawRotateX.set(-dy * 24);
-      rawRotateY.set(dx * 24);
-    }
-
-    if (!isHoloActive) {
-      setIsHoloActive(true);
-    }
-  };
-
-  const handleHoloPointerLeave = () => {
-    setIsHoloActive(false);
-    rawPointerX.set(50);
-    rawPointerY.set(50);
-    rawCenterDist.set(0);
-    rawRotateX.set(0);
-    rawRotateY.set(0);
-  };
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -236,97 +161,13 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
             transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col items-center justify-center lg:col-span-5 lg:mt-14 lg:items-end"
           >
-            <div className="relative w-full max-w-md">
+            <div className="relative flex w-full max-w-[430px] justify-center lg:justify-end">
               <div
                 style={{ backgroundImage: 'var(--google-gradient-aura)' }}
-                className="animate-pulse-ring absolute -inset-2.5 rounded-3xl blur-2xl"
+                className="animate-pulse-ring absolute -inset-3 rounded-[28px] blur-2xl"
                 aria-hidden="true"
               />
-
-              <div
-                ref={holoStageRef}
-                onPointerEnter={() => setIsHoloActive(true)}
-                onPointerMove={handleHoloPointerMove}
-                onPointerLeave={handleHoloPointerLeave}
-                className="animate-float-gentle perspective-1000 relative"
-              >
-                <motion.div
-                  data-holo-active={isHoloActive ? 'true' : 'false'}
-                  style={holoCardStyle}
-                  className="holo-card google-border-frame group relative rounded-2xl p-[1.5px] shadow-[var(--shadow-glow)]"
-                >
-                  <div
-                    style={{ transformStyle: 'preserve-3d' }}
-                    className="relative rounded-[calc(1rem-1.5px)] p-5"
-                  >
-                    <div
-                      className="pointer-events-none absolute inset-0 overflow-hidden rounded-[calc(1rem-1.5px)] bg-folio-surface backdrop-blur-xl transition-colors duration-300"
-                      aria-hidden="true"
-                    >
-                      <div className="holo-foil-layer holo-foil-surface" />
-                      <div className="holo-glare-layer holo-glare-surface" />
-                    </div>
-
-                    <div
-                      style={
-                        shouldReduceMotion
-                          ? undefined
-                          : { transform: 'translateZ(8px)', transformStyle: 'preserve-3d' }
-                      }
-                      className="holo-inner-frame google-border-frame relative z-10 rounded-xl p-[2px]"
-                    >
-                      <div className="relative overflow-hidden rounded-[10px] bg-folio-bg">
-                        <img
-                          src={PROFILE_DATA.avatarUrl}
-                          alt={PROFILE_DATA.name}
-                          className="aspect-square w-full object-cover object-top filter contrast-[1.03] transition-transform duration-500 group-hover:scale-[1.03]"
-                        />
-                        <div
-                          style={{
-                            background:
-                              'linear-gradient(to top, var(--overlay-scrim) 0%, transparent 55%)',
-                          }}
-                          className="pointer-events-none absolute inset-0"
-                        />
-                        <div className="holo-foil-layer holo-foil-portrait" aria-hidden="true" />
-                        <div className="holo-sparkle-layer" aria-hidden="true" />
-                        <div className="holo-glare-layer holo-glare-portrait" aria-hidden="true" />
-                      </div>
-
-                      <div className="holo-content-lift pointer-events-none absolute bottom-3.5 left-3.5 right-3.5 z-20 flex items-center justify-between text-white">
-                        <div>
-                          <div className="font-serif text-lg font-bold">
-                            {PROFILE_DATA.name}
-                          </div>
-                          <div className="font-mono text-xs text-white/85">
-                            {PROFILE_DATA.role[locale]}
-                          </div>
-                        </div>
-                        <div className="rounded-full border border-white/20 bg-black/55 px-3 py-1 font-mono text-xs backdrop-blur-md">
-                          {PROFILE_DATA.birthYear}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="holo-content-lift relative z-20 mt-4 border-t border-folio-border pt-3">
-                      <div className="mb-2 font-mono text-[11px] font-semibold text-folio-muted">
-                        {t.indexHeader}
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {PROJECTS_DATA.map((proj) => (
-                          <a
-                            key={proj.id}
-                            href={`#project-${proj.id}`}
-                            className="cursor-pointer rounded-md border border-folio-border bg-folio-elevated px-2.5 py-1 font-mono text-[11px] text-folio-ink transition-all duration-200 hover:-translate-y-0.5 hover:border-folio-gblue"
-                          >
-                            {proj.title}
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
+              <PokemonProfileCard locale={locale} />
             </div>
           </motion.div>
         </div>

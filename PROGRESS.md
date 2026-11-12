@@ -132,3 +132,15 @@ Cập nhật lần cuối: 2026-11-12
   - Cập nhật tiêu đề và lời nhắn phần Liên hệ nguyên văn (`Cùng làm một thứ chạy được nhé` / `Let's build something that works`), giữ nguyên email `nguyenvanhoanglong478@gmail.com` và GitHub cá nhân.
 - **Kiểm chứng**: Chạy `impeccable detect --json` (`[]`), `tsc -b && vite build` và kiểm thử Playwright trên `1440px`, `820px`, `375px`, `360px` cho cả `VI/EN` và `Light/Dark` (`ALL PLAYWRIGHT CHECKS PASSED: 0 console errors, 0 page errors, 0 overflow`).
 - **Skill áp dụng**: `taste-skill`, `hallmark`, `impeccable`, `no-ai-slop`.
+
+## 13. Bổ Sung Mạng Xã Hội Instagram, Facebook, X & Đồng Bộ Footer
+
+- **Dữ liệu Liên kết Mạng Xã Hội (`src/data/profile.ts`)**:
+  - Thêm kiểu `SocialPlatform`, `SocialLinkItem` và mảng `PROFILE_DATA.contacts.socials` gồm 4 liên kết (`GITHUB`, `INSTAGRAM` `instagram.com/duongwym`, `FACEBOOK` `facebook.com/share/1HZNvbuB6m`, `X` `x.com/LongNgu56546236`), giữ nguyên `email` (`nguyenvanhoanglong478@gmail.com`) và `githubUrl`.
+- **Biểu tượng Đơn sắc & Khu vực Liên hệ (`src/components/SocialIcon.tsx`, `src/components/Contact.tsx`)**:
+  - Tạo component `SocialIcon` đơn sắc (`currentColor`) thống nhất cho `github`, `instagram`, `facebook`, `x`.
+  - Mở rộng cột liên hệ bên trái (`lg:col-span-6`) thành bố cục bento 5 thẻ cân đối với cột soạn email (`lg:col-span-6`): thẻ `EMAIL` phủ rộng `sm:col-span-2` phía trên lưới 2×2 cho `GITHUB`, `INSTAGRAM`, `FACEBOOK`, `X`. Toàn bộ 5 nút đều dùng `.google-btn-github` kèm `.google-pill-aura`, bo tròn viên thuốc `9999px`, viền xoay Google Modern Gradient khi tương tác và `min-w-0 truncate` chống tràn chữ trên `360px`/`375px`.
+- **Footer (`src/components/Footer.tsx`)**:
+  - Bổ sung 5 nút icon nhanh `.folio-btn-icon` kèm `.google-pill-aura` cho `Email`, `GITHUB`, `INSTAGRAM`, `FACEBOOK`, `X` đặt cạnh nút quay về đầu trang.
+- **Kiểm chứng**: Chạy `impeccable detect --json` (`[]`), `tsc -b && vite build` và kiểm thử Playwright trên `1440px`, `820px`, `375px`, `360px` cho cả `VI/EN` và `Light/Dark`, bao gồm cả chế độ cảm ứng (`ALL PLAYWRIGHT CHECKS PASSED: 0 console errors, 0 page errors, 0 overflow`).
+- **Skill áp dụng**: `taste-skill`, `hallmark`, `impeccable`, `no-ai-slop`.

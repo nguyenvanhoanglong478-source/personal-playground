@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ExternalLink, Github, Mail, Send, Sparkles } from 'lucide-react';
+import { ExternalLink, Mail, Send, Sparkles } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
+import { SocialIcon } from './SocialIcon';
 
 interface ContactProps {
   locale: Locale;
@@ -48,39 +49,54 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col justify-between gap-4 lg:col-span-5"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-6"
           >
-            <div className="folio-card google-gradient-hover-border flex flex-1 flex-col justify-center">
+            <div className="folio-card google-gradient-hover-border flex min-w-0 flex-col justify-center !p-5 sm:col-span-2">
               <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
                 <Mail className="h-4 w-4 text-folio-ink" aria-hidden="true" />
                 <span>EMAIL</span>
               </div>
               <a
                 href={`mailto:${PROFILE_DATA.contacts.email}`}
-                className="mt-2 inline-flex min-h-[36px] items-center break-all font-mono text-sm font-semibold text-folio-ink underline transition-colors hover:text-folio-muted"
-              >
-                {PROFILE_DATA.contacts.email}
-              </a>
-            </div>
-
-            <div className="folio-card google-gradient-hover-border flex flex-1 flex-col justify-center">
-              <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
-                <Github className="h-4 w-4 text-folio-ink" aria-hidden="true" />
-                <span>GITHUB</span>
-              </div>
-              <a
-                href={PROFILE_DATA.contacts.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="google-btn-github group/btn mt-3 w-fit max-w-full"
+                className="google-btn-github group/btn mt-3 w-fit max-w-full min-w-0"
               >
                 <span className="google-pill-aura" aria-hidden="true" />
                 <span className="google-btn-github-label min-w-0 truncate">
-                  {PROFILE_DATA.contacts.githubUrl}
+                  {PROFILE_DATA.contacts.email}
                 </span>
-                <ExternalLink className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" aria-hidden="true" />
+                <Mail
+                  className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5"
+                  aria-hidden="true"
+                />
               </a>
             </div>
+
+            {PROFILE_DATA.contacts.socials.map((social) => (
+              <div
+                key={social.id}
+                className="folio-card google-gradient-hover-border flex min-w-0 flex-col justify-center !p-5"
+              >
+                <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
+                  <SocialIcon platform={social.id} className="h-4 w-4 shrink-0 text-folio-ink" />
+                  <span>{social.label}</span>
+                </div>
+                <a
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="google-btn-github group/btn mt-3 w-fit max-w-full min-w-0"
+                >
+                  <span className="google-pill-aura" aria-hidden="true" />
+                  <span className="google-btn-github-label min-w-0 truncate">
+                    {social.displayText}
+                  </span>
+                  <ExternalLink
+                    className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5"
+                    aria-hidden="true"
+                  />
+                </a>
+              </div>
+            ))}
           </motion.div>
 
           <motion.div
@@ -88,7 +104,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="folio-card google-gradient-hover-border flex flex-col justify-between lg:col-span-7"
+            className="folio-card google-gradient-hover-border flex flex-col justify-between lg:col-span-6"
           >
             <div>
               <h3 className="font-serif text-2xl font-bold text-folio-ink">
@@ -122,7 +138,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                   </label>
                   <textarea
                     id="mailto-body-input"
-                    rows={4}
+                    rows={5}
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                     placeholder={t.bodyPlaceholder}

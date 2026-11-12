@@ -11,6 +11,15 @@ export interface MethodologyPrinciple {
   description: BilingualText;
 }
 
+export type SocialPlatform = 'github' | 'instagram' | 'facebook' | 'x';
+
+export interface SocialLinkItem {
+  id: SocialPlatform;
+  label: string;
+  href: string;
+  displayText: string;
+}
+
 export interface ProfileInfo {
   name: string;
   birthYear: string;
@@ -28,6 +37,7 @@ export interface ProfileInfo {
     email: string;
     githubUrl: string;
     githubHandle: string;
+    socials: SocialLinkItem[];
   };
 }
 
@@ -117,6 +127,32 @@ export const PROFILE_DATA: ProfileInfo = {
     email: 'nguyenvanhoanglong478@gmail.com',
     githubUrl: 'https://github.com/nguyenvanhoanglong478-source',
     githubHandle: 'nguyenvanhoanglong478-source',
+    socials: [
+      {
+        id: 'github',
+        label: 'GITHUB',
+        href: 'https://github.com/nguyenvanhoanglong478-source',
+        displayText: 'github.com/nguyenvanhoanglong478-source',
+      },
+      {
+        id: 'instagram',
+        label: 'INSTAGRAM',
+        href: 'https://www.instagram.com/duongwym?dlrf=dXlxZzFhMWpqYzJw',
+        displayText: 'instagram.com/duongwym',
+      },
+      {
+        id: 'facebook',
+        label: 'FACEBOOK',
+        href: 'https://www.facebook.com/share/1HZNvbuB6m/',
+        displayText: 'facebook.com/share/1HZNvbuB6m',
+      },
+      {
+        id: 'x',
+        label: 'X',
+        href: 'https://x.com/LongNgu56546236',
+        displayText: 'x.com/LongNgu56546236',
+      },
+    ],
   },
 };
 

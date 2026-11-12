@@ -9,7 +9,6 @@ import { SkillsMatrix } from './components/SkillsMatrix';
 import { BuiltWithDiagram } from './components/BuiltWithDiagram';
 import { Contact } from './components/Contact';
 import { Footer } from './components/Footer';
-import { CustomCursor } from './components/CustomCursor';
 
 const THEME_STORAGE_KEY = 'longhoang_folio_theme_v1';
 const LOCALE_STORAGE_KEY = 'longhoang_folio_locale_v1';
@@ -113,8 +112,6 @@ export function App() {
       >
         {locale === 'vi' ? 'Chuyển đến nội dung chính' : 'Skip to main content'}
       </a>
-
-      <CustomCursor />
 
       <Navbar
         locale={locale}

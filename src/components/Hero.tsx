@@ -1,4 +1,4 @@
-import React, { Suspense, useRef, useState } from 'react';
+import React, { Suspense, useRef } from 'react';
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { ArrowDownRight, BookMarked, Mail, Sparkles } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
@@ -15,8 +15,6 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
   const shouldReduceMotion = useReducedMotion();
   const t = UI_LABELS[locale].hero;
   const heroRef = useRef<HTMLElement | null>(null);
-  const btnRef = useRef<HTMLAnchorElement | null>(null);
-  const [btnOffset, setBtnOffset] = useState({ x: 0, y: 0 });
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -24,19 +22,6 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
   });
   const portraitParallax = useTransform(scrollYProgress, [0, 1], [0, -32]);
   const copyParallax = useTransform(scrollYProgress, [0, 1], [0, -12]);
-
-  const handleMagneticMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (shouldReduceMotion || !btnRef.current) return;
-    const rect = btnRef.current.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    setBtnOffset({
-      x: (e.clientX - cx) * 0.16,
-      y: (e.clientY - cy) * 0.16,
-    });
-  };
-
-  const resetMagnetic = () => setBtnOffset({ x: 0, y: 0 });
 
   const sloganWords = PROFILE_DATA.slogan[locale].split(' ');
 
@@ -149,24 +134,11 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
                 transition={{ duration: 0.5, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="mt-8 flex flex-wrap items-center gap-5"
               >
-                <span
-                  onMouseMove={handleMagneticMove}
-                  onMouseLeave={resetMagnetic}
-                  style={{
-                    transform: `translate3d(${btnOffset.x}px, ${btnOffset.y}px, 0)`,
-                  }}
-                  className="inline-block transition-transform duration-200 ease-out"
-                >
-                  <a
-                    ref={btnRef}
-                    href="#projects"
-                    className="folio-btn-primary"
-                  >
-                    <span className="google-pill-aura" aria-hidden="true" />
-                    <span>{t.ctaProjects}</span>
-                    <ArrowDownRight className="h-4 w-4" aria-hidden="true" />
-                  </a>
-                </span>
+                <a href="#projects" className="folio-btn-primary">
+                  <span className="google-pill-aura" aria-hidden="true" />
+                  <span>{t.ctaProjects}</span>
+                  <ArrowDownRight className="h-4 w-4" aria-hidden="true" />
+                </a>
 
                 <a href="#contact" className="folio-btn-secondary">
                   <span className="google-pill-aura" aria-hidden="true" />
@@ -232,7 +204,7 @@ export const Hero: React.FC<HeroProps> = ({ locale, theme }) => {
                         <a
                           key={proj.id}
                           href={`#project-${proj.id}`}
-                          className="rounded-md border border-folio-border bg-folio-elevated px-2.5 py-1 font-mono text-[11px] text-folio-ink transition-colors hover:border-folio-gblue"
+                          className="cursor-pointer rounded-md border border-folio-border bg-folio-elevated px-2.5 py-1 font-mono text-[11px] text-folio-ink transition-all duration-200 hover:-translate-y-0.5 hover:border-folio-gblue"
                         >
                           {proj.title}
                         </a>

@@ -37,10 +37,6 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
     let animId = 0;
     let width = 0;
     let height = 0;
-    let pointerX = -1000;
-    let pointerY = -1000;
-    let smoothPointerX = -1000;
-    let smoothPointerY = -1000;
     let tick = 0;
 
     const particles: Particle[] = [];
@@ -76,57 +72,15 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
     setupSize();
     window.addEventListener('resize', setupSize);
 
-    const onPointerMove = (e: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      pointerX = e.clientX - rect.left;
-      pointerY = e.clientY - rect.top;
-      if (smoothPointerX < -500) {
-        smoothPointerX = pointerX;
-        smoothPointerY = pointerY;
-      }
-    };
-
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-
     const renderFrame = () => {
       tick += 0.01;
-
-      if (smoothPointerX > -500) {
-        smoothPointerX += (pointerX - smoothPointerX) * 0.08;
-        smoothPointerY += (pointerY - smoothPointerY) * 0.08;
-      }
 
       ctx.clearRect(0, 0, width, height);
 
       const isDark = theme === 'dark';
-      const glowInner = isDark
-        ? 'rgba(66, 133, 244, 0.11)'
-        : 'rgba(66, 133, 244, 0.08)';
-      const glowMid = isDark
-        ? 'rgba(155, 114, 203, 0.07)'
-        : 'rgba(155, 114, 203, 0.05)';
       const lineColor = isDark
         ? 'rgba(138, 180, 248, 0.08)'
         : 'rgba(26, 115, 232, 0.07)';
-
-      if (smoothPointerX > -100 && smoothPointerX < width + 100) {
-        const glowRadius = Math.min(width, 360);
-        const grad = ctx.createRadialGradient(
-          smoothPointerX,
-          smoothPointerY,
-          0,
-          smoothPointerX,
-          smoothPointerY,
-          glowRadius
-        );
-        grad.addColorStop(0, glowInner);
-        grad.addColorStop(0.45, glowMid);
-        grad.addColorStop(1, 'transparent');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(smoothPointerX, smoothPointerY, glowRadius, 0, Math.PI * 2);
-        ctx.fill();
-      }
 
       const waveY = height * 0.84;
       const waveGrad = ctx.createLinearGradient(0, waveY, width, waveY);
@@ -140,9 +94,7 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
       ctx.lineWidth = 1.2;
       ctx.beginPath();
       for (let x = 0; x <= width; x += 16) {
-        const dist = Math.hypot(x - smoothPointerX, waveY - smoothPointerY);
-        const pull = Math.max(0, 1 - dist / 220) * 10;
-        const y = waveY + Math.sin(x * 0.008 + tick) * (6 + pull);
+        const y = waveY + Math.sin(x * 0.008 + tick) * 6;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
@@ -160,11 +112,7 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
           if (p.y > height) p.y = 0;
         }
 
-        const distToMouse = Math.hypot(p.x - smoothPointerX, p.y - smoothPointerY);
-        let currentAlpha = isDark ? p.baseAlpha : p.baseAlpha * 0.78;
-        if (distToMouse < 180) {
-          currentAlpha += (1 - distToMouse / 180) * 0.35;
-        }
+        const currentAlpha = isDark ? p.baseAlpha : p.baseAlpha * 0.78;
 
         ctx.fillStyle = `rgba(${p.rgb}, ${currentAlpha})`;
         ctx.beginPath();
@@ -195,7 +143,6 @@ const HeroFolioCanvas: React.FC<HeroFolioCanvasProps> = ({ theme }) => {
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', setupSize);
-      window.removeEventListener('pointermove', onPointerMove);
     };
   }, [theme]);
 

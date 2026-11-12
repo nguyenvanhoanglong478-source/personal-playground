@@ -432,7 +432,6 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
   const outerRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
-  const [spotlight, setSpotlight] = useState({ x: 150, y: 150 });
   const [isHovered, setIsHovered] = useState(false);
   const t = UI_LABELS[locale].projects;
 
@@ -458,7 +457,6 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
       x: -normY * 6.5,
       y: normX * 6.5,
     });
-    setSpotlight({ x, y });
   };
 
   const handleMouseEnter = () => {
@@ -503,14 +501,6 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
             >
               {project.indexNumber}
             </span>
-
-            <div
-              className="pointer-events-none absolute -inset-px rounded-[var(--radius-card)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-              style={{
-                background: `radial-gradient(460px circle at ${spotlight.x}px ${spotlight.y}px, var(--spotlight-blue), var(--spotlight-purple) 40%, transparent 70%)`,
-              }}
-              aria-hidden="true"
-            />
 
             <div
               className={

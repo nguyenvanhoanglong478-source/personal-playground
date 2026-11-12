@@ -48,6 +48,7 @@ Toàn bộ token màu được khai báo tập trung tại `:root`, `html[data-t
 
 ## 4. Chuyển Động & Kiểm Chứng
 
-- Toàn bộ nút bấm tương tác (`.folio-btn-primary`, `.folio-btn-secondary`, `.folio-btn-compact`, `.folio-btn-icon`, `.google-btn-github`) dùng nền kính mờ bán trong suốt `backdrop-filter: blur(14px)` (tuyệt đối không tô màu fill kể cả khi hover), viền mảnh conic-gradient xoay liên tục qua `@property --btn-angle` và hào quang tỏa nhẹ ra mép ngoài (`.google-pill-aura`), tự dừng xoay khi `prefers-reduced-motion: reduce`.
-- Bento Grid 5 dự án hỗ trợ nghiêng 3D theo con trỏ chuột, vệt sáng radial spotlight và viền sáng Gradient Google khi hover.
-- Đồ họa nền (`HeroFolioCanvas.tsx`) vẽ hạt sáng và sóng hài hòa 60fps bằng bảng màu Google, tự tắt hiệu ứng mạnh khi `prefers-reduced-motion: reduce`.
+- Con trỏ chuột hệ thống nguyên bản được giữ trọn vẹn trên toàn trang (không dùng custom cursor, không dùng spotlight theo con trỏ); toàn bộ thẻ `a[href]`, `button`, `[role='button']` hiển thị `cursor: pointer`.
+- Toàn bộ nút bấm tương tác (`.folio-btn-primary`, `.folio-btn-secondary`, `.folio-btn-compact`, `.folio-btn-icon`, `.google-btn-github`) đứng yên tĩnh lặng ở trạng thái mặc định với nền kính mờ `backdrop-filter: blur(14px)` và viền tĩnh mảnh `--btn-border-static`. Chỉ khi di chuột trực tiếp vào từng nút (`:hover`), viền conic-gradient Google xoay theo `--btn-angle`, hào quang ngoài (`.google-pill-aura`) và hiệu ứng nâng nhẹ `translateY(-2px) scale(1.015)` mới xuất hiện rồi chuyển mượt về trạng thái tĩnh khi rời chuột.
+- Bento Grid 5 dự án hỗ trợ nghiêng 3D khi hover thẻ và viền sáng Google (`.google-gradient-hover-border`).
+- Đồ họa nền (`HeroFolioCanvas.tsx`) vẽ hạt sáng và sóng hài hòa nhẹ nhàng theo bảng màu Google, không bám theo chuyển động chuột toàn trang và tự dừng khi `prefers-reduced-motion: reduce`.

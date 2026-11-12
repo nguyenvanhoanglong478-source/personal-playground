@@ -63,6 +63,15 @@ html[data-theme='light'] {
   --mesh-lobe-yellow: rgba(251, 188, 4, 0.10);
   --mesh-lobe-green: rgba(52, 168, 83, 0.10);
   --overlay-scrim: rgba(19, 19, 20, 0.80);
+  --holo-surface-blend: normal;
+  --holo-surface-opacity: 0.18;
+  --holo-portrait-blend: color-dodge;
+  --holo-portrait-opacity: 0.36;
+  --holo-glare-surface-opacity: 0.48;
+  --holo-glare-portrait-opacity: 0.62;
+  --holo-sparkle-opacity: 0.64;
+  --holo-foil-filter: brightness(0.84) contrast(1.18) saturate(1.25);
+  --holo-surface-filter: brightness(1.05) contrast(1.04) saturate(1.28);
 }
 
 html[data-theme='dark'] {
@@ -93,6 +102,15 @@ html[data-theme='dark'] {
   --mesh-lobe-yellow: rgba(251, 188, 4, 0.09);
   --mesh-lobe-green: rgba(52, 168, 83, 0.11);
   --overlay-scrim: rgba(19, 19, 20, 0.85);
+  --holo-surface-blend: color-dodge;
+  --holo-surface-opacity: 0.24;
+  --holo-portrait-blend: color-dodge;
+  --holo-portrait-opacity: 0.39;
+  --holo-glare-surface-opacity: 0.42;
+  --holo-glare-portrait-opacity: 0.66;
+  --holo-sparkle-opacity: 0.72;
+  --holo-foil-filter: brightness(0.82) contrast(1.18) saturate(1.22);
+  --holo-surface-filter: brightness(0.82) contrast(1.14) saturate(1.20);
 }
 
 @media (min-width: 1024px) {
@@ -568,6 +586,150 @@ html[data-theme='dark'] .group:hover .editorial-watermark {
   perspective: 1000px;
 }
 
+.holo-card {
+  --pointer-x: 50%;
+  --pointer-y: 50%;
+  --pointer-from-center: 0;
+  --rotate-x: 0deg;
+  --rotate-y: 0deg;
+  transform-style: preserve-3d;
+  transition: box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1), filter 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.holo-card.google-border-frame,
+.holo-card .holo-inner-frame.google-border-frame {
+  background-size: 200% 200%;
+  background-position: calc(var(--pointer-x) * 0.7 + 15%) calc(var(--pointer-y) * 0.7 + 15%);
+  transition: background-position 120ms ease-out, filter 320ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.holo-card[data-holo-active='true'] {
+  will-change: transform;
+  box-shadow:
+    calc((var(--pointer-x) - 50%) * -0.25) calc((var(--pointer-y) - 50%) * -0.25 + 16px) 38px -8px rgba(66, 133, 244, 0.30),
+    0 12px 30px -6px rgba(155, 114, 203, 0.24);
+}
+
+.holo-card[data-holo-active='true'].google-border-frame,
+.holo-card[data-holo-active='true'] .holo-inner-frame.google-border-frame {
+  filter: saturate(1.26) brightness(1.09);
+}
+
+.holo-foil-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.04) 0px,
+      rgba(255, 255, 255, 0.19) 1.5px,
+      rgba(18, 20, 28, 0.22) 3.5px,
+      rgba(18, 20, 28, 0.22) 5px
+    ),
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      #4285F4 16%,
+      #00E5FF 28%,
+      #34A853 40%,
+      #FBBC04 52%,
+      #EA4335 64%,
+      #FF00E5 76%,
+      #9B72CB 86%,
+      #D96570 94%,
+      transparent 100%
+    );
+  background-size: 200% 200%, 260% 260%;
+  background-position:
+    calc(var(--pointer-x) * 0.3) calc(var(--pointer-y) * 0.3),
+    calc(100% - var(--pointer-x) * 0.85) calc(100% - var(--pointer-y) * 0.85);
+  background-blend-mode: hard-light;
+  opacity: 0;
+  transition: opacity 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.holo-foil-portrait {
+  mix-blend-mode: var(--holo-portrait-blend);
+  filter: var(--holo-foil-filter);
+}
+
+.holo-foil-surface {
+  mix-blend-mode: var(--holo-surface-blend);
+  filter: var(--holo-surface-filter);
+}
+
+.holo-sparkle-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 22% 28%, rgba(255, 255, 255, 0.92) 0 0.85px, transparent 1.4px),
+    radial-gradient(circle at 74% 62%, rgba(0, 229, 255, 0.72) 0 1.05px, rgba(0, 229, 255, 0.14) 2px, transparent 3.2px),
+    radial-gradient(circle at 38% 78%, rgba(251, 188, 4, 0.75) 0 1px, transparent 2.4px),
+    radial-gradient(circle at 64% 24%, rgba(255, 0, 229, 0.55) 0 1.4px, rgba(155, 114, 203, 0.16) 4px, transparent 7px);
+  background-size: 23px 29px, 37px 41px, 43px 31px, 59px 53px;
+  background-position:
+    calc(var(--pointer-x) * 0.28) calc(var(--pointer-y) * 0.28),
+    calc(100% - var(--pointer-x) * 0.36) calc(100% - var(--pointer-y) * 0.36),
+    calc(var(--pointer-x) * 0.18 + 14px) calc(100% - var(--pointer-y) * 0.24),
+    calc(100% - var(--pointer-x) * 0.22) calc(var(--pointer-y) * 0.32 + 9px);
+  mix-blend-mode: color-dodge;
+  -webkit-mask-image: radial-gradient(
+    circle 185px at var(--pointer-x) var(--pointer-y),
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.45) 45%,
+    transparent 82%
+  );
+  mask-image: radial-gradient(
+    circle 185px at var(--pointer-x) var(--pointer-y),
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.45) 45%,
+    transparent 82%
+  );
+  opacity: 0;
+  transition: opacity 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.holo-glare-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    farthest-corner circle at var(--pointer-x) var(--pointer-y),
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.15) 35%,
+    transparent 80%
+  );
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transition: opacity 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.holo-card[data-holo-active='true'] .holo-foil-portrait {
+  opacity: calc(var(--holo-portrait-opacity) * (0.68 + var(--pointer-from-center) * 0.32));
+}
+
+.holo-card[data-holo-active='true'] .holo-foil-surface {
+  opacity: calc(var(--holo-surface-opacity) * (0.65 + var(--pointer-from-center) * 0.35));
+}
+
+.holo-card[data-holo-active='true'] .holo-sparkle-layer {
+  opacity: calc(var(--holo-sparkle-opacity) * (0.7 + var(--pointer-from-center) * 0.3));
+}
+
+.holo-card[data-holo-active='true'] .holo-glare-portrait {
+  opacity: var(--holo-glare-portrait-opacity);
+}
+
+.holo-card[data-holo-active='true'] .holo-glare-surface {
+  opacity: var(--holo-glare-surface-opacity);
+}
+
+.holo-content-lift {
+  transform: translateZ(24px);
+}
+
 @keyframes float-gentle {
   0%, 100% {
     transform: translateY(0px);
@@ -636,6 +798,10 @@ html[data-theme='dark'] .group:hover .editorial-watermark {
   .folio-btn-icon:hover,
   .google-btn-github:hover {
     animation: none;
+  }
+  .holo-card,
+  .holo-content-lift {
+    transform: none !important;
   }
   *,
   *::before,

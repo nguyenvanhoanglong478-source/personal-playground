@@ -144,3 +144,14 @@ Cập nhật lần cuối: 2026-11-12
   - Bổ sung 5 nút icon nhanh `.folio-btn-icon` kèm `.google-pill-aura` cho `Email`, `GITHUB`, `INSTAGRAM`, `FACEBOOK`, `X` đặt cạnh nút quay về đầu trang.
 - **Kiểm chứng**: Chạy `impeccable detect --json` (`[]`), `tsc -b && vite build` và kiểm thử Playwright trên `1440px`, `820px`, `375px`, `360px` cho cả `VI/EN` và `Light/Dark`, bao gồm cả chế độ cảm ứng (`ALL PLAYWRIGHT CHECKS PASSED: 0 console errors, 0 page errors, 0 overflow`).
 - **Skill áp dụng**: `taste-skill`, `hallmark`, `impeccable`, `no-ai-slop`.
+
+## 14. Thiết Lập & Triển Khai Cloudflare Pages
+
+- **Cấu hình Build & Script (`vite.config.ts`, `package.json`)**:
+  - Xác nhận `vite.config.ts` sử dụng `base: './'` cùng các tài nguyên `public/avatar.jpg`, `public/favicon.svg` hoạt động sạch trên tên miền gốc Cloudflare Pages, đồng thời chạy `npm run build` (`tsc -b && vite build`) không lỗi.
+  - Thêm script `"pages:deploy": "npm run build && npx wrangler pages deploy dist --project-name=longhoang --branch=main"` vào `package.json`.
+- **Xác thực & Tạo Project (`wrangler`)**:
+  - Đăng nhập thành công vào tài khoản Cloudflare (`nguyenvanhoanglong478@gmail.com`) thông qua OAuth Device Flow với quyền `account:read`, `user:read`, `pages:write`.
+  - Tạo dự án Cloudflare Pages `longhoang` (`--production-branch=main --force`) và triển khai thư mục `dist/` (8 tệp) lên nhánh production `main`.
+- **Liên kết & Tài liệu (`README.md`, `PROGRESS.md`)**:
+  - Cập nhật đường dẫn Live Demo chính thức (`https://longhoang.pages.dev/`) và bản deploy kiểm tra (`https://9db9997f.longhoang.pages.dev`) sau khi xác nhận HTTP `200` cho trang chủ, `avatar.jpg` và `favicon.svg`.

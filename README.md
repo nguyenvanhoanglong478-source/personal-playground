@@ -2,7 +2,12 @@
 
 Trang web cá nhân của **Long Hoàng**, xây dựng bằng **Vite + React + TypeScript + Tailwind CSS + Framer Motion**.
 
-## Cách chạy trên máy cá nhân
+## Live Demo
+
+- **Cloudflare Pages:** https://longhoang.pages.dev/
+- **GitHub Pages:** https://nguyenvanhoanglong478-source.github.io/personal-playground/
+
+## Cách chạy & triển khai
 
 Yêu cầu: **Node.js >= 18**.
 
@@ -10,6 +15,7 @@ Yêu cầu: **Node.js >= 18**.
 npm install
 npm run dev
 npm run build
+npm run pages:deploy
 ```
 
 ## Cấu trúc dữ liệu trong `src/data/`

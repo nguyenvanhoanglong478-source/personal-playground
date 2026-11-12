@@ -36,13 +36,13 @@ export const About: React.FC<AboutProps> = ({ locale, theme }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-12">
+        <div className="grid grid-cols-1 items-start gap-8 overflow-visible lg:grid-cols-12 lg:gap-12">
           <motion.div
             initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 22 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="lg:col-span-4"
+            className="relative z-30 overflow-visible lg:col-span-4"
           >
             <AboutFoilPass locale={locale} theme={theme} />
           </motion.div>

@@ -30,7 +30,10 @@ const CARD_H = 1.48;
 const CARD_W = CARD_H * (PASS_WIDTH / PASS_HEIGHT);
 const HALF_W = CARD_W * 0.5;
 const HALF_H = CARD_H * 0.5;
-const FOV_SCALE = 1.18;
+const CANVAS_SCALE_X = 2.2;
+const CANVAS_SCALE_Y = 1.9;
+const FOV_SCALE_BASE = 1.18;
+const FOV_SCALE = FOV_SCALE_BASE / CANVAS_SCALE_Y;
 const STUB_SPLIT_RATIO = 0.775;
 const PBD_ITERATIONS = 16;
 
@@ -63,6 +66,8 @@ interface MeshState {
   constraints: ConstraintsData;
   dragActive: boolean;
   dragZone: 'body' | 'stub';
+  tearStartSide: 'left' | 'right';
+  maxTornCols: number;
   grabU: number;
   grabV: number;
   startScreenX: number;
@@ -487,6 +492,8 @@ function createMeshState(): MeshState {
     constraints,
     dragActive: false,
     dragZone: 'body',
+    tearStartSide: 'left',
+    maxTornCols: 0,
     grabU: 0.5,
     grabV: 0.5,
     startScreenX: 0,
@@ -675,6 +682,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
 }) => {
   const shouldReduceMotion = useReducedMotion();
   const stageRef = useRef<HTMLDivElement | null>(null);
+  const hitBoxRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frontTexCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const backTexCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -849,7 +857,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         return;
       }
 
-      const damping = 0.94;
+      const damping = mesh.dragActive ? 0.80 : 0.65;
       const cosFlip = Math.cos(mesh.flipAngle);
       const curlSign = cosFlip >= 0 ? 1 : -1;
 
@@ -871,18 +879,26 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
           mesh.x[i] += vx;
           mesh.y[i] += vy;
           mesh.z[i] += vz;
+        } else if (!mesh.dragActive) {
+          const tx = mesh.restX[i];
+          const ty = mesh.restY[i];
+
+          mesh.x[i] += (tx - mesh.x[i]) * 0.16;
+          mesh.y[i] += (ty - mesh.y[i]) * 0.16;
+          mesh.z[i] += (0 - mesh.z[i]) * 0.18;
+
+          mesh.oldX[i] = mesh.x[i] - (mesh.x[i] - mesh.oldX[i]) * 0.4;
+          mesh.oldY[i] = mesh.y[i] - (mesh.y[i] - mesh.oldY[i]) * 0.4;
+          mesh.oldZ[i] = mesh.z[i] - (mesh.z[i] - mesh.oldZ[i]) * 0.4;
         } else {
           let vx = (mesh.x[i] - mesh.oldX[i]) * damping;
           let vy = (mesh.y[i] - mesh.oldY[i]) * damping;
           let vz = (mesh.z[i] - mesh.oldZ[i]) * damping;
 
-          let spring = 0.085;
-          if (mesh.dragActive) {
-            const u = mesh.uv[i * 2];
-            const v = mesh.uv[i * 2 + 1];
-            const distFromGrab = Math.hypot(u - mesh.grabU, v - mesh.grabV);
-            spring = Math.min(0.065, 0.008 + distFromGrab * 0.05);
-          }
+          const u = mesh.uv[i * 2];
+          const v = mesh.uv[i * 2 + 1];
+          const distFromGrab = Math.hypot(u - mesh.grabU, v - mesh.grabV);
+          const spring = Math.min(0.045, 0.005 + distFromGrab * 0.035);
 
           const targetX = mesh.restX[i];
           const targetY = mesh.restY[i];
@@ -942,52 +958,33 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
       }
 
       if (mesh.dragActive && mesh.dragZone === 'stub' && !mesh.isTorn) {
-        const pullDown = mesh.startScreenY - mesh.curScreenY;
+        const deltaX =
+          (mesh.curScreenX - mesh.startScreenX) * Math.cos(mesh.flipAngle);
+        const deltaY = mesh.startScreenY - mesh.curScreenY;
+        const pullDistance = Math.hypot(deltaX * 0.6, Math.max(0, deltaY));
 
-        for (let c = 0; c < COLS; c++) {
-          if (mesh.seamBroken[c] === 1) continue;
-          const bIdx = (BODY_ROWS - 1) * COLS + c;
-          const sIdx = BODY_VERTS + c;
+        const TEAR_START_DEADZONE = 0.035;
+        const FULL_TEAR_DRAG_DISTANCE = 0.38;
 
-          const dx = mesh.x[sIdx] - mesh.x[bIdx];
-          const dy = mesh.y[sIdx] - mesh.y[bIdx];
-          const dz = mesh.z[sIdx] - mesh.z[bIdx];
-          const stretch = Math.hypot(dx, dy, dz);
+        const rawProgress = Math.max(
+          0,
+          (pullDistance - TEAR_START_DEADZONE) / FULL_TEAR_DRAG_DISTANCE
+        );
+        const targetTornCols = Math.min(COLS, Math.floor(rawProgress * COLS));
+        mesh.maxTornCols = Math.max(mesh.maxTornCols, targetTornCols);
 
-          const colU = c / (COLS - 1);
-          const distToGrabCol = Math.abs(colU - mesh.grabU);
-          const colThreshold = Math.max(
-            0.028,
-            0.046 - (1.0 - distToGrabCol) * 0.022
-          );
-
-          const hasAdjacentBroken =
-            (c > 0 && mesh.seamBroken[c - 1] === 1) ||
-            (c < COLS - 1 && mesh.seamBroken[c + 1] === 1);
-          const adjThreshold = hasAdjacentBroken
-            ? colThreshold * 0.72
-            : colThreshold;
-
-          if (stretch > adjThreshold || pullDown > 0.12) {
-            mesh.seamBroken[c] = 1;
-            mesh.z[sIdx] += 0.035 * curlSign;
-            mesh.y[sIdx] -= 0.02;
-          }
-        }
-
-        let brokenCount = 0;
-        for (let c = 0; c < COLS; c++) {
-          if (mesh.seamBroken[c] === 1) brokenCount++;
-        }
-
-        if (brokenCount > COLS * 0.55 && brokenCount < COLS) {
+        if (mesh.tearStartSide === 'left') {
           for (let c = 0; c < COLS; c++) {
-            mesh.seamBroken[c] = 1;
+            mesh.seamBroken[c] = c < mesh.maxTornCols ? 1 : 0;
           }
-          brokenCount = COLS;
+        } else {
+          for (let c = 0; c < COLS; c++) {
+            const colFromRight = COLS - 1 - c;
+            mesh.seamBroken[c] = colFromRight < mesh.maxTornCols ? 1 : 0;
+          }
         }
 
-        if (brokenCount === COLS && !mesh.isTorn) {
+        if (mesh.maxTornCols >= COLS && !mesh.isTorn) {
           mesh.isTorn = true;
           mesh.dragActive = false;
           setIsTorn(true);
@@ -997,10 +994,10 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
             const rowFactor = (r - 23) / 4.0;
             for (let c = 0; c < COLS; c++) {
               const bIdx = r * COLS + c;
-              mesh.y[bIdx] += 0.038 * rowFactor;
-              mesh.oldY[bIdx] = mesh.y[bIdx] - 0.022 * rowFactor;
+              mesh.y[bIdx] += 0.005 * rowFactor;
+              mesh.oldY[bIdx] = mesh.y[bIdx] - 0.002 * rowFactor;
               mesh.z[bIdx] +=
-                (Math.sin(c * 0.5) * 0.035 + 0.02) * rowFactor * curlSign;
+                (Math.sin(c * 0.5) * 0.005 + 0.003) * rowFactor * curlSign;
             }
           }
         }
@@ -1030,10 +1027,10 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
             const rowFactor = (r - 23) / 4.0;
             for (let c = 0; c < COLS; c++) {
               const bIdx = r * COLS + c;
-              mesh.y[bIdx] += 0.038 * rowFactor;
-              mesh.oldY[bIdx] = mesh.y[bIdx] - 0.022 * rowFactor;
+              mesh.y[bIdx] += 0.005 * rowFactor;
+              mesh.oldY[bIdx] = mesh.y[bIdx] - 0.002 * rowFactor;
               mesh.z[bIdx] +=
-                (Math.sin(c * 0.5) * 0.035 + 0.02) * rowFactor * curlSign;
+                (Math.sin(c * 0.5) * 0.005 + 0.003) * rowFactor * curlSign;
             }
           }
         }
@@ -1097,7 +1094,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         const vel =
           Math.abs(mesh.x[i] - mesh.oldX[i]) +
           Math.abs(mesh.y[i] - mesh.oldY[i]) +
-          Math.abs(mesh.z[i] - mesh.oldZ[i]);
+          Math.abs(mesh.z[i]);
         kinetic += vel;
       }
 
@@ -1113,7 +1110,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         mesh.hovering ||
         stubActive ||
         tearWaveRunning ||
-        kinetic > 0.006
+        kinetic > 0.003
       ) {
         rafRef.current = requestAnimationFrame(stepPhysicsAndRender);
       } else {
@@ -1320,24 +1317,23 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
   }, [renderFrame, stopLoop]);
 
   const mapPointerToNdc = useCallback((clientX: number, clientY: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { ndcX: 0, ndcY: 0, u: 0.5, v: 0.5 };
-    const rect = canvas.getBoundingClientRect();
-    const aspect = rect.width / Math.max(1, rect.height);
-    const ndcX = ((clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1;
-    const ndcY = 1 - ((clientY - rect.top) / Math.max(1, rect.height)) * 2;
-    const worldX = (ndcX * aspect) / FOV_SCALE;
-    const worldY = ndcY / FOV_SCALE;
+    const box = hitBoxRef.current;
+    if (!box) return { ndcX: 0, ndcY: 0, u: 0.5, v: 0.5 };
+    const rect = box.getBoundingClientRect();
+    const centerX = rect.left + rect.width * 0.5;
+    const centerY = rect.top + rect.height * 0.5;
+    const ndcX = (clientX - centerX) / (rect.width * 0.5);
+    const ndcY = (centerY - clientY) / (rect.height * 0.5);
 
     const mesh = meshRef.current;
     const cosFlip = Math.cos(mesh.flipAngle);
-    const localX = Math.abs(cosFlip) > 0.2 ? worldX / cosFlip : worldX;
-    const u = Math.max(0, Math.min(1, (localX + HALF_W) / CARD_W));
-    const v = Math.max(0, Math.min(1, (HALF_H - worldY) / CARD_H));
+    const localNdcX = Math.abs(cosFlip) > 0.2 ? ndcX / cosFlip : ndcX;
+    const u = Math.max(0, Math.min(1, (localNdcX + 1) * 0.5));
+    const v = Math.max(0, Math.min(1, (1 - ndcY) * 0.5));
 
     return {
-      ndcX: worldX / HALF_W,
-      ndcY: worldY / HALF_H,
+      ndcX,
+      ndcY,
       u,
       v,
     };
@@ -1354,6 +1350,25 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
 
   useEffect(() => {
     if (!isInteracting) return;
+
+    const onWinMove = (e: PointerEvent) => {
+      if (
+        activePointerIdRef.current !== null &&
+        e.pointerId !== activePointerIdRef.current
+      ) {
+        return;
+      }
+      const mapped = mapPointerToNdc(e.clientX, e.clientY);
+      const mesh = meshRef.current;
+      mesh.hoverNdcX = mapped.ndcX;
+      mesh.hoverNdcY = mapped.ndcY;
+      if (mesh.dragActive) {
+        mesh.curScreenX = mapped.ndcX;
+        mesh.curScreenY = mapped.ndcY;
+      }
+      startLoop();
+    };
+
     const onWinEnd = (e: PointerEvent) => {
       if (
         activePointerIdRef.current === null ||
@@ -1362,15 +1377,18 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         releaseDrag();
       }
     };
+
+    window.addEventListener('pointermove', onWinMove);
     window.addEventListener('pointerup', onWinEnd);
     window.addEventListener('pointercancel', onWinEnd);
     return () => {
+      window.removeEventListener('pointermove', onWinMove);
       window.removeEventListener('pointerup', onWinEnd);
       window.removeEventListener('pointercancel', onWinEnd);
     };
-  }, [isInteracting, releaseDrag]);
+  }, [isInteracting, mapPointerToNdc, releaseDrag, startLoop]);
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (shouldReduceMotion || (e.pointerType === 'mouse' && e.button !== 0))
       return;
     const mapped = mapPointerToNdc(e.clientX, e.clientY);
@@ -1379,6 +1397,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     mesh.dragActive = true;
     mesh.dragZone =
       mapped.v >= STUB_SPLIT_RATIO - 0.03 && !mesh.isTorn ? 'stub' : 'body';
+    mesh.tearStartSide = mapped.u <= 0.5 ? 'left' : 'right';
     mesh.grabU = mapped.u;
     mesh.grabV = mapped.v;
     mesh.startScreenX = mapped.ndcX;
@@ -1388,16 +1407,11 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     mesh.hoverNdcX = mapped.ndcX;
     mesh.hoverNdcY = mapped.ndcY;
     setIsInteracting(true);
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      return;
-    }
     startLoop();
   };
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (shouldReduceMotion) return;
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (shouldReduceMotion || meshRef.current.dragActive) return;
     const mapped = mapPointerToNdc(e.clientX, e.clientY);
     const mesh = meshRef.current;
     mesh.hoverNdcX = Math.max(-1.2, Math.min(1.2, mapped.ndcX));
@@ -1406,27 +1420,10 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     if (e.pointerType === 'mouse') {
       mesh.hovering = true;
     }
-    if (mesh.dragActive && activePointerIdRef.current === e.pointerId) {
-      mesh.curScreenX = mapped.ndcX;
-      mesh.curScreenY = mapped.ndcY;
-    }
     startLoop();
   };
 
-  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (activePointerIdRef.current === e.pointerId) {
-      try {
-        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-          e.currentTarget.releasePointerCapture(e.pointerId);
-        }
-      } catch {
-        return;
-      }
-      releaseDrag();
-    }
-  };
-
-  const handlePointerLeave = (e: React.PointerEvent<HTMLCanvasElement>) => {
+  const handlePointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
     const mesh = meshRef.current;
     mesh.hovering = false;
     if (e.pointerType !== 'mouse' || !mesh.dragActive) {
@@ -1468,6 +1465,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
 
     mesh.isTorn = false;
     mesh.tearWaveActive = false;
+    mesh.maxTornCols = 0;
     mesh.stubAlpha = 1.0;
     for (let c = 0; c < COLS; c++) {
       mesh.seamBroken[c] = 0;
@@ -1502,22 +1500,26 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
       data-edition={edition}
       data-interacting={isInteracting ? 'true' : 'false'}
       data-drag-bent={isDragBent ? 'true' : 'false'}
-      className="about-foil-stage mx-auto flex w-full max-w-[360px] flex-col items-center gap-3.5 lg:mx-0"
+      className="about-foil-stage relative z-30 mx-auto flex w-full max-w-[360px] flex-col items-center gap-3.5 overflow-visible data-[interacting=true]:z-40 lg:mx-0"
     >
-      <div className="relative w-full">
+      <div className="relative aspect-[360/560] w-full overflow-visible">
         <canvas
           ref={canvasRef}
+          aria-hidden="true"
+          className="about-foil-canvas pointer-events-none absolute left-[-60%] top-[-45%] h-[190%] w-[220%]"
+        />
+        <div
+          ref={hitBoxRef}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
           onPointerLeave={handlePointerLeave}
           aria-label={
             locale === 'vi'
               ? 'Vé định danh Hologram tương tác của Long Hoàng, có thể kéo uốn cong, lật hai mặt và xé cuống vé'
               : 'Interactive holographic creator pass for Long Hoàng with 3D bending, two-sided flip, and tearable stub'
           }
-          className="about-foil-canvas block aspect-[360/560] w-full cursor-grab active:cursor-grabbing"
+          role="region"
+          className="pointer-events-auto absolute inset-0 cursor-grab active:cursor-grabbing"
         />
         <img
           src={PROFILE_DATA.avatarUrl}

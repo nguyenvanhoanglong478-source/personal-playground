@@ -30,7 +30,6 @@ const CARD_H = 1.48;
 const CARD_W = CARD_H * (PASS_WIDTH / PASS_HEIGHT);
 const HALF_W = CARD_W * 0.5;
 const HALF_H = CARD_H * 0.5;
-const SEAM_OVERLAP = 0.012;
 const PBD_ITERATIONS = 16;
 
 interface ConstraintsData {
@@ -173,9 +172,9 @@ const FRAG_SHADER_SRC = `
   varying float vSeamBroken;
 
   float tornEdgeOffset(float u) {
-    float tooth = (abs(sin(u * 28.0 * 3.14159265)) - 0.5) * 0.012;
-    float fiber = (sin(u * 97.0) * 0.5 + sin(u * 211.0) * 0.35 + cos(u * 347.0) * 0.15) * 0.004;
-    return tooth + fiber;
+    float tooth = abs(sin(u * 28.0 * 3.14159265)) * 0.0085;
+    float fiber = (sin(u * 97.0) * 0.5 + sin(u * 211.0) * 0.35 + cos(u * 347.0) * 0.15) * 0.0025;
+    return max(0.001, tooth + fiber);
   }
 
   vec3 googleSpectrum(float t) {
@@ -216,20 +215,20 @@ const FRAG_SHADER_SRC = `
     if (tex.a < 0.03) discard;
 
     float distToCut = 999.0;
-    float cutY = 0.775 + tornEdgeOffset(vUv.x);
     if (vSeamBroken > 0.45) {
+      float edgeOffset = tornEdgeOffset(vUv.x);
       if (uIsStub < 0.5) {
+        float cutY = 0.775 - edgeOffset;
         if (vUv.y > cutY) discard;
-        distToCut = abs(vUv.y - cutY);
+        if (vUv.y > 0.74) {
+          distToCut = abs(vUv.y - cutY);
+        }
       } else {
+        float cutY = 0.775 + edgeOffset;
         if (vUv.y < cutY) discard;
-        distToCut = abs(vUv.y - cutY);
-      }
-    } else {
-      if (uIsStub < 0.5) {
-        if (vUv.y > 0.775) discard;
-      } else {
-        if (vUv.y < 0.775) discard;
+        if (vUv.y < 0.81) {
+          distToCut = abs(vUv.y - cutY);
+        }
       }
     }
 
@@ -393,8 +392,8 @@ function createMeshState(): MeshState {
 
   for (let r = 0; r < BODY_ROWS; r++) {
     const vNorm = r / (BODY_ROWS - 1);
-    const v = vNorm * (STUB_SPLIT_RATIO + SEAM_OVERLAP);
-    const py = HALF_H - vNorm * STUB_SPLIT_RATIO * CARD_H;
+    const v = vNorm * STUB_SPLIT_RATIO;
+    const py = HALF_H - v * CARD_H;
     for (let c = 0; c < COLS; c++) {
       const u = c / (COLS - 1);
       const px = -HALF_W + u * CARD_W;
@@ -417,12 +416,8 @@ function createMeshState(): MeshState {
 
   for (let r = 0; r < STUB_ROWS; r++) {
     const vNorm = r / (STUB_ROWS - 1);
-    const v =
-      STUB_SPLIT_RATIO -
-      SEAM_OVERLAP +
-      vNorm * (1.0 - (STUB_SPLIT_RATIO - SEAM_OVERLAP));
-    const py =
-      HALF_H - (STUB_SPLIT_RATIO + vNorm * (1.0 - STUB_SPLIT_RATIO)) * CARD_H;
+    const v = STUB_SPLIT_RATIO + vNorm * (1.0 - STUB_SPLIT_RATIO);
+    const py = HALF_H - v * CARD_H;
     for (let c = 0; c < COLS; c++) {
       const u = c / (COLS - 1);
       const px = -HALF_W + u * CARD_W;

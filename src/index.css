@@ -1265,6 +1265,9 @@ html[data-theme='dark'] .editorial-watermark {
   .pokemon-card-rotator[data-interacting='false'][data-holo-active='false'] .pokemon-card__glare {
     opacity: 0 !important;
   }
+  .gba-dialog-caret {
+    animation: none;
+  }
   *,
   *::before,
   *::after {
@@ -1300,4 +1303,52 @@ html[data-theme='dark'] .editorial-watermark {
 .about-edition-pill--active::before {
   border: 1px solid var(--text-primary);
 }
+
+.pixelated-canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.pokemon-gba-dialog {
+  position: relative;
+  border-radius: 10px;
+  border: 2px solid var(--text-primary);
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow:
+    inset 0 0 0 3px var(--bg-elevated),
+    inset 0 0 0 4.5px var(--border-strong),
+    var(--shadow-soft);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition:
+    background-color 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html[data-theme='dark'] .pokemon-gba-dialog {
+  border-color: var(--border-strong);
+  box-shadow:
+    inset 0 0 0 3px var(--bg-elevated),
+    inset 0 0 0 4.5px rgba(245, 245, 247, 0.24),
+    var(--shadow-soft);
+}
+
+@keyframes gba-caret-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(2px);
+    opacity: 0.55;
+  }
+}
+
+.gba-dialog-caret {
+  animation: gba-caret-bob 900ms steps(2, end) infinite;
+}
+
 

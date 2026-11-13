@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { Locale } from './data/profile';
-import { Navbar } from './components/Navbar';
+import { AppTab, Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { About } from './components/About';
 import { Experience } from './components/Experience';
@@ -10,8 +10,41 @@ import { BuiltWithDiagram } from './components/BuiltWithDiagram';
 import { Contact } from './components/Contact';
 import { Footer } from './components/Footer';
 
+const LazyWorkspacePage = lazy(() => import('./components/WorkspacePage'));
+
 const THEME_STORAGE_KEY = 'longhoang_folio_theme_v1';
 const LOCALE_STORAGE_KEY = 'longhoang_folio_locale_v1';
+
+function readInitialTab(): AppTab {
+  if (typeof window === 'undefined') return 'profile';
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') === 'workspace' ? 'workspace' : 'profile';
+  } catch {
+    return 'profile';
+  }
+}
+
+function syncTabQueryUrl(tab: AppTab, clearHash: boolean) {
+  if (typeof window === 'undefined') return;
+  try {
+    const url = new URL(window.location.href);
+    if (tab === 'workspace') {
+      url.searchParams.set('tab', 'workspace');
+    } else {
+      url.searchParams.delete('tab');
+    }
+    const query = url.searchParams.toString();
+    const hash = clearHash ? '' : url.hash;
+    window.history.replaceState(
+      null,
+      '',
+      `${url.pathname}${query ? `?${query}` : ''}${hash}`
+    );
+  } catch {
+    return;
+  }
+}
 
 export function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -40,7 +73,9 @@ export function App() {
     return 'vi';
   });
 
+  const [activeTab, setActiveTab] = useState<AppTab>(readInitialTab);
   const [activeSection, setActiveSection] = useState<string>('hero');
+  const pendingSectionRef = useRef<string | null>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -67,7 +102,32 @@ export function App() {
     }
   }, [locale]);
 
+  const scrollToSectionElement = useCallback((sectionId: string) => {
+    const target = document.getElementById(sectionId);
+    if (!target) return;
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    target.scrollIntoView({
+      behavior: prefersReduced ? 'auto' : 'smooth',
+      block: 'start',
+    });
+    setActiveSection(sectionId);
+  }, []);
+
   useEffect(() => {
+    if (activeTab !== 'profile') return;
+
+    if (pendingSectionRef.current) {
+      const pendingId = pendingSectionRef.current;
+      pendingSectionRef.current = null;
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          scrollToSectionElement(pendingId);
+        });
+      });
+    }
+
     const sectionIds = [
       'hero',
       'about',
@@ -117,7 +177,28 @@ export function App() {
 
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
+  }, [activeTab, scrollToSectionElement]);
+
+  const handleSelectTab = useCallback((nextTab: AppTab) => {
+    pendingSectionRef.current = null;
+    setActiveTab(nextTab);
+    syncTabQueryUrl(nextTab, true);
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }, []);
+
+  const handleNavigateSection = useCallback(
+    (sectionId: string) => {
+      if (activeTab === 'profile') {
+        syncTabQueryUrl('profile', true);
+        scrollToSectionElement(sectionId);
+        return;
+      }
+      pendingSectionRef.current = sectionId;
+      setActiveTab('profile');
+      syncTabQueryUrl('profile', true);
+    },
+    [activeTab, scrollToSectionElement]
+  );
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
@@ -140,16 +221,39 @@ export function App() {
         theme={theme}
         toggleTheme={toggleTheme}
         activeSection={activeSection}
+        activeTab={activeTab}
+        onSelectTab={handleSelectTab}
+        onNavigateSection={handleNavigateSection}
       />
 
       <main id="main-content" className="relative z-10">
-        <Hero locale={locale} />
-        <About locale={locale} theme={theme} />
-        <Experience locale={locale} />
-        <ProjectsBento locale={locale} />
-        <SkillsMatrix locale={locale} />
-        <BuiltWithDiagram locale={locale} />
-        <Contact locale={locale} />
+        {activeTab === 'profile' ? (
+          <>
+            <Hero locale={locale} />
+            <About locale={locale} theme={theme} />
+            <Experience locale={locale} />
+            <ProjectsBento locale={locale} />
+            <SkillsMatrix locale={locale} />
+            <BuiltWithDiagram locale={locale} />
+            <Contact locale={locale} />
+          </>
+        ) : (
+          <Suspense
+            fallback={
+              <section className="folio-section !pt-10 lg:!pt-14 !pb-28 sm:!pb-28">
+                <div className="folio-container">
+                  <div className="folio-card flex min-h-[420px] items-center justify-center font-mono text-sm text-folio-muted">
+                    {locale === 'vi'
+                      ? 'Đang mở không gian làm việc...'
+                      : 'Loading workspace...'}
+                  </div>
+                </div>
+              </section>
+            }
+          >
+            <LazyWorkspacePage locale={locale} theme={theme} />
+          </Suspense>
+        )}
       </main>
 
       <Footer locale={locale} theme={theme} />

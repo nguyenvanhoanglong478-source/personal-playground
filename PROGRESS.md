@@ -1,6 +1,6 @@
 # PROGRESS.md - Tiến Độ Trang Cá Nhân Long Hoàng
 
-Cập nhật lần cuối: 2026-11-12
+Cập nhật lần cuối: 2026-11-13
 
 ## 1. Thông Tin Đã Cập Nhật
 
@@ -271,3 +271,27 @@ Cập nhật lần cuối: 2026-11-12
 - **Thẻ Email kèm nút Sao chép 1 chạm & Thẻ nhận việc cân đối 2 cột (`Contact.tsx`, `src/data/profile.ts`)**:
   - Giữ nút mở trình gửi mail `nguyenvanhoanglong478@gmail.com` và bổ sung nút sao chép 1 chạm (`navigator.clipboard.writeText`, đạt kích thước chạm tối thiểu `44px` trên mobile, hiện phản hồi `"Đã chép!"` / `"Copied!"` và thông báo `aria-live="polite"`).
   - Thêm thẻ thông tin nhận việc/hợp tác (`flex-1`) ngay dưới thẻ Email để cân bằng tự nhiên với khung `Soạn nhanh email` bên phải: hiển thị chấm xanh trạng thái sẵn sàng, 3 hạng mục nhận làm song ngữ VI/EN sạch văn phong tự nhiên, thời gian phản hồi trong ngày và dòng dẫn hướng xuống thanh mạng xã hội ở `Footer`.
+
+
+## 21. Bổ Sung Tab "Không Gian" GBA Pixel Art & Nhạc Spotify (`WorkspacePage`)
+
+- **Kiến trúc Tab & Điều hướng URL (`src/App.tsx`, `src/components/Navbar.tsx`)**:
+  - Thêm bộ chuyển tab `Hồ sơ` / `Không gian` (`Profile` / `Workspace`) trên cả Desktop lẫn Mobile (`min-h-[44px]`), đồng bộ với query `?tab=workspace` qua `window.history.replaceState` và lazy-load `WorkspacePage` bằng `React.lazy` + `<Suspense>`.
+  - Bảo toàn trọn vẹn 7 phân khu của `Hồ sơ`, thẻ `AboutFoilPass` và chân trang `Footer` + `FooterPet`; hỗ trợ bấm các neo `#about`..`#contact` từ tab `Không gian` để quay về đúng phân khu trên `Hồ sơ`.
+- **Phòng Pixel Art 320×180 Phong Cách Pokémon GBA (`pixelPalette.ts`, `roomEnvironment.ts`, `pixelSprites.ts`, `WorkspaceRoom.tsx`)**:
+  - Render trên `<canvas width={320} height={180}>` với `.pixelated-canvas` (`image-rendering: pixelated; crisp-edges`) và `ctx.imageSmoothingEnabled = false`, nhịp vẽ ~15fps (`66ms`) tự dừng khi tab ẩn và tuân thủ `useReducedMotion()`.
+  - Vẽ chi tiết tường phào, sàn gỗ có mắt gỗ/mạch ván, cửa sổ đổi trời mây/hoàng hôn/trăng sao, thảm dệt có tua rua, giường chăn kẻ ô, kệ gỗ trưng bày **mô hình xe Honda Cub xanh kem** (kỷ niệm `Deliver Simulator`), khung thẻ Holo, đồng hồ và cây xanh.
+  - Tia nắng sáng/ngày, ánh trăng khuya và quầng đèn bàn vàng ấm dùng **Ordered Bayer 4×4 / 2×2 dithering** từng pixel thay vì blur mờ; nhân vật **Long Hoàng** và chú **Capybara đội cam** thay đổi dáng đứng uống cà phê (`waking`), ngồi gõ phím (`working` / `late_night` có ánh hắt màn hình lên kính) và ngủ trong chăn kèm `zZz` (`sleeping`).
+- **Tương tác Điểm chạm, Hộp thoại GBA & Spotify (`src/data/workspace.ts`, `src/hooks/useSpotifyStatus.ts`, `src/components/WorkspacePage.tsx`, `src/index.css`)**:
+  - Tự động đọc giờ Việt Nam (`Asia/Ho_Chi_Minh`, `GMT+7`) qua `getVietnamClockInfo()`, cho phép chuyển thử 5 chế độ (`Tự động · Giờ VN`, `Sáng`, `Làm việc`, `Tối`, `Đi ngủ`) và bật/tắt **Đèn bàn** từ cả canvas lẫn nút pill.
+  - 7 vùng chạm (`monitor`, `speakers`, `lamp`, `window`, `bed`, `capybara`, `shelf`) kèm nút nhanh `>= 44px`, con trỏ vàng `▼` trên canvas và hộp thoại `.pokemon-gba-dialog` viền kép chạy chữ song ngữ VI/EN sạch từ khóa (không em-dash, không ngoặc trong chuỗi hiển thị).
+  - Tích hợp `useSpotifyStatus` (poll `25000ms` khi tab visible) và chế độ **Nghe thử Lofi** (`SIMULATED_LOFI_TRACKS`) với thẻ `Nhạc nền đang phát`, icon đĩa nhạc `Disc3` dự phòng không phụ thuộc ảnh ngoài, thanh tiến độ thời gian thực và hiệu ứng loa rung + nốt nhạc `♪`/`♫`.
+- **Hướng Dẫn Bật Spotify Thật (`src/data/workspace.ts`)**:
+  - Mở `src/data/workspace.ts` và chỉnh đối tượng `WORKSPACE_CONFIG`:
+    1. **Dùng Discord Lanyard**: Tham gia máy chủ Discord Lanyard để bật đồng bộ trạng thái tài khoản, bật hiển thị Spotify trên Discord rồi điền Discord User ID vào `lanyardUserId: 'ID_DISCORD_CUA_BAN'`. Hook sẽ gọi `https://api.lanyard.rest/v1/users/${id}` và chỉ trích xuất `data.spotify` (bỏ qua hoàn toàn các game/activity khác).
+    2. **Dùng Endpoint JSON riêng**: Nếu có API proxy riêng trả về JSON dạng `SpotifyTrackInfo` hoặc `{ track: SpotifyTrackInfo }`, giữ `lanyardUserId: ''` và điền URL vào `spotifyEndpointUrl: 'https://...'`.
+    3. Khi cả hai trường đều để `''`, giao diện hiển thị gợi ý cùng nút **Nghe thử Lofi**.
+- **Kiểm chứng**:
+  - Kiểm tra tĩnh mã nguồn `src/`: `0` comment thực (`//`, `/*`), `0` text gradient, `0` em-dash hay ký tự thừa trong `src/data/workspace.ts`.
+  - `npm.cmd run verify` (`tsc -b --noEmit && vite build`): pass sạch với `0` lỗi TypeScript/Vite.
+  - Playwright trên preview build ở `1440×900` (Light & Dark, VI & EN) và `375×812` cảm ứng (`has_touch=True`, Light & Dark, VI & EN): `0` console error, `0` page error, `0` tràn ngang (`scrollWidth <= innerWidth`), mọi nút chạm đạt `>= 44px`, kiểm tra đủ 7 hotspot trên canvas, bật/tắt đèn bàn, bật/tắt Lofi Demo, đồng bộ `?tab=workspace`, nhảy `#projects` từ Workspace về Profile, giữ nguyên `AboutFoilPass` & `FooterPet`, và kiểm tra trực quan 6 ảnh chụp màn hình qua `read_file`.

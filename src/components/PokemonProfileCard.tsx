@@ -10,7 +10,7 @@ import {
 import { ExternalLink, Shield } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 import { PROJECTS_DATA } from '../data/projects';
-import { CapybaraLogo } from './CapybaraLogo';
+import { BrandLogo } from './BrandLogo';
 
 interface PokemonProfileCardProps {
   locale: Locale;
@@ -236,7 +236,7 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
             <div className="flex min-w-0 items-center gap-1 sm:gap-2">
               <div className="pokemon-stage-pill inline-flex shrink-0 items-center gap-0.5 py-0.5 pl-0.5 pr-1.5 sm:gap-1 sm:pl-1 sm:pr-2.5">
                 <span className="pokemon-stage-socket inline-flex h-4 w-4 items-center justify-center rounded-full sm:h-[18px] sm:w-[18px]">
-                  <CapybaraLogo size={13} showAura={false} className="text-folio-ink" />
+                  <BrandLogo size={13} showAura={false} className="text-folio-ink" />
                 </span>
                 <span className="font-mono text-[8px] font-bold uppercase tracking-[0.06em] text-folio-ink sm:text-[9.5px] sm:tracking-[0.12em]">
                   {statsLabels.stage}

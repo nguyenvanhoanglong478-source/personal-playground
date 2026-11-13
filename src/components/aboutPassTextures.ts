@@ -368,7 +368,7 @@ function paintBarcode(
   ctx.restore();
 }
 
-function paintCapybaraSeal(
+function paintStarSeal(
   ctx: CanvasRenderingContext2D,
   palette: EditionStyle,
   cx: number,
@@ -385,7 +385,7 @@ function paintCapybaraSeal(
   sealGrad.addColorStop(0, '#4285F4');
   sealGrad.addColorStop(0.26, '#9B72CB');
   sealGrad.addColorStop(0.52, '#D96570');
-  sealGrad.addColorStop(0.76, '#FBBC04');
+  sealGrad.addColorStop(0.78, '#FBBC04');
   sealGrad.addColorStop(1, '#34A853');
 
   ctx.strokeStyle = sealGrad;
@@ -400,60 +400,36 @@ function paintCapybaraSeal(
   ctx.stroke();
   ctx.setLineDash([]);
 
-  const s = (radius * 1.15) / 48;
+  const s = (radius * 1.32) / 48;
   ctx.save();
-  ctx.translate(cx - 24 * s, cy - 23 * s);
+  ctx.translate(cx - 24.5 * s, cy - 23 * s);
   ctx.scale(s, s);
 
-  ctx.fillStyle = sealGrad;
+  const starGrad = ctx.createLinearGradient(6, 5, 43, 41);
+  starGrad.addColorStop(0, '#4285F4');
+  starGrad.addColorStop(0.26, '#9B72CB');
+  starGrad.addColorStop(0.52, '#D96570');
+  starGrad.addColorStop(0.78, '#FBBC04');
+  starGrad.addColorStop(1, '#34A853');
+  ctx.fillStyle = starGrad;
+
   ctx.beginPath();
-  ctx.moveTo(24, 4.6);
-  ctx.bezierCurveTo(24.42, 7.65, 25.55, 8.78, 28.6, 9.2);
-  ctx.bezierCurveTo(25.55, 9.62, 24.42, 10.75, 24, 13.8);
-  ctx.bezierCurveTo(23.58, 10.75, 22.45, 9.62, 19.4, 9.2);
-  ctx.bezierCurveTo(22.45, 8.78, 23.58, 7.65, 24, 4.6);
+  ctx.moveTo(22, 9);
+  ctx.bezierCurveTo(23.28, 18.28, 28.72, 23.72, 38, 25);
+  ctx.bezierCurveTo(28.72, 26.28, 23.28, 31.72, 22, 41);
+  ctx.bezierCurveTo(20.72, 31.72, 15.28, 26.28, 6, 25);
+  ctx.bezierCurveTo(15.28, 23.72, 20.72, 18.28, 22, 9);
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = palette.sealStroke;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = 2.05;
   ctx.beginPath();
-  ctx.moveTo(13.8, 35.8);
-  ctx.bezierCurveTo(13.1, 30.0, 13.6, 24.4, 15.6, 21.0);
-  ctx.bezierCurveTo(14.5, 18.2, 15.0, 15.8, 17.1, 15.7);
-  ctx.bezierCurveTo(18.7, 15.6, 19.4, 17.3, 19.0, 19.2);
-  ctx.bezierCurveTo(22.8, 17.9, 28.4, 18.5, 32.8, 20.3);
-  ctx.bezierCurveTo(34.8, 21.1, 35.7, 22.5, 35.7, 24.9);
-  ctx.lineTo(35.4, 28.8);
-  ctx.bezierCurveTo(35.3, 31.3, 33.5, 32.6, 30.3, 32.6);
-  ctx.bezierCurveTo(27.9, 32.6, 26.2, 33.2, 25.5, 34.4);
-  ctx.bezierCurveTo(25.1, 35.0, 25.1, 35.4, 25.2, 35.8);
-  ctx.stroke();
-
-  ctx.lineWidth = 1.9;
-  ctx.beginPath();
-  ctx.moveTo(12.2, 35.8);
-  ctx.quadraticCurveTo(19.5, 36.6, 26.8, 35.8);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(23.2, 22.0);
-  ctx.quadraticCurveTo(25.5, 23.9, 27.8, 22.0);
-  ctx.stroke();
-
-  ctx.lineWidth = 1.7;
-  ctx.beginPath();
-  ctx.moveTo(31.8, 23.7);
-  ctx.bezierCurveTo(32.3, 24.2, 32.6, 24.7, 32.7, 25.3);
-  ctx.stroke();
-
-  ctx.lineWidth = 1.75;
-  ctx.beginPath();
-  ctx.moveTo(35.3, 28.6);
-  ctx.bezierCurveTo(33.4, 28.8, 32.0, 29.6, 31.2, 30.7);
-  ctx.stroke();
+  ctx.moveTo(37.5, 5);
+  ctx.bezierCurveTo(37.94, 8.19, 39.81, 10.06, 43, 10.5);
+  ctx.bezierCurveTo(39.81, 10.94, 37.94, 12.81, 37.5, 16);
+  ctx.bezierCurveTo(37.06, 12.81, 35.19, 10.94, 32, 10.5);
+  ctx.bezierCurveTo(35.19, 10.06, 37.06, 8.19, 37.5, 5);
+  ctx.closePath();
+  ctx.fill();
 
   ctx.restore();
   ctx.restore();
@@ -800,16 +776,16 @@ export function renderBackPassTexture(
   const principles =
     locale === 'vi'
       ? [
-          { code: '01', text: 'Chia nhỏ từng bước' },
-          { code: '02', text: 'Giữ chắc phần đang chạy' },
-          { code: '03', text: 'Kiểm thử 1800 bước' },
-          { code: '04', text: 'Chi tiết 16x16' },
+          { code: '01', text: 'Làm cuốn chiếu từng phần' },
+          { code: '02', text: 'Giữ bản chính luôn ổn' },
+          { code: '03', text: 'Tự test cho kỹ' },
+          { code: '04', text: 'Chăm chút mấy thứ nhỏ' },
         ]
       : [
-          { code: '01', text: 'Small steps first' },
-          { code: '02', text: 'Protect what works' },
-          { code: '03', text: '1800-step testing' },
-          { code: '04', text: '16x16 details' },
+          { code: '01', text: 'Build step by step' },
+          { code: '02', text: 'Keep the live site safe' },
+          { code: '03', text: 'Test like a real user' },
+          { code: '04', text: 'Care about small details' },
         ];
 
   const badgeColors = ['#4285F4', '#34A853', '#FBBC04', '#D96570'];
@@ -845,7 +821,7 @@ export function renderBackPassTexture(
     ctx.fillText(item.text, px + 16, py + 56);
   });
 
-  paintCapybaraSeal(ctx, palette, marginX + 74, splitY + 126, 62);
+  paintStarSeal(ctx, palette, marginX + 74, splitY + 126, 62);
 
   ctx.textAlign = 'left';
   ctx.fillStyle = palette.inkPrimary;

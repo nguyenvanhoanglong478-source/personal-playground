@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Globe, Menu, Moon, Sun, X } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
-import { CapybaraLogo } from './CapybaraLogo';
+import { BrandLogo } from './BrandLogo';
 
 interface NavbarProps {
   locale: Locale;
@@ -41,9 +41,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         <a
           href="#hero"
           className="group flex min-h-[44px] min-w-0 cursor-pointer items-center gap-2.5 text-folio-ink sm:gap-3"
-          aria-label="Long Hoàng"
+          aria-label="Long Hoàng Logo"
         >
-          <CapybaraLogo size={38} showAura className="text-folio-ink" />
+          <BrandLogo size={38} showAura className="text-folio-ink" />
           <div className="flex min-w-0 flex-col">
             <span className="truncate font-serif text-base font-semibold leading-none tracking-tight text-folio-ink sm:text-lg">
               {PROFILE_DATA.name}

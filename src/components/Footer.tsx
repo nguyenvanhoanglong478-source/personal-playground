@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowUp, Mail } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
-import { CapybaraLogo } from './CapybaraLogo';
+import { BrandLogo } from './BrandLogo';
 import { SocialIcon } from './SocialIcon';
 
 interface FooterProps {
@@ -17,9 +17,9 @@ export const Footer: React.FC<FooterProps> = ({ locale }) => {
         <a
           href="#hero"
           className="group inline-flex min-h-[44px] cursor-pointer items-center gap-3 text-folio-ink"
-          aria-label="Long Hoàng"
+          aria-label="Long Hoàng Logo"
         >
-          <CapybaraLogo size={34} showAura className="text-folio-ink" />
+          <BrandLogo size={34} showAura className="text-folio-ink" />
           <div className="font-serif text-base font-semibold text-folio-ink">
             {t.colophon}
           </div>

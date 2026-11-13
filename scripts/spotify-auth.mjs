@@ -3,16 +3,17 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
-import readline from 'node:readline/promises';
-import { stdin as input, stdout as output } from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const REDIRECT_HOST = '127.0.0.1';
 const REDIRECT_PORT = 4389;
 const REDIRECT_PATH = '/callback';
-const REDIRECT_URI = `http://${REDIRECT_HOST}:${REDIRECT_PORT}${REDIRECT_PATH}`;
+const BASE_URL = `http://${REDIRECT_HOST}:${REDIRECT_PORT}`;
+const REDIRECT_URI = `${BASE_URL}${REDIRECT_PATH}`;
 const SPOTIFY_SCOPE = 'user-read-currently-playing';
 const CF_PAGES_PROJECT = 'longhoang';
 const DEV_VARS_FILE = '.dev.vars';
+const MAX_FORM_BODY_BYTES = 8192;
 
 function stripSurroundingQuotes(raw) {
   const trimmed = raw.trim();
@@ -47,11 +48,11 @@ function escapeHtml(text) {
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
-function renderCallbackPage(title, message, isError = false) {
-  const accent = isError ? '#EA4335' : '#34A853';
+function renderHtmlShell(title, bodyHtml) {
   return `<!doctype html>
 <html lang="vi">
 <head>
@@ -59,6 +60,12 @@ function renderCallbackPage(title, message, isError = false) {
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>${escapeHtml(title)}</title>
   <style>
+    :root {
+      color-scheme: dark;
+    }
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       min-height: 100vh;
@@ -67,136 +74,255 @@ function renderCallbackPage(title, message, isError = false) {
       padding: 24px;
       background: #131314;
       color: #F8F9FA;
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     }
     main {
-      max-width: 460px;
+      max-width: 520px;
       width: 100%;
       padding: 28px;
       border-radius: 16px;
       background: #1E1F20;
       border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
     }
     h1 {
-      margin: 0 0 12px;
+      margin: 0 0 8px;
       font-size: 20px;
-      color: ${accent};
+      line-height: 1.3;
     }
-    p {
+    p, li {
       margin: 0;
       line-height: 1.6;
       color: #D2D5DB;
       font-size: 14px;
     }
+    ol {
+      margin: 14px 0 18px;
+      padding-left: 20px;
+      display: grid;
+      gap: 8px;
+    }
+    a {
+      color: #8AB4F8;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .box {
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #131314;
+      border: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 18px;
+    }
+    .copy-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      color: #F8F9FA;
+      word-break: break-all;
+      flex: 1;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #E8EAED;
+      margin-bottom: 6px;
+    }
+    .field {
+      margin-bottom: 14px;
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    input {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: #131314;
+      color: #F8F9FA;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+    }
+    input:focus {
+      outline: 2px solid #8AB4F8;
+      outline-offset: 1px;
+    }
+    button {
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: #28292C;
+      color: #F8F9FA;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    button:hover {
+      background: #33353A;
+    }
+    button.primary {
+      width: 100%;
+      margin-top: 6px;
+      background: #F8F9FA;
+      color: #131314;
+      border-color: transparent;
+      font-size: 14px;
+    }
+    button.primary:hover {
+      background: #E2E5E9;
+    }
+    .alert {
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .alert-error {
+      background: rgba(234,67,53,0.14);
+      border: 1px solid rgba(234,67,53,0.4);
+      color: #FCA5A5;
+    }
+    .alert-ok {
+      background: rgba(52,168,83,0.14);
+      border: 1px solid rgba(52,168,83,0.4);
+      color: #86EFAC;
+    }
+    .muted {
+      font-size: 12px;
+      color: #9AA0A6;
+    }
   </style>
 </head>
 <body>
   <main>
-    <h1>${escapeHtml(title)}</h1>
-    <p>${escapeHtml(message)}</p>
+    ${bodyHtml}
   </main>
 </body>
 </html>`;
 }
 
-/**
- * Wait for the Spotify OAuth loopback redirect on 127.0.0.1:4389.
- * @param {string} expectedState
- * @param {string} authorizeUrl
- * @returns {Promise<string>} Authorization code
- */
-function waitForAuthorizationCode(expectedState, authorizeUrl) {
+function renderSetupFormPage(formToken, errorMessage = '') {
+  const errorBlock = errorMessage
+    ? `<div class="alert alert-error">${escapeHtml(errorMessage)}</div>`
+    : '';
+
+  return renderHtmlShell(
+    'Kết nối Spotify - Portfolio Long Hoàng',
+    `
+    <h1>Kết nối Spotify cho Portfolio</h1>
+    <p>Dán thông tin Spotify Developer app tại đây để tự lấy Refresh Token và đẩy bí mật lên Cloudflare Pages (chạy hoàn toàn trên máy bạn).</p>
+
+    <ol>
+      <li>Mở <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Spotify Developer Dashboard</a> và bấm <strong>Create app</strong>.</li>
+      <li>Tích chọn <strong>Web API</strong>, điền đúng <strong>Redirect URI</strong> bên dưới rồi bấm <strong>Save</strong>:
+        <div class="box" style="margin-top:8px;margin-bottom:0">
+          <div class="muted">Redirect URI bắt buộc (dùng 127.0.0.1, không dùng localhost)</div>
+          <div class="copy-row">
+            <code id="redirect-uri">${escapeHtml(REDIRECT_URI)}</code>
+            <button type="button" id="copy-uri-btn">Chép URI</button>
+          </div>
+        </div>
+      </li>
+      <li>Vào <strong>Settings</strong> của app vừa tạo để lấy <strong>Client ID</strong> và bấm <em>View client secret</em> lấy <strong>Client Secret</strong>.</li>
+    </ol>
+
+    ${errorBlock}
+
+    <form method="POST" action="/start" autocomplete="off">
+      <input type="hidden" name="token" value="${escapeHtml(formToken)}" />
+
+      <div class="field">
+        <label for="client_id">Spotify Client ID</label>
+        <input id="client_id" name="clientId" type="text" required placeholder="Dán Client ID bằng Ctrl + V" />
+      </div>
+
+      <div class="field">
+        <label for="client_secret">Spotify Client Secret</label>
+        <div class="input-row">
+          <input id="client_secret" name="clientSecret" type="password" required placeholder="Dán Client Secret bằng Ctrl + V" />
+          <button type="button" id="toggle-secret-btn">Hiện</button>
+        </div>
+      </div>
+
+      <button type="submit" class="primary">Tiếp tục cấp quyền Spotify →</button>
+    </form>
+
+    <script>
+      const copyBtn = document.getElementById('copy-uri-btn');
+      const uriEl = document.getElementById('redirect-uri');
+      if (copyBtn && uriEl) {
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(uriEl.textContent || '');
+            copyBtn.textContent = 'Đã chép!';
+            setTimeout(() => { copyBtn.textContent = 'Chép URI'; }, 2000);
+          } catch {
+            copyBtn.textContent = 'Chọn thủ công';
+          }
+        });
+      }
+
+      const secretInput = document.getElementById('client_secret');
+      const toggleBtn = document.getElementById('toggle-secret-btn');
+      if (secretInput && toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          const hidden = secretInput.type === 'password';
+          secretInput.type = hidden ? 'text' : 'password';
+          toggleBtn.textContent = hidden ? 'Ẩn' : 'Hiện';
+        });
+      }
+    </script>
+    `
+  );
+}
+
+function renderStatusPage(title, summary, detailsHtml, isError = false) {
+  const alertClass = isError ? 'alert-error' : 'alert-ok';
+  return renderHtmlShell(
+    title,
+    `
+    <h1>${escapeHtml(title)}</h1>
+    <div class="alert ${alertClass}">${escapeHtml(summary)}</div>
+    ${detailsHtml}
+    `
+  );
+}
+
+function readFormBody(req) {
   return new Promise((resolve, reject) => {
-    let settled = false;
-    let timeoutId = null;
+    const chunks = [];
+    let totalBytes = 0;
 
-    const finish = (handler, value) => {
-      if (settled) return;
-      settled = true;
-      if (timeoutId) clearTimeout(timeoutId);
-      server.close(() => handler(value));
-    };
-
-    const server = http.createServer((req, res) => {
-      if (!req.url) {
-        res.writeHead(400);
-        res.end();
+    req.on('data', (chunk) => {
+      totalBytes += chunk.length;
+      if (totalBytes > MAX_FORM_BODY_BYTES) {
+        reject(new Error('Form payload too large.'));
+        req.destroy();
         return;
       }
-
-      const requestUrl = new URL(req.url, `http://${REDIRECT_HOST}:${REDIRECT_PORT}`);
-      if (requestUrl.pathname !== REDIRECT_PATH) {
-        res.writeHead(404);
-        res.end('Not found');
-        return;
-      }
-
-      const returnedState = requestUrl.searchParams.get('state');
-      const authError = requestUrl.searchParams.get('error');
-      const code = requestUrl.searchParams.get('code');
-
-      if (authError) {
-        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(
-          renderCallbackPage(
-            'Không thể cấp quyền Spotify',
-            `Spotify trả về lỗi: ${authError}. Bạn có thể đóng tab này và chạy lại lệnh.`,
-            true
-          )
-        );
-        finish(reject, new Error(`Spotify authorization denied: ${authError}`));
-        return;
-      }
-
-      if (!code || returnedState !== expectedState) {
-        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(
-          renderCallbackPage(
-            'Phiên xác thực không khớp',
-            'Thiếu mã code hoặc state không hợp lệ. Vui lòng đóng tab này và chạy lại script.',
-            true
-          )
-        );
-        finish(reject, new Error('Invalid OAuth callback state or missing code.'));
-        return;
-      }
-
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(
-        renderCallbackPage(
-          'Đã lấy mã Spotify thành công',
-          'Bạn có thể đóng tab trình duyệt này và quay lại cửa sổ terminal.'
-        )
-      );
-      finish(resolve, code);
+      chunks.push(chunk);
     });
 
-    server.on('error', (err) => {
-      finish(
-        reject,
-        new Error(
-          `Could not open callback server on ${REDIRECT_HOST}:${REDIRECT_PORT} (${err.message}).`
-        )
-      );
+    req.on('end', () => {
+      resolve(Buffer.concat(chunks).toString('utf8'));
     });
 
-    server.listen(REDIRECT_PORT, REDIRECT_HOST, () => {
-      console.log('');
-      console.log('[2/4] Opening Spotify authorization page in your browser...');
-      console.log('      If it does not open automatically, copy and open this URL:');
-      console.log(`      ${authorizeUrl}`);
-      console.log('');
-      console.log('      Waiting for you to click "Agree" on Spotify...');
-
-      openExternalBrowser(authorizeUrl);
-
-      timeoutId = setTimeout(() => {
-        finish(
-          reject,
-          new Error('Timed out after 5 minutes waiting for Spotify authorization callback.')
-        );
-      }, 5 * 60 * 1000);
-    });
+    req.on('error', reject);
   });
 }
 
@@ -219,7 +345,7 @@ async function exchangeCodeForTokens(clientId, clientSecret, code) {
   if (!response.ok || !payload?.refresh_token || !payload?.access_token) {
     const reason =
       payload?.error_description || payload?.error || `HTTP ${response.status}`;
-    throw new Error(`Could not exchange Refresh Token from Spotify: ${reason}`);
+    throw new Error(`Spotify rejected token exchange: ${reason}`);
   }
 
   return {
@@ -239,13 +365,18 @@ async function testCurrentlyPlaying(accessToken) {
   );
 
   if (response.status === 204) {
-    return { reachable: true, summary: 'Spotify API OK (nothing currently playing).' };
+    return {
+      reachable: true,
+      viSummary: 'Kiểm tra API Spotify thành công (hiện tài khoản chưa phát bài nào).',
+      asciiSummary: 'Spotify API OK (nothing currently playing).',
+    };
   }
 
   if (!response.ok) {
     return {
       reachable: false,
-      summary: `Check /currently-playing returned HTTP ${response.status}.`,
+      viSummary: `API /currently-playing trả về mã HTTP ${response.status}.`,
+      asciiSummary: `Check /currently-playing returned HTTP ${response.status}.`,
     };
   }
 
@@ -256,11 +387,16 @@ async function testCurrentlyPlaying(accessToken) {
       : data.item.show?.name ?? '';
     return {
       reachable: true,
-      summary: `Now playing test: "${data.item.name}"${artist ? ` - ${artist}` : ''}`,
+      viSummary: `Đang phát thử: "${data.item.name}"${artist ? ` - ${artist}` : ''}`,
+      asciiSummary: `Now playing test: "${data.item.name}"${artist ? ` - ${artist}` : ''}`,
     };
   }
 
-  return { reachable: true, summary: 'Spotify API OK (playback is currently paused).' };
+  return {
+    reachable: true,
+    viSummary: 'Kiểm tra API Spotify thành công (đang tạm dừng phát nhạc).',
+    asciiSummary: 'Spotify API OK (playback is currently paused).',
+  };
 }
 
 function writeDevVars(clientId, clientSecret, refreshToken) {
@@ -299,103 +435,255 @@ function uploadSecretsToCloudflare() {
   return result.status === 0;
 }
 
-async function promptLine(rl, label) {
-  console.log(label);
-  const value = await rl.question('> ');
-  return stripSurroundingQuotes(value);
-}
+/**
+ * Run the local browser setup wizard and upload Cloudflare Pages secrets.
+ * Exporting `startSetupServer` allows automated local tests without spawning interactive UI.
+ */
+export function startSetupServer({ openBrowser = true, autoCloseOnSuccess = true } = {}) {
+  const formToken = crypto.randomBytes(16).toString('hex');
+  const pendingAuth = {
+    clientId: '',
+    clientSecret: '',
+    oauthState: '',
+  };
 
-async function main() {
-  const rl = readline.createInterface({ input, output });
+  let closed = false;
+  let timeoutId = null;
 
-  try {
-    console.log('');
-    console.log('=== Spotify Web API Setup (Cloudflare Pages Function) ===');
-    console.log('');
-    console.log('[1/4] Create an app at https://developer.spotify.com/dashboard:');
-    console.log('      - Click "Create app" -> Check "Web API"');
-    console.log(`      - Set Redirect URI exactly to: ${REDIRECT_URI}`);
-    console.log('      - Save -> Open Settings to copy Client ID & Client Secret');
-    console.log('');
-
-    const clientId = await promptLine(rl, 'Paste Spotify Client ID (then press Enter):');
-    if (!clientId) {
-      throw new Error('Client ID cannot be empty.');
+  const server = http.createServer(async (req, res) => {
+    if (!req.url) {
+      res.writeHead(400);
+      res.end();
+      return;
     }
 
-    console.log('');
-    const clientSecret = await promptLine(
-      rl,
-      'Paste Spotify Client Secret (then press Enter):'
-    );
-    if (!clientSecret) {
-      throw new Error('Client Secret cannot be empty.');
+    const requestUrl = new URL(req.url, BASE_URL);
+
+    if (req.method === 'GET' && requestUrl.pathname === '/') {
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+      });
+      res.end(renderSetupFormPage(formToken));
+      return;
     }
 
-    const state = crypto.randomBytes(16).toString('hex');
-    const authParams = new URLSearchParams({
-      response_type: 'code',
-      client_id: clientId,
-      scope: SPOTIFY_SCOPE,
-      redirect_uri: REDIRECT_URI,
-      state,
-      show_dialog: 'true',
-    });
-    const authorizeUrl = `https://accounts.spotify.com/authorize?${authParams.toString()}`;
+    if (req.method === 'POST' && requestUrl.pathname === '/start') {
+      try {
+        const rawBody = await readFormBody(req);
+        const params = new URLSearchParams(rawBody);
+        const submittedToken = params.get('token') ?? '';
 
-    const code = await waitForAuthorizationCode(state, authorizeUrl);
-    console.log('[3/4] Received authorization code, exchanging for Refresh Token...');
+        if (submittedToken !== formToken) {
+          res.writeHead(403, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(
+            renderSetupFormPage(
+              formToken,
+              'Phiên biểu mẫu không hợp lệ. Vui lòng tải lại trang và thử lại.'
+            )
+          );
+          return;
+        }
 
-    const { accessToken, refreshToken } = await exchangeCodeForTokens(
-      clientId,
-      clientSecret,
-      code
-    );
+        const clientId = stripSurroundingQuotes(params.get('clientId') ?? '');
+        const clientSecret = stripSurroundingQuotes(params.get('clientSecret') ?? '');
 
-    const playbackCheck = await testCurrentlyPlaying(accessToken);
-    console.log(`      ${playbackCheck.summary}`);
+        if (!clientId || !clientSecret) {
+          res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(
+            renderSetupFormPage(
+              formToken,
+              'Vui lòng dán đủ cả Spotify Client ID và Client Secret.'
+            )
+          );
+          return;
+        }
 
-    writeDevVars(clientId, clientSecret, refreshToken);
-    console.log(`[4/4] Saved secrets locally to ${DEV_VARS_FILE} (ignored by .gitignore).`);
-    console.log('');
+        const oauthState = crypto.randomBytes(16).toString('hex');
+        pendingAuth.clientId = clientId;
+        pendingAuth.clientSecret = clientSecret;
+        pendingAuth.oauthState = oauthState;
 
-    const answer = (
-      await promptLine(
-        rl,
-        `Upload the 3 secrets to Cloudflare Pages project "${CF_PAGES_PROJECT}" now? (Y/n):`
-      )
-    ).toLowerCase();
+        console.log('[2/4] Received Client ID & Secret from setup page.');
+        console.log('      Redirecting browser to Spotify authorization...');
 
-    if (answer === '' || answer === 'y' || answer === 'yes') {
-      console.log('');
-      const uploaded = uploadSecretsToCloudflare();
-      if (uploaded) {
-        console.log('');
-        console.log('DONE! Your Workspace tab on Cloudflare Pages & GitHub Pages');
-        console.log('will now display your live Spotify playback automatically.');
-      } else {
-        console.log('');
-        console.log('Could not upload automatically via wrangler.');
-        console.log(
-          `Run "npx wrangler login" or upload ${DEV_VARS_FILE} manually with:`
-        );
-        console.log(
-          `npx wrangler pages secret bulk ${DEV_VARS_FILE} --project-name=${CF_PAGES_PROJECT}`
+        const authParams = new URLSearchParams({
+          response_type: 'code',
+          client_id: clientId,
+          scope: SPOTIFY_SCOPE,
+          redirect_uri: REDIRECT_URI,
+          state: oauthState,
+          show_dialog: 'true',
+        });
+
+        res.writeHead(303, {
+          Location: `https://accounts.spotify.com/authorize?${authParams.toString()}`,
+        });
+        res.end();
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(
+          renderSetupFormPage(
+            formToken,
+            `Không đọc được dữ liệu biểu mẫu (${err.message}).`
+          )
         );
       }
-    } else {
-      console.log('');
-      console.log('When ready, upload the secrets to Cloudflare Pages with:');
-      console.log(
-        `npx wrangler pages secret bulk ${DEV_VARS_FILE} --project-name=${CF_PAGES_PROJECT}`
-      );
+      return;
     }
-  } finally {
-    rl.close();
-  }
+
+    if (req.method === 'GET' && requestUrl.pathname === REDIRECT_PATH) {
+      const returnedState = requestUrl.searchParams.get('state');
+      const authError = requestUrl.searchParams.get('error');
+      const code = requestUrl.searchParams.get('code');
+
+      if (authError) {
+        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(
+          renderStatusPage(
+            'Chưa cấp quyền Spotify',
+            `Spotify trả về lỗi: ${authError}. Bạn có thể quay về trang thiết lập để thử lại.`,
+            `<p><a href="/">← Quay lại trang nhập Client ID / Secret</a></p>`,
+            true
+          )
+        );
+        return;
+      }
+
+      if (
+        !code ||
+        !pendingAuth.oauthState ||
+        returnedState !== pendingAuth.oauthState
+      ) {
+        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(
+          renderStatusPage(
+            'Phiên xác thực hết hạn hoặc không khớp',
+            'Thiếu mã code hoặc phiên làm việc đã đổi. Vui lòng điền lại từ trang thiết lập.',
+            `<p><a href="/">← Quay lại trang thiết lập</a></p>`,
+            true
+          )
+        );
+        return;
+      }
+
+      try {
+        console.log('[3/4] Received callback code, exchanging for Refresh Token...');
+        const { accessToken, refreshToken } = await exchangeCodeForTokens(
+          pendingAuth.clientId,
+          pendingAuth.clientSecret,
+          code
+        );
+
+        const playbackCheck = await testCurrentlyPlaying(accessToken);
+        console.log(`      ${playbackCheck.asciiSummary}`);
+
+        writeDevVars(pendingAuth.clientId, pendingAuth.clientSecret, refreshToken);
+        console.log(`[4/4] Saved ${DEV_VARS_FILE} and uploading secrets to Cloudflare Pages...`);
+
+        const uploaded = uploadSecretsToCloudflare();
+
+        if (uploaded) {
+          console.log('');
+          console.log('DONE! Spotify secrets uploaded to Cloudflare Pages project "longhoang".');
+          console.log('Play any track on Spotify and open https://longhoang.pages.dev/?tab=workspace');
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(
+            renderStatusPage(
+              'Kết nối Spotify thành công!',
+              playbackCheck.viSummary,
+              `
+              <div class="box">
+                <p>Đã tự động lưu <code>${escapeHtml(DEV_VARS_FILE)}</code> và đẩy 3 secrets lên Cloudflare Pages (<strong>${escapeHtml(CF_PAGES_PROJECT)}</strong>).</p>
+              </div>
+              <p>Bây giờ bạn có thể mở nhạc bất kỳ trên Spotify rồi vào <a href="https://longhoang.pages.dev/?tab=workspace" target="_blank" rel="noopener noreferrer">tab Không gian</a> để kiểm tra trực tiếp. Bạn có thể đóng tab này lại.</p>
+              `
+            )
+          );
+        } else {
+          console.log('');
+          console.log('Saved .dev.vars locally, but wrangler upload failed.');
+          console.log(
+            `Run: npx wrangler pages secret bulk ${DEV_VARS_FILE} --project-name=${CF_PAGES_PROJECT}`
+          );
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(
+            renderStatusPage(
+              'Đã lấy Refresh Token, cần đẩy thủ công lên Cloudflare',
+              `${playbackCheck.viSummary} Tuy nhiên bước đẩy tự động qua Wrangler chưa thành công.`,
+              `
+              <div class="box">
+                <p>Đã lưu sẵn <code>${escapeHtml(DEV_VARS_FILE)}</code> trên máy bạn. Hãy kiểm tra cửa sổ terminal hoặc chạy lại:</p>
+                <p style="margin-top:8px"><code>npx wrangler pages secret bulk ${escapeHtml(DEV_VARS_FILE)} --project-name=${escapeHtml(CF_PAGES_PROJECT)}</code></p>
+              </div>
+              `,
+              true
+            )
+          );
+        }
+
+        if (autoCloseOnSuccess && !closed) {
+          closed = true;
+          if (timeoutId) clearTimeout(timeoutId);
+          setTimeout(() => server.close(), 250);
+        }
+      } catch (err) {
+        console.error(`[spotify:setup] Token exchange failed: ${err.message}`);
+        res.writeHead(502, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(
+          renderStatusPage(
+            'Không lấy được Refresh Token',
+            err.message,
+            `<p><a href="/">← Kiểm tra lại Client ID / Secret và thử lại</a></p>`,
+            true
+          )
+        );
+      }
+      return;
+    }
+
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Not found');
+  });
+
+  server.on('error', (err) => {
+    console.error(
+      `[spotify:setup] Could not bind ${BASE_URL}: ${err.message}`
+    );
+    process.exitCode = 1;
+  });
+
+  server.listen(REDIRECT_PORT, REDIRECT_HOST, () => {
+    console.log('');
+    console.log('=== Spotify Web API Setup (Local Browser Wizard) ===');
+    console.log('');
+    console.log(`[1/4] Opening setup page in your browser: ${BASE_URL}`);
+    console.log('      If your browser does not open, visit that URL manually.');
+    console.log('      Press Ctrl+C in this window to stop anytime.');
+    console.log('');
+
+    if (openBrowser) {
+      openExternalBrowser(BASE_URL);
+    }
+
+    if (autoCloseOnSuccess) {
+      timeoutId = setTimeout(() => {
+        if (!closed) {
+          closed = true;
+          console.error('[spotify:setup] Timed out after 10 minutes without finishing setup.');
+          server.close();
+          process.exitCode = 1;
+        }
+      }, 10 * 60 * 1000);
+    }
+  });
+
+  return server;
 }
 
-main().catch((err) => {
-  console.error(`\n[spotify:setup] Error: ${err.message}`);
-  process.exitCode = 1;
-});
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
+) {
+  startSetupServer();
+}

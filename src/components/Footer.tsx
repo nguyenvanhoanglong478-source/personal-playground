@@ -1,18 +1,43 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowUp, Mail } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 import { BrandLogo } from './BrandLogo';
+import { FooterPet } from './FooterPet';
 import { SocialIcon } from './SocialIcon';
 
 interface FooterProps {
   locale: Locale;
+  theme: 'light' | 'dark';
 }
 
-export const Footer: React.FC<FooterProps> = ({ locale }) => {
+export const Footer: React.FC<FooterProps> = ({ locale, theme }) => {
   const t = UI_LABELS[locale].footer;
+  const footerRef = useRef<HTMLElement | null>(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const el = footerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          setIsInView(entry.isIntersecting);
+        }
+      },
+      { rootMargin: '120px 0px', threshold: 0.01 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <footer className="relative z-10 border-t border-folio-border bg-folio-surface/80 py-10 text-folio-muted backdrop-blur-md transition-colors duration-300">
+    <footer
+      ref={footerRef}
+      className="relative z-20 border-t border-folio-border bg-folio-surface/80 py-10 text-folio-muted backdrop-blur-md transition-colors duration-300"
+    >
+      <FooterPet locale={locale} theme={theme} active={isInView} />
       <div className="folio-container flex flex-col items-start justify-between gap-5 md:flex-row md:items-center">
         <a
           href="#hero"

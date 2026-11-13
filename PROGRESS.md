@@ -251,3 +251,13 @@ Cập nhật lần cuối: 2026-11-12
 - **Logo ngôi sao 4 cánh trừu tượng lấy cảm hứng Gemini (`src/components/BrandLogo.tsx`, `public/favicon.svg`, `aboutPassTextures.ts`)**:
   - Thay thế `CapybaraLogo.tsx` (đã xóa) bằng `BrandLogo.tsx` (`viewBox="0 0 48 48"`, `aria-label="Long Hoàng Logo"`, `useId()` chống trùng ID gradient) với ngôi sao 4 cánh đường cong lõm chính tâm `(22, 25)` kèm tia sao phụ nhỏ ở góc trên phải `(37.5, 10.5)`, tô dải **Google Modern Gradient** (`#4285F4` -> `#9B72CB` -> `#D96570` -> `#FBBC04` -> `#34A853`), giữ hào quang & xoay nhẹ khi hover trên `Navbar`/`Footer` (tôn trọng `prefers-reduced-motion: reduce`).
   - Đồng bộ `BrandLogo` vào `Navbar.tsx`, `PokemonProfileCard.tsx`, `Footer.tsx`, cập nhật `public/favicon.svg` trên nền bo góc tối `#131314`, và nâng cấp con dấu mặt sau vé WebGL trong `aboutPassTextures.ts` sang `paintStarSeal`.
+
+
+## 19. Bổ Sung Chú Capybara Pixel Art Tương Tác Trên Đường Viền Footer (`FooterPet`)
+
+- **Đồ họa & Vị trí (`src/components/FooterPet.tsx`, `src/components/Footer.tsx`, `src/App.tsx`, `src/index.css`)**:
+  - Truyền `theme` xuống `<Footer locale={locale} theme={theme} />`, đặt `FooterPet` gắn sát ngay trên `border-t` của `<footer>` bên trong `.folio-container` (không `position: fixed`, không tràn ngang).
+  - Dựng chú Capybara pixel art hoàn toàn bằng SVG `<rect>` (`shapeRendering="crispEdges"`, `viewBox="0 0 19 16"`, `38×32px` trong nút bấm `44×44px`) với thân nâu ấm, má hồng, quả cam + lá xanh trên đầu, 4 nhịp chân đi bộ (`scaleX(-1)` khi đổi chiều), chớp mắt, tư thế ngủ gật `zZz` và tia sao 4 cánh Google Gradient `✦` khi tương tác.
+- **Tương tác Sáng/Tối, Bong Bóng Thoại & Tối Ưu Hiệu Năng**:
+  - **Light Mode**: tự dạo qua lại trong biên đo bởi `ResizeObserver` (`[0, trackWidth - 44]`) và dừng nghỉ ngẫu nhiên `1.5–2.5s`; **Dark Mode**: ngồi ngủ gật, chạm/hover sẽ tạm tỉnh dậy đáp lời rồi lim dim ngủ lại.
+  - Bong bóng thoại xoay vòng câu nói tự nhiên VI/EN (kèm lời chào riêng khi đánh thức ở Dark Mode), tự đổi căn lề trái/giữa/phải tránh bị cắt chữ gần hai mép màn hình mobile, tự ẩn sau `3.5s`, tạm dừng mọi vòng lặp qua `IntersectionObserver` khi footer ngoài viewport và tôn trọng `useReducedMotion()`.

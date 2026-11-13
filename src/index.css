@@ -1178,6 +1178,56 @@ html[data-theme='dark'] .editorial-watermark {
   }
 }
 
+@keyframes capy-zzz-float {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 4px, 0) scale(0.85);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(6px, -11px, 0) scale(1.05);
+  }
+}
+
+@keyframes capy-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes capy-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-5px);
+  }
+}
+
+.capy-zzz-1 {
+  animation: capy-zzz-float 2.4s ease-out infinite;
+}
+
+.capy-zzz-2 {
+  animation: capy-zzz-float 2.4s ease-out 0.8s infinite;
+}
+
+.capy-breathe {
+  animation: capy-breathe 2.8s ease-in-out infinite;
+}
+
+.capy-hop {
+  animation: capy-hop 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

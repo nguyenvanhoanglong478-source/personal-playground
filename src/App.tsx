@@ -152,7 +152,7 @@ export function App() {
         <Contact locale={locale} />
       </main>
 
-      <Footer locale={locale} />
+      <Footer locale={locale} theme={theme} />
     </div>
   );
 }

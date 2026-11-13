@@ -24,7 +24,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
   return (
     <section
       id="contact"
-      className="folio-section"
+      className="folio-section !pb-28 sm:!pb-28"
       aria-labelledby="contact-heading"
     >
       <div className="folio-container">

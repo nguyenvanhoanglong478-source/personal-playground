@@ -127,20 +127,20 @@ function pickAlbumArtUrl(images) {
  */
 function normalizeSpotifyPlayback(payload, fetchedAtMs) {
   if (!payload || typeof payload !== 'object') {
-    return { isPlaying: false, configured: true };
+    return { isPlaying: false, isPaused: false, configured: true };
   }
 
   const record = /** @type {Record<string, any>} */ (payload);
   const item =
     record.item && typeof record.item === 'object' ? record.item : null;
 
-  if (record.is_playing !== true || !item) {
-    return { isPlaying: false, configured: true };
+  if (!item) {
+    return { isPlaying: false, isPaused: false, configured: true };
   }
 
   const title = readTrimmedString(item.name);
   if (!title) {
-    return { isPlaying: false, configured: true };
+    return { isPlaying: false, isPaused: false, configured: true };
   }
 
   const isEpisode = item.type === 'episode' || Boolean(item.show);
@@ -179,18 +179,35 @@ function normalizeSpotifyPlayback(payload, fetchedAtMs) {
   const progressMs =
     durationMs !== undefined ? Math.min(durationMs, rawProgressMs) : rawProgressMs;
 
+  if (record.is_playing !== true) {
+    return {
+      isPlaying: false,
+      isPaused: true,
+      configured: true,
+      title,
+      artist,
+      ...(album ? { album } : {}),
+      ...(albumArtUrl ? { albumArtUrl } : {}),
+      ...(trackUrl ? { trackUrl } : {}),
+      progressMs,
+      ...(durationMs !== undefined ? { durationMs } : {}),
+    };
+  }
+
   const startedAtMs = fetchedAtMs - progressMs;
   const endsAtMs =
     durationMs !== undefined ? startedAtMs + durationMs : undefined;
 
   return {
     isPlaying: true,
+    isPaused: false,
     configured: true,
     title,
     artist,
     ...(album ? { album } : {}),
     ...(albumArtUrl ? { albumArtUrl } : {}),
     ...(trackUrl ? { trackUrl } : {}),
+    progressMs,
     startedAtMs,
     ...(endsAtMs !== undefined ? { endsAtMs } : {}),
     ...(durationMs !== undefined ? { durationMs } : {}),
@@ -216,7 +233,7 @@ export async function onRequest(context) {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return jsonResponse(
       request,
-      { isPlaying: false, error: 'method_not_allowed' },
+      { isPlaying: false, isPaused: false, error: 'method_not_allowed' },
       405
     );
   }
@@ -226,7 +243,11 @@ export async function onRequest(context) {
   const refreshToken = readTrimmedString(env?.SPOTIFY_REFRESH_TOKEN);
 
   if (!clientId || !clientSecret || !refreshToken) {
-    return jsonResponse(request, { isPlaying: false, configured: false }, 200);
+    return jsonResponse(
+      request,
+      { isPlaying: false, isPaused: false, configured: false },
+      200
+    );
   }
 
   try {
@@ -241,6 +262,7 @@ export async function onRequest(context) {
         request,
         {
           isPlaying: false,
+          isPaused: false,
           configured: true,
           error: 'spotify_token_error',
           upstreamStatus: tokenResult.status,
@@ -258,7 +280,7 @@ export async function onRequest(context) {
     if (playbackResponse.status === 204) {
       return jsonResponse(
         request,
-        { isPlaying: false, configured: true },
+        { isPlaying: false, isPaused: false, configured: true },
         200
       );
     }
@@ -268,6 +290,7 @@ export async function onRequest(context) {
         request,
         {
           isPlaying: false,
+          isPaused: false,
           configured: true,
           error: 'spotify_api_error',
           upstreamStatus: playbackResponse.status,
@@ -276,7 +299,16 @@ export async function onRequest(context) {
       );
     }
 
-    const playbackJson = await playbackResponse.json();
+    const rawBody = await playbackResponse.text();
+    if (!rawBody) {
+      return jsonResponse(
+        request,
+        { isPlaying: false, isPaused: false, configured: true },
+        200
+      );
+    }
+
+    const playbackJson = JSON.parse(rawBody);
     const normalized = normalizeSpotifyPlayback(playbackJson, Date.now());
     return jsonResponse(request, normalized, 200);
   } catch {
@@ -284,6 +316,7 @@ export async function onRequest(context) {
       request,
       {
         isPlaying: false,
+        isPaused: false,
         configured: true,
         error: 'upstream_unreachable',
       },

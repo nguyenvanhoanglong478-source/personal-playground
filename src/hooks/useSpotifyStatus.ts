@@ -12,6 +12,8 @@ export interface UseSpotifyStatusResult {
   durationLabel: string;
   isConfigured: boolean;
   isDemoActive: boolean;
+  isPlaying: boolean;
+  isPaused: boolean;
   toggleDemo: () => void;
 }
 
@@ -31,11 +33,53 @@ function readFiniteNumber(value: unknown): number | undefined {
     : undefined;
 }
 
+function readBooleanFromSources(
+  primary: Record<string, unknown>,
+  fallback: Record<string, unknown>,
+  keys: string[]
+): boolean | undefined {
+  for (const obj of [primary, fallback]) {
+    for (const key of keys) {
+      const value = obj[key];
+      if (typeof value === 'boolean') {
+        return value;
+      }
+    }
+  }
+  return undefined;
+}
+
+function readNumberFromSources(
+  primary: Record<string, unknown>,
+  fallback: Record<string, unknown>,
+  keys: string[]
+): number | undefined {
+  for (const obj of [primary, fallback]) {
+    for (const key of keys) {
+      const num = readFiniteNumber(obj[key]);
+      if (num !== undefined) {
+        return num;
+      }
+    }
+  }
+  return undefined;
+}
+
+function appendCacheBuster(url: string): string {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}_=${Date.now()}`;
+}
+
 function formatTimeLabel(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function clampProgressMs(rawProgressMs: number, durationMs?: number): number {
+  const nonNegative = Math.max(0, Math.round(rawProgressMs));
+  return durationMs !== undefined ? Math.min(durationMs, nonNegative) : nonNegative;
 }
 
 function parseLanyardSpotify(payload: unknown): SpotifyTrackInfo | null {
@@ -74,6 +118,7 @@ function parseLanyardSpotify(payload: unknown): SpotifyTrackInfo | null {
 
   return {
     isPlaying: true,
+    isPaused: false,
     isDemo: false,
     title,
     artist,
@@ -86,29 +131,45 @@ function parseLanyardSpotify(payload: unknown): SpotifyTrackInfo | null {
   };
 }
 
-function parseEndpointSpotify(payload: unknown): SpotifyTrackInfo | null {
+function parseEndpointSpotify(
+  payload: unknown,
+  prevTrack: SpotifyTrackInfo | null,
+  receivedAtMs: number
+): SpotifyTrackInfo | null {
   if (!isRecord(payload)) return null;
+  if (payload.configured === false) return null;
 
-  const source =
-    'track' in payload
-      ? isRecord(payload.track)
-        ? payload.track
-        : null
-      : payload;
+  const trackRecord =
+    'track' in payload && isRecord(payload.track) ? payload.track : null;
+  const source = trackRecord ?? payload;
 
-  if (!source) return null;
-
-  const isPlaying = source.isPlaying === true;
+  const rawIsPlaying = readBooleanFromSources(source, payload, [
+    'isPlaying',
+    'is_playing',
+    'playing',
+  ]);
+  const rawIsPaused = readBooleanFromSources(source, payload, [
+    'isPaused',
+    'is_paused',
+    'paused',
+  ]);
   const title = readNonEmptyString(source.title);
-  if (!isPlaying || !title) return null;
 
-  const artist = readNonEmptyString(source.artist) ?? 'Unknown Artist';
-  const album = readNonEmptyString(source.album);
-  const albumArtUrl = readNonEmptyString(source.albumArtUrl);
-  const trackUrl = readNonEmptyString(source.trackUrl);
+  const rawProgressMs = readNumberFromSources(source, payload, [
+    'progressMs',
+    'progress_ms',
+  ]);
+  const rawDurationMs = readNumberFromSources(source, payload, [
+    'durationMs',
+    'duration_ms',
+  ]);
   const startedAtMs = readFiniteNumber(source.startedAtMs);
   const endsAtMs = readFiniteNumber(source.endsAtMs);
-  const explicitDurationMs = readFiniteNumber(source.durationMs);
+
+  const explicitDurationMs =
+    rawDurationMs !== undefined && rawDurationMs > 0
+      ? Math.round(rawDurationMs)
+      : undefined;
   const durationMs =
     explicitDurationMs ??
     (startedAtMs !== undefined &&
@@ -117,18 +178,99 @@ function parseEndpointSpotify(payload: unknown): SpotifyTrackInfo | null {
       ? endsAtMs - startedAtMs
       : undefined);
 
-  return {
-    isPlaying: true,
-    isDemo: false,
-    title,
-    artist,
-    album,
-    albumArtUrl,
-    trackUrl,
-    startedAtMs,
-    endsAtMs,
-    durationMs,
-  };
+  if (rawIsPlaying === true) {
+    if (!title) return null;
+
+    const artist = readNonEmptyString(source.artist) ?? 'Unknown Artist';
+    const album = readNonEmptyString(source.album);
+    const albumArtUrl = readNonEmptyString(source.albumArtUrl);
+    const trackUrl = readNonEmptyString(source.trackUrl);
+
+    const progressMs =
+      rawProgressMs !== undefined
+        ? clampProgressMs(rawProgressMs, durationMs)
+        : startedAtMs !== undefined
+          ? clampProgressMs(receivedAtMs - startedAtMs, durationMs)
+          : undefined;
+
+    const effectiveStartedAtMs =
+      startedAtMs ??
+      (progressMs !== undefined ? receivedAtMs - progressMs : undefined);
+    const effectiveEndsAtMs =
+      endsAtMs ??
+      (effectiveStartedAtMs !== undefined && durationMs !== undefined
+        ? effectiveStartedAtMs + durationMs
+        : undefined);
+
+    return {
+      isPlaying: true,
+      isPaused: false,
+      isDemo: false,
+      title,
+      artist,
+      album,
+      albumArtUrl,
+      trackUrl,
+      progressMs,
+      startedAtMs: effectiveStartedAtMs,
+      endsAtMs: effectiveEndsAtMs,
+      durationMs,
+    };
+  }
+
+  if (rawIsPlaying === false || rawIsPaused === true) {
+    if (title) {
+      const artist = readNonEmptyString(source.artist) ?? 'Unknown Artist';
+      const album = readNonEmptyString(source.album);
+      const albumArtUrl = readNonEmptyString(source.albumArtUrl);
+      const trackUrl = readNonEmptyString(source.trackUrl);
+      const progressMs = clampProgressMs(rawProgressMs ?? 0, durationMs);
+
+      return {
+        isPlaying: false,
+        isPaused: true,
+        isDemo: false,
+        title,
+        artist,
+        album,
+        albumArtUrl,
+        trackUrl,
+        progressMs,
+        durationMs,
+      };
+    }
+
+    if (prevTrack && rawIsPaused !== false) {
+      const prevDurationMs = prevTrack.durationMs;
+      let frozenProgressMs = prevTrack.progressMs ?? 0;
+
+      if (rawProgressMs !== undefined) {
+        frozenProgressMs = clampProgressMs(rawProgressMs, prevDurationMs);
+      } else if (prevTrack.isPlaying && prevTrack.startedAtMs !== undefined) {
+        frozenProgressMs = clampProgressMs(
+          receivedAtMs - prevTrack.startedAtMs,
+          prevDurationMs
+        );
+      }
+
+      return {
+        isPlaying: false,
+        isPaused: true,
+        isDemo: false,
+        title: prevTrack.title,
+        artist: prevTrack.artist,
+        album: prevTrack.album,
+        albumArtUrl: prevTrack.albumArtUrl,
+        trackUrl: prevTrack.trackUrl,
+        progressMs: frozenProgressMs,
+        durationMs: prevDurationMs,
+      };
+    }
+
+    return null;
+  }
+
+  return null;
 }
 
 function readEndpointConfiguredFlag(payload: unknown): boolean | null {
@@ -186,6 +328,7 @@ export function useSpotifyStatus(enabled: boolean): UseSpotifyStatusResult {
     let disposed = false;
     let pollTimerId: number | null = null;
     let activeController: AbortController | null = null;
+    let lastFetchStartMs = 0;
 
     const clearPollTimer = () => {
       if (pollTimerId !== null) {
@@ -210,13 +353,19 @@ export function useSpotifyStatus(enabled: boolean): UseSpotifyStatusResult {
         return;
       }
 
+      const startedAt = Date.now();
+      if (activeController && startedAt - lastFetchStartMs < 250) {
+        return;
+      }
+
       abortPending();
       const controller = new AbortController();
       activeController = controller;
+      lastFetchStartMs = startedAt;
 
       const targetUrl = lanyardUserId
         ? `https://api.lanyard.rest/v1/users/${encodeURIComponent(lanyardUserId)}`
-        : spotifyEndpointUrl;
+        : appendCacheBuster(spotifyEndpointUrl);
 
       try {
         const response = await fetch(targetUrl, {
@@ -235,14 +384,19 @@ export function useSpotifyStatus(enabled: boolean): UseSpotifyStatusResult {
           }
         }
 
-        const parsed = lanyardUserId
-          ? parseLanyardSpotify(json)
-          : parseEndpointSpotify(json);
-
-        setNowMs(Date.now());
-        setLiveTrack(parsed);
+        const fetchedAtMs = Date.now();
+        setNowMs(fetchedAtMs);
+        setLiveTrack((prevTrack) =>
+          lanyardUserId
+            ? parseLanyardSpotify(json)
+            : parseEndpointSpotify(json, prevTrack, fetchedAtMs)
+        );
       } catch {
         return;
+      } finally {
+        if (activeController === controller) {
+          activeController = null;
+        }
       }
     };
 
@@ -261,9 +415,16 @@ export function useSpotifyStatus(enabled: boolean): UseSpotifyStatusResult {
       }, WORKSPACE_CONFIG.pollIntervalMs);
     };
 
+    const handleWindowFocus = () => {
+      syncPolling();
+    };
+
     syncPolling();
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', syncPolling);
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleWindowFocus);
     }
 
     return () => {
@@ -272,6 +433,9 @@ export function useSpotifyStatus(enabled: boolean): UseSpotifyStatusResult {
       abortPending();
       if (typeof document !== 'undefined') {
         document.removeEventListener('visibilitychange', syncPolling);
+      }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('focus', handleWindowFocus);
       }
     };
   }, [
@@ -354,6 +518,7 @@ export function useSpotifyStatus(enabled: boolean): UseSpotifyStatusResult {
       return {
         ...baseTrack,
         isPlaying: true,
+        isPaused: false,
         isDemo: true,
         durationMs,
         startedAtMs: demoState.startedAtMs,
@@ -378,19 +543,29 @@ export function useSpotifyStatus(enabled: boolean): UseSpotifyStatusResult {
 
     if (inferredDurationMs > 0) {
       durationLabel = formatTimeLabel(inferredDurationMs);
-      if (track.startedAtMs !== undefined) {
-        const elapsedMs = Math.min(
-          inferredDurationMs,
-          Math.max(0, nowMs - track.startedAtMs)
+      if (!track.isPlaying && track.progressMs !== undefined) {
+        const frozenMs = clampProgressMs(track.progressMs, inferredDurationMs);
+        elapsedLabel = formatTimeLabel(frozenMs);
+        progressRatio = Math.min(1, Math.max(0, frozenMs / inferredDurationMs));
+      } else if (track.isPlaying && track.startedAtMs !== undefined) {
+        const elapsedMs = clampProgressMs(
+          nowMs - track.startedAtMs,
+          inferredDurationMs
         );
         elapsedLabel = formatTimeLabel(elapsedMs);
-        progressRatio = Math.min(
-          1,
-          Math.max(0, elapsedMs / inferredDurationMs)
-        );
+        progressRatio = Math.min(1, Math.max(0, elapsedMs / inferredDurationMs));
+      } else if (track.progressMs !== undefined) {
+        const frozenMs = clampProgressMs(track.progressMs, inferredDurationMs);
+        elapsedLabel = formatTimeLabel(frozenMs);
+        progressRatio = Math.min(1, Math.max(0, frozenMs / inferredDurationMs));
       }
+    } else if (track.progressMs !== undefined) {
+      elapsedLabel = formatTimeLabel(Math.max(0, track.progressMs));
     }
   }
+
+  const isPlaying = Boolean(track && track.isPlaying);
+  const isPaused = Boolean(track && !track.isPlaying && track.isPaused !== false);
 
   return {
     track,
@@ -399,6 +574,8 @@ export function useSpotifyStatus(enabled: boolean): UseSpotifyStatusResult {
     durationLabel,
     isConfigured,
     isDemoActive,
+    isPlaying,
+    isPaused,
     toggleDemo,
   };
 }

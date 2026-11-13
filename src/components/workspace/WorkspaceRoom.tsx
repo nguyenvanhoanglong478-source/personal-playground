@@ -36,7 +36,7 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
 }) => {
   const shouldReduceMotion = Boolean(useReducedMotion());
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const tickRef = useRef<number>(0);
+  const elapsedSecRef = useRef<number>(0);
   const hoveredRegionRef = useRef<RoomHotspotRegion | null>(null);
   const propsRef = useRef({
     timeState,
@@ -61,39 +61,49 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
     if (!ctx) return;
 
     const current = propsRef.current;
-    const effectiveTick = current.reducedMotion ? 0 : tickRef.current;
+    const effectiveElapsedSec = current.reducedMotion ? 0 : elapsedSecRef.current;
+    const effectiveTick = current.reducedMotion
+      ? 0
+      : Math.floor(effectiveElapsedSec * 15);
     const palette = getRoomPalette(current.timeState, current.lampOn);
     const activeHovered = hoveredRegionRef.current;
 
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
-    drawRoomEnvironment(ctx, {
-      timeState: current.timeState,
-      lampOn: current.lampOn,
-      tick: effectiveTick,
-      palette,
-    });
-
-    drawCharacterAndEffects(ctx, {
+    const envOptions = {
       timeState: current.timeState,
       lampOn: current.lampOn,
       isMusicActive: current.isMusicActive,
       tick: effectiveTick,
+      elapsedSec: effectiveElapsedSec,
+      palette,
+    };
+    drawRoomEnvironment(ctx, envOptions);
+
+    const spriteOptions = {
+      timeState: current.timeState,
+      lampOn: current.lampOn,
+      isMusicActive: current.isMusicActive,
+      tick: effectiveTick,
+      elapsedSec: effectiveElapsedSec,
       palette,
       hoveredHotspot: activeHovered ? activeHovered.id : null,
       selectedHotspot: current.selectedHotspot,
       hoveredRegion: activeHovered,
       reducedMotion: current.reducedMotion,
-    });
+    };
+    drawCharacterAndEffects(ctx, spriteOptions);
 
-    drawLightingOverlay(ctx, {
+    const lightingOptions = {
       timeState: current.timeState,
       lampOn: current.lampOn,
       isMusicActive: current.isMusicActive,
       tick: effectiveTick,
+      elapsedSec: effectiveElapsedSec,
       palette,
-    });
+    };
+    drawLightingOverlay(ctx, lightingOptions);
   }, []);
 
   useEffect(() => {
@@ -109,13 +119,13 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
 
   useEffect(() => {
     if (shouldReduceMotion) {
-      tickRef.current = 0;
+      elapsedSecRef.current = 0;
       drawFrame();
       return;
     }
 
     let rafId = 0;
-    let lastStepMs = performance.now();
+    let lastMs = performance.now();
 
     const loop = (now: number) => {
       if (document.visibilityState !== 'visible') {
@@ -123,19 +133,17 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
         return;
       }
 
-      const elapsed = now - lastStepMs;
-      if (elapsed >= 66) {
-        lastStepMs = now - (elapsed % 66);
-        tickRef.current = (tickRef.current + 1) % 1000000;
-        drawFrame();
-      }
+      const dtSec = Math.min(0.05, Math.max(0, (now - lastMs) / 1000));
+      lastMs = now;
+      elapsedSecRef.current += dtSec;
+      drawFrame();
 
       rafId = window.requestAnimationFrame(loop);
     };
 
     const startLoop = () => {
       if (rafId !== 0 || document.visibilityState !== 'visible') return;
-      lastStepMs = performance.now();
+      lastMs = performance.now();
       rafId = window.requestAnimationFrame(loop);
     };
 
@@ -147,6 +155,7 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
+        lastMs = performance.now();
         drawFrame();
         startLoop();
       } else {
@@ -238,7 +247,7 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
         onClick={handleClick}
         aria-label={canvasAriaLabel}
         role="img"
-        className="pixelated-canvas block h-full w-full cursor-pointer select-none"
+        className="pixelated-canvas block h-full w-full cursor-pointer select-none touch-pan-y"
       />
     </div>
   );

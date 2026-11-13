@@ -48,9 +48,33 @@ const HOTSPOT_ORDER: RoomHotspotId[] = [
   'shelf',
 ];
 
+function renderSpeakerIcon(hotspot: RoomHotspotId | null): React.ReactNode {
+  const iconClass = 'h-3 w-3 shrink-0 text-folio-muted';
+  if (hotspot === 'lamp') {
+    return <LampDesk className={iconClass} aria-hidden="true" />;
+  }
+  if (hotspot === 'speakers') {
+    return <Volume2 className={iconClass} aria-hidden="true" />;
+  }
+  if (hotspot === 'monitor') {
+    return <Monitor className={iconClass} aria-hidden="true" />;
+  }
+  if (hotspot === null) {
+    return <Clock className={iconClass} aria-hidden="true" />;
+  }
+  return <Sparkles className={iconClass} aria-hidden="true" />;
+}
+
 export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
   const shouldReduceMotion = Boolean(useReducedMotion());
   const t = WORKSPACE_UI_LABELS[locale];
+  const extraLabels: {
+    spotifyHeader: string;
+    spotifyPausedBadge?: string;
+    spotifyPausedText?: string;
+  } = t;
+  const pausedBadgeLabel =
+    extraLabels.spotifyPausedBadge ?? (locale === 'vi' ? 'Tạm dừng' : 'Paused');
 
   const [vnClock, setVnClock] = useState(() => getVietnamClockInfo());
   const [timeOverride, setTimeOverride] = useState<TimeOverrideMode>('auto');
@@ -73,12 +97,14 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
     progressRatio,
     elapsedLabel,
     durationLabel,
-    isConfigured,
     isDemoActive,
     toggleDemo,
   } = useSpotifyStatus(true);
 
   const isMusicActive = Boolean(track && track.isPlaying);
+  const isTrackPaused = Boolean(
+    track && !track.isPlaying && track.isPaused !== false
+  );
 
   useEffect(() => {
     const refreshClock = () => {
@@ -183,7 +209,9 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
     : TIME_STATE_META[activeTimeState].label[locale];
 
   const isTypingDone = typedCount >= fullDialogue.length;
-  const progressPercent = Math.round(Math.min(1, Math.max(0, progressRatio)) * 100);
+  const progressPercent = Math.round(
+    Math.min(1, Math.max(0, progressRatio)) * 100
+  );
 
   return (
     <section
@@ -195,33 +223,32 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
         <div className="folio-section-header !mb-4 grid grid-cols-1 gap-4 !pb-4 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
             <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
-              <Sparkles className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
+              <Sparkles
+                className="h-3.5 w-3.5 text-folio-ink"
+                aria-hidden="true"
+              />
               <span className="folio-index-label">{t.sectionTag}</span>
             </div>
             <h1 id="workspace-heading" className="folio-section-heading">
               {t.title}
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-folio-muted sm:text-base">
-              {t.subtitle}
-            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 lg:col-span-5 lg:justify-end">
             <div className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-folio-border bg-folio-surface px-4 py-2 font-mono text-xs font-semibold text-folio-ink shadow-soft">
               <Clock className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
               <span className="tabular-nums">{vnClock.formattedTime}</span>
-              <span className="text-folio-faint">·</span>
-              <span className="text-folio-muted">{t.gmtSuffix}</span>
+              <span className="text-folio-faint">{t.gmtSuffix}</span>
             </div>
 
             <button
               type="button"
               onClick={handleToggleLamp}
               aria-pressed={lampOn}
-              className={`inline-flex min-h-[44px] items-center gap-2 rounded-full border px-4 py-2 font-mono text-xs font-semibold transition-all duration-200 ${
+              className={`inline-flex min-h-[44px] items-center gap-2 rounded-full border px-4 py-2 font-mono text-xs font-semibold transition-[transform,border-color,background-color,color] duration-200 active:scale-[0.98] ${
                 lampOn
                   ? 'border-folio-strong bg-folio-surface text-folio-ink shadow-soft'
-                  : 'border-folio-border bg-folio-elevated text-folio-muted hover:text-folio-ink'
+                  : 'border-folio-border bg-folio-elevated text-folio-muted hover:border-folio-strong hover:text-folio-ink'
               }`}
             >
               <span
@@ -241,17 +268,19 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
 
         <div
           role="group"
-          aria-label={locale === 'vi' ? 'Chọn khung giờ căn phòng' : 'Room time presets'}
+          aria-label={
+            locale === 'vi' ? 'Chọn khung giờ căn phòng' : 'Room time presets'
+          }
           className="mb-4 flex flex-wrap items-center gap-2"
         >
           <button
             type="button"
             onClick={() => handleSelectTimeMode('auto')}
             aria-pressed={timeOverride === 'auto'}
-            className={`min-h-[44px] rounded-full border px-4 py-2 font-mono text-xs transition-all duration-200 ${
+            className={`min-h-[44px] rounded-full border px-4 py-2 font-mono text-xs transition-[transform,border-color,background-color,color] duration-200 active:scale-[0.98] ${
               timeOverride === 'auto'
                 ? 'border-folio-strong bg-folio-surface font-semibold text-folio-ink shadow-soft'
-                : 'border-folio-border bg-folio-elevated text-folio-muted hover:text-folio-ink'
+                : 'border-folio-border bg-folio-elevated text-folio-muted hover:border-folio-strong hover:text-folio-ink'
             }`}
           >
             {t.autoModeLabel}
@@ -265,10 +294,10 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
                 type="button"
                 onClick={() => handleSelectTimeMode(stateId)}
                 aria-pressed={isActive}
-                className={`min-h-[44px] rounded-full border px-4 py-2 font-mono text-xs transition-all duration-200 ${
+                className={`min-h-[44px] rounded-full border px-4 py-2 font-mono text-xs transition-[transform,border-color,background-color,color] duration-200 active:scale-[0.98] ${
                   isActive
                     ? 'border-folio-strong bg-folio-surface font-semibold text-folio-ink shadow-soft'
-                    : 'border-folio-border bg-folio-elevated text-folio-muted hover:text-folio-ink'
+                    : 'border-folio-border bg-folio-elevated text-folio-muted hover:border-folio-strong hover:text-folio-ink'
                 }`}
               >
                 <span>{TIME_STATE_META[stateId].label[locale]}</span>
@@ -290,17 +319,17 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
 
             <div
               onClick={handleSkipDialogue}
-              className={`pokemon-gba-dialog min-h-[96px] px-4 py-3 sm:px-5 sm:py-3.5 ${
+              className={`pokemon-gba-dialog min-h-[84px] px-4 py-3 sm:px-5 sm:py-3.5 ${
                 isTypingDone ? '' : 'cursor-pointer'
               }`}
             >
               <div className="mb-1.5 flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated px-2.5 py-0.5 font-mono text-[11px] font-semibold text-folio-ink">
-                  <Monitor className="h-3 w-3 text-folio-muted" aria-hidden="true" />
+                  {renderSpeakerIcon(selectedHotspot)}
                   <span>{activeSpeakerLabel}</span>
                 </span>
 
-                <span className="font-mono text-[11px] text-folio-faint">
+                <span className="font-mono text-[11px] tabular-nums text-folio-faint">
                   {TIME_STATE_META[activeTimeState].hours}
                 </span>
               </div>
@@ -319,12 +348,6 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
                   </span>
                 )}
               </div>
-
-              {!selectedHotspot && (
-                <p className="mt-2 font-mono text-[11px] text-folio-faint">
-                  {t.dialogPromptHint}
-                </p>
-              )}
             </div>
 
             <div
@@ -340,7 +363,7 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
                     type="button"
                     onClick={() => handleSelectHotspot(hotspotId)}
                     aria-pressed={isSelected}
-                    className={`min-h-[44px] rounded-[var(--radius-tag)] border px-3.5 py-2 font-mono text-xs font-medium transition-all duration-150 active:scale-[0.98] ${
+                    className={`min-h-[44px] rounded-[var(--radius-tag)] border px-3.5 py-2 font-mono text-xs font-medium transition-[transform,border-color,background-color,color] duration-150 active:scale-[0.98] ${
                       isSelected
                         ? 'border-folio-strong bg-folio-surface font-semibold text-folio-ink shadow-soft'
                         : 'border-folio-border bg-folio-elevated text-folio-ink hover:border-folio-gblue'
@@ -353,16 +376,19 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
             </div>
           </div>
 
-          <aside className="flex flex-col gap-5 lg:col-span-4">
+          <aside className="flex flex-col lg:col-span-4">
             <div className="folio-card google-gradient-hover-border flex flex-col gap-4 !p-5 sm:!p-6">
               <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-3">
-                <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-ink">
-                  <Music2 className="h-4 w-4 text-folio-ink" aria-hidden="true" />
-                  <span>{t.spotifyHeader}</span>
+                <div className="flex min-w-0 items-center gap-2 font-mono text-xs font-semibold text-folio-ink">
+                  <Music2
+                    className="h-4 w-4 shrink-0 text-folio-ink"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{t.spotifyHeader}</span>
                 </div>
 
                 {isMusicActive && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-folio-border bg-folio-elevated px-2.5 py-1 font-mono text-[11px] font-semibold text-folio-ink">
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-folio-border bg-folio-elevated px-2.5 py-1 font-mono text-[11px] font-semibold text-folio-ink">
                     <span className="relative flex h-2 w-2" aria-hidden="true">
                       {!shouldReduceMotion && (
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-folio-ggreen opacity-75" />
@@ -374,6 +400,16 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
                     </span>
                   </span>
                 )}
+
+                {isTrackPaused && (
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-folio-gyellow/40 bg-folio-elevated px-2.5 py-1 font-mono text-[11px] font-semibold text-folio-ink">
+                    <span
+                      className="h-2 w-2 rounded-full bg-folio-gyellow"
+                      aria-hidden="true"
+                    />
+                    <span>{pausedBadgeLabel}</span>
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-3.5">
@@ -382,7 +418,9 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
                     src={track.albumArtUrl}
                     alt={track.album ?? track.title}
                     onError={() => setArtLoadFailed(true)}
-                    className="h-14 w-14 shrink-0 rounded-[var(--radius-tag)] border border-folio-border object-cover"
+                    className={`h-14 w-14 shrink-0 rounded-[var(--radius-tag)] border border-folio-border object-cover transition-opacity duration-300 ${
+                      isTrackPaused ? 'opacity-85' : ''
+                    }`}
                   />
                 ) : (
                   <div
@@ -393,14 +431,16 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
                       className={`h-7 w-7 ${
                         isMusicActive && !shouldReduceMotion
                           ? 'animate-[spin_6s_linear_infinite]'
-                          : ''
+                          : isTrackPaused
+                            ? 'opacity-70'
+                            : ''
                       }`}
                     />
                   </div>
                 )}
 
                 <div className="min-w-0 flex-1">
-                  {track && track.isPlaying ? (
+                  {track ? (
                     <>
                       {track.trackUrl ? (
                         <a
@@ -435,9 +475,14 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
                         {t.spotifyIdleText}
                       </div>
                       <div className="mt-0.5 flex items-center gap-1.5 font-mono text-xs text-folio-muted">
-                        <Volume2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        <Volume2
+                          className="h-3.5 w-3.5 shrink-0"
+                          aria-hidden="true"
+                        />
                         <span>
-                          {locale === 'vi' ? 'Loa bàn lo-fi' : 'Lo-fi Desk Speakers'}
+                          {locale === 'vi'
+                            ? 'Loa bàn lo-fi'
+                            : 'Lo-fi Desk Speakers'}
                         </span>
                       </div>
                     </>
@@ -445,12 +490,16 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
                 </div>
               </div>
 
-              {track && track.isPlaying ? (
+              {track && (
                 <div className="space-y-1.5">
                   <div className="h-1.5 w-full overflow-hidden rounded-full border border-folio-border bg-folio-elevated">
                     <div
                       style={{ width: `${progressPercent}%` }}
-                      className="h-full rounded-full bg-folio-ggreen transition-[width] duration-500 ease-linear"
+                      className={`h-full rounded-full ${
+                        isMusicActive
+                          ? 'bg-folio-ggreen transition-[width] duration-500 ease-linear'
+                          : 'bg-folio-faint/55'
+                      }`}
                     />
                   </div>
                   <div className="flex items-center justify-between font-mono text-[11px] tabular-nums text-folio-faint">
@@ -458,15 +507,9 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
                     <span>{durationLabel}</span>
                   </div>
                 </div>
-              ) : (
-                !isConfigured && (
-                  <p className="rounded-[var(--radius-inner)] border border-folio-border bg-folio-elevated px-3.5 py-2.5 text-xs leading-relaxed text-folio-muted">
-                    {t.spotifyUnconfiguredHint}
-                  </p>
-                )
               )}
 
-              {(!isConfigured || !isMusicActive || isDemoActive) && (
+              {(!isMusicActive || isDemoActive) && (
                 <button
                   type="button"
                   onClick={toggleDemo}
@@ -484,20 +527,6 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
                   </span>
                 </button>
               )}
-            </div>
-
-            <div className="folio-card-inner space-y-2.5">
-              <div className="flex items-center justify-between gap-2 font-mono text-xs">
-                <span className="font-semibold text-folio-ink">
-                  {TIME_STATE_META[activeTimeState].label[locale]}
-                </span>
-                <span className="tabular-nums text-folio-faint">
-                  {TIME_STATE_META[activeTimeState].hours}
-                </span>
-              </div>
-              <p className="text-xs leading-relaxed text-folio-muted">
-                {TIME_STATE_META[activeTimeState].hint[locale]}
-              </p>
             </div>
           </aside>
         </div>

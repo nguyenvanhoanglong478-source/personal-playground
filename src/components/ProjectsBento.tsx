@@ -649,7 +649,7 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
                   <span className="google-pill-aura" aria-hidden="true" />
                   <FolderGit2 className="h-3.5 w-3.5" aria-hidden="true" />
                   <span className="google-btn-github-label">
-                    {project.repoCtaLabel ? project.repoCtaLabel[locale] : t.repoLabel}
+                    {t.repoLabel}
                   </span>
                   <ExternalLink className="h-3 w-3 transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" aria-hidden="true" />
                 </a>

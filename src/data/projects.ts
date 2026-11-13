@@ -21,7 +21,6 @@ export interface ProjectItem {
   subtitle: BilingualText;
   description: BilingualText;
   repoUrl: string;
-  repoCtaLabel?: BilingualText;
   technologies: TechItem[];
 }
 
@@ -151,10 +150,6 @@ export const PROJECTS_DATA: ProjectItem[] = [
       en: 'A real-time two-team browser quiz where the host writes questions and sets timers from 5 to 300 seconds per round. I built the lobby and player UI, live scoring sync, and Node.js backend.',
     },
     repoUrl: 'https://github.com/nguyenvanhoanglong478-source',
-    repoCtaLabel: {
-      vi: 'Trang GitHub',
-      en: 'GitHub Profile',
-    },
     technologies: [
       {
         name: 'Node.js',

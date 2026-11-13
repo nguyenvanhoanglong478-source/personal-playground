@@ -175,25 +175,25 @@ function waitForAuthorizationCode(expectedState, authorizeUrl) {
       finish(
         reject,
         new Error(
-          `Không mở được cổng callback ${REDIRECT_HOST}:${REDIRECT_PORT} (${err.message}).`
+          `Could not open callback server on ${REDIRECT_HOST}:${REDIRECT_PORT} (${err.message}).`
         )
       );
     });
 
     server.listen(REDIRECT_PORT, REDIRECT_HOST, () => {
       console.log('');
-      console.log('2. Trình duyệt sẽ mở trang cấp quyền Spotify.');
-      console.log('   Nếu trình duyệt không tự mở, hãy copy URL dưới đây dán vào trình duyệt:');
-      console.log(`   ${authorizeUrl}`);
+      console.log('[2/4] Opening Spotify authorization page in your browser...');
+      console.log('      If it does not open automatically, copy and open this URL:');
+      console.log(`      ${authorizeUrl}`);
       console.log('');
-      console.log('   Đang chờ bạn bấm "Agree" trên Spotify...');
+      console.log('      Waiting for you to click "Agree" on Spotify...');
 
       openExternalBrowser(authorizeUrl);
 
       timeoutId = setTimeout(() => {
         finish(
           reject,
-          new Error('Hết thời gian chờ (5 phút) phản hồi từ trang đăng nhập Spotify.')
+          new Error('Timed out after 5 minutes waiting for Spotify authorization callback.')
         );
       }, 5 * 60 * 1000);
     });
@@ -219,7 +219,7 @@ async function exchangeCodeForTokens(clientId, clientSecret, code) {
   if (!response.ok || !payload?.refresh_token || !payload?.access_token) {
     const reason =
       payload?.error_description || payload?.error || `HTTP ${response.status}`;
-    throw new Error(`Không đổi được Refresh Token từ Spotify: ${reason}`);
+    throw new Error(`Could not exchange Refresh Token from Spotify: ${reason}`);
   }
 
   return {
@@ -239,13 +239,13 @@ async function testCurrentlyPlaying(accessToken) {
   );
 
   if (response.status === 204) {
-    return { reachable: true, summary: 'Kết nối OK (hiện tại Spotify đang dừng nhạc).' };
+    return { reachable: true, summary: 'Spotify API OK (nothing currently playing).' };
   }
 
   if (!response.ok) {
     return {
       reachable: false,
-      summary: `Kiểm tra /currently-playing trả về HTTP ${response.status}.`,
+      summary: `Check /currently-playing returned HTTP ${response.status}.`,
     };
   }
 
@@ -256,11 +256,11 @@ async function testCurrentlyPlaying(accessToken) {
       : data.item.show?.name ?? '';
     return {
       reachable: true,
-      summary: `Đang phát thử nghiệm: "${data.item.name}"${artist ? ` — ${artist}` : ''}`,
+      summary: `Now playing test: "${data.item.name}"${artist ? ` - ${artist}` : ''}`,
     };
   }
 
-  return { reachable: true, summary: 'Kết nối OK (hiện không phát bài nào).' };
+  return { reachable: true, summary: 'Spotify API OK (playback is currently paused).' };
 }
 
 function writeDevVars(clientId, clientSecret, refreshToken) {
@@ -299,30 +299,37 @@ function uploadSecretsToCloudflare() {
   return result.status === 0;
 }
 
+async function promptLine(rl, label) {
+  console.log(label);
+  const value = await rl.question('> ');
+  return stripSurroundingQuotes(value);
+}
+
 async function main() {
   const rl = readline.createInterface({ input, output });
 
   try {
     console.log('');
-    console.log('=== Thiết lập Spotify Web API (Cloudflare Pages Function) ===');
+    console.log('=== Spotify Web API Setup (Cloudflare Pages Function) ===');
     console.log('');
-    console.log('1. Chuẩn bị app trên Spotify Developer Dashboard:');
-    console.log('   - Mở: https://developer.spotify.com/dashboard');
-    console.log('   - Bấm "Create app" -> Tích chọn "Web API"');
-    console.log(`   - Điền Redirect URI chính xác là: ${REDIRECT_URI}`);
-    console.log('   - Lưu lại rồi vào Settings để lấy Client ID và Client Secret.');
+    console.log('[1/4] Create an app at https://developer.spotify.com/dashboard:');
+    console.log('      - Click "Create app" -> Check "Web API"');
+    console.log(`      - Set Redirect URI exactly to: ${REDIRECT_URI}`);
+    console.log('      - Save -> Open Settings to copy Client ID & Client Secret');
     console.log('');
 
-    const rawClientId = await rl.question('Nhập Spotify Client ID: ');
-    const clientId = stripSurroundingQuotes(rawClientId);
+    const clientId = await promptLine(rl, 'Paste Spotify Client ID (then press Enter):');
     if (!clientId) {
-      throw new Error('Client ID không được để trống.');
+      throw new Error('Client ID cannot be empty.');
     }
 
-    const rawClientSecret = await rl.question('Nhập Spotify Client Secret: ');
-    const clientSecret = stripSurroundingQuotes(rawClientSecret);
+    console.log('');
+    const clientSecret = await promptLine(
+      rl,
+      'Paste Spotify Client Secret (then press Enter):'
+    );
     if (!clientSecret) {
-      throw new Error('Client Secret không được để trống.');
+      throw new Error('Client Secret cannot be empty.');
     }
 
     const state = crypto.randomBytes(16).toString('hex');
@@ -337,7 +344,7 @@ async function main() {
     const authorizeUrl = `https://accounts.spotify.com/authorize?${authParams.toString()}`;
 
     const code = await waitForAuthorizationCode(state, authorizeUrl);
-    console.log('3. Đã nhận authorization code, đang đổi sang Refresh Token...');
+    console.log('[3/4] Received authorization code, exchanging for Refresh Token...');
 
     const { accessToken, refreshToken } = await exchangeCodeForTokens(
       clientId,
@@ -346,31 +353,31 @@ async function main() {
     );
 
     const playbackCheck = await testCurrentlyPlaying(accessToken);
-    console.log(`   ${playbackCheck.summary}`);
+    console.log(`      ${playbackCheck.summary}`);
 
     writeDevVars(clientId, clientSecret, refreshToken);
-    console.log(`4. Đã lưu secrets vào ${DEV_VARS_FILE} (file này được .gitignore bỏ qua).`);
+    console.log(`[4/4] Saved secrets locally to ${DEV_VARS_FILE} (ignored by .gitignore).`);
+    console.log('');
 
     const answer = (
-      await rl.question(
-        `\nĐẩy 3 biến mật lên Cloudflare Pages project "${CF_PAGES_PROJECT}" ngay bây giờ? (Y/n): `
+      await promptLine(
+        rl,
+        `Upload the 3 secrets to Cloudflare Pages project "${CF_PAGES_PROJECT}" now? (Y/n):`
       )
-    )
-      .trim()
-      .toLowerCase();
+    ).toLowerCase();
 
     if (answer === '' || answer === 'y' || answer === 'yes') {
       console.log('');
       const uploaded = uploadSecretsToCloudflare();
       if (uploaded) {
         console.log('');
-        console.log('Xong! Từ giờ tab "Không gian" trên cả Cloudflare Pages và GitHub Pages');
-        console.log('sẽ tự hiển thị bài hát Spotify thật của bạn.');
+        console.log('DONE! Your Workspace tab on Cloudflare Pages & GitHub Pages');
+        console.log('will now display your live Spotify playback automatically.');
       } else {
         console.log('');
-        console.log('Không đẩy tự động được qua wrangler.');
+        console.log('Could not upload automatically via wrangler.');
         console.log(
-          `Hãy chạy lại "npx wrangler login" hoặc tải file ${DEV_VARS_FILE} bằng lệnh:`
+          `Run "npx wrangler login" or upload ${DEV_VARS_FILE} manually with:`
         );
         console.log(
           `npx wrangler pages secret bulk ${DEV_VARS_FILE} --project-name=${CF_PAGES_PROJECT}`
@@ -378,7 +385,7 @@ async function main() {
       }
     } else {
       console.log('');
-      console.log('Khi nào sẵn sàng, chạy lệnh sau để đẩy secrets lên Cloudflare Pages:');
+      console.log('When ready, upload the secrets to Cloudflare Pages with:');
       console.log(
         `npx wrangler pages secret bulk ${DEV_VARS_FILE} --project-name=${CF_PAGES_PROJECT}`
       );
@@ -389,6 +396,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(`\n[spotify:setup] Lỗi: ${err.message}`);
+  console.error(`\n[spotify:setup] Error: ${err.message}`);
   process.exitCode = 1;
 });

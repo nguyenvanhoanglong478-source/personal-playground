@@ -5,6 +5,9 @@ dist-ssr
 .DS_Store
 .env
 .env.*
+.dev.vars
+.dev.vars.*
+.wrangler
 .taste-skill
 .hallmark
 shots

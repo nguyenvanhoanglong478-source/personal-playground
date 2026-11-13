@@ -70,7 +70,7 @@ export const ROOM_HEIGHT = 180;
 export const WORKSPACE_CONFIG: WorkspaceConfig = {
   timezone: 'Asia/Ho_Chi_Minh',
   lanyardUserId: '',
-  spotifyEndpointUrl: '',
+  spotifyEndpointUrl: 'https://longhoang.pages.dev/api/spotify',
   pollIntervalMs: 25000,
 };
 
@@ -237,7 +237,7 @@ export const WORKSPACE_UI_LABELS: Record<Locale, WorkspaceUiLabels> = {
     spotifyDemoStopBtn: 'Tắt Demo',
     spotifyIdleText: 'Hiện chưa phát bài nào',
     spotifyUnconfiguredHint:
-      'Chưa gắn mã Discord Lanyard, bạn có thể bật Nghe thử Lofi để xem loa và chú capybara nhún theo nhạc.',
+      'Chưa hoàn tất kết nối Spotify trực tiếp. Bạn có thể bật Nghe thử Lofi để xem loa và chú capybara nhún theo nhạc.',
     dialogPromptHint: 'Bấm vào màn hình, đèn bàn, capybara hoặc kệ xe Cub để xem ghi chú.',
     lampToggleBtn: 'Đèn bàn',
     lampOnLabel: 'Đang bật',
@@ -269,7 +269,7 @@ export const WORKSPACE_UI_LABELS: Record<Locale, WorkspaceUiLabels> = {
     spotifyDemoStopBtn: 'Stop Demo',
     spotifyIdleText: 'Nothing playing right now',
     spotifyUnconfiguredHint:
-      'Live Spotify link is not set yet. Hit Play Lo-fi Demo to watch the speakers and capybara groove.',
+      'Direct Spotify credentials are not added yet. Hit Play Lo-fi Demo to watch the speakers and capybara groove.',
     dialogPromptHint: 'Click the monitor, desk lamp, capybara, or Cub shelf to inspect.',
     lampToggleBtn: 'Desk lamp',
     lampOnLabel: 'On',

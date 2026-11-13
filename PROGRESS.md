@@ -295,3 +295,19 @@ Cập nhật lần cuối: 2026-11-13
   - Kiểm tra tĩnh mã nguồn `src/`: `0` comment thực (`//`, `/*`), `0` text gradient, `0` em-dash hay ký tự thừa trong `src/data/workspace.ts`.
   - `npm.cmd run verify` (`tsc -b --noEmit && vite build`): pass sạch với `0` lỗi TypeScript/Vite.
   - Playwright trên preview build ở `1440×900` (Light & Dark, VI & EN) và `375×812` cảm ứng (`has_touch=True`, Light & Dark, VI & EN): `0` console error, `0` page error, `0` tràn ngang (`scrollWidth <= innerWidth`), mọi nút chạm đạt `>= 44px`, kiểm tra đủ 7 hotspot trên canvas, bật/tắt đèn bàn, bật/tắt Lofi Demo, đồng bộ `?tab=workspace`, nhảy `#projects` từ Workspace về Profile, giữ nguyên `AboutFoilPass` & `FooterPet`, và kiểm tra trực quan 6 ảnh chụp màn hình qua `read_file`.
+
+
+## 22. Kết Nối Spotify Trực Tiếp Qua Cloudflare Pages Function (`functions/api/spotify.js`, `scripts/spotify-auth.mjs`)
+
+- **Proxy Cloudflare Pages Function (`functions/api/spotify.js`)**:
+  - Thêm serverless endpoint `GET /api/spotify` chạy cùng hạ tầng Cloudflare Pages (`longhoang`), đổi `SPOTIFY_REFRESH_TOKEN` sang access token ở phía server và gọi `https://api.spotify.com/v1/me/player/currently-playing?additional_types=track,episode` (hỗ trợ cả nhạc `track` lẫn podcast `episode`).
+  - Bảo vệ bởi CORS allowlist (`https://longhoang.pages.dev`, `*.longhoang.pages.dev`, `https://nguyenvanhoanglong478-source.github.io`, `localhost` / `127.0.0.1`), header `Cache-Control: no-store, max-age=0`, phản hồi sạch `{ isPlaying: false, configured: false }` (`HTTP 200`) khi chưa nạp secrets để tránh lỗi console, hoặc `502` đã loại bỏ thông tin nhạy cảm nếu token lỗi.
+- **Tích Hợp Frontend (`src/data/workspace.ts`, `src/hooks/useSpotifyStatus.ts`)**:
+  - Gắn `WORKSPACE_CONFIG.spotifyEndpointUrl = 'https://longhoang.pages.dev/api/spotify'` dùng chung cho cả Cloudflare Pages lẫn GitHub Pages.
+  - Cập nhật `useSpotifyStatus` đọc cờ `configured` từ phản hồi JSON: khi Cloudflare chưa có secrets (`configured: false`), giao diện vẫn hiện gợi ý thân thiện cùng nút **Nghe thử Lofi**; ngay khi secrets được nạp, trang tự nhận trạng thái Spotify thật mà không cần build lại.
+- **Công Cụ Lấy Refresh Token & Nạp Secrets (`scripts/spotify-auth.mjs`, `package.json`, `.gitignore`)**:
+  - Thêm lệnh `npm run spotify:setup` mở máy chủ callback cục bộ tại `http://127.0.0.1:4389/callback` (tuân thủ quy định Spotify Developer Dashboard bắt buộc IP `127.0.0.1` thay vì `localhost`), tự đổi authorization code lấy `Refresh Token`, kiểm tra ngay endpoint `/currently-playing`, lưu `.dev.vars` (đã thêm `.dev.vars`, `.dev.vars.*`, `.wrangler` vào `.gitignore`) và hỗ trợ đẩy thẳng cả 3 secrets lên Cloudflare Pages qua `npx wrangler pages secret bulk .dev.vars --project-name longhoang`.
+- **Kiểm chứng**:
+  - Biên dịch thử Pages Function bằng `npx wrangler pages functions build functions` thành công (`Compiled Worker successfully`).
+  - Chạy bộ kiểm thử 8 kịch bản cho `onRequest` (`OPTIONS`, CORS allowlist, `405`, thiếu secrets, Spotify `204`, `track` đang phát, podcast `episode`, lỗi token không rò rỉ secret): pass `8/8`.
+  - Chạy `npm run verify` (`tsc -b --noEmit && tsc -b && vite build`): pass `0` lỗi.

@@ -131,12 +131,24 @@ function parseEndpointSpotify(payload: unknown): SpotifyTrackInfo | null {
   };
 }
 
+function readEndpointConfiguredFlag(payload: unknown): boolean | null {
+  if (!isRecord(payload)) return null;
+  return typeof payload.configured === 'boolean' ? payload.configured : null;
+}
+
 export function useSpotifyStatus(enabled: boolean): UseSpotifyStatusResult {
   const lanyardUserId = WORKSPACE_CONFIG.lanyardUserId.trim();
   const spotifyEndpointUrl = WORKSPACE_CONFIG.spotifyEndpointUrl.trim();
-  const isConfigured = lanyardUserId.length > 0 || spotifyEndpointUrl.length > 0;
+  const hasConnectionTarget =
+    lanyardUserId.length > 0 || spotifyEndpointUrl.length > 0;
 
+  const [endpointConfigured, setEndpointConfigured] = useState<boolean | null>(
+    null
+  );
   const [liveTrack, setLiveTrack] = useState<SpotifyTrackInfo | null>(null);
+  const isConfigured =
+    lanyardUserId.length > 0 ||
+    (spotifyEndpointUrl.length > 0 && endpointConfigured !== false);
   const [isDemoActive, setIsDemoActive] = useState(false);
   const [demoState, setDemoState] = useState<{
     index: number;
@@ -169,7 +181,7 @@ export function useSpotifyStatus(enabled: boolean): UseSpotifyStatusResult {
   }, []);
 
   useEffect(() => {
-    if (!enabled || !isConfigured || isDemoActive) return;
+    if (!enabled || !hasConnectionTarget || isDemoActive) return;
 
     let disposed = false;
     let pollTimerId: number | null = null;
@@ -216,6 +228,13 @@ export function useSpotifyStatus(enabled: boolean): UseSpotifyStatusResult {
         const json: unknown = await response.json();
         if (disposed || controller.signal.aborted) return;
 
+        if (!lanyardUserId) {
+          const configuredFlag = readEndpointConfiguredFlag(json);
+          if (configuredFlag !== null) {
+            setEndpointConfigured(configuredFlag);
+          }
+        }
+
         const parsed = lanyardUserId
           ? parseLanyardSpotify(json)
           : parseEndpointSpotify(json);
@@ -255,7 +274,13 @@ export function useSpotifyStatus(enabled: boolean): UseSpotifyStatusResult {
         document.removeEventListener('visibilitychange', syncPolling);
       }
     };
-  }, [enabled, isConfigured, isDemoActive, lanyardUserId, spotifyEndpointUrl]);
+  }, [
+    enabled,
+    hasConnectionTarget,
+    isDemoActive,
+    lanyardUserId,
+    spotifyEndpointUrl,
+  ]);
 
   const hasActivePlayback = isDemoActive || Boolean(liveTrack?.isPlaying);
 

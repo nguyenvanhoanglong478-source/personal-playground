@@ -11,7 +11,8 @@
     "verify": "npm run typecheck && npm run build",
     "preview": "vite preview --port 4173",
     "deploy": "node scripts/deploy-gh-pages.mjs",
-    "pages:deploy": "npm run build && npx wrangler pages deploy dist --project-name=longhoang --branch=main"
+    "pages:deploy": "npm run build && npx wrangler pages deploy dist --project-name=longhoang --branch=main",
+    "spotify:setup": "node scripts/spotify-auth.mjs"
   },
   "dependencies": {
     "framer-motion": "^11.11.17",

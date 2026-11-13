@@ -261,3 +261,13 @@ Cập nhật lần cuối: 2026-11-12
 - **Tương tác Sáng/Tối, Bong Bóng Thoại & Tối Ưu Hiệu Năng**:
   - **Light Mode**: tự dạo qua lại trong biên đo bởi `ResizeObserver` (`[0, trackWidth - 44]`) và dừng nghỉ ngẫu nhiên `1.5–2.5s`; **Dark Mode**: ngồi ngủ gật, chạm/hover sẽ tạm tỉnh dậy đáp lời rồi lim dim ngủ lại.
   - Bong bóng thoại xoay vòng câu nói tự nhiên VI/EN (kèm lời chào riêng khi đánh thức ở Dark Mode), tự đổi căn lề trái/giữa/phải tránh bị cắt chữ gần hai mép màn hình mobile, tự ẩn sau `3.5s`, tạm dừng mọi vòng lặp qua `IntersectionObserver` khi footer ngoài viewport và tôn trọng `useReducedMotion()`.
+
+
+## 20. Dọn Gọn Cột Trái Mục Liên Hệ, Thêm Nút Sao Chép Email & Thẻ Nhận Việc (`Contact.tsx`, `profile.ts`)
+
+- **Xóa 4 thẻ card mạng xã hội lớn bị cắt link tại `src/components/Contact.tsx`**:
+  - Giữ nguyên 5 nút tròn mạng xã hội & email kèm `<FooterPet />` tại `src/components/Footer.tsx` và dữ liệu `PROFILE_DATA.contacts.socials` trong `src/data/profile.ts`.
+  - Gỡ bỏ hoàn toàn 4 thẻ card mạng xã hội lớn ở cột trái `#contact` để tránh trùng lặp và lỗi cắt `...` đường dẫn.
+- **Thẻ Email kèm nút Sao chép 1 chạm & Thẻ nhận việc cân đối 2 cột (`Contact.tsx`, `src/data/profile.ts`)**:
+  - Giữ nút mở trình gửi mail `nguyenvanhoanglong478@gmail.com` và bổ sung nút sao chép 1 chạm (`navigator.clipboard.writeText`, đạt kích thước chạm tối thiểu `44px` trên mobile, hiện phản hồi `"Đã chép!"` / `"Copied!"` và thông báo `aria-live="polite"`).
+  - Thêm thẻ thông tin nhận việc/hợp tác (`flex-1`) ngay dưới thẻ Email để cân bằng tự nhiên với khung `Soạn nhanh email` bên phải: hiển thị chấm xanh trạng thái sẵn sàng, 3 hạng mục nhận làm song ngữ VI/EN sạch văn phong tự nhiên, thời gian phản hồi trong ngày và dòng dẫn hướng xuống thanh mạng xã hội ở `Footer`.

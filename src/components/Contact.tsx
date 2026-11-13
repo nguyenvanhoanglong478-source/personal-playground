@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ExternalLink, Mail, Send, Sparkles } from 'lucide-react';
+import { ArrowDown, Check, Clock, Copy, Mail, Send, Sparkles } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
-import { SocialIcon } from './SocialIcon';
 
 interface ContactProps {
   locale: Locale;
@@ -13,6 +12,57 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
   const t = UI_LABELS[locale].contact;
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
+  const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopyEmail = async () => {
+    const email = PROFILE_DATA.contacts.email;
+    let didCopy = false;
+
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      try {
+        await navigator.clipboard.writeText(email);
+        didCopy = true;
+      } catch {
+        didCopy = false;
+      }
+    }
+
+    if (!didCopy) {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = email;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        didCopy = document.execCommand('copy');
+        document.body.removeChild(textarea);
+      } catch {
+        didCopy = false;
+      }
+    }
+
+    if (!didCopy) return;
+
+    setCopied(true);
+    if (copyTimerRef.current !== null) {
+      window.clearTimeout(copyTimerRef.current);
+    }
+    copyTimerRef.current = window.setTimeout(() => {
+      setCopied(false);
+      copyTimerRef.current = null;
+    }, 2000);
+  };
 
   const mailtoHref = `mailto:${PROFILE_DATA.contacts.email}?subject=${encodeURIComponent(
     subject ||
@@ -49,54 +99,87 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-6"
+            className="flex flex-col gap-5 lg:col-span-6"
           >
-            <div className="folio-card google-gradient-hover-border flex min-w-0 flex-col justify-center !p-5 sm:col-span-2">
+            <div className="folio-card google-gradient-hover-border flex min-w-0 flex-col justify-center !p-5 sm:!p-6">
               <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
-                <Mail className="h-4 w-4 text-folio-ink" aria-hidden="true" />
-                <span>EMAIL</span>
+                <Mail className="h-4 w-4 shrink-0 text-folio-ink" aria-hidden="true" />
+                <span>{t.emailLabel}</span>
               </div>
-              <a
-                href={`mailto:${PROFILE_DATA.contacts.email}`}
-                className="google-btn-github group/btn mt-3 w-fit max-w-full min-w-0"
-              >
-                <span className="google-pill-aura" aria-hidden="true" />
-                <span className="google-btn-github-label min-w-0 truncate">
-                  {PROFILE_DATA.contacts.email}
-                </span>
-                <Mail
-                  className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5"
-                  aria-hidden="true"
-                />
-              </a>
-            </div>
-
-            {PROFILE_DATA.contacts.socials.map((social) => (
-              <div
-                key={social.id}
-                className="folio-card google-gradient-hover-border flex min-w-0 flex-col justify-center !p-5"
-              >
-                <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
-                  <SocialIcon platform={social.id} className="h-4 w-4 shrink-0 text-folio-ink" />
-                  <span>{social.label}</span>
-                </div>
+              <div className="mt-3.5 flex min-w-0 flex-wrap items-center gap-2.5">
                 <a
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="google-btn-github group/btn mt-3 w-fit max-w-full min-w-0"
+                  href={`mailto:${PROFILE_DATA.contacts.email}`}
+                  className="google-btn-github group/btn min-h-[44px] w-fit max-w-full min-w-0 sm:min-h-[40px]"
                 >
                   <span className="google-pill-aura" aria-hidden="true" />
                   <span className="google-btn-github-label min-w-0 truncate">
-                    {social.displayText}
+                    {PROFILE_DATA.contacts.email}
                   </span>
-                  <ExternalLink
+                  <Mail
                     className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5"
                     aria-hidden="true"
                   />
                 </a>
+                <button
+                  type="button"
+                  onClick={handleCopyEmail}
+                  aria-label={t.copyAriaLabel}
+                  className="folio-btn-compact min-h-[44px] min-w-[44px] shrink-0 sm:min-h-[40px]"
+                >
+                  <span className="google-pill-aura" aria-hidden="true" />
+                  {copied ? (
+                    <Check className="h-3.5 w-3.5 shrink-0 text-folio-ink" aria-hidden="true" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5 shrink-0 text-folio-ink" aria-hidden="true" />
+                  )}
+                  <span>{copied ? t.copiedButton : t.copyButton}</span>
+                </button>
               </div>
-            ))}
+              <span className="sr-only" aria-live="polite">
+                {copied ? t.copiedAnnouncement : ''}
+              </span>
+            </div>
+
+            <div className="folio-card google-gradient-hover-border flex min-w-0 flex-1 flex-col justify-between !p-5 sm:!p-7">
+              <div>
+                <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-folio-border bg-folio-elevated px-3 py-1.5 font-mono text-[11px] font-semibold text-folio-ink">
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    {!shouldReduceMotion && (
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-folio-ggreen opacity-75" />
+                    )}
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-folio-ggreen" />
+                  </span>
+                  <span className="leading-snug">{t.availabilityBadge}</span>
+                </div>
+
+                <h3 className="mt-4 font-serif text-xl font-bold text-folio-ink sm:text-2xl">
+                  {t.availabilityTitle}
+                </h3>
+
+                <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-folio-muted">
+                  {t.availabilityScope.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2.5">
+                      <span
+                        className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-folio-ink/50"
+                        aria-hidden="true"
+                      />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-folio-border pt-4 text-xs">
+                <div className="inline-flex items-center gap-1.5 font-mono text-folio-muted">
+                  <Clock className="h-3.5 w-3.5 shrink-0 text-folio-ink" aria-hidden="true" />
+                  <span>{t.responseTime}</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 font-sans text-folio-faint">
+                  <span>{t.socialNote}</span>
+                  <ArrowDown className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                </div>
+              </div>
+            </div>
           </motion.div>
 
           <motion.div

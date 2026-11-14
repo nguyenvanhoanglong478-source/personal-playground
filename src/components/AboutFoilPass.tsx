@@ -3,7 +3,6 @@ import { useReducedMotion } from 'framer-motion';
 import { RefreshCw, Repeat2 } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 import {
-  EDITION_STYLES,
   FoilEdition,
   PASS_HEIGHT,
   PASS_WIDTH,
@@ -168,10 +167,7 @@ const FRAG_SHADER_SRC = `
 
   uniform sampler2D uFrontTex;
   uniform sampler2D uBackTex;
-  uniform float uEdition;
-  uniform float uHoloIntensity;
   uniform vec2 uPointer;
-  uniform float uBend;
   uniform float uPartAlpha;
   uniform float uIsShadow;
   uniform float uIsStub;
@@ -185,36 +181,6 @@ const FRAG_SHADER_SRC = `
     float tooth = abs(sin(u * 28.0 * 3.14159265)) * 0.0085;
     float fiber = (sin(u * 97.0) * 0.5 + sin(u * 211.0) * 0.35 + cos(u * 347.0) * 0.15) * 0.0025;
     return max(0.001, tooth + fiber);
-  }
-
-  vec3 googleSpectrum(float t) {
-    float p = fract(t) * 6.0;
-    vec3 c0 = vec3(0.259, 0.522, 0.957);
-    vec3 c1 = vec3(0.000, 0.898, 1.000);
-    vec3 c2 = vec3(0.204, 0.659, 0.325);
-    vec3 c3 = vec3(0.984, 0.737, 0.016);
-    vec3 c4 = vec3(0.918, 0.263, 0.208);
-    vec3 c5 = vec3(0.608, 0.447, 0.796);
-    if (p < 1.0) return mix(c0, c1, fract(p));
-    if (p < 2.0) return mix(c1, c2, fract(p));
-    if (p < 3.0) return mix(c2, c3, fract(p));
-    if (p < 4.0) return mix(c3, c4, fract(p));
-    if (p < 5.0) return mix(c4, c5, fract(p));
-    return mix(c5, c0, fract(p));
-  }
-
-  vec3 silverHoloSpectrum(float t) {
-    float p = fract(t);
-    return 0.5 + 0.5 * cos(6.28318 * (p + vec3(0.0, 0.33, 0.67)));
-  }
-
-  vec3 obsidianGoldSpectrum(float t) {
-    float p = fract(t);
-    vec3 gold = vec3(1.0, 0.84, 0.45);
-    vec3 violet = vec3(0.65, 0.45, 0.85);
-    vec3 emerald = vec3(0.35, 0.85, 0.55);
-    if (p < 0.5) return mix(gold, emerald, p * 2.0);
-    return mix(emerald, violet, (p - 0.5) * 2.0);
   }
 
   void main() {
@@ -254,47 +220,24 @@ const FRAG_SHADER_SRC = `
     vec3 H = normalize(L + V);
 
     float ndl = dot(N, L);
-    float diffuse = clamp(0.70 + 0.30 * ndl, 0.32, 1.0);
+    float diffuse = clamp(0.80 + 0.20 * ndl, 0.46, 1.0);
 
     float curvature = clamp(length(N.xy) * 1.55, 0.0, 1.0);
     float creaseShadow = smoothstep(0.0, 0.65, curvature * max(0.0, -ndl + 0.18));
-    diffuse -= creaseShadow * 0.32;
+    diffuse -= creaseShadow * 0.26;
 
-    float specPower = mix(18.0, 42.0, curvature);
+    float specPower = mix(20.0, 44.0, curvature);
     float spec = pow(max(dot(N, H), 0.0), specPower);
-
-    float ndv = clamp(dot(N, V), 0.0, 1.0);
-    float fresnel = pow(1.0 - ndv, 2.4);
-
-    float normalAngle = atan(N.y, N.x);
-    float normalTilt = 1.0 - abs(N.z);
-    float foilPhase =
-      vUv.x * 0.54 +
-      vUv.y * 0.34 +
-      normalAngle * 0.318 +
-      normalTilt * 1.80 +
-      uPointer.x * 0.24 +
-      uPointer.y * 0.14;
-
-    vec3 rainbow = uEdition < 0.5
-      ? silverHoloSpectrum(foilPhase)
-      : (uEdition < 1.5 ? obsidianGoldSpectrum(foilPhase) : googleSpectrum(foilPhase));
-
-    float isTopStrip = smoothstep(0.0, 0.075, 0.075 - vUv.y);
-    float foilMask = (0.05 + 0.70 * normalTilt + 0.48 * curvature + 0.38 * isTopStrip + 0.28 * spec + 0.18 * fresnel + 0.12 * uBend) * uHoloIntensity;
-    float glintBand = smoothstep(0.32, 0.94, sin(foilPhase * 8.2) * 0.5 + 0.5);
 
     if (distToCut < 0.0050) {
       float fiberBlend = smoothstep(0.0050, 0.0005, distToCut);
       vec3 paperCore = vec3(0.95, 0.94, 0.91);
       tex.rgb = mix(tex.rgb, paperCore, fiberBlend);
-      foilMask *= (1.0 - fiberBlend);
       spec *= (1.0 - fiberBlend);
     }
 
     vec3 lit = tex.rgb * diffuse;
-    lit += rainbow * foilMask * (0.58 + 0.42 * glintBand);
-    lit += vec3(1.0) * (spec * 0.32 * (0.4 + 0.6 * uHoloIntensity));
+    lit += vec3(1.0) * spec * 0.10;
 
     float outAlpha = tex.a * uPartAlpha;
     gl_FragColor = vec4(clamp(lit, 0.0, 1.0), outAlpha);
@@ -683,11 +626,8 @@ interface GlContextState {
     uFovScale: WebGLUniformLocation | null;
     uIsShadow: WebGLUniformLocation | null;
     uIsStub: WebGLUniformLocation | null;
-    uEdition: WebGLUniformLocation | null;
     uPartAlpha: WebGLUniformLocation | null;
-    uHoloIntensity: WebGLUniformLocation | null;
     uPointer: WebGLUniformLocation | null;
-    uBend: WebGLUniformLocation | null;
   };
 }
 
@@ -852,15 +792,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     gl.uniform1f(locs.uTiltY, tiltY);
     gl.uniform1f(locs.uAspect, uAspect);
     gl.uniform1f(locs.uFovScale, uFovScale);
-    gl.uniform1f(
-      locs.uHoloIntensity,
-      EDITION_STYLES[editionRef.current].holoIntensity
-    );
     gl.uniform2f(locs.uPointer, mesh.hoverNdcX, mesh.hoverNdcY);
-    gl.uniform1f(locs.uBend, mesh.bendIntensity);
-
-    const editionIndex = editionRef.current === 'silver-holo' ? 0.0 : 1.0;
-    gl.uniform1f(locs.uEdition, editionIndex);
 
     gl.disable(gl.DEPTH_TEST);
     gl.uniform1f(locs.uIsShadow, 1.0);
@@ -1206,30 +1138,6 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     backTexCanvasRef.current = document.createElement('canvas');
 
     let mounted = true;
-    let initialAvatarReady = false;
-
-    const img = new Image();
-    img.onload = () => {
-      avatarImgRef.current = img;
-      if (mounted && !initialAvatarReady) {
-        syncTexturesRef.current();
-      }
-    };
-    img.onerror = () => {
-      avatarImgRef.current = null;
-      if (mounted) {
-        syncTexturesRef.current();
-      }
-    };
-    img.src = PROFILE_DATA.avatarUrl;
-    if (img.complete) {
-      if (img.naturalWidth > 0) {
-        avatarImgRef.current = img;
-        initialAvatarReady = true;
-      } else {
-        avatarImgRef.current = null;
-      }
-    }
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1311,11 +1219,8 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
               uFovScale: gl.getUniformLocation(program, 'uFovScale'),
               uIsShadow: gl.getUniformLocation(program, 'uIsShadow'),
               uIsStub: gl.getUniformLocation(program, 'uIsStub'),
-              uEdition: gl.getUniformLocation(program, 'uEdition'),
               uPartAlpha: gl.getUniformLocation(program, 'uPartAlpha'),
-              uHoloIntensity: gl.getUniformLocation(program, 'uHoloIntensity'),
               uPointer: gl.getUniformLocation(program, 'uPointer'),
-              uBend: gl.getUniformLocation(program, 'uBend'),
             },
           };
         }

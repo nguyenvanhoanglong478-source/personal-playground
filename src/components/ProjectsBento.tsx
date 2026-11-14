@@ -564,7 +564,7 @@ const TiltProjectCard: React.FC<TiltProjectCardProps> = ({
                 ? 'transform 90ms ease-out, background-color 360ms ease, box-shadow 300ms ease, border-color 300ms ease'
                 : 'transform 450ms cubic-bezier(0.22, 1, 0.36, 1), background-color 360ms ease, box-shadow 300ms ease, border-color 300ms ease',
             }}
-            className="google-gradient-hover-border group relative flex h-full flex-col justify-between overflow-hidden rounded-[var(--radius-card)] border border-folio-border bg-folio-surface p-6 shadow-[var(--shadow-soft)] backdrop-blur-xl hover:border-transparent hover:shadow-[var(--shadow-glow)] sm:p-7"
+            className="google-gradient-hover-border group relative flex h-full flex-col justify-between overflow-hidden rounded-[var(--radius-card)] border border-folio-border bg-folio-surface p-6 shadow-[var(--shadow-soft)] backdrop-blur-xl hover:border-folio-strong hover:shadow-[var(--shadow-glow)] sm:p-7"
           >
             <span
               aria-hidden="true"

@@ -1,6 +1,6 @@
 # PROGRESS.md - Tiến Độ Trang Cá Nhân Long Hoàng
 
-Cập nhật lần cuối: 2026-11-13
+Cập nhật lần cuối: 2026-11-14
 
 ## 1. Thông Tin Đã Cập Nhật
 
@@ -380,3 +380,30 @@ Cập nhật lần cuối: 2026-11-13
   - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`): thoát `0`, `0` lỗi (`dist/assets/WorkspacePage-CWoJkRKz.js 92.78 kB`).
   - Kiểm tra AST (`ts.createSourceFile`) & runtime: `AST_COMMENT_COUNT=0`, `MATRIX_RUNTIME_ALL_POSES_OK=true`.
   - Playwright trên `vite preview`: chụp & rà soát trực tiếp ảnh zoom `8×` cho cả 4 tư thế (`crop_waking_standing.png`, `crop_working_seated.png`, `crop_late_night_seated.png`, `crop_sleeping_bed.png`) cùng ảnh Desktop `1440×900` và Mobile `375×812` — `console_errors: []`, `page_errors: []`.
+
+
+## 27. Logo Capybara Pixel Art, Tinh Gọn Navbar, Hào Quang Thẻ Đơn Sắc & Vé 3D Capybara Onsen
+
+- **Biểu Tượng Thương Hiệu Capybara Pixel Art (`src/components/BrandLogo.tsx`, `public/favicon.svg`, `src/components/PokemonProfileCard.tsx`, `src/components/Footer.tsx`)**:
+  - Thay ngôi sao Gemini bằng huy hiệu chân dung chính diện **Pixel Art Capybara Portrait & Sitting Bust** trên lưới `16×16` (`viewBox="0 0 16 16"`, `shapeRendering="crispEdges"`, `aria-label="Long Hoàng — Capybara Pixel Logo"`), hoàn toàn khác biệt với chú Capybara đi bộ ngang thân ở `FooterPet`.
+  - Thiết kế gồm đầu bo tròn, tai nhỏ, mắt `1×2`, mảng mõm `#734928` với mũi chữ `T` (`#24150E`), má hồng ấm (`#E58B7B`), lông ngực caramel & hai chân trước ngồi gọn (`#D09560`, `#B87B48`, `#9C6639`), viền màu chọn lọc (`#3B2417`, `#2C1B12`) và quả quýt/cam (`#F97316`, `#FDBA74`) kèm lá xanh (`#22C55E`, `#15803D`) đội trên đầu.
+  - Gỡ bỏ hoàn toàn vòng hào quang `conic-gradient` cầu vồng; `showAura` nay dùng quầng sáng ấm nhẹ kèm hiệu ứng nhấc nhẹ khi hover (`group-hover:-translate-y-0.5 group-hover:scale-105`, tôn trọng `motion-reduce`).
+  - Đồng bộ `public/favicon.svg` trên nền bo góc tối (`rx="4"`, `#18181B`, viền trong `#3F3F46`), gắn `size={22}` tại `PokemonProfileCard.tsx` (giữ nguyên ảnh thật `./avatar.jpg`) và `size={36}` tại `Footer.tsx`.
+- **Tinh Gọn Thanh Điều Hướng `Navbar.tsx` (`src/components/Navbar.tsx`, `src/data/profile.ts`)**:
+  - Xóa dòng phụ đề dài `PROFILE_DATA.brandSubtitle[locale]` cạnh logo, chỉ giữ `<BrandLogo size={34} showAura />` + tên `Long Hoàng`.
+  - Thu gọn chiều cao thanh điều hướng (`py-1.5 sm:py-2` ở hàng chính, `py-1` ở thanh tab di động, `lg:min-h-[34px]` cho pill tab desktop trong khi vẫn giữ vùng chạm `min-h-[44px]` trên di động).
+  - Bỏ tiền tố đánh số `01.`–`07.` khỏi `UI_LABELS[locale].nav` (`Giới thiệu`, `Về tôi`, `Kinh nghiệm`, `Dự án`, `Kỹ năng`, `Công nghệ` / `Intro`, `About`, `Experience`, `Projects`, `Skills`, `Stack`) và loại bỏ mục `Liên hệ` trùng lặp khỏi hàng điều hướng giữa.
+  - Xóa toàn bộ thanh gạch chân cầu vồng `.google-border-frame` dưới tab và mục nav đang chọn, thay bằng trạng thái pill đơn sắc tương phản cao (`bg-folio-surface font-semibold text-folio-ink shadow-sm ring-1 ring-black/10 dark:ring-white/15` cho tab và `bg-folio-elevated font-semibold text-folio-ink ring-1 ring-black/10 dark:ring-white/15` cho mục nav).
+- **Viền & Hào Quang Hover Thẻ Đơn Sắc (`src/index.css`, `src/components/Experience.tsx`, `src/components/ProjectsBento.tsx`, `src/components/SkillsMatrix.tsx`)**:
+  - Bảo toàn 100% nền **Google Aura Mesh** (`.google-aura-backdrop`).
+  - Chuyển hiệu ứng hover trên toàn bộ thẻ nội dung (`.folio-card`, `.google-gradient-hover-border`, `.folio-chip`) từ dải màu cầu vồng sang **đơn sắc theo giao diện**:
+    - **Dark Mode (`html[data-theme='dark']`)**: viền và hào quang phát sáng **trắng dịu** (`--border-strong: rgba(255, 255, 255, 0.55)`, `--shadow-glow: 0 12px 36px -6px rgba(255, 255, 255, 0.16), 0 0 20px -2px rgba(255, 255, 255, 0.12)`, dải sáng viền `linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.65) 100%)`).
+    - **Light Mode (`html[data-theme='light']`)**: viền và hào quang phát sáng **đen than** (`--border-strong: rgba(17, 17, 17, 0.45)`, `--shadow-glow: 0 12px 34px -6px rgba(17, 17, 17, 0.16), 0 0 18px -2px rgba(17, 17, 17, 0.10)`, dải sáng viền `linear-gradient(135deg, rgba(17,17,17,0.65) 0%, rgba(17,17,17,0.18) 50%, rgba(17,17,17,0.55) 100%)`).
+- **Tái Thiết Kế Vé 3D `AboutFoilPass` & Tranh Pixel Capybara Onsen (`src/components/AboutFoilPass.tsx`, `src/components/aboutPassTextures.ts`)**:
+  - Gỡ bỏ hoàn toàn lớp phủ lóa cầu vồng (`googleSpectrum`, `silverHoloSpectrum`, `obsidianGoldSpectrum`, `foilMask`, `glintBand`) trong `FRAG_SHADER_SRC` của `AboutFoilPass.tsx` và `prismWash` trong `aboutPassTextures.ts`, giữ lại ánh sáng khuếch tán giấy bìa mờ 3D tự nhiên (`diffuse` + bóng nếp gấp `creaseShadow` + phản xạ trắng nhẹ `vec3(1.0) * spec * 0.10`) giúp chữ và tranh sắc nét tuyệt đối khi kéo uốn, lật mặt và xé cuống vé.
+  - Chuyển dải tiêu đề (`paintFoilBand`), khung bát giác quanh hình minh họa, biểu đồ Radar mặt sau và bảng màu `EDITION_STYLES` về tông biên tập đơn sắc (giấy sáng mực đen ở Light Mode, Obsidian bạch kim ở Dark Mode); cập nhật con dấu tròn mặt sau (`paintStarSeal`) thành dấu mộc **Pixel Capybara Stamp** đơn sắc.
+  - Thay ảnh chân dung trên mặt trước vé bằng hàm `paintOnsenCapybaraScene` (`ctx.imageSmoothingEnabled = false`) vẽ trực tiếp bức tranh **Pixel Art Capybara ngâm suối nước nóng Onsen** trên lưới nguyên `36×36` (`7×7` px mỗi ô): chú Capybara thư giãn trong bồn gỗ Hinoki bốc khói mờ, đội khăn trắng gấp gọn và quả yuzu trên đầu, 2 quả yuzu nổi trên mặt nước xanh ngọc gợn sóng, khóm trúc xanh cùng đèn đá Nhật (`Tōrō`) phát sáng ấm phía sau và bầu trời tự đổi theo giao diện (đêm trăng khuyết đầy sao ở Dark Mode, bình minh sương mờ ở Light Mode).
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`): thoát `0`, `0` lỗi (`dist/assets/AboutFoilPass-DHUFSyDX.js 39.52 kB`, `dist/assets/index-CbUDVdKy.js 118.81 kB`).
+  - Kiểm tra AST (`ts.createScanner`) & CSS trên toàn bộ tệp chỉnh sửa: `TS_COMMENTS=0`, `CSS_COMMENTS=0`.
+  - Playwright trên `vite preview` (`127.0.0.1:4173`) ở cả **Dark Mode** và **Light Mode**, trên **Desktop (`1440×900`)** và **Mobile (`375×812` cảm ứng)**: xác nhận trực quan qua ảnh chụp màn hình thanh `Navbar` gọn gàng không phụ đề/không gạch chân cầu vồng, logo Capybara pixel sắc nét, hiệu ứng hover thẻ phát sáng trắng (Dark) / đen (Light) trên nền `.google-aura-backdrop`, vé 3D `AboutFoilPass` sắc nét với cảnh Capybara Onsen cùng đầy đủ thao tác kéo uốn (`data-drag-bent="true"`), lật mặt (`data-flipped="true"`), xé cuống (`data-torn="true"`), khôi phục (`data-torn="false"`), tab `Không gian` (`?tab=workspace`) hoạt động ổn định, `scrollWidth <= innerWidth` và `0` lỗi console/page.

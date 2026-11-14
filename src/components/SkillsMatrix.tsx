@@ -91,7 +91,7 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
           >
             {marqueeList.map((skill, idx) => (
               <div key={`${skill.id}-${idx}`} className="folio-chip shrink-0 gap-2">
-                <span className="google-border-frame h-2 w-2 rounded-full" />
+                <span className="h-2 w-2 rounded-full bg-folio-ink/70" aria-hidden="true" />
                 <span className="font-semibold">{skill.label[locale]}</span>
               </div>
             ))}

@@ -44,7 +44,7 @@ export const Footer: React.FC<FooterProps> = ({ locale, theme }) => {
           className="group inline-flex min-h-[44px] cursor-pointer items-center gap-3 text-folio-ink"
           aria-label="Long Hoàng Logo"
         >
-          <BrandLogo size={34} showAura className="text-folio-ink" />
+          <BrandLogo size={36} showAura className="text-folio-ink" />
           <div className="font-serif text-base font-semibold text-folio-ink">
             {t.colophon}
           </div>

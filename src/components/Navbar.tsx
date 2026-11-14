@@ -48,7 +48,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'projects', label: t.projects },
     { id: 'skills', label: t.skills },
     { id: 'stack', label: t.stack },
-    { id: 'contact', label: t.contact },
   ];
 
   const handleSectionLinkClick = (
@@ -67,28 +66,23 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-50 border-b border-folio-border bg-folio-bg/85 backdrop-blur-xl transition-colors duration-300">
-      <div className="folio-container flex items-center justify-between gap-2 py-2.5 sm:gap-3 sm:py-3">
+      <div className="folio-container flex items-center justify-between gap-2 py-1.5 sm:gap-3 sm:py-2">
         <a
           href="#hero"
           onClick={(event) => handleSectionLinkClick(event, 'hero')}
-          className="group flex min-h-[44px] shrink-0 cursor-pointer items-center gap-2.5 text-folio-ink sm:gap-3"
+          className="group flex min-h-[44px] shrink-0 cursor-pointer items-center gap-2.5 text-folio-ink lg:min-h-[38px]"
           aria-label="Long Hoàng Logo"
         >
-          <BrandLogo size={38} showAura className="shrink-0 text-folio-ink" />
-          <div className="flex flex-col">
-            <span className="whitespace-nowrap font-serif text-base font-semibold leading-none tracking-tight text-folio-ink sm:text-lg">
-              {PROFILE_DATA.name}
-            </span>
-            <span className="hidden whitespace-nowrap font-mono text-[11px] text-folio-muted sm:block xl:hidden 2xl:block">
-              {PROFILE_DATA.brandSubtitle[locale]}
-            </span>
-          </div>
+          <BrandLogo size={34} showAura className="shrink-0 text-folio-ink" />
+          <span className="whitespace-nowrap font-serif text-base font-semibold leading-none tracking-tight text-folio-ink sm:text-[1.0625rem]">
+            {PROFILE_DATA.name}
+          </span>
         </a>
 
         <div
           role="tablist"
           aria-label={locale === 'vi' ? 'Chuyển chế độ xem' : 'Switch view'}
-          className="hidden items-center rounded-full border border-folio-border bg-folio-elevated/90 p-0.5 md:inline-flex"
+          className="hidden items-center gap-0.5 rounded-full border border-folio-border bg-folio-elevated/90 p-0.5 md:inline-flex"
         >
           {(['profile', 'workspace'] as const).map((tab) => {
             const isTabActive = activeTab === tab;
@@ -99,26 +93,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                 role="tab"
                 aria-selected={isTabActive}
                 onClick={() => handleTabClick(tab)}
-                className={`relative min-h-[44px] whitespace-nowrap rounded-full px-3.5 py-1.5 font-mono text-xs transition-all duration-200 lg:min-h-[36px] ${
+                className={`relative min-h-[44px] whitespace-nowrap rounded-full px-3.5 py-1 font-mono text-xs transition-all duration-200 lg:min-h-[34px] ${
                   isTabActive
-                    ? 'bg-folio-surface font-semibold text-folio-ink shadow-soft'
+                    ? 'bg-folio-surface font-semibold text-folio-ink shadow-sm ring-1 ring-black/10 dark:ring-white/15'
                     : 'text-folio-muted hover:text-folio-ink'
                 }`}
               >
                 {tabLabels[tab]}
-                {isTabActive && (
-                  <span
-                    className="google-border-frame absolute bottom-0.5 left-3 right-3 h-0.5 rounded-full"
-                    aria-hidden="true"
-                  />
-                )}
               </button>
             );
           })}
         </div>
 
         <nav
-          className="hidden xl:flex xl:items-center xl:gap-0.5"
+          className="hidden xl:flex xl:items-center xl:gap-1"
           aria-label={locale === 'vi' ? 'Điều hướng chính' : 'Primary Navigation'}
         >
           {navItems.map((item) => {
@@ -129,25 +117,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                 href={`#${item.id}`}
                 onClick={(event) => handleSectionLinkClick(event, item.id)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative whitespace-nowrap rounded-[var(--radius-control)] px-1.5 py-2 font-mono text-[11px] transition-all duration-200 hover:-translate-y-0.5 2xl:px-2 ${
+                className={`relative whitespace-nowrap rounded-full px-2.5 py-1.5 font-mono text-xs transition-all duration-200 hover:-translate-y-0.5 2xl:px-3 ${
                   isActive
-                    ? 'bg-folio-elevated font-semibold text-folio-ink'
+                    ? 'bg-folio-elevated font-semibold text-folio-ink ring-1 ring-black/10 dark:ring-white/15'
                     : 'text-folio-muted hover:text-folio-ink'
                 }`}
               >
                 {item.label}
-                {isActive && (
-                  <span
-                    className="google-border-frame absolute bottom-0 left-2 right-2 h-0.5 rounded-full"
-                    aria-hidden="true"
-                  />
-                )}
               </a>
             );
           })}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <button
             type="button"
             onClick={() => setLocale(locale === 'vi' ? 'en' : 'vi')}
@@ -201,12 +183,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      <div className="border-t border-folio-border/70 bg-folio-bg/75 py-1.5 md:hidden">
+      <div className="border-t border-folio-border/70 bg-folio-bg/75 py-1 md:hidden">
         <div className="folio-container">
           <div
             role="tablist"
             aria-label={locale === 'vi' ? 'Chuyển chế độ xem' : 'Switch view'}
-            className="grid grid-cols-2 gap-1 rounded-full border border-folio-border bg-folio-elevated/90 p-1"
+            className="grid grid-cols-2 gap-1 rounded-full border border-folio-border bg-folio-elevated/90 p-0.5"
           >
             {(['profile', 'workspace'] as const).map((tab) => {
               const isTabActive = activeTab === tab;
@@ -217,19 +199,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                   role="tab"
                   aria-selected={isTabActive}
                   onClick={() => handleTabClick(tab)}
-                  className={`relative flex min-h-[44px] items-center justify-center rounded-full px-3 py-2 font-mono text-xs transition-all duration-200 ${
+                  className={`relative flex min-h-[44px] items-center justify-center rounded-full px-3 py-1.5 font-mono text-xs transition-all duration-200 ${
                     isTabActive
-                      ? 'bg-folio-surface font-semibold text-folio-ink shadow-soft'
+                      ? 'bg-folio-surface font-semibold text-folio-ink shadow-sm ring-1 ring-black/10 dark:ring-white/15'
                       : 'text-folio-muted hover:text-folio-ink'
                   }`}
                 >
                   {tabLabels[tab]}
-                  {isTabActive && (
-                    <span
-                      className="google-border-frame absolute bottom-1 left-6 right-6 h-0.5 rounded-full"
-                      aria-hidden="true"
-                    />
-                  )}
                 </button>
               );
             })}
@@ -239,10 +215,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {mobileOpen && (
         <nav
-          className="border-t border-folio-border bg-folio-bg px-4 py-4 xl:hidden"
+          className="border-t border-folio-border bg-folio-bg px-4 py-3 xl:hidden"
           aria-label="Mobile Navigation"
         >
-          <div className="folio-container flex flex-col gap-2 !px-0">
+          <div className="folio-container flex flex-col gap-1.5 !px-0">
             {navItems.map((item) => {
               const isActive = activeTab === 'profile' && activeSection === item.id;
               return (
@@ -252,7 +228,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={(event) => handleSectionLinkClick(event, item.id)}
                   className={`flex min-h-[44px] items-center justify-between rounded-[var(--radius-control)] border px-4 py-2 font-mono text-sm transition-transform duration-150 active:scale-[0.985] ${
                     isActive
-                      ? 'border-folio-strong bg-folio-surface font-semibold text-folio-ink'
+                      ? 'border-folio-strong bg-folio-surface font-semibold text-folio-ink ring-1 ring-black/10 dark:ring-white/15'
                       : 'border-folio-border bg-folio-elevated text-folio-ink'
                   }`}
                 >

@@ -82,7 +82,7 @@ export const Experience: React.FC<ExperienceProps> = ({ locale }) => {
                 >
                   <span
                     aria-hidden="true"
-                    className="editorial-spine-dot absolute -left-[30px] top-8 flex h-3 w-3 items-center justify-center rounded-full border border-folio-strong bg-folio-bg group-hover:scale-125 group-hover:border-folio-gblue sm:-left-[42px]"
+                    className="editorial-spine-dot absolute -left-[30px] top-8 flex h-3 w-3 items-center justify-center rounded-full border border-folio-strong bg-folio-bg group-hover:scale-125 group-hover:border-folio-ink sm:-left-[42px]"
                   >
                     <span className="h-1 w-1 rounded-full bg-folio-ink" />
                   </span>

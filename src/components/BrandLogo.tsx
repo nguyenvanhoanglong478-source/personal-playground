@@ -1,4 +1,4 @@
-import React, { useId } from 'react';
+import React from 'react';
 
 interface BrandLogoProps {
   size?: number;
@@ -7,15 +7,10 @@ interface BrandLogoProps {
 }
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({
-  size = 40,
+  size = 36,
   className = '',
   showAura = true,
 }) => {
-  const rawId = useId();
-  const safeId = rawId.replace(/:/g, '');
-  const gradId = `brand-star-grad-${safeId}`;
-  const auraGlowId = `brand-star-aura-${safeId}`;
-
   return (
     <span
       className={`relative inline-flex shrink-0 items-center justify-center ${className}`}
@@ -26,82 +21,103 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           aria-hidden="true"
           style={{
             background:
-              'conic-gradient(from 45deg, #4285F4, #9B72CB, #D96570, #FBBC04, #34A853, #4285F4)',
+              'radial-gradient(circle, rgba(249, 115, 22, 0.24) 0%, rgba(208, 149, 96, 0.16) 52%, transparent 76%)',
           }}
-          className="pointer-events-none absolute inset-0 rounded-full opacity-0 blur-md transition-all duration-500 ease-out group-hover:scale-110 group-hover:opacity-35 motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-hover:opacity-0"
+          className="pointer-events-none absolute -inset-1 rounded-full opacity-0 blur-sm transition-all duration-300 ease-out group-hover:scale-110 group-hover:opacity-100 motion-reduce:transition-none motion-reduce:group-hover:transform-none motion-reduce:group-hover:opacity-0"
         />
       )}
 
       <svg
         width={size}
         height={size}
-        viewBox="0 0 48 48"
+        viewBox="0 0 16 16"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        shapeRendering="crispEdges"
         role="img"
-        aria-label="Long Hoàng Logo"
-        className="relative z-10 overflow-visible"
+        aria-label="Long Hoàng — Capybara Pixel Logo"
+        className={`relative z-10 block select-none overflow-visible ${
+          showAura
+            ? 'transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:transform-none'
+            : ''
+        }`}
       >
-        <defs>
-          <linearGradient
-            id={gradId}
-            x1="6"
-            y1="5"
-            x2="43"
-            y2="41"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop offset="0%" stopColor="#4285F4" />
-            <stop offset="26%" stopColor="#9B72CB" />
-            <stop offset="52%" stopColor="#D96570" />
-            <stop offset="78%" stopColor="#FBBC04" />
-            <stop offset="100%" stopColor="#34A853" />
-          </linearGradient>
+        <rect x="7" y="0" width="1" height="1" fill="#15803D" />
+        <rect x="8" y="0" width="2" height="1" fill="#22C55E" />
 
-          <radialGradient id={auraGlowId} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#4285F4" stopOpacity="0.22" />
-            <stop offset="60%" stopColor="#9B72CB" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#34A853" stopOpacity="0" />
-          </radialGradient>
-        </defs>
+        <rect x="6" y="1" width="2" height="1" fill="#FDBA74" />
+        <rect x="8" y="1" width="2" height="1" fill="#F97316" />
+        <rect x="6" y="2" width="1" height="1" fill="#FDBA74" />
+        <rect x="7" y="2" width="3" height="1" fill="#F97316" />
 
-        {showAura && (
-          <circle
-            cx="24"
-            cy="24"
-            r="21"
-            fill={`url(#${auraGlowId})`}
-            className="opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100 motion-reduce:transition-none"
-          />
-        )}
+        <rect x="2" y="2" width="2" height="1" fill="#3B2417" />
+        <rect x="12" y="2" width="2" height="1" fill="#3B2417" />
 
-        <g
-          style={{ transformOrigin: '22px 25px', transformBox: 'view-box' }}
-          className={
-            showAura
-              ? 'transition-transform duration-500 ease-out group-hover:rotate-[12deg] group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:transform-none'
-              : undefined
-          }
-        >
-          <path
-            d="M 22 9 C 23.28 18.28 28.72 23.72 38 25 C 28.72 26.28 23.28 31.72 22 41 C 20.72 31.72 15.28 26.28 6 25 C 15.28 23.72 20.72 18.28 22 9 Z"
-            fill={`url(#${gradId})`}
-          />
-        </g>
+        <rect x="2" y="3" width="1" height="1" fill="#3B2417" />
+        <rect x="3" y="3" width="1" height="1" fill="#734928" />
+        <rect x="4" y="3" width="2" height="1" fill="#3B2417" />
+        <rect x="6" y="3" width="4" height="1" fill="#9C6639" />
+        <rect x="10" y="3" width="2" height="1" fill="#3B2417" />
+        <rect x="12" y="3" width="1" height="1" fill="#734928" />
+        <rect x="13" y="3" width="1" height="1" fill="#3B2417" />
 
-        <g
-          style={{ transformOrigin: '37.5px 10.5px', transformBox: 'view-box' }}
-          className={
-            showAura
-              ? 'transition-transform duration-500 ease-out group-hover:-rotate-90 group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:transform-none'
-              : undefined
-          }
-        >
-          <path
-            d="M 37.5 5 C 37.94 8.19 39.81 10.06 43 10.5 C 39.81 10.94 37.94 12.81 37.5 16 C 37.06 12.81 35.19 10.94 32 10.5 C 35.19 10.06 37.06 8.19 37.5 5 Z"
-            fill={`url(#${gradId})`}
-          />
-        </g>
+        <rect x="2" y="4" width="1" height="1" fill="#3B2417" />
+        <rect x="3" y="4" width="1" height="1" fill="#9C6639" />
+        <rect x="4" y="4" width="8" height="1" fill="#D09560" />
+        <rect x="12" y="4" width="1" height="1" fill="#9C6639" />
+        <rect x="13" y="4" width="1" height="1" fill="#3B2417" />
+
+        <rect x="1" y="5" width="1" height="2" fill="#3B2417" />
+        <rect x="2" y="5" width="2" height="1" fill="#B87B48" />
+        <rect x="4" y="5" width="8" height="1" fill="#D09560" />
+        <rect x="12" y="5" width="2" height="1" fill="#B87B48" />
+        <rect x="14" y="5" width="1" height="2" fill="#3B2417" />
+
+        <rect x="2" y="6" width="12" height="4" fill="#B87B48" />
+        <rect x="1" y="7" width="1" height="3" fill="#2C1B12" />
+        <rect x="14" y="7" width="1" height="3" fill="#2C1B12" />
+
+        <rect x="2" y="9" width="1" height="1" fill="#9C6639" />
+        <rect x="5" y="9" width="1" height="1" fill="#9C6639" />
+        <rect x="10" y="9" width="1" height="1" fill="#9C6639" />
+        <rect x="13" y="9" width="1" height="1" fill="#9C6639" />
+
+        <rect x="6" y="6" width="4" height="5" fill="#734928" />
+
+        <rect x="3" y="6" width="1" height="2" fill="#24150E" />
+        <rect x="12" y="6" width="1" height="2" fill="#24150E" />
+
+        <rect x="2" y="8" width="2" height="1" fill="#E58B7B" />
+        <rect x="12" y="8" width="2" height="1" fill="#E58B7B" />
+
+        <rect x="6" y="7" width="4" height="1" fill="#24150E" />
+        <rect x="7" y="8" width="2" height="2" fill="#24150E" />
+
+        <rect x="2" y="10" width="1" height="3" fill="#2C1B12" />
+        <rect x="3" y="10" width="3" height="1" fill="#9C6639" />
+        <rect x="10" y="10" width="3" height="1" fill="#9C6639" />
+        <rect x="13" y="10" width="1" height="3" fill="#2C1B12" />
+
+        <rect x="3" y="11" width="2" height="1" fill="#B87B48" />
+        <rect x="5" y="11" width="1" height="1" fill="#9C6639" />
+        <rect x="6" y="11" width="4" height="1" fill="#D09560" />
+        <rect x="10" y="11" width="1" height="1" fill="#9C6639" />
+        <rect x="11" y="11" width="2" height="1" fill="#B87B48" />
+
+        <rect x="3" y="12" width="2" height="1" fill="#9C6639" />
+        <rect x="5" y="12" width="1" height="1" fill="#3B2417" />
+        <rect x="6" y="12" width="4" height="1" fill="#B87B48" />
+        <rect x="7" y="12" width="2" height="1" fill="#D09560" />
+        <rect x="10" y="12" width="1" height="1" fill="#3B2417" />
+        <rect x="11" y="12" width="2" height="1" fill="#9C6639" />
+
+        <rect x="3" y="13" width="1" height="1" fill="#2C1B12" />
+        <rect x="4" y="13" width="2" height="1" fill="#734928" />
+        <rect x="6" y="13" width="4" height="1" fill="#9C6639" />
+        <rect x="10" y="13" width="2" height="1" fill="#734928" />
+        <rect x="12" y="13" width="1" height="1" fill="#2C1B12" />
+
+        <rect x="4" y="14" width="8" height="1" fill="#2C1B12" />
       </svg>
     </span>
   );

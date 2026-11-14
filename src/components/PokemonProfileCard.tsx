@@ -234,9 +234,9 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
 
           <header className="pokemon-card-layer-elevated relative z-20 flex items-center justify-between gap-1 pb-2 sm:gap-2">
             <div className="flex min-w-0 items-center gap-1 sm:gap-2">
-              <div className="pokemon-stage-pill inline-flex shrink-0 items-center gap-0.5 py-0.5 pl-0.5 pr-1.5 sm:gap-1 sm:pl-1 sm:pr-2.5">
-                <span className="pokemon-stage-socket inline-flex h-4 w-4 items-center justify-center rounded-full sm:h-[18px] sm:w-[18px]">
-                  <BrandLogo size={13} showAura={false} className="text-folio-ink" />
+              <div className="pokemon-stage-pill inline-flex shrink-0 items-center gap-1 py-0.5 pl-0.5 pr-1.5 sm:gap-1.5 sm:pl-1 sm:pr-2.5">
+                <span className="pokemon-stage-socket inline-flex h-6 w-6 items-center justify-center rounded-full sm:h-[26px] sm:w-[26px]">
+                  <BrandLogo size={22} showAura={false} className="text-folio-ink" />
                 </span>
                 <span className="font-mono text-[8px] font-bold uppercase tracking-[0.06em] text-folio-ink sm:text-[9.5px] sm:tracking-[0.12em]">
                   {statsLabels.stage}

@@ -365,3 +365,18 @@ Cập nhật lần cuối: 2026-11-13
   - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`): thoát `0`, `0` lỗi (`dist/assets/WorkspacePage-Buaw_-pi.js 101.21 kB`).
   - Kiểm tra AST (`ts.createSourceFile`) & runtime: `AST_COMMENT_COUNT=0`, `MATRIX_RUNTIME_ALL_POSES_OK=true`.
   - Playwright trên `vite preview` (`127.0.0.1:4174`): chụp và đối chiếu cận cảnh phóng đại `8×` nearest-neighbor cho 4 tư thế (`waking` đứng, `working` ngồi, `late_night` ngồi, `sleeping` trên giường) cùng toàn cảnh Desktop `1440×900` và Mobile `375×812` — `0` console error, `0` page error.
+
+
+## 26. Tái Cấu Trúc Unified Character Rig & Hiệu Chỉnh Điểm Neo Ghế Ngồi (`pixelSprites.ts`, `WorkspaceRoom.tsx`)
+
+- **Mô Hình Lắp Ghép Thống Nhất (`UNIFIED CHARACTER RIG`, `src/components/workspace/pixelSprites.ts`)**:
+  - Hợp nhất toàn bộ 3 tư thế thành một hệ thống thành phần dùng chung (`CHAR_PALETTE`, `getLongPalette`, `createEmptyGrid`, `stampGridLayer`, `finalizeGridMatrix`) giữ nguyên `1px` Selective Colored Outlines và loại bỏ hoàn toàn kiểu tô chấm caro trên tóc.
+  - Chuẩn hóa kích thước dùng chung xuyên suốt mọi tư thế: đầu `12×12` (`HEAD_FRONT_OPEN`/`BLINK`/`SIP`, `HEAD_BACK_CENTER`/`GLANCE_LEFT`/`GLANCE_RIGHT`, `HEAD_SLEEP`), thân hoodie thon gọn rộng `14px` (`TORSO_FRONT`/`FRONT_BREATHE`, `TORSO_BACK` có mũ trùm gập sau gáy, `TORSO_SLEEP`), chân `LEGS_FRONT` và tay lắp ghép (`WAKING_ARMS_*`, `SEATED_ARMS_*`, `SLEEP_RESTING_HAND`).
+  - Tư thế ngồi (`50×20`, `drawY = seatAnchor.seatTopY - 13`): lùi nhẹ khối đầu khỏi dải bàn phím để lộ rõ thanh RGB và hàng phím, hai cánh tay mảnh `2–3px` chạm mép dưới bàn phím & chuột, vai/mũ hoodie tách bạch phía trên tựa lưng ghế `drawChairBackOverlay`.
+  - Tư thế đứng (`21×29`) giữ nhịp thở/nhấp cà phê/vươn vai trong `WALKABLE_RECT`; tư thế ngủ (`20×19`, `SLEEP_DRAW_X = 32, SLEEP_DRAW_Y = 89`) dùng chung khối đầu & vai `14px` nằm giữa gối dưới lớp chăn `drawBedBlanket`.
+- **Neo Ghế Xoay Theo Dữ Liệu Tọa Độ Thực (`src/components/workspace/WorkspaceRoom.tsx`)**:
+  - Định nghĩa `SEATED_CHAIR_ANCHOR` (`seatCenterX: 173, seatTopY: 96`) và truyền qua `seatAnchor` cho lớp vẽ nhân vật.
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`): thoát `0`, `0` lỗi (`dist/assets/WorkspacePage-CWoJkRKz.js 92.78 kB`).
+  - Kiểm tra AST (`ts.createSourceFile`) & runtime: `AST_COMMENT_COUNT=0`, `MATRIX_RUNTIME_ALL_POSES_OK=true`.
+  - Playwright trên `vite preview`: chụp & rà soát trực tiếp ảnh zoom `8×` cho cả 4 tư thế (`crop_waking_standing.png`, `crop_working_seated.png`, `crop_late_night_seated.png`, `crop_sleeping_bed.png`) cùng ảnh Desktop `1440×900` và Mobile `375×812` — `console_errors: []`, `page_errors: []`.

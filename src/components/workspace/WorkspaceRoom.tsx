@@ -36,6 +36,11 @@ export interface WorkspaceRoomProps {
   locale?: Locale;
 }
 
+const SEATED_CHAIR_ANCHOR = {
+  seatCenterX: 173,
+  seatTopY: 96,
+} as const;
+
 export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
   timeState,
   lampOn,
@@ -101,6 +106,7 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
       selectedHotspot: current.selectedHotspot,
       hoveredRegion: activeHovered,
       reducedMotion: current.reducedMotion,
+      seatAnchor: SEATED_CHAIR_ANCHOR,
     };
 
     const lightingOptions = {

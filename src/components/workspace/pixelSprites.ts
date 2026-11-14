@@ -6,6 +6,11 @@ export type SpriteMatrix = readonly string[];
 
 export type SpriteColorMap = Record<string, string | undefined>;
 
+export interface SeatAnchor {
+  readonly seatCenterX: number;
+  readonly seatTopY: number;
+}
+
 export interface DrawCharacterAndEffectsOptions {
   timeState: RoomTimeState;
   lampOn: boolean;
@@ -17,6 +22,7 @@ export interface DrawCharacterAndEffectsOptions {
   selectedHotspot: RoomHotspotId | null;
   hoveredRegion?: RoomHotspotRegion | null;
   reducedMotion?: boolean;
+  seatAnchor?: SeatAnchor;
 }
 
 const MUSIC_FADE_DURATION_SEC = 0.4;
@@ -39,15 +45,27 @@ const LEFT_WOOFER_Y = 68;
 const RIGHT_WOOFER_X = 211;
 const RIGHT_WOOFER_Y = 68;
 
-const SEATED_DRAW_X = 152;
-const SEATED_DRAW_Y = 72;
-const SEATED_WIDTH = 52;
-const SEATED_HEAD_HEIGHT = 12;
-const SEATED_TORSO_HEIGHT = 22;
-const SEATED_TOTAL_HEIGHT = 33;
+const DEFAULT_SEAT_ANCHOR: SeatAnchor = {
+  seatCenterX: 173,
+  seatTopY: 96,
+};
 
-const SLEEP_DRAW_X = 24;
-const SLEEP_DRAW_Y = 86;
+const HEAD_WIDTH = 12;
+const HEAD_HEIGHT = 12;
+const TORSO_WIDTH = 14;
+
+const SEATED_WIDTH = 50;
+const SEATED_TOTAL_HEIGHT = 20;
+const SEATED_TORSO_X = 11;
+const SEATED_HEAD_X = 12;
+
+const SLEEP_WIDTH = 20;
+const SLEEP_HEIGHT = 19;
+const SLEEP_DRAW_X = 32;
+const SLEEP_DRAW_Y = 89;
+
+const WAKING_WIDTH = 21;
+const WAKING_HEIGHT = 29;
 
 interface MusicVisualTracker {
   wasActive: boolean;
@@ -389,619 +407,538 @@ function drawSideLaptopScreen(
   }
 }
 
-const SLEEPING_HEAD_ROWS: SpriteMatrix = assertUniformMatrixWidth(
+interface RigPlacement {
+  readonly matrix: SpriteMatrix;
+  readonly x: number;
+  readonly y: number;
+  readonly overwrite?: boolean;
+}
+
+function createEmptyGrid(width: number, height: number): string[][] {
+  return Array.from({ length: height }, () => Array<string>(width).fill('.'));
+}
+
+function stampGridLayer(grid: string[][], placement: RigPlacement): void {
+  const { matrix, x, y, overwrite = true } = placement;
+  const height = grid.length;
+  const width = grid[0]?.length ?? 0;
+
+  for (let r = 0; r < matrix.length; r += 1) {
+    const gr = y + r;
+    if (gr < 0 || gr >= height) continue;
+    const row = matrix[r];
+    for (let c = 0; c < row.length; c += 1) {
+      const ch = row[c];
+      if (ch === '.' || ch === ' ') continue;
+      const gc = x + c;
+      if (gc < 0 || gc >= width) continue;
+      if (overwrite || grid[gr][gc] === '.') {
+        grid[gr][gc] = ch;
+      }
+    }
+  }
+}
+
+function finalizeGridMatrix(grid: string[][], expectedWidth: number): SpriteMatrix {
+  return assertUniformMatrixWidth(
+    grid.map((chars) => chars.join('')),
+    expectedWidth
+  );
+}
+
+const HEAD_FRONT_OPEN: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '...........oooooooooooo...........',
-    '.........oohlllhhhhllhoo..........',
-    '........ohlllhhhhhhhhllho.........',
-    '.......PohllhhhhhhhhhllhoP........',
-    '.......PoHHhHHHHhHHHHHHhHoP.......',
-    '.......PoHHhdttHHhdttdhHHoP.......',
-    '.......PodttttttttttttttdoP.......',
-    '.......kttttdKKKtttKKKdtttk.......',
-    '.......PktttpttttttttptttkP.......',
-    '........PkttttttttttttttkP........',
-    '.........PkdttttttttttdkP.........',
-    '..........PkddddttddddkP..........',
-    '...........PkkddddddkkP...........',
-    '...........ObbBBddBBbbO...........',
+    '...oooooo...',
+    '..olllhhho..',
+    '.ollllhhhho.',
+    'oohlllHHHhoo',
+    'ohhhhhHHHHho',
+    'oHHhtHHthHHo',
+    '.oHGGggGGHo.',
+    '.ktWEttWEtk.',
+    '.kpEEttEEpk.',
+    '..kttttttk..',
+    '...kkddkk...',
+    '....kddk....',
   ],
-  34
+  HEAD_WIDTH
 );
 
-const SLEEPING_TORSO_ROWS: SpriteMatrix = assertUniformMatrixWidth(
+const HEAD_FRONT_BLINK: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '.......ObbbbBBBBCCBBBBbbbbO.......',
-    '.....ObbbbBBBBBzBBBBBBbbbbO..kkk..',
-    '....ObbbbBBBBBBzBBBBBBBbbbOkttddk.',
-    '....OBBBBBBBBBBzBBBBBBBBBBBOkdddk.',
-    '....OBBBBBBBBBBBBBBBBBBBBBBO......',
-    '....OBBBBBSSSSBBBBBBBBBBSSSSBO....',
-    '.....OSSSSSSSSSSSSSSSSSSSSSSSO....',
-    '......OOOOOOOOOOOOOOOOOOOOOOO.....',
+    '...oooooo...',
+    '..olllhhho..',
+    '.ollllhhhho.',
+    'oohlllHHHhoo',
+    'ohhhhhHHHHho',
+    'oHHhtHHthHHo',
+    '.oHGGggGGHo.',
+    '.ktKKttKKtk.',
+    '.kpttttttpk.',
+    '..kttttttk..',
+    '...kkddkk...',
+    '....kddk....',
   ],
-  34
+  HEAD_WIDTH
+);
+
+const HEAD_FRONT_SIP: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '...oooooo...',
+    '..olllhhho..',
+    '.ollllhhhho.',
+    'oohlllHHHhoo',
+    'ohhhhhHHHHho',
+    'oHHhtHHthHHo',
+    '.oHGGggGGHo.',
+    '.ktKKttKKtk.',
+    '.kpttttttpk.',
+    '..kttttttk..',
+    '...kkddkk...',
+    '....kddk....',
+  ],
+  HEAD_WIDTH
+);
+
+const HEAD_BACK_CENTER: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '...oooooo...',
+    '..olllhhho..',
+    '.ollllhhhho.',
+    'oolllhhhHHho',
+    'ohllhhhhHHho',
+    'ohhhhhhHHHho',
+    'kthhHHHHHhtk',
+    'kdhHHHHHHHdk',
+    '.oHHHHHHHHo.',
+    '..ooHHHHoo..',
+    '...ooHHoo...',
+    '....kddk....',
+  ],
+  HEAD_WIDTH
+);
+
+const HEAD_BACK_GLANCE_LEFT: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '..ooooooo...',
+    '.olllhhhhoo.',
+    '.ollllhhhho.',
+    'oolllhhHHHho',
+    'ohllhhhHHHho',
+    'ohhhhhHHHHho',
+    'kthHHHHHHhtk',
+    'kdHHHHHHHHdk',
+    '.oHHHHHHHHo.',
+    '..ooHHHHoo..',
+    '...ooHHoo...',
+    '....kddk....',
+  ],
+  HEAD_WIDTH
+);
+
+const HEAD_BACK_GLANCE_RIGHT: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '...ooooooo..',
+    '.oohhhhlllo.',
+    '.ohhhhllllo.',
+    'ohHHHhhllloo',
+    'ohHHHhhhllho',
+    'ohHHHHhhhhho',
+    'kthHHHHHHhtk',
+    'kdHHHHHHHHdk',
+    '.oHHHHHHHHo.',
+    '..ooHHHHoo..',
+    '...ooHHoo...',
+    '....kddk....',
+  ],
+  HEAD_WIDTH
+);
+
+const HEAD_SLEEP: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '...oooooo...',
+    '..olllhhho..',
+    '.ollllhhhho.',
+    'oohlllHHHhoo',
+    'ohhhhhHHHHho',
+    'oHHhtHHthHHo',
+    '.oHttttttHo.',
+    '.ktKKttKKtk.',
+    '.kpttttttpk.',
+    '..kttttttk..',
+    '...kkddkk...',
+    '....kddk....',
+  ],
+  HEAD_WIDTH
+);
+
+const TORSO_FRONT: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '.ObbBBCCBBbbO.',
+    'ObbBBBzBBBBbbO',
+    'ObBSBBzBBBSbbO',
+    'OBBSBBzBBBBSbO',
+    '.OBBSBzBBBBSO.',
+    '.OBBBBzBBBBSO.',
+    '.OSSSSSSSSSSO.',
+    '..OOOOOOOOOO..',
+  ],
+  TORSO_WIDTH
+);
+
+const TORSO_FRONT_BREATHE: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '.ObbBBCCBBbbO.',
+    'ObbbBBzBBBBbbO',
+    'ObBSBBzBBBSbbO',
+    'OBBSBBzBBBBSbO',
+    '.OBBSBzBBBBSO.',
+    '.OBBBBzBBBBSO.',
+    '.OSSSSSSSSSSO.',
+    '..OOOOOOOOOO..',
+  ],
+  TORSO_WIDTH
+);
+
+const TORSO_BACK: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '..OObDDDDbOO..',
+    '.OObDDDDDDbOO.',
+    'ObBSbDDDDbSBbO',
+    'OBBSSDDDDSSBBO',
+    'OBBBSSbbSSBBBO',
+    '.OBBBSSSSBBBO.',
+    '.OBBbBBBBbBBO.',
+    '.OBBBBBBBBBBO.',
+    '.OSSSSSSSSSSO.',
+    '..OOOOOOOOOO..',
+  ],
+  TORSO_WIDTH
+);
+
+const TORSO_SLEEP: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '.ObbBBCCBBbbO.',
+    'ObbBBBzBBBBbbO',
+    'ObBSBBzBBBSbbO',
+    'OBBBBBzBBBBBBO',
+    '.OBBBBSSSSBBO.',
+    '.OSSSSSSSSSSO.',
+    '..OOOOOOOOOO..',
+  ],
+  TORSO_WIDTH
+);
+
+const SLEEP_RESTING_HAND: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '.kkk.',
+    'kttdk',
+    'kddk.',
+  ],
+  5
+);
+
+const LEGS_FRONT: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '..QJjJNNJjJQ..',
+    '..QJjQQQQjJQ..',
+    '..QJjQ..QjJQ..',
+    '..QJjQ..QjJQ..',
+    '..QJJQ..QJJQ..',
+    '..QuvQ..QuvQ..',
+    '.QuuuQ..QuuuQ.',
+    '.QwwwQ..QwwwQ.',
+    '..QQQ....QQQ..',
+    '.xxxx....xxxx.',
+  ],
+  TORSO_WIDTH
 );
 
 function buildSleepingLongMatrix(breathOffset: number): SpriteMatrix {
-  const width = 34;
-  const totalHeight = 22;
-  const grid: string[][] = Array.from({ length: totalHeight }, () =>
-    Array<string>(width).fill('.')
-  );
+  const grid = createEmptyGrid(SLEEP_WIDTH, SLEEP_HEIGHT);
+  const torsoOffset = breathOffset < 0 ? -1 : 0;
 
-  for (let r = 0; r < SLEEPING_HEAD_ROWS.length; r += 1) {
-    const line = SLEEPING_HEAD_ROWS[r];
-    for (let c = 0; c < width; c += 1) {
-      const ch = line[c];
-      if (ch && ch !== '.') {
-        grid[r][c] = ch;
-      }
-    }
-  }
+  stampGridLayer(grid, { matrix: HEAD_SLEEP, x: 4, y: 0 });
+  stampGridLayer(grid, { matrix: TORSO_SLEEP, x: 3, y: 11 + torsoOffset });
+  stampGridLayer(grid, { matrix: SLEEP_RESTING_HAND, x: 15, y: 11 + torsoOffset });
 
-  const torsoStart = 14 + (breathOffset < 0 ? -1 : 0);
-  for (let r = 0; r < SLEEPING_TORSO_ROWS.length; r += 1) {
-    const gr = torsoStart + r;
-    if (gr < 0 || gr >= totalHeight) continue;
-    const line = SLEEPING_TORSO_ROWS[r];
-    for (let c = 0; c < width; c += 1) {
-      const ch = line[c];
-      if (ch && ch !== '.') {
-        grid[gr][c] = ch;
-      }
-    }
-  }
-
-  return assertUniformMatrixWidth(
-    grid.map((chars) => chars.join('')),
-    width
-  );
+  return finalizeGridMatrix(grid, SLEEP_WIDTH);
 }
 
-const SEATED_HEAD_MONITOR: SpriteMatrix = assertUniformMatrixWidth(
+const SEATED_ARMS_HOME: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '................oooooooooo..........................',
-    '..............oohlllhhhhhhoo........................',
-    '.............ohllhhhhhhhhlhho.......................',
-    '.............ohHHhhhHHHHhhhHho......................',
-    '............oHhhhHHHHHHHHhHHhHo.....................',
-    '............kLGdHHHHHHHHhhHHHhHo....................',
-    '............ktGGdHHHHHHHHHHHHhHo....................',
-    '.............ktdHHHHHHHHHHHHHhHo....................',
-    '.............oHHHhHHHHHhHHHHhho.....................',
-    '..............oHhHHHHHHHhHHHho......................',
-    '...............ooddHHHHddooo........................',
-    '..................ObbddbbO..........................',
+    '..................................................',
+    '..................................................',
+    '..................................................',
+    '.......kkk.............kkk........................',
+    '......kttdk...........ktdk........................',
+    '.......Obdk...........Obdk........................',
+    '........ObO............ObO........................',
+    '.........ObO..........ObO.........................',
+    '.........ObO..........ObO.........................',
+    '..........ObO........ObO..........................',
+    '..........ObB.........BBbO........................',
+    '..................................................',
+    '..................................................',
   ],
   SEATED_WIDTH
 );
 
-const SEATED_HEAD_GLANCE_LEFT: SpriteMatrix = assertUniformMatrixWidth(
+const SEATED_ARMS_TYPE_L: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '...............oooooooooo...........................',
-    '.............oohlllhhhhhhoo.........................',
-    '............ohllhhhhhhhhlhho........................',
-    '............ohHHhhhHHHHhhhHho.......................',
-    '...........ohhhhHHHHHHHHhHHhHo......................',
-    '...........oHGGLdHHHHHHHHhhHHo......................',
-    '..........ktGWEtdHHHHHHHHHHHHhHo....................',
-    '..........kptEEtdHHHHHHHHHHHHhHo....................',
-    '...........ktdHHHHHHHHHHHHHhHo......................',
-    '............oddHHHHHHHHHHHhho.......................',
-    '..............ooddddddHdooo.........................',
-    '.................ObbddbbO...........................',
+    '..................................................',
+    '..................................................',
+    '.......kkk........................................',
+    '......kttdk............kkk........................',
+    '.......Obdk...........ktdk........................',
+    '........ObO...........Obdk........................',
+    '........ObO............ObO........................',
+    '.........ObO..........ObO.........................',
+    '.........ObO..........ObO.........................',
+    '..........ObO........ObO..........................',
+    '..........ObB.........BBbO........................',
+    '..................................................',
+    '..................................................',
   ],
   SEATED_WIDTH
 );
 
-const SEATED_HEAD_SIP_MUG: SpriteMatrix = assertUniformMatrixWidth(
+const SEATED_ARMS_TYPE_R: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '.................oooooooooo.........................',
-    '...............oohhhhhllhhoo........................',
-    '..............ohlhhhhhhhhhllho......................',
-    '..............ohHhhhHHHHhhhHHho.....................',
-    '.............ohHHhHHHHHHHHhhhho.....................',
-    '.............ohHHhhHHHHHHHHdLGGo....................',
-    '.............ohHHHHHHHHHHHHdtKKtk...................',
-    '.............ohHHHHHHHHHHHHHdtptk...................',
-    '..............ohHHHHHHHHHHHHdtk.....................',
-    '...............oHHHHHHHHHHddo.......................',
-    '................oodddddddoo.........................',
-    '..................ObbddbbO..........................',
+    '..................................................',
+    '..................................................',
+    '.......................kkk........................',
+    '.......kkk............ktdk........................',
+    '......kttdk...........Obdk........................',
+    '.......Obdk............ObO........................',
+    '........ObO............ObO........................',
+    '.........ObO..........ObO.........................',
+    '.........ObO..........ObO.........................',
+    '..........ObO........ObO..........................',
+    '..........ObB.........BBbO........................',
+    '..................................................',
+    '..................................................',
   ],
   SEATED_WIDTH
 );
 
-const SEATED_HEAD_TILT_LEFT: SpriteMatrix = assertUniformMatrixWidth(
+const SEATED_ARMS_MOUSE_A: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '...............oooooooooo...........................',
-    '.............oohlllhhhhhhoo.........................',
-    '............ohllhhhhhhhhlhho........................',
-    '............ohHHhhhHHHHhhhHho.......................',
-    '...........oHhhhHHHHHHHHhHHhHo......................',
-    '...........kLGdHHHHHHHHhhHHHhHo.....................',
-    '...........ktGGdHHHHHHHHHHHHhHo.....................',
-    '............ktdHHHHHHHHHHHHHhHo.....................',
-    '............oHHHhHHHHHhHHHHhho......................',
-    '.............oHhHHHHHHHhHHHho.......................',
-    '..............ooddHHHHddooo.........................',
-    '.................ObbddbbO...........................',
+    '..................................................',
+    '..................................................',
+    '.................................kkk..............',
+    '.......kkk......................ktddk.............',
+    '......kttdk....................Obbtk..............',
+    '.......Obdk...................ObO.................',
+    '........ObO..................ObO..................',
+    '.........ObO................ObO...................',
+    '.........ObO..............ObbO....................',
+    '..........ObO...........OObbO.....................',
+    '..........ObB..........BBbbO......................',
+    '..................................................',
+    '..................................................',
   ],
   SEATED_WIDTH
 );
 
-const SEATED_HEAD_TILT_RIGHT: SpriteMatrix = assertUniformMatrixWidth(
+const SEATED_ARMS_MOUSE_B: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '.................oooooooooo.........................',
-    '...............oohlllhhhhhhoo.......................',
-    '..............ohlhhhhhhhhhllho......................',
-    '..............ohHhhhHHHHhhhHHho.....................',
-    '.............oHhhhHHHHHHHHhHHhHo....................',
-    '.............kLGdHHHHHHHHhhHHHhHo...................',
-    '.............ktGGdHHHHHHHHHHHHhHo...................',
-    '..............ktdHHHHHHHHHHHHHhHo...................',
-    '..............oHHHhHHHHHhHHHHhho....................',
-    '...............oHhHHHHHHHhHHHho.....................',
-    '................ooddHHHHddooo.......................',
-    '...................ObbddbbO.........................',
+    '..................................................',
+    '..................................................',
+    '..................................kkk.............',
+    '.......kkk.......................ktddk............',
+    '......kttdk.....................Obbtk.............',
+    '.......Obdk....................ObO................',
+    '........ObO...................ObO.................',
+    '.........ObO.................ObO..................',
+    '.........ObO...............ObbO...................',
+    '..........ObO............OObbO....................',
+    '..........ObB...........BBbbO.....................',
+    '..................................................',
+    '..................................................',
   ],
   SEATED_WIDTH
 );
 
-const SEATED_TORSO_HOME: SpriteMatrix = assertUniformMatrixWidth(
+const SEATED_ARMS_REACH_MUG: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '....................................................',
-    '.....kkkk...............kkkk........................',
-    '....kttdk..............ktddtk.......................',
-    '....ObbtO....OOObBCCBbOOO..kdbtO....................',
-    '....ObbBOOObbBBbSBBBBBSbBBBbbObbbbO.................',
-    '.....ObbBBbBBBBbSSSSSSSbBBBBbBbbO...................',
-    '......OOBBBBBBBBbbbbbBBBBBBBBBOO....................',
-    '.......OBBBBBBBBBBBBBBBBBBBBBBO.....................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBbBBBBBBBBBBBBbBBBO......................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBBBSSSSBBBBBBSSSSBO......................',
-    '.........OBBBBSSSSBBBBBBSSSBO.......................',
-    '...........OBBBBBBBBBBBBBBBBO.......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OBBBSSSSBBBBBBBSSSSO......................',
-    '..........OSSSSSSSSSSSSSSSSSSO......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OSSSSSSSSSSSSSSSSSSO......................',
-    '...........OOOOOOOOOOOOOOOOOO.......................',
+    '..................................................',
+    '.........................................kkk......',
+    '........................................ktddk.....',
+    '.......kkk.............................Obbtk......',
+    '......kttdk.........................OOObbO........',
+    '.......Obdk......................OOObbO...........',
+    '........ObO...................OOObbO..............',
+    '.........ObO................OObbO.................',
+    '.........ObO..............OObbO...................',
+    '..........ObO...........OObbO.....................',
+    '..........ObB..........BBbbO......................',
+    '..................................................',
+    '..................................................',
   ],
   SEATED_WIDTH
 );
 
-const SEATED_TORSO_TYPE_L: SpriteMatrix = assertUniformMatrixWidth(
+const SEATED_ARMS_SIP_MUG: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '.....kkkk...........................................',
-    '....kttdk...............kkkk........................',
-    '....ObbtO..............ktddtk.......................',
-    '....ObbBO....OOObBCCBbOOO..kdbtO....................',
-    '.....ObbOOObbBBbSBBBBBSbBBBbbObbbbO.................',
-    '.....ObbBBbBBBBbSSSSSSSbBBBBbBbbO...................',
-    '......OOBBBBBBBBbbbbbBBBBBBBBBOO....................',
-    '.......OBBBBBBBBBBBBBBBBBBBBBBO.....................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBbBBBBBBBBBBBBbBBBO......................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBBBSSSSBBBBBBSSSSBO......................',
-    '.........OBBBBSSSSBBBBBBSSSBO.......................',
-    '...........OBBBBBBBBBBBBBBBBO.......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OBBBSSSSBBBBBBBSSSSO......................',
-    '..........OSSSSSSSSSSSSSSSSSSO......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OSSSSSSSSSSSSSSSSSSO......................',
-    '...........OOOOOOOOOOOOOOOOOO.......................',
+    '..................................................',
+    '..................................................',
+    '..................................................',
+    '.........................mmmm.....................',
+    '........................mMMMrO....................',
+    '.......kkk..............mMFFrO....................',
+    '......kttdk.............mMMMdk....................',
+    '.......Obdk.............ObbkktO...................',
+    '........ObO..............Obbtdk...................',
+    '.........ObO.............ObbO.....................',
+    '..........ObB............BBbO.....................',
+    '..................................................',
+    '..................................................',
   ],
   SEATED_WIDTH
 );
 
-const SEATED_TORSO_TYPE_R: SpriteMatrix = assertUniformMatrixWidth(
+const SEATED_ARMS_STRETCH: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '........................kkkk........................',
-    '.....kkkk..............ktddtk.......................',
-    '....kttdk..............ObdtkO.......................',
-    '....ObbtO....OOObBCCBbOOO..kbtO.....................',
-    '....ObbBOOObbBBbSBBBBBSbBBBbbObbbO..................',
-    '.....ObbBBbBBBBbSSSSSSSbBBBBbBbbO...................',
-    '......OOBBBBBBBBbbbbbBBBBBBBBBOO....................',
-    '.......OBBBBBBBBBBBBBBBBBBBBBBO.....................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBbBBBBBBBBBBBBbBBBO......................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBBBSSSSBBBBBBSSSSBO......................',
-    '.........OBBBBSSSSBBBBBBSSSBO.......................',
-    '...........OBBBBBBBBBBBBBBBBO.......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OBBBSSSSBBBBBBBSSSSO......................',
-    '..........OSSSSSSSSSSSSSSSSSSO......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OSSSSSSSSSSSSSSSSSSO......................',
-    '...........OOOOOOOOOOOOOOOOOO.......................',
+    '......kkk.....................kkk.................',
+    '.....ktdk....................ktddk................',
+    '.....ObO.....................ObbO.................',
+    '......ObO...................ObO...................',
+    '.......ObO.................ObO....................',
+    '.......ObO.................ObO....................',
+    '........ObO...............ObO.....................',
+    '........ObO...............ObO.....................',
+    '.........ObO.............ObO......................',
+    '..........ObO...........ObO.......................',
+    '..........ObB...........BbO.......................',
+    '..................................................',
+    '..................................................',
   ],
   SEATED_WIDTH
 );
-
-const SEATED_TORSO_MOUSE_A: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '....................................................',
-    '.....kkkk..........................kkkk.............',
-    '....kttdk.........................ktddtk............',
-    '....ObbtO....OOObBCCBbOOOOO.......Obbddtk...........',
-    '....ObbBOOObbBBbSBBBBBSbBBBbbOOOOObbbbbO............',
-    '.....ObbBBbBBBBbSSSSSSSbBBBBBBBbbbbbbOO.............',
-    '......OOBBBBBBBBbbbbbBBBBBBBBBOOOOO.................',
-    '.......OBBBBBBBBBBBBBBBBBBBBBBO.....................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBbBBBBBBBBBBBBbBBBO......................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBBBSSSSBBBBBBSSSSBO......................',
-    '.........OBBBBSSSSBBBBBBSSSBO.......................',
-    '...........OBBBBBBBBBBBBBBBBO.......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OBBBSSSSBBBBBBBSSSSO......................',
-    '..........OSSSSSSSSSSSSSSSSSSO......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OSSSSSSSSSSSSSSSSSSO......................',
-    '...........OOOOOOOOOOOOOOOOOO.......................',
-  ],
-  SEATED_WIDTH
-);
-
-const SEATED_TORSO_MOUSE_B: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '....................................................',
-    '.....kkkk...........................kkkk............',
-    '....kttdk..........................ktddtk...........',
-    '....ObbtO....OOObBCCBbOOOOO........Obbddtk..........',
-    '....ObbBOOObbBBbSBBBBBSbBBBbbOOOOOObbbbbbO..........',
-    '.....ObbBBbBBBBbSSSSSSSbBBBBBBBbbbbbbbOO............',
-    '......OOBBBBBBBBbbbbbBBBBBBBBBOOOOOO................',
-    '.......OBBBBBBBBBBBBBBBBBBBBBBO.....................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBbBBBBBBBBBBBBbBBBO......................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBBBSSSSBBBBBBSSSSBO......................',
-    '.........OBBBBSSSSBBBBBBSSSBO.......................',
-    '...........OBBBBBBBBBBBBBBBBO.......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OBBBSSSSBBBBBBBSSSSO......................',
-    '..........OSSSSSSSSSSSSSSSSSSO......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OSSSSSSSSSSSSSSSSSSO......................',
-    '...........OOOOOOOOOOOOOOOOOO.......................',
-  ],
-  SEATED_WIDTH
-);
-
-const SEATED_TORSO_REACH_MUG: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '....................................................',
-    '.....kkkk...................................kkkk....',
-    '....kttdk..................................ktddtk...',
-    '....ObbtO....OOObBCCBbOOOOOOO..............Obbddtk..',
-    '....ObbBOOObbBBbSBBBBBSbBBBBbbOOOOOOOOOOOOObbbbbbO..',
-    '.....ObbBBbBBBBbSSSSSSSbBBBBBBBBBBbbbbbbbbbbbbbOO...',
-    '......OOBBBBBBBBbbbbbBBBBBBBBBOOOOOOOOOOOOOO........',
-    '.......OBBBBBBBBBBBBBBBBBBBBBBO.....................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBbBBBBBBBBBBBBbBBBO......................',
-    '........OBBBBBBBBBBBBBBBBBBBBO......................',
-    '........OBBBBBSSSSBBBBBBSSSSBO......................',
-    '.........OBBBBSSSSBBBBBBSSSBO.......................',
-    '...........OBBBBBBBBBBBBBBBBO.......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OBBBSSSSBBBBBBBSSSSO......................',
-    '..........OSSSSSSSSSSSSSSSSSSO......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OBBBBBBBBBBBBBBBBBBO......................',
-    '..........OSSSSSSSSSSSSSSSSSSO......................',
-    '...........OOOOOOOOOOOOOOOOOO.......................',
-  ],
-  SEATED_WIDTH
-);
-
-const SEATED_TORSO_SIP_MUG: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '............................mmmmmm..................',
-    '...........................mMMMMMcO.................',
-    '...........................mMFFFFcm.................',
-    '...........................mMMMMdk..................',
-    '...........................ObbdkktO.................',
-    '...........................Obbbbtdk.................',
-    '.....kkkk..................ObbbbbO..................',
-    '....kttdk..................ObbBbO...................',
-    '....ObbtO....OOObBCCBbOOOOObBbBO....................',
-    '....ObbBOOObbBBbSBBBBBSbBBBBbbO.....................',
-    '.....ObbBBbBBBBbSSSSSSSbBBBBBO......................',
-    '......OOBBBBBBBBbbbbbBBBBBBBOO......................',
-    '.......OBBBBBBBBBBBBBBBBBBBBO.......................',
-    '........OBBBBBBBBBBBBBBBBBBBO.......................',
-    '........OBBBbBBBBBBBBBBBbBBBO.......................',
-    '........OBBBBBBBBBBBBBBBBBBBO.......................',
-    '........OBBBBBSSSSBBBBBBSSSSO.......................',
-    '.........OBBBBSSSSBBBBBBSSSO........................',
-    '...........OBBBBBBBBBBBBBBO.........................',
-    '...........OBBBBBBBBBBBBBBO.........................',
-    '..........OSSSSSSSSSSSSSSSSO........................',
-    '...........OOOOOOOOOOOOOOOO.........................',
-  ],
-  SEATED_WIDTH
-);
-
-const SEATED_TORSO_STRETCH: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '.....kkkk.........................kkkk..............',
-    '....kttdk........................ktddtk.............',
-    '....kbdtk........................kbddtk.............',
-    '.....ObbO........................ObbbO..............',
-    '.....OBbO........................ObBBO..............',
-    '......OBbO.......................ObBO...............',
-    '.......OBbO...OOObBCCBbOOO.......ObBO...............',
-    '........ObbbOObbBBbSSSSSbBBBBbOObbO.................',
-    '.........OBBBBBBBBBbbbbbBBBBBBBBBO..................',
-    '.........OBBBBBBBBBBBBBBBBBBBBBBO...................',
-    '..........OBBBBBBBBBBBBBBBBBBBBO....................',
-    '..........OBBBbBBBBBBBBBBBBbBBBO....................',
-    '..........OBBBBBBBBBBBBBBBBBBBBO....................',
-    '..........OBBBBBSSSSBBBBBBSSSSO.....................',
-    '..........OBBBBBSSSSBBBBBBSSSO......................',
-    '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-    '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-    '..........OBBBSSSSBBBBBBSSSSBO......................',
-    '...........OSSSSSSSSSSSSSSSSO.......................',
-    '...........OBBBBBBBBBBBBBBBBO.......................',
-    '...........OBBBBBBBBBBBBBBBBO.......................',
-    '............OOOOOOOOOOOOOOOO........................',
-  ],
-  SEATED_WIDTH
-);
-
-function normalizeRows(rows: readonly string[], width = SEATED_WIDTH): SpriteMatrix {
-  return assertUniformMatrixWidth(
-    rows.map((row) =>
-      row.length >= width ? row.slice(0, width) : row.padEnd(width, '.')
-    ),
-    width
-  );
-}
 
 function buildSeatedLongMatrix(
   head: SpriteMatrix,
-  torso: SpriteMatrix,
+  arms: SpriteMatrix,
   headDropPx: number,
-  shoulderDropPx: number
+  bodyDropPx: number
 ): SpriteMatrix {
-  const normHead = normalizeRows(head, SEATED_WIDTH);
-  const normTorso = normalizeRows(torso, SEATED_WIDTH);
+  const grid = createEmptyGrid(SEATED_WIDTH, SEATED_TOTAL_HEIGHT);
+  const drop = bodyDropPx > 0 ? 1 : 0;
+  const hDrop = headDropPx > 0 ? 1 : 0;
 
-  const grid: string[][] = Array.from({ length: SEATED_TOTAL_HEIGHT }, () =>
-    Array<string>(SEATED_WIDTH).fill('.')
-  );
+  stampGridLayer(grid, { matrix: TORSO_BACK, x: SEATED_TORSO_X, y: 9 + drop });
+  stampGridLayer(grid, { matrix: arms, x: 0, y: drop });
+  stampGridLayer(grid, { matrix: head, x: SEATED_HEAD_X, y: hDrop });
 
-  const isSipPose = torso === SEATED_TORSO_SIP_MUG;
-  const torsoBase = torso === SEATED_TORSO_STRETCH ? 7 : isSipPose ? 6 : 11;
-  const torsoStart = Math.min(SEATED_TOTAL_HEIGHT - SEATED_TORSO_HEIGHT, torsoBase + shoulderDropPx);
-
-  for (let r = 0; r < SEATED_TORSO_HEIGHT; r += 1) {
-    const gr = torsoStart + r;
-    if (gr < 0 || gr >= SEATED_TOTAL_HEIGHT) continue;
-    const rowStr = normTorso[r];
-    for (let c = 0; c < SEATED_WIDTH; c += 1) {
-      const ch = rowStr[c];
-      if (ch !== '.') {
-        grid[gr][c] = ch;
-      }
-    }
-  }
-
-  const headStart = 1 + (headDropPx > 0 ? 1 : 0);
-  for (let r = 0; r < SEATED_HEAD_HEIGHT; r += 1) {
-    const gr = headStart + r;
-    if (gr < 0 || gr >= SEATED_TOTAL_HEIGHT) continue;
-    const rowStr = normHead[r];
-    for (let c = 0; c < SEATED_WIDTH; c += 1) {
-      const ch = rowStr[c];
-      if (ch === '.') continue;
-      const existing = grid[gr][c];
-      if (existing === 'M' || existing === 'F' || existing === 'c' || existing === 'm') continue;
-      if (isSipPose && c >= 26 && existing !== '.') continue;
-      grid[gr][c] = ch;
-    }
-  }
-
-  return assertUniformMatrixWidth(
-    grid.map((chars) => chars.join('')),
-    SEATED_WIDTH
-  );
+  return finalizeGridMatrix(grid, SEATED_WIDTH);
 }
 
-const WAKING_HEAD_OPEN: SpriteMatrix = assertUniformMatrixWidth(
+const WAKING_ARMS_HOLD_CUP: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '......oooooooo........',
-    '....oohlllhhhhoo......',
-    '...ohlllhhhhhhhho.....',
-    '..ohllhhhhhhhhhhho....',
-    '..ohHHHHhhlhhhhHHo....',
-    '..oHHhdttHhdtthHHo....',
-    '..oHdtGGGtttGGGtHo....',
-    '..ktttLWEgGgWELtk.....',
-    '..ktttpEEtttEEptk.....',
-    '...kttttdttttttk......',
-    '....kkddtttddkk.......',
-    '....ObbBdddBbbO.......',
+    '.....................',
+    '.....................',
+    '................mmm..',
+    '...............mFFMm.',
+    '...ktt........btMMcm.',
+    '....kk.........kdMcm.',
+    '................kmmm.',
+    '.....................',
   ],
-  22
+  WAKING_WIDTH
 );
 
-const WAKING_HEAD_BLINK: SpriteMatrix = assertUniformMatrixWidth(
+const WAKING_ARMS_LIFT_CUP: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '......oooooooo........',
-    '....oohlllhhhhoo......',
-    '...ohlllhhhhhhhho.....',
-    '..ohllhhhhhhhhhhho....',
-    '..ohHHHHhhlhhhhHHo....',
-    '..oHHhdttHhdtthHHo....',
-    '..oHdtGGGtttGGGtHo....',
-    '..ktttLKKgGgKKLtk.....',
-    '..ktttpttttttpttk.....',
-    '...kttttdttttttk......',
-    '....kkddtttddkk.......',
-    '....ObbBdddBbbO.......',
+    '................mmm..',
+    '...............mFFMm.',
+    '..............btMMcm.',
+    '...ktt.........kdMcm.',
+    '....kk..........kmmm.',
+    '.....................',
+    '.....................',
+    '.....................',
   ],
-  22
+  WAKING_WIDTH
 );
 
-const WAKING_HEAD_SIP: SpriteMatrix = assertUniformMatrixWidth(
+const WAKING_ARMS_STRETCH: SpriteMatrix = assertUniformMatrixWidth(
   [
-    '......oooooooo........',
-    '....oohlllhhhhoo......',
-    '...ohlllhhhhhhhho.....',
-    '..ohllhhhhhhhhhhho....',
-    '..ohHHHHhhlhhhhHHo....',
-    '..oHHhdttHhdtthHHo....',
-    '..oHdtGGGtttGGGtHo....',
-    '..ktttLKKgGgKKLtk.....',
-    '..ktttpttttttpttk.....',
-    '...kttttdttttttk......',
-    '....kkddtttddkk.......',
-    '....ObbBdddBbbO.......',
+    '.kkk............kkk..',
+    'ktdk............ktdk.',
+    'ObbO............ObbO.',
+    '.ObO............ObO..',
+    '.....................',
+    '.....................',
+    '.....................',
+    '.....................',
+    '.....................',
+    '.....................',
   ],
-  22
+  WAKING_WIDTH
 );
 
-const WAKING_BODY_HOLD_CUP: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '...ObbBBCCCBBbbO......',
-    '..ObbBBBBzBBBBbO......',
-    '..ObBSBBBzBBBSO.mmm...',
-    '..OBBSBBBzBBBbOmFFMmm.',
-    '..OBBSBBBzBBBSbtMMcm.m',
-    '..OkdtOBSBzBSOkdMMcmm.',
-    '...kkOSSSSSSSO.kmmmm..',
-    '.....OOOOOOOOO........',
-    '.....QJjJNJjJQ........',
-    '.....QJjQQQjJQ........',
-    '.....QJjQ.QjJQ........',
-    '.....QJjQ.QjJQ........',
-    '.....QJjQ.QjJQ........',
-    '.....QJJQ.QJJQ........',
-    '.....QuvQ.QuvQ........',
-    '....QuuuQ.QuuuQ.......',
-    '....QwwwQ.QwwwQ.......',
-    '.....QQQ...QQQ........',
-    '....xxxxx.xxxxx.......',
-  ],
-  22
+function buildWakingLongMatrix(
+  head: SpriteMatrix,
+  torso: SpriteMatrix,
+  arms: SpriteMatrix,
+  armsY: number
+): SpriteMatrix {
+  const grid = createEmptyGrid(WAKING_WIDTH, WAKING_HEIGHT);
+
+  stampGridLayer(grid, { matrix: LEGS_FRONT, x: 2, y: 19 });
+  stampGridLayer(grid, { matrix: head, x: 3, y: 0 });
+  stampGridLayer(grid, { matrix: torso, x: 2, y: 11 });
+  stampGridLayer(grid, { matrix: arms, x: 0, y: armsY });
+
+  return finalizeGridMatrix(grid, WAKING_WIDTH);
+}
+
+const WAKING_IDLE_DEFAULT = buildWakingLongMatrix(
+  HEAD_FRONT_OPEN,
+  TORSO_FRONT,
+  WAKING_ARMS_HOLD_CUP,
+  11
 );
 
-const WAKING_BODY_BREATHE: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '...ObbbBCCCBBbbO......',
-    '..ObbbBBBzBBBBbO......',
-    '..ObBSBBBzBBBSO.mmm...',
-    '..OBBSBBBzBBBbOmFFMmm.',
-    '..OBBSBBBzBBBSbtMMcm.m',
-    '..OkdtOBSBzBSOkdMMcmm.',
-    '...kkOSSSSSSSO.kmmmm..',
-    '.....OOOOOOOOO........',
-    '.....QJjJNJjJQ........',
-    '.....QJjQQQjJQ........',
-    '.....QJjQ.QjJQ........',
-    '.....QJjQ.QjJQ........',
-    '.....QJjQ.QjJQ........',
-    '.....QJJQ.QJJQ........',
-    '.....QuvQ.QuvQ........',
-    '....QuuuQ.QuuuQ.......',
-    '....QwwwQ.QwwwQ.......',
-    '.....QQQ...QQQ........',
-    '....xxxxx.xxxxx.......',
-  ],
-  22
-);
-
-const WAKING_BODY_LIFT_CUP: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '...ObbBBCCCBBbO.mmm...',
-    '..ObbBBBBzBBBBOmFFMmm.',
-    '..ObBSBBBzBBBBbtMMcm.m',
-    '..OBBSBBBzBBBOkdMMcmm.',
-    '..OBBSBBBzBBBO.kmmmm..',
-    '..OkdtBSBzBSBO........',
-    '...kkOSSSSSSSO........',
-    '.....OOOOOOOOO........',
-    '.....QJjJNJjJQ........',
-    '.....QJjQQQjJQ........',
-    '.....QJjQ.QjJQ........',
-    '.....QJjQ.QjJQ........',
-    '.....QJjQ.QjJQ........',
-    '.....QJJQ.QJJQ........',
-    '.....QuvQ.QuvQ........',
-    '....QuuuQ.QuuuQ.......',
-    '....QwwwQ.QwwwQ.......',
-    '.....QQQ...QQQ........',
-    '....xxxxx.xxxxx.......',
-  ],
-  22
-);
-
-const WAKING_STRETCH_MATRIX: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '......oooooooo........',
-    '....oohlllhhhhoo......',
-    '...ohlllhhhhhhhho.....',
-    '..ohllhhhhhhhhhhho....',
-    '..ohHHHHhhlhhhhHHo....',
-    '..oHHhdttHhdtthHHo....',
-    '..oHdtGGGtttGGGtHo....',
-    '..ktttLKKgGgKKLtk.....',
-    '..ktttpttttttpttk.....',
-    'kdtkttttdttttttk......',
-    'ObbOkkddtttddkk.......',
-    'OBbBObbBdddBbbO.......',
-    'OBBbbBBCCCBBbbO.......',
-    '.ObbbBBBBzBBBBbO......',
-    '..ObBSBBBzBBBSbO.mmm..',
-    '..OBBSBBBzBBBSbOmFFmm.',
-    '..OBBSBBBzBBBbtMMcmcm.',
-    '..OkdtOBSBzBSBOkdMMmm.',
-    '...kkOSSSSSSSO..mmmm..',
-    '.....OOOOOOOOO........',
-    '.....QJjJNJjJQ........',
-    '.....QJjQQQjJQ........',
-    '.....QJjQ.QjJQ........',
-    '.....QJjQ.QjJQ........',
-    '.....QJjQ.QjJQ........',
-    '.....QJJQ.QJJQ........',
-    '.....QuvQ.QuvQ........',
-    '....QuuuQ.QuuuQ.......',
-    '....QwwwQ.QwwwQ.......',
-    '.....QQQ...QQQ........',
-    '....xxxxx.xxxxx.......',
-  ],
-  22
-);
-
-const WAKING_IDLE_STEPS: readonly SpriteMatrix[] = [
-  assertUniformMatrixWidth([...WAKING_HEAD_OPEN, ...WAKING_BODY_HOLD_CUP], 22),
-  assertUniformMatrixWidth([...WAKING_HEAD_BLINK, ...WAKING_BODY_HOLD_CUP], 22),
-];
+const CHAR_PALETTE = {
+  day: {
+    o: '#2B1D17',
+    k: '#8F5943',
+    O: '#1E2436',
+    Q: '#182030',
+    m: '#786B63',
+    H: '#3D261C',
+    h: '#5D3A29',
+    l: '#7E513A',
+    t: '#F5CBB0',
+    d: '#DCA183',
+    p: '#EB9E90',
+    E: '#1F2433',
+    W: '#FFFFFF',
+    K: '#5C382C',
+    G: '#434E63',
+    g: '#9C8B88',
+    L: '#CBE6F2',
+    C: '#F5F0E6',
+    b: '#475569',
+    B: '#334155',
+    D: '#5D6F8A',
+    S: '#243042',
+    z: '#64748B',
+    j: '#334460',
+    J: '#233044',
+    N: '#1B2536',
+    u: '#F1F5F9',
+    v: '#94A3B8',
+    w: '#CBD5E1',
+    M: '#FFFDF9',
+    r: '#D6CFC2',
+    F: '#5C3422',
+    c: '#D6CFC2',
+    x: 'rgba(22, 16, 28, 0.28)',
+  },
+} as const;
 
 function getLongPalette(
   timeState: RoomTimeState,
@@ -1011,41 +948,36 @@ function getLongPalette(
   const isSleep = timeState === 'sleeping';
   const isLate = timeState === 'late_night';
   const dim = isSleep && !lampOn;
+  const base = CHAR_PALETTE.day;
 
   return {
-    o: dim ? '#1E161C' : isLate ? '#241814' : '#2B1D17',
-    k: dim ? '#684339' : isLate ? '#7D4D3A' : '#8F5943',
-    O: dim ? '#151926' : isLate ? '#181D2C' : '#1E2436',
-    Q: dim ? '#121824' : '#182030',
-    m: dim ? '#5D524C' : '#786B63',
-    H: dim ? '#2C1E26' : isLate ? '#322019' : '#3B261D',
-    h: dim ? '#432E37' : isLate ? '#4D3125' : '#5A3A2B',
-    l: dim ? '#634650' : isLate ? '#734B37' : '#84573F',
-    t: dim ? '#C49B8B' : isLate ? '#E8B99B' : '#F5CBB0',
-    d: dim ? '#9E7668' : isLate ? '#C98E72' : '#DDA284',
-    p: dim ? '#AD706C' : isLate ? '#D88B7E' : '#ECA092',
-    E: '#1F2433',
-    W: '#FFFFFF',
-    K: isSleep ? '#4A302C' : '#5C382C',
-    G: '#475569',
-    g: '#9E8C89',
-    L: isLate ? '#8CEAF8' : '#CCE7F2',
-    C: dim ? '#B5B2C0' : isLate ? '#DFD9CE' : '#F5F0E6',
-    b: dim ? '#3D485E' : isLate ? (lampOn ? '#58677D' : '#435066') : '#475569',
-    B: dim ? '#273145' : isLate ? '#2D3A4D' : '#334155',
-    S: dim ? '#1C2333' : isLate ? '#1F293A' : '#243042',
-    z: dim ? '#3F4B61' : isLate ? '#52627A' : '#64748B',
-    j: dim ? '#29374F' : '#334460',
-    J: dim ? '#1D2638' : '#233044',
-    N: dim ? '#141B29' : '#1B2536',
-    u: dim ? '#B8C0CC' : '#F1F5F9',
-    v: dim ? '#737E91' : '#94A3B8',
-    w: dim ? '#949EAE' : '#CBD5E1',
-    M: '#FFFDF9',
-    c: '#D6CFC2',
-    F: '#5C3422',
+    ...base,
+    o: dim ? '#1E161C' : isLate ? '#241814' : base.o,
+    k: dim ? '#684339' : isLate ? '#7D4D3A' : base.k,
+    O: dim ? '#151926' : isLate ? '#181D2C' : base.O,
+    Q: dim ? '#121824' : base.Q,
+    m: dim ? '#5D524C' : base.m,
+    H: dim ? '#2C1E26' : isLate ? '#322019' : base.H,
+    h: dim ? '#452E37' : isLate ? '#4E3124' : base.h,
+    l: dim ? '#634650' : isLate ? '#734B37' : base.l,
+    t: dim ? '#C49B8B' : isLate ? '#E8B99B' : base.t,
+    d: dim ? '#9E7668' : isLate ? '#C98E72' : base.d,
+    p: dim ? '#AD706C' : isLate ? '#D88B7E' : base.p,
+    K: isSleep ? '#4A302C' : base.K,
+    L: isLate ? '#8CEAF8' : base.L,
+    C: dim ? '#B5B2C0' : isLate ? '#DFD9CE' : base.C,
+    b: dim ? '#3D485E' : isLate ? (lampOn ? '#58677D' : '#435066') : base.b,
+    B: dim ? '#273145' : isLate ? '#2D3A4D' : base.B,
+    D: dim ? '#48566E' : isLate ? (lampOn ? '#64758F' : '#4E5E78') : base.D,
+    S: dim ? '#1C2333' : isLate ? '#1F293A' : base.S,
+    z: dim ? '#3F4B61' : isLate ? '#52627A' : base.z,
+    j: dim ? '#29374F' : base.j,
+    J: dim ? '#1D2638' : base.J,
+    N: dim ? '#141B29' : base.N,
+    u: dim ? '#B8C0CC' : base.u,
+    v: dim ? '#737E91' : base.v,
+    w: dim ? '#949EAE' : base.w,
     P: palette.pillowShadow,
-    x: 'rgba(22, 16, 28, 0.28)',
   };
 }
 
@@ -1544,7 +1476,7 @@ export function drawSleepingCharacter(
   const matrix = buildSleepingLongMatrix(breathOffset);
 
   drawSpriteMatrix(ctx, matrix, colors, SLEEP_DRAW_X, SLEEP_DRAW_Y);
-  drawZzzDrift(ctx, 41, 80, timeSec, reducedMotion, 6);
+  drawZzzDrift(ctx, 44, 83, timeSec, reducedMotion, 6);
 }
 
 export function drawRoomScreensAndSteam(
@@ -1569,81 +1501,84 @@ export function drawSeatedCharacter(
     return;
   }
 
+  const seatAnchor = options.seatAnchor ?? DEFAULT_SEAT_ANCHOR;
+  const drawX = Math.round(seatAnchor.seatCenterX - 18);
+  const drawY = Math.round(seatAnchor.seatTopY - 13);
   const timeSec = resolveTimeSec(options);
   const colors = getLongPalette(timeState, lampOn, palette);
 
   if (reducedMotion) {
-    const matrix = buildSeatedLongMatrix(SEATED_HEAD_MONITOR, SEATED_TORSO_HOME, 0, 0);
-    drawSpriteMatrix(ctx, matrix, colors, SEATED_DRAW_X, SEATED_DRAW_Y);
+    const matrix = buildSeatedLongMatrix(HEAD_BACK_CENTER, SEATED_ARMS_HOME, 0, 0);
+    drawSpriteMatrix(ctx, matrix, colors, drawX, drawY);
     return;
   }
 
   const cycle = timeState === 'late_night' ? timeSec % 16 : timeSec % 18;
   const musicBobDown = isMusicActive && Math.sin(timeSec * Math.PI * 3.1) > 0.32 ? 1 : 0;
 
-  let head: SpriteMatrix = SEATED_HEAD_MONITOR;
-  let torso: SpriteMatrix = SEATED_TORSO_HOME;
+  let head: SpriteMatrix = HEAD_BACK_CENTER;
+  let arms: SpriteMatrix = SEATED_ARMS_HOME;
   let headDrop = musicBobDown;
   let shoulderDrop = musicBobDown;
 
   if (timeState === 'working') {
     if (cycle >= 3.2 && cycle < 5.0) {
-      head = SEATED_HEAD_GLANCE_LEFT;
+      head = HEAD_BACK_GLANCE_LEFT;
     } else if (cycle >= 5.2 && cycle < 5.7) {
-      torso = SEATED_TORSO_REACH_MUG;
+      arms = SEATED_ARMS_REACH_MUG;
       shoulderDrop = 0;
     } else if (cycle >= 5.7 && cycle < 6.9) {
       maskStaticDeskMug(ctx, palette);
-      head = SEATED_HEAD_SIP_MUG;
-      torso = SEATED_TORSO_SIP_MUG;
+      head = HEAD_BACK_GLANCE_RIGHT;
+      arms = SEATED_ARMS_SIP_MUG;
       headDrop = 0;
       shoulderDrop = 0;
-      drawSmoothSteam(ctx, 182, 76, timeSec, false, 5);
+      drawSmoothSteam(ctx, drawX + 28, drawY + 2, timeSec, false, 5);
     } else if (cycle >= 6.9 && cycle < 7.4) {
-      torso = SEATED_TORSO_REACH_MUG;
+      arms = SEATED_ARMS_REACH_MUG;
       shoulderDrop = 0;
     } else if (cycle >= 10.8 && cycle < 13.4) {
-      head = cycle < 12.1 ? SEATED_HEAD_TILT_LEFT : SEATED_HEAD_TILT_RIGHT;
-      torso = SEATED_TORSO_STRETCH;
+      head = cycle < 12.1 ? HEAD_BACK_GLANCE_LEFT : HEAD_BACK_GLANCE_RIGHT;
+      arms = SEATED_ARMS_STRETCH;
       headDrop = 0;
       shoulderDrop = 0;
     } else if (cycle >= 14.8 && cycle < 16.4) {
-      head = SEATED_HEAD_GLANCE_LEFT;
-      torso = Math.floor(timeSec * 5) % 2 === 0 ? SEATED_TORSO_TYPE_L : SEATED_TORSO_TYPE_R;
+      head = HEAD_BACK_GLANCE_LEFT;
+      arms = Math.floor(timeSec * 5) % 2 === 0 ? SEATED_ARMS_TYPE_L : SEATED_ARMS_TYPE_R;
     } else if (cycle >= 8.2 && cycle < 10.2) {
-      torso = Math.floor(timeSec * 2.5) % 2 === 0 ? SEATED_TORSO_MOUSE_A : SEATED_TORSO_MOUSE_B;
+      arms = Math.floor(timeSec * 2.5) % 2 === 0 ? SEATED_ARMS_MOUSE_A : SEATED_ARMS_MOUSE_B;
     } else {
       const step = Math.floor(timeSec * 5.2) % 3;
-      torso =
+      arms =
         step === 0
-          ? SEATED_TORSO_TYPE_L
+          ? SEATED_ARMS_TYPE_L
           : step === 1
-            ? SEATED_TORSO_TYPE_R
-            : SEATED_TORSO_HOME;
+            ? SEATED_ARMS_TYPE_R
+            : SEATED_ARMS_HOME;
     }
   } else {
     if (cycle >= 3.5 && cycle < 4.9) {
-      head = SEATED_HEAD_GLANCE_LEFT;
+      head = HEAD_BACK_GLANCE_LEFT;
     } else if (cycle >= 6.0 && cycle < 8.6) {
-      torso = SEATED_TORSO_STRETCH;
+      arms = SEATED_ARMS_STRETCH;
       headDrop = 0;
       shoulderDrop = 0;
-      head = cycle < 7.3 ? SEATED_HEAD_TILT_LEFT : SEATED_HEAD_TILT_RIGHT;
+      head = cycle < 7.3 ? HEAD_BACK_GLANCE_LEFT : HEAD_BACK_GLANCE_RIGHT;
     } else if (cycle >= 10.4 && cycle < 12.2) {
-      torso = Math.floor(timeSec * 2.4) % 2 === 0 ? SEATED_TORSO_MOUSE_A : SEATED_TORSO_MOUSE_B;
+      arms = Math.floor(timeSec * 2.4) % 2 === 0 ? SEATED_ARMS_MOUSE_A : SEATED_ARMS_MOUSE_B;
     } else {
       const step = Math.floor(timeSec * 4.8) % 3;
-      torso =
+      arms =
         step === 0
-          ? SEATED_TORSO_TYPE_L
+          ? SEATED_ARMS_TYPE_L
           : step === 1
-            ? SEATED_TORSO_TYPE_R
-            : SEATED_TORSO_HOME;
+            ? SEATED_ARMS_TYPE_R
+            : SEATED_ARMS_HOME;
     }
   }
 
-  const matrix = buildSeatedLongMatrix(head, torso, headDrop, shoulderDrop);
-  drawSpriteMatrix(ctx, matrix, colors, SEATED_DRAW_X, SEATED_DRAW_Y);
+  const matrix = buildSeatedLongMatrix(head, arms, headDrop, shoulderDrop);
+  drawSpriteMatrix(ctx, matrix, colors, drawX, drawY);
 
   if (lampOn && timeState === 'late_night') {
     const hairRow = head[3] ?? '';
@@ -1655,9 +1590,16 @@ export function drawSeatedCharacter(
       }
     }
     if (rightHairCol >= 0) {
-      fillPixelRect(ctx, SEATED_DRAW_X + rightHairCol, SEATED_DRAW_Y + 4 + headDrop, 1, 2, '#FCD34D');
+      fillPixelRect(
+        ctx,
+        drawX + SEATED_HEAD_X + rightHairCol,
+        drawY + 3 + headDrop,
+        1,
+        2,
+        '#FCD34D'
+      );
     }
-    const sleeveRow = matrix[16] ?? '';
+    const sleeveRow = matrix[11] ?? '';
     let rightArmCol = -1;
     for (let c = sleeveRow.length - 1; c >= 0; c -= 1) {
       if (sleeveRow[c] === 'B' || sleeveRow[c] === 'b') {
@@ -1666,7 +1608,7 @@ export function drawSeatedCharacter(
       }
     }
     if (rightArmCol >= 0) {
-      fillPixelRect(ctx, SEATED_DRAW_X + rightArmCol, SEATED_DRAW_Y + 16, 1, 2, '#E9B872');
+      fillPixelRect(ctx, drawX + rightArmCol, drawY + 11 + shoulderDrop, 1, 2, '#E9B872');
     }
   }
 }
@@ -1682,88 +1624,87 @@ interface WakingLongPose {
 
 function getWakingLongPose(timeSec: number, reducedMotion: boolean): WakingLongPose {
   const minX = WALKABLE_RECT.x + 3;
-  const maxX = Math.min(84, WALKABLE_RECT.x + WALKABLE_RECT.w - 22);
+  const maxX = Math.min(85, WALKABLE_RECT.x + WALKABLE_RECT.w - WAKING_WIDTH);
   const clampX = (x: number): number => Math.max(minX, Math.min(maxX, Math.round(x)));
   const clampY = (y: number, h: number): number =>
     Math.max(WALKABLE_RECT.y, Math.min(148 - h + 1, Math.round(y)));
 
   if (reducedMotion) {
-    const mat = WAKING_IDLE_STEPS[0];
     const x = clampX(81);
-    const y = clampY(108, mat.length);
+    const y = clampY(110, WAKING_IDLE_DEFAULT.length);
     return {
       x,
       y,
-      footY: y + mat.length - 2,
-      matrix: mat,
+      footY: y + WAKING_IDLE_DEFAULT.length - 2,
+      matrix: WAKING_IDLE_DEFAULT,
       steamX: x + 16,
-      steamY: y + 13,
+      steamY: y + 12,
     };
   }
 
   const cycle = timeSec % 16;
   const blinkNow = timeSec % 3.9 >= 3.68 && timeSec % 3.9 <= 3.84;
   const breatheNow = Math.sin(timeSec * ((Math.PI * 2) / 3.2)) > 0.35;
-  const idleBody = breatheNow ? WAKING_BODY_BREATHE : WAKING_BODY_HOLD_CUP;
+  const idleTorso = breatheNow ? TORSO_FRONT_BREATHE : TORSO_FRONT;
   const swayOffset = Math.round(Math.sin(timeSec * 0.9) * 1.4);
 
   if (cycle < 4.5) {
-    const head = blinkNow ? WAKING_HEAD_BLINK : WAKING_HEAD_OPEN;
-    const mat = [...head, ...idleBody];
+    const head = blinkNow ? HEAD_FRONT_BLINK : HEAD_FRONT_OPEN;
+    const mat = buildWakingLongMatrix(head, idleTorso, WAKING_ARMS_HOLD_CUP, 11);
     const x = clampX(81 + (cycle > 2.2 ? 1 : 0));
-    const y = clampY(108, mat.length);
+    const y = clampY(110, mat.length);
     return {
       x,
       y,
       footY: y + mat.length - 2,
       matrix: mat,
       steamX: x + 16,
-      steamY: y + 13,
+      steamY: y + 12,
     };
   }
 
   if (cycle < 8.2) {
     const isPeakSip = cycle >= 5.0 && cycle < 7.5;
-    const head = isPeakSip ? WAKING_HEAD_SIP : blinkNow ? WAKING_HEAD_BLINK : WAKING_HEAD_OPEN;
-    const body = isPeakSip ? WAKING_BODY_LIFT_CUP : idleBody;
-    const mat = [...head, ...body];
+    const head = isPeakSip ? HEAD_FRONT_SIP : blinkNow ? HEAD_FRONT_BLINK : HEAD_FRONT_OPEN;
+    const arms = isPeakSip ? WAKING_ARMS_LIFT_CUP : WAKING_ARMS_HOLD_CUP;
+    const mat = buildWakingLongMatrix(head, idleTorso, arms, 11);
     const x = clampX(82);
-    const y = clampY(108, mat.length);
+    const y = clampY(110, mat.length);
     return {
       x,
       y,
       footY: y + mat.length - 2,
       matrix: mat,
       steamX: x + 16,
-      steamY: y + (isPeakSip ? 11 : 13),
+      steamY: y + (isPeakSip ? 10 : 12),
     };
   }
 
   if (cycle < 11.8) {
-    const mat = WAKING_STRETCH_MATRIX;
+    const mat = buildWakingLongMatrix(HEAD_FRONT_BLINK, TORSO_FRONT, WAKING_ARMS_STRETCH, 8);
     const x = clampX(81 + Math.max(-1, Math.min(1, swayOffset)));
-    const y = clampY(108, mat.length);
+    const y = clampY(110, mat.length);
     return {
       x,
       y,
       footY: y + mat.length - 2,
       matrix: mat,
-      steamX: x + 16,
-      steamY: y + 13,
+      steamX: -10,
+      steamY: -10,
     };
   }
 
-  const head = blinkNow ? WAKING_HEAD_BLINK : WAKING_HEAD_OPEN;
-  const mat = [...head, ...idleBody];
+  const head = blinkNow ? HEAD_FRONT_BLINK : HEAD_FRONT_OPEN;
+  const mat = buildWakingLongMatrix(head, idleTorso, WAKING_ARMS_HOLD_CUP, 11);
   const x = clampX(81 + Math.max(0, Math.min(2, swayOffset)));
-  const y = clampY(108 + (cycle >= 13.6 && cycle < 14.8 ? -1 : 0), mat.length);
+  const y = clampY(110 + (cycle >= 13.6 && cycle < 14.8 ? -1 : 0), mat.length);
   return {
     x,
     y,
     footY: y + mat.length - 2,
     matrix: mat,
     steamX: x + 16,
-    steamY: y + 13,
+    steamY: y + 12,
   };
 }
 
@@ -1935,7 +1876,9 @@ export function drawWakingAndCapybaraLayer(
 
   const renderLong = () => {
     drawSpriteMatrix(ctx, longPose.matrix, longColors, longPose.x, longPose.y);
-    drawSmoothSteam(ctx, longPose.steamX, longPose.steamY, timeSec, reducedMotion, 7);
+    if (longPose.steamX >= 0) {
+      drawSmoothSteam(ctx, longPose.steamX, longPose.steamY, timeSec, reducedMotion, 7);
+    }
   };
 
   if (longPose.footY <= capyState.footY) {

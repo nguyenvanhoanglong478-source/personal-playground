@@ -168,6 +168,7 @@ const FRAG_SHADER_SRC = `
   uniform sampler2D uFrontTex;
   uniform sampler2D uBackTex;
   uniform vec2 uPointer;
+  uniform float uBend;
   uniform float uPartAlpha;
   uniform float uIsShadow;
   uniform float uIsStub;
@@ -220,24 +221,54 @@ const FRAG_SHADER_SRC = `
     vec3 H = normalize(L + V);
 
     float ndl = dot(N, L);
-    float diffuse = clamp(0.80 + 0.20 * ndl, 0.46, 1.0);
+    float diffuse = clamp(0.80 + 0.20 * ndl, 0.44, 1.0);
 
+    float normalTilt = 1.0 - abs(N.z);
     float curvature = clamp(length(N.xy) * 1.55, 0.0, 1.0);
     float creaseShadow = smoothstep(0.0, 0.65, curvature * max(0.0, -ndl + 0.18));
-    diffuse -= creaseShadow * 0.26;
+    diffuse -= creaseShadow * 0.28;
 
-    float specPower = mix(20.0, 44.0, curvature);
+    float ndv = clamp(dot(N, V), 0.0, 1.0);
+    float fresnel = pow(1.0 - ndv, 2.5);
+
+    float specPower = mix(28.0, 68.0, curvature);
     float spec = pow(max(dot(N, H), 0.0), specPower);
+
+    float foilPhase =
+      vUv.x * 0.65 +
+      vUv.y * 0.42 +
+      atan(N.y, N.x) * 0.35 +
+      normalTilt * 2.1 +
+      uPointer.x * 0.34 +
+      uPointer.y * 0.22;
+
+    float bandPrimary = pow(max(0.0, sin(foilPhase * 7.5)), 4.0);
+    float bandSecondary = pow(max(0.0, cos(foilPhase * 13.0 + 1.1)), 6.0);
+    float foilBands = bandPrimary * 0.62 + bandSecondary * 0.85;
+
+    float isHeader = smoothstep(0.095, 0.035, vUv.y);
+    float artBoxX = step(0.315, vUv.x) * step(vUv.x, 0.685);
+    float artBoxY = step(0.113, vUv.y) * step(vUv.y, 0.340);
+    float artMask = gl_FrontFacing ? (artBoxX * artBoxY) : 0.0;
+    float foilProtection = mix(1.0, 0.25, artMask);
+
+    float tiltActivation = clamp(curvature * 1.05 + normalTilt * 1.45 + uBend * 0.90 + fresnel * 0.55, 0.0, 1.25);
+    float headerActivation = isHeader * (0.24 + 0.76 * clamp(curvature * 1.6 + uBend * 1.1, 0.0, 1.0));
+    float luma = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
+    float inkContrastKeep = mix(0.62, 1.0, smoothstep(0.08, 0.42, luma));
+    float foilWeight = (foilBands * (tiltActivation * 0.24 + headerActivation * 0.19) + spec * (0.09 + 0.18 * tiltActivation + 0.14 * isHeader)) * foilProtection * inkContrastKeep;
+
+    vec3 silverFoilColor = mix(vec3(0.95, 0.97, 1.00), vec3(0.84, 0.92, 1.00), bandSecondary);
 
     if (distToCut < 0.0050) {
       float fiberBlend = smoothstep(0.0050, 0.0005, distToCut);
       vec3 paperCore = vec3(0.95, 0.94, 0.91);
       tex.rgb = mix(tex.rgb, paperCore, fiberBlend);
-      spec *= (1.0 - fiberBlend);
+      foilWeight *= (1.0 - fiberBlend);
     }
 
     vec3 lit = tex.rgb * diffuse;
-    lit += vec3(1.0) * spec * 0.10;
+    lit += silverFoilColor * foilWeight;
 
     float outAlpha = tex.a * uPartAlpha;
     gl_FragColor = vec4(clamp(lit, 0.0, 1.0), outAlpha);
@@ -628,6 +659,7 @@ interface GlContextState {
     uIsStub: WebGLUniformLocation | null;
     uPartAlpha: WebGLUniformLocation | null;
     uPointer: WebGLUniformLocation | null;
+    uBend: WebGLUniformLocation | null;
   };
 }
 
@@ -793,6 +825,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     gl.uniform1f(locs.uAspect, uAspect);
     gl.uniform1f(locs.uFovScale, uFovScale);
     gl.uniform2f(locs.uPointer, mesh.hoverNdcX, mesh.hoverNdcY);
+    gl.uniform1f(locs.uBend, mesh.bendIntensity);
 
     gl.disable(gl.DEPTH_TEST);
     gl.uniform1f(locs.uIsShadow, 1.0);
@@ -1221,6 +1254,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
               uIsStub: gl.getUniformLocation(program, 'uIsStub'),
               uPartAlpha: gl.getUniformLocation(program, 'uPartAlpha'),
               uPointer: gl.getUniformLocation(program, 'uPointer'),
+              uBend: gl.getUniformLocation(program, 'uBend'),
             },
           };
         }

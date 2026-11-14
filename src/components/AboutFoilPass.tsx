@@ -250,15 +250,16 @@ const FRAG_SHADER_SRC = `
     float artBoxX = step(0.315, vUv.x) * step(vUv.x, 0.685);
     float artBoxY = step(0.113, vUv.y) * step(vUv.y, 0.340);
     float artMask = gl_FrontFacing ? (artBoxX * artBoxY) : 0.0;
-    float foilProtection = mix(1.0, 0.25, artMask);
+    float foilProtection = mix(1.0, 0.26, artMask);
 
     float tiltActivation = clamp(curvature * 1.05 + normalTilt * 1.45 + uBend * 0.90 + fresnel * 0.55, 0.0, 1.25);
     float headerActivation = isHeader * (0.24 + 0.76 * clamp(curvature * 1.6 + uBend * 1.1, 0.0, 1.0));
     float luma = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
     float inkContrastKeep = mix(0.62, 1.0, smoothstep(0.08, 0.42, luma));
-    float foilWeight = (foilBands * (tiltActivation * 0.24 + headerActivation * 0.19) + spec * (0.09 + 0.18 * tiltActivation + 0.14 * isHeader)) * foilProtection * inkContrastKeep;
+    float foilWeight = (foilBands * (tiltActivation * 0.38 + headerActivation * 0.28 + 0.055 * (0.4 + 0.6 * length(uPointer))) + spec * (0.09 + 0.18 * tiltActivation + 0.14 * isHeader)) * foilProtection * inkContrastKeep;
 
-    vec3 silverFoilColor = mix(vec3(0.95, 0.97, 1.00), vec3(0.84, 0.92, 1.00), bandSecondary);
+    vec3 rainbow = 0.54 + 0.46 * cos(6.28318 * (foilPhase * 1.15 + vec3(0.00, 0.33, 0.67)));
+    vec3 foilColor = mix(rainbow, vec3(1.0), bandSecondary * 0.25);
 
     if (distToCut < 0.0050) {
       float fiberBlend = smoothstep(0.0050, 0.0005, distToCut);
@@ -268,7 +269,7 @@ const FRAG_SHADER_SRC = `
     }
 
     vec3 lit = tex.rgb * diffuse;
-    lit += silverFoilColor * foilWeight;
+    lit += foilColor * foilWeight;
 
     float outAlpha = tex.a * uPartAlpha;
     gl_FragColor = vec4(clamp(lit, 0.0, 1.0), outAlpha);

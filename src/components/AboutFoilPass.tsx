@@ -31,6 +31,10 @@ const HALF_W = CARD_W * 0.5;
 const HALF_H = CARD_H * 0.5;
 const PBD_ITERATIONS = 16;
 
+const TEMP_NX = new Float32Array(TOTAL_VERTS);
+const TEMP_NY = new Float32Array(TOTAL_VERTS);
+const TEMP_NZ = new Float32Array(TOTAL_VERTS);
+
 interface ConstraintsData {
   i1: Int32Array;
   i2: Int32Array;
@@ -103,7 +107,6 @@ const VERT_SHADER_SRC = `
   uniform float uTiltY;
   uniform float uAspect;
   uniform float uFovScale;
-  uniform float uIsShadow;
 
   varying vec2 vUv;
   varying vec3 vNormal;
@@ -138,13 +141,6 @@ const VERT_SHADER_SRC = `
     vec3 yNorm = vec3(rNorm.x * cy + rNorm.z * sy, rNorm.y, -rNorm.x * sy + rNorm.z * cy);
     vec3 fNorm = vec3(yNorm.x, yNorm.y * cx - yNorm.z * sx, yNorm.y * sx + yNorm.z * cx);
 
-    if (uIsShadow > 0.5) {
-      float zLift = max(0.0, fPos.z + 0.15);
-      fPos.x += 0.028 + zLift * 0.08;
-      fPos.y -= 0.044 + zLift * 0.09;
-      fPos.z = -0.22;
-    }
-
     float camDist = 3.2;
     float w = max(0.8, camDist - fPos.z);
 
@@ -168,8 +164,8 @@ const FRAG_SHADER_SRC = `
   uniform sampler2D uFrontTex;
   uniform sampler2D uBackTex;
   uniform vec2 uPointer;
+  uniform float uBend;
   uniform float uPartAlpha;
-  uniform float uIsShadow;
   uniform float uIsStub;
 
   varying vec2 vUv;
@@ -208,36 +204,82 @@ const FRAG_SHADER_SRC = `
       }
     }
 
-    if (uIsShadow > 0.5) {
-      float shadowAlpha = 0.16 * tex.a * uPartAlpha * clamp(1.0 - vWorldPos.z * 0.4, 0.1, 1.0);
-      gl_FragColor = vec4(0.0, 0.0, 0.0, shadowAlpha);
-      return;
-    }
-
     vec3 N = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
     vec3 V = normalize(vec3(0.0, 0.0, 3.2) - vWorldPos);
     vec3 L = normalize(vec3(-0.35 + uPointer.x * 0.38, 0.52 - uPointer.y * 0.35, 0.84));
     vec3 H = normalize(L + V);
 
     float ndl = dot(N, L);
-    float diffuse = clamp(0.80 + 0.20 * ndl, 0.46, 1.0);
+    float diffuse = clamp(0.80 + 0.20 * ndl, 0.44, 1.0);
 
+    float normalTilt = 1.0 - abs(N.z);
     float curvature = clamp(length(N.xy) * 1.55, 0.0, 1.0);
     float creaseShadow = smoothstep(0.0, 0.65, curvature * max(0.0, -ndl + 0.18));
-    diffuse -= creaseShadow * 0.26;
+    diffuse -= creaseShadow * 0.28;
 
-    float specPower = mix(20.0, 44.0, curvature);
+    float ndv = clamp(dot(N, V), 0.0, 1.0);
+    float fresnel = pow(1.0 - ndv, 2.5);
+
+    float specPower = mix(28.0, 68.0, curvature);
     float spec = pow(max(dot(N, H), 0.0), specPower);
+
+    float foilPhase =
+      vUv.x * 0.58 +
+      vUv.y * 0.38 +
+      N.x * 0.48 -
+      N.y * 0.32 +
+      (1.0 - N.z * N.z) * 1.15 +
+      uPointer.x * 0.32 +
+      uPointer.y * 0.20 +
+      uBend * 0.18;
+
+    float wave1 = 0.5 + 0.5 * cos(foilPhase * 6.28318 * 1.15);
+    float wave2 = 0.5 + 0.5 * cos(foilPhase * 6.28318 * 2.1 + 1.15);
+    float bandPrimary = smoothstep(0.28, 0.92, wave1);
+    float bandSecondary = smoothstep(0.42, 0.96, wave2);
+    float foilBands = bandPrimary * 0.65 + bandSecondary * 0.55;
+
+    float isHeader = smoothstep(0.095, 0.035, vUv.y);
+    float artBoxX = step(0.315, vUv.x) * step(vUv.x, 0.685);
+    float artBoxY = step(0.113, vUv.y) * step(vUv.y, 0.340);
+    float artMask = gl_FrontFacing ? (artBoxX * artBoxY) : 0.0;
+    float foilProtection = mix(1.0, 0.26, artMask);
+
+    float tiltActivation = clamp(curvature * 1.05 + normalTilt * 1.45 + uBend * 0.90 + fresnel * 0.55, 0.0, 1.25);
+    float headerActivation = isHeader * (0.24 + 0.76 * clamp(curvature * 1.6 + uBend * 1.1, 0.0, 1.0));
+    float luma = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
+    vec3 paperSample = (
+      gl_FrontFacing
+        ? texture2D(uFrontTex, vec2(0.05, 0.42))
+        : texture2D(uBackTex, vec2(0.05, 0.42))
+    ).rgb;
+    float isLightCard = smoothstep(0.45, 0.72, dot(paperSample, vec3(0.299, 0.587, 0.114)));
+    float inkContrastKeep = mix(0.62, 1.0, smoothstep(0.08, 0.42, luma));
+    float lightTextKeep = mix(1.0, smoothstep(0.58, 0.88, luma), isLightCard);
+    float brightSurface = smoothstep(0.48, 0.88, luma);
+
+    float foilWeight =
+      (foilBands * (tiltActivation * 0.38 + headerActivation * 0.28 + 0.065 * (0.45 + 0.55 * length(uPointer))) +
+        spec * (0.10 + 0.18 * tiltActivation + 0.14 * isHeader)) *
+      foilProtection *
+      inkContrastKeep *
+      lightTextKeep;
+
+    vec3 rainbow = 0.54 + 0.46 * cos(6.28318 * (foilPhase * 1.05 + vec3(0.00, 0.33, 0.67)));
+    vec3 foilColor = mix(rainbow, vec3(1.0), bandSecondary * 0.22);
 
     if (distToCut < 0.0050) {
       float fiberBlend = smoothstep(0.0050, 0.0005, distToCut);
       vec3 paperCore = vec3(0.95, 0.94, 0.91);
       tex.rgb = mix(tex.rgb, paperCore, fiberBlend);
-      spec *= (1.0 - fiberBlend);
+      foilWeight *= (1.0 - fiberBlend);
     }
 
     vec3 lit = tex.rgb * diffuse;
-    lit += vec3(1.0) * spec * 0.10;
+    vec3 pastelPearl = mix(vec3(0.98), rainbow, 0.58);
+    float pearlMix = clamp(foilWeight * 0.85, 0.0, 0.55) * brightSurface;
+    lit = mix(lit, pastelPearl * max(0.86, diffuse), pearlMix);
+    lit += foilColor * foilWeight * (1.0 - brightSurface * 0.68);
 
     float outAlpha = tex.a * uPartAlpha;
     gl_FragColor = vec4(clamp(lit, 0.0, 1.0), outAlpha);
@@ -535,9 +577,50 @@ function computeNormals(mesh: MeshState) {
       let cz = ux * vy - uy * vx;
       const len = Math.hypot(cx, cy, cz) || 1;
 
-      nx[idx] = cx / len;
-      ny[idx] = cy / len;
-      nz[idx] = cz / len;
+      TEMP_NX[idx] = cx / len;
+      TEMP_NY[idx] = cy / len;
+      TEMP_NZ[idx] = cz / len;
+    }
+  }
+
+  for (let r = 0; r < ROWS; r++) {
+    const isBody = r < BODY_ROWS;
+    const stubRow = r - BODY_ROWS;
+
+    for (let c = 0; c < COLS; c++) {
+      const idx = isBody ? r * COLS + c : BODY_VERTS + stubRow * COLS + c;
+      let sx = TEMP_NX[idx] * 2.0;
+      let sy = TEMP_NY[idx] * 2.0;
+      let sz = TEMP_NZ[idx] * 2.0;
+
+      for (let dr = -1; dr <= 1; dr++) {
+        const nr = r + dr;
+        if (nr < 0 || nr >= ROWS) continue;
+        const nIsBody = nr < BODY_ROWS;
+        const crossSeam = isBody !== nIsBody;
+
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const nc = c + dc;
+          if (nc < 0 || nc >= COLS) continue;
+          if (crossSeam && (seamBroken[c] === 1 || seamBroken[nc] === 1)) {
+            continue;
+          }
+
+          const nIdx = nIsBody
+            ? nr * COLS + nc
+            : BODY_VERTS + (nr - BODY_ROWS) * COLS + nc;
+          const w = dr === 0 || dc === 0 ? 1.0 : 0.5;
+          sx += TEMP_NX[nIdx] * w;
+          sy += TEMP_NY[nIdx] * w;
+          sz += TEMP_NZ[nIdx] * w;
+        }
+      }
+
+      const slen = Math.hypot(sx, sy, sz) || 1;
+      nx[idx] = sx / slen;
+      ny[idx] = sy / slen;
+      nz[idx] = sz / slen;
     }
   }
 }
@@ -624,10 +707,10 @@ interface GlContextState {
     uTiltY: WebGLUniformLocation | null;
     uAspect: WebGLUniformLocation | null;
     uFovScale: WebGLUniformLocation | null;
-    uIsShadow: WebGLUniformLocation | null;
     uIsStub: WebGLUniformLocation | null;
     uPartAlpha: WebGLUniformLocation | null;
     uPointer: WebGLUniformLocation | null;
+    uBend: WebGLUniformLocation | null;
   };
 }
 
@@ -793,23 +876,9 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     gl.uniform1f(locs.uAspect, uAspect);
     gl.uniform1f(locs.uFovScale, uFovScale);
     gl.uniform2f(locs.uPointer, mesh.hoverNdcX, mesh.hoverNdcY);
-
-    gl.disable(gl.DEPTH_TEST);
-    gl.uniform1f(locs.uIsShadow, 1.0);
-    gl.uniform1f(locs.uPartAlpha, 1.0);
-    gl.uniform1f(locs.uIsStub, 0.0);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glState.bodyIdxBuffer);
-    gl.drawElements(gl.TRIANGLES, mesh.bodyIndices.length, gl.UNSIGNED_SHORT, 0);
-
-    if (mesh.stubAlpha > 0.01) {
-      gl.uniform1f(locs.uPartAlpha, mesh.stubAlpha);
-      gl.uniform1f(locs.uIsStub, 1.0);
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glState.stubIdxBuffer);
-      gl.drawElements(gl.TRIANGLES, mesh.stubIndices.length, gl.UNSIGNED_SHORT, 0);
-    }
+    gl.uniform1f(locs.uBend, mesh.bendIntensity);
 
     gl.enable(gl.DEPTH_TEST);
-    gl.uniform1f(locs.uIsShadow, 0.0);
     gl.uniform1f(locs.uPartAlpha, 1.0);
     gl.uniform1f(locs.uIsStub, 0.0);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glState.bodyIdxBuffer);
@@ -1217,10 +1286,10 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
               uTiltY: gl.getUniformLocation(program, 'uTiltY'),
               uAspect: gl.getUniformLocation(program, 'uAspect'),
               uFovScale: gl.getUniformLocation(program, 'uFovScale'),
-              uIsShadow: gl.getUniformLocation(program, 'uIsShadow'),
               uIsStub: gl.getUniformLocation(program, 'uIsStub'),
               uPartAlpha: gl.getUniformLocation(program, 'uPartAlpha'),
               uPointer: gl.getUniformLocation(program, 'uPointer'),
+              uBend: gl.getUniformLocation(program, 'uBend'),
             },
           };
         }

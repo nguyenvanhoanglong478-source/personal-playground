@@ -407,3 +407,18 @@ Cập nhật lần cuối: 2026-11-14
   - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`): thoát `0`, `0` lỗi (`dist/assets/AboutFoilPass-DHUFSyDX.js 39.52 kB`, `dist/assets/index-CbUDVdKy.js 118.81 kB`).
   - Kiểm tra AST (`ts.createScanner`) & CSS trên toàn bộ tệp chỉnh sửa: `TS_COMMENTS=0`, `CSS_COMMENTS=0`.
   - Playwright trên `vite preview` (`127.0.0.1:4173`) ở cả **Dark Mode** và **Light Mode**, trên **Desktop (`1440×900`)** và **Mobile (`375×812` cảm ứng)**: xác nhận trực quan qua ảnh chụp màn hình thanh `Navbar` gọn gàng không phụ đề/không gạch chân cầu vồng, logo Capybara pixel sắc nét, hiệu ứng hover thẻ phát sáng trắng (Dark) / đen (Light) trên nền `.google-aura-backdrop`, vé 3D `AboutFoilPass` sắc nét với cảnh Capybara Onsen cùng đầy đủ thao tác kéo uốn (`data-drag-bent="true"`), lật mặt (`data-flipped="true"`), xé cuống (`data-torn="true"`), khôi phục (`data-torn="false"`), tab `Không gian` (`?tab=workspace`) hoạt động ổn định, `scrollWidth <= innerWidth` và `0` lỗi console/page.
+
+
+## 28. Khôi Phục Hiệu Ứng Foil Cầu Vồng Mịn & Gỡ Bỏ Drop Shadow / Click Glow (`AboutFoilPass.tsx`, `src/index.css`)
+
+- **Shader Foil Lăng Kính Cầu Vồng Mịn & Làm Mượt Pháp Tuyến (`src/components/AboutFoilPass.tsx`)**:
+  - Khôi phục hiệu ứng foil cầu vồng lăng kính mượt trong `FRAG_SHADER_SRC` với `uniform float uBend` (`mesh.bendIntensity`) và dải sóng cosine `smoothstep` (`bandPrimary`, `bandSecondary`) không dùng `atan` xoáy tâm.
+  - Làm mượt trường vector pháp tuyến từ các đỉnh lân cận trong `computeNormals()` qua bộ đệm `TEMP_NX`, `TEMP_NY`, `TEMP_NZ` (giữ ranh giới đường xé `seamBroken`) để ánh sáng và dải cầu vồng trượt đều khi uốn cong vé.
+  - Bảo vệ độ rõ tranh minh họa Capybara Onsen bằng `artMask` (`0.26` bên trong khung tranh) và bảo vệ độ tương phản chữ trên nền giấy sáng Light Mode qua `isLightCard` (`lightTextKeep`, `inkContrastKeep`, `pastelPearl`).
+- **Gỡ Bỏ Hoàn Toàn Drop Shadow & Hào Quang Bấm/Kéo (`src/components/AboutFoilPass.tsx`, `src/index.css`)**:
+  - Xóa lượt vẽ bóng đổ WebGL (`uIsShadow`) khỏi `VERT_SHADER_SRC`, `FRAG_SHADER_SRC`, `GlContextState` và vòng vẽ chính trong `src/components/AboutFoilPass.tsx`.
+  - Xóa `filter: drop-shadow(...)` trên `.about-foil-canvas` và quy tắc `.about-foil-stage[data-interacting='true'] .about-foil-canvas` dùng `--accent-glow` trong `src/index.css`.
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_COMMENTS=0` trong `src/components/AboutFoilPass.tsx` và `CSS_COMMENTS=0` trong `src/index.css`.
+  - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`): thoát `0`, `0` lỗi (`dist/assets/AboutFoilPass-l2hasdhh.js 41.54 kB`, `dist/assets/index-prhVbFbk.css 61.01 kB`).
+  - Playwright trên `vite preview` (`Desktop 1440×900` & `Mobile 375×812`, Dark & Light): `idle_filter: "none"`, `drag_filter: "none"`, `interacting_during_drag: "true"`, `drag_bent_during_drag: "true"`, `flipped_after_click: "true"`, `torn_after_drag: "true"`, `restored_torn: "false"`, `no_overflow: true`, `console_errors: []`, `page_errors: []`, chữ Light Mode và tranh Capybara Onsen sắc nét.

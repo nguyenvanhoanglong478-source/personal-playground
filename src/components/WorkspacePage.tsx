@@ -38,16 +38,6 @@ const TIME_STATE_ORDER: RoomTimeState[] = [
   'sleeping',
 ];
 
-const HOTSPOT_ORDER: RoomHotspotId[] = [
-  'monitor',
-  'speakers',
-  'lamp',
-  'window',
-  'bed',
-  'capybara',
-  'shelf',
-];
-
 function renderSpeakerIcon(hotspot: RoomHotspotId | null): React.ReactNode {
   const iconClass = 'h-3 w-3 shrink-0 text-folio-muted';
   if (hotspot === 'lamp') {
@@ -68,13 +58,7 @@ function renderSpeakerIcon(hotspot: RoomHotspotId | null): React.ReactNode {
 export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
   const shouldReduceMotion = Boolean(useReducedMotion());
   const t = WORKSPACE_UI_LABELS[locale];
-  const extraLabels: {
-    spotifyHeader: string;
-    spotifyPausedBadge?: string;
-    spotifyPausedText?: string;
-  } = t;
-  const pausedBadgeLabel =
-    extraLabels.spotifyPausedBadge ?? (locale === 'vi' ? 'Tạm dừng' : 'Paused');
+  const pausedBadgeLabel = t.spotifyPausedBadge;
 
   const [vnClock, setVnClock] = useState(() => getVietnamClockInfo());
   const [timeOverride, setTimeOverride] = useState<TimeOverrideMode>('auto');
@@ -348,31 +332,6 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
                   </span>
                 )}
               </div>
-            </div>
-
-            <div
-              role="group"
-              aria-label={t.hotspotsAriaLabel}
-              className="flex flex-wrap items-center gap-2"
-            >
-              {HOTSPOT_ORDER.map((hotspotId) => {
-                const isSelected = selectedHotspot === hotspotId;
-                return (
-                  <button
-                    key={hotspotId}
-                    type="button"
-                    onClick={() => handleSelectHotspot(hotspotId)}
-                    aria-pressed={isSelected}
-                    className={`min-h-[44px] rounded-[var(--radius-tag)] border px-3.5 py-2 font-mono text-xs font-medium transition-[transform,border-color,background-color,color] duration-150 active:scale-[0.98] ${
-                      isSelected
-                        ? 'border-folio-strong bg-folio-surface font-semibold text-folio-ink shadow-soft'
-                        : 'border-folio-border bg-folio-elevated text-folio-ink hover:border-folio-gblue'
-                    }`}
-                  >
-                    {t.hotspotNames[hotspotId]}
-                  </button>
-                );
-              })}
             </div>
           </div>
 

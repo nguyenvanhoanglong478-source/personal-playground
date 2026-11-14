@@ -10,11 +10,21 @@ import {
   WORKSPACE_UI_LABELS,
 } from '../../data/workspace';
 import { getRoomPalette } from './pixelPalette';
-import { drawCharacterAndEffects } from './pixelSprites';
+import {
+  drawMusicEffectsOverlay,
+  drawRoomScreensAndSteam,
+  drawSeatedCharacter,
+  drawSleepingCharacter,
+  drawWakingAndCapybaraLayer,
+  getSleepingBreathOffset,
+} from './pixelSprites';
 import {
   ROOM_HOTSPOTS,
+  drawBedBlanket,
+  drawChairBackOverlay,
+  drawDeskAndChairBase,
   drawLightingOverlay,
-  drawRoomEnvironment,
+  drawRoomBaseLayer,
 } from './roomEnvironment';
 
 export interface WorkspaceRoomProps {
@@ -79,7 +89,6 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
       elapsedSec: effectiveElapsedSec,
       palette,
     };
-    drawRoomEnvironment(ctx, envOptions);
 
     const spriteOptions = {
       timeState: current.timeState,
@@ -93,7 +102,6 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
       hoveredRegion: activeHovered,
       reducedMotion: current.reducedMotion,
     };
-    drawCharacterAndEffects(ctx, spriteOptions);
 
     const lightingOptions = {
       timeState: current.timeState,
@@ -103,7 +111,30 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
       elapsedSec: effectiveElapsedSec,
       palette,
     };
+
+    drawRoomBaseLayer(ctx, envOptions);
+
+    if (current.timeState === 'sleeping') {
+      drawSleepingCharacter(ctx, spriteOptions);
+    }
+    const bedBreathOffset =
+      current.timeState === 'sleeping'
+        ? getSleepingBreathOffset(effectiveElapsedSec, current.reducedMotion)
+        : 0;
+    drawBedBlanket(ctx, palette, bedBreathOffset);
+
+    drawDeskAndChairBase(ctx, envOptions);
+    drawRoomScreensAndSteam(ctx, spriteOptions);
+
+    if (current.timeState === 'working' || current.timeState === 'late_night') {
+      drawSeatedCharacter(ctx, spriteOptions);
+    }
+    drawChairBackOverlay(ctx, palette);
+
+    drawWakingAndCapybaraLayer(ctx, spriteOptions);
+
     drawLightingOverlay(ctx, lightingOptions);
+    drawMusicEffectsOverlay(ctx, spriteOptions);
   }, []);
 
   useEffect(() => {

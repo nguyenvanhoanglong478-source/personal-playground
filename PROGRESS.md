@@ -333,3 +333,20 @@ Cập nhật lần cuối: 2026-11-13
     - Đạt toàn bộ 4 khung giờ phòng (`Sáng`, `Làm việc`, `Tối`, `Đi ngủ`) và đối chiếu trực quan 11 ảnh chụp màn hình: nhân vật ngồi khớp ghế/bàn, Bayer dithering nắng/trăng/đèn bàn, Honda Cub, Capybara trong thảm, giao diện gọn không còn thẻ thừa; nhãn `"Long đang nghe"` / `"Long is listening"` và bật/tắt `"Nghe thử Lofi"` / `"Tắt Demo"` hoạt động chuẩn.
     - Xác minh **Spotify Pause Sync** qua route mock `**/api/spotify**`: chuyển từ `isPlaying: true` (`"Midnight Lo-Fi Test"`, đồng hồ và EQ/nốt nhạc chạy) sang cả payload tạm dừng đầy đủ lẫn payload tối giản `{ isPlaying: false }` -> giao diện chuyển ngay sang `"Tạm dừng"` / `"Paused"`, đĩa ngừng xoay, thanh tiến độ và đồng hồ đóng băng hoàn toàn, canvas dừng rung loa, dừng EQ và tắt hẳn nốt nhạc sau cửa sổ mờ `0.4s`.
     - `0` lỗi console, `0` lỗi trang, `0` tràn ngang (`scrollWidth <= innerWidth`), tab `Hồ sơ` giữ nguyên không hồi quy; toàn bộ `14/14` nút trong `#workspace` trên Mobile `375×812` đạt kích thước chạm `>= 44×44px` (ghi nhận nút đổi theme sẵn có ở `Navbar.tsx` giữ `h = 44px`, `w = 38px` trên `375px` do không nằm trong phạm vi chỉnh sửa đợt này).
+
+
+## 24. Chuẩn Hóa 6 Lớp Z-Order Nhân Vật & Gọn Giao Diện Hộp Thoại GBA (`WorkspaceRoom`)
+
+- **Tách Lớp Môi Trường & Ranh Giới Di Chuyển (`src/components/workspace/roomEnvironment.ts`)**:
+  - Xuất chuẩn `WALKABLE_RECT` (`{ x: 76, y: 88, w: 30, h: 62 }`) cho sàn gỗ trống giữa giường và bàn, cùng `RUG_WALK_RECT` (`{ x: 118, y: 127, w: 108, h: 24 }`) trong lòng thảm dưới chân bánh xe ghế xoay.
+  - Tách giường thành `drawBedBase` (gối trắng `20..62, 89..102`) và `drawBedBlanket` (nẹp chăn `103+b..106+b` & chăn kẻ ô `107+b..146`); tách ghế xoay thành `drawChairSeatBase` và `drawChairBackOverlay` (`161..185, 97..114`) ôm lưng nhân vật; làm dịu Bayer dithering nắng cửa sổ khi phủ qua vùng bàn phím/loa/laptop (`111..190, 56..92`).
+- **Tinh Chỉnh Tư Thế Nhân Vật & Điều Phối 6 Lớp (`src/components/workspace/pixelSprites.ts`, `WorkspaceRoom.tsx`)**:
+  - `drawSleepingCharacter`: đầu và vai nhân vật tỉ lệ chuẩn nằm chính giữa gối thật của giường (`x: 27..57, y: 86..107`), thân được `drawBedBlanket` đắp phủ bên trên (xóa hoàn toàn hình nhân vật tí hon trên gối) kèm nhịp thở `{0, -1}` và `zZz`.
+  - `drawSeatedCharacter`: nhân vật ngồi quay lưng hướng màn hình (`156..205, 73..104`) với tay gõ phím, di chuột và nhấc cốc cà phê, phần lưng dưới được `drawChairBackOverlay` ôm gọn phía sau (không còn chân đứng đè ghế).
+  - `drawWakingAndCapybaraLayer`: nhân vật buổi sáng đứng uống cà phê hoàn toàn trong `WALKABLE_RECT`, sắp thứ tự Y cùng Capybara di chuyển trong `RUG_WALK_RECT`; `WorkspaceRoom.tsx` dựng đúng thứ tự 6 lớp Z-order.
+- **Loại Bỏ Hàng Nút Điểm Chạm Dưới Hộp Thoại (`src/components/WorkspacePage.tsx`, `src/data/workspace.ts`, `DESIGN.md`)**:
+  - Xóa `HOTSPOT_ORDER` và hàng 7 nút bên dưới `.pokemon-gba-dialog`, giữ tương tác bấm trực tiếp 7 vùng trên `<canvas>` và thẻ `"Long đang nghe"` / `"Long is listening"` đồng bộ Play/Pause Spotify; cập nhật lại `DESIGN.md` khớp thiết kế hiện hành.
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - AST TypeScript check (`ts.createSourceFile`): `0` comment trong 7 tệp workspace (`src/data/workspace.ts`, `src/hooks/useSpotifyStatus.ts`, `src/components/WorkspacePage.tsx`, `src/components/workspace/*`) và `0` dấu ngoặc/em-dash thừa trong chuỗi `workspace.ts`.
+  - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`): thoát `0`, `0` lỗi (`dist/assets/WorkspacePage-CgZyTSlI.js 100.04 kB`).
+  - Playwright trên `vite preview` (`127.0.0.1:4173`) ở Desktop `1440×900` và Mobile cảm ứng `375×812` (kiểm tra 11 ảnh chụp màn hình qua `read_file`): đạt cả 4 trạng thái (`Sáng`, `Làm việc`, `Tối`, `Đi ngủ`), xác nhận không còn hàng nút dưới `.pokemon-gba-dialog`, bấm trực tiếp lên `<canvas>` (`bed`, `capybara`, `monitor`) cập nhật đúng hộp thoại trên cả Desktop & Mobile, đồng bộ Spotify Play -> Pause đóng băng ở `00:44`, `Hồ sơ` không hồi quy, `0` lỗi console/page, `0` tràn ngang và `7/7` nút trong `#workspace` đạt `>= 44×44px` trên Mobile.

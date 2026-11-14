@@ -1,5 +1,6 @@
 import type { RoomHotspotId, RoomHotspotRegion, RoomTimeState } from '../../data/workspace';
 import type { RoomPalette } from './pixelPalette';
+import { RUG_WALK_RECT, WALKABLE_RECT } from './roomEnvironment';
 
 export type SpriteMatrix = readonly string[];
 
@@ -37,6 +38,16 @@ const LEFT_WOOFER_X = 117;
 const LEFT_WOOFER_Y = 68;
 const RIGHT_WOOFER_X = 211;
 const RIGHT_WOOFER_Y = 68;
+
+const SEATED_DRAW_X = 152;
+const SEATED_DRAW_Y = 72;
+const SEATED_WIDTH = 52;
+const SEATED_HEAD_HEIGHT = 12;
+const SEATED_TORSO_HEIGHT = 22;
+const SEATED_TOTAL_HEIGHT = 33;
+
+const SLEEP_DRAW_X = 24;
+const SLEEP_DRAW_Y = 86;
 
 interface MusicVisualTracker {
   wasActive: boolean;
@@ -104,6 +115,11 @@ function pingPong(val: number, span: number): number {
   const period = span * 2;
   const mod = ((val % period) + period) % period;
   return mod <= span ? mod : period - mod;
+}
+
+function resolveTimeSec(options: DrawCharacterAndEffectsOptions): number {
+  const reduced = Boolean(options.reducedMotion);
+  return reduced ? 0 : (options.elapsedSec ?? options.tick / 15);
 }
 
 const HOTSPOT_POINTER_ANCHORS: Record<RoomHotspotId, { pointerX: number; pointerY: number }> = {
@@ -230,8 +246,12 @@ function drawMainMonitorScreen(
       : Math.round(sy + 1 + pingPong(timeSec * 6.2 + 2, bounceSpanY));
 
     if (!reducedMotion) {
-      const prevX = Math.round(sx + 1 + pingPong(Math.max(0, timeSec - 0.12) * 9.5 + 3, bounceSpanX));
-      const prevY = Math.round(sy + 1 + pingPong(Math.max(0, timeSec - 0.12) * 6.2 + 2, bounceSpanY));
+      const prevX = Math.round(
+        sx + 1 + pingPong(Math.max(0, timeSec - 0.12) * 9.5 + 3, bounceSpanX)
+      );
+      const prevY = Math.round(
+        sy + 1 + pingPong(Math.max(0, timeSec - 0.12) * 6.2 + 2, bounceSpanY)
+      );
       ctx.save();
       ctx.globalAlpha = 0.45;
       fillPixelRect(ctx, prevX + 2, prevY + 2, 1, 1, '#9B72CB');
@@ -351,246 +371,343 @@ function drawSideLaptopScreen(
   }
 }
 
-const SEATED_HEAD_OPEN: SpriteMatrix = [
-  '.............OOOOO...............................',
-  '...........OOHllhhOOO............................',
-  '..........OHllhhhhhHHHO..........................',
-  '.........OHHlhHHHHHHhHHO.........................',
-  '.........OHhHHtsdsstHHHO.........................',
-  '........OHsGGGGGsGGGGGsHO........................',
-  '........OdsGGRLEGsGERLGsdO.......................',
-  '.........OdGGGGGsGGGGGdO.........................',
-  '..........OspppstspppsO..........................',
-  '...........OOddsssddOO...........................',
+const SLEEPING_HEAD_ROWS: SpriteMatrix = [
+  '...........OOOOOOOOOOOO...........',
+  '.........OOHllhhhhhhllHOO.........',
+  '........OHllhhhhhhhhhhllHO........',
+  '.......POHhHHhHHHHHHhHHhHOP.......',
+  '.......POHhHhtsdsstsdstHHOP.......',
+  '.......POHsdstttttttttdsHOP.......',
+  '......POdsstsssssssssstssdOP......',
+  '......POdssssKKKssKKKssssdOP......',
+  '......POdssppsssdtsssppssdOP......',
+  '.......POsssssssppsssssssOP.......',
+  '........POdssssddddssssdOP........',
+  '.........POOddddssddddOOP.........',
+  '...........OOOdsddsdOOO...........',
+  '.........OOObCdsddsdCbOOO.........',
 ];
 
-const SEATED_HEAD_BLINK: SpriteMatrix = [
-  '.............OOOOO...............................',
-  '...........OOHllhhOOO............................',
-  '..........OHllhhhhhHHHO..........................',
-  '.........OHHlhHHHHHHhHHO.........................',
-  '.........OHhHHtsdsstHHHO.........................',
-  '........OHsGGGGGsGGGGGsHO........................',
-  '........OdsGKKKGsGKKKGsdO........................',
-  '.........OdGGGGGsGGGGGdO.........................',
-  '..........OspppstspppsO..........................',
-  '...........OOddsssddOO...........................',
+const SLEEPING_TORSO_ROWS: SpriteMatrix = [
+  '......OOOBbbCCddddddCCbbBOOO.OOOO.',
+  '....OOBBBBBbCCmmmmmmCCbBBBBBOtsstO',
+  '...OBBBBBBBbCCmmmmmmCCbBBBBBOsdssO',
+  '...OBBBBBBBBBCCCCCCCCBBBBBBBObbbsO',
+  '...OBBBBBBBBBBBBBBBBBBBBBBBBObbbOO',
+  '...OBBBBBSSSSBBBBBBBBBBSSSSBBBBBO.',
+  '....OSSSSSSSSSSSSSSSSSSSSSSSSSSO..',
+  '.....OOOOOOOOOOOOOOOOOOOOOOOOOO...',
+];
+
+function buildSleepingLongMatrix(breathOffset: number): SpriteMatrix {
+  const width = 34;
+  const totalHeight = 22;
+  const grid: string[][] = Array.from({ length: totalHeight }, () =>
+    Array<string>(width).fill('.')
+  );
+
+  for (let r = 0; r < SLEEPING_HEAD_ROWS.length; r += 1) {
+    const line = SLEEPING_HEAD_ROWS[r];
+    for (let c = 0; c < width; c += 1) {
+      const ch = line[c];
+      if (ch && ch !== '.') {
+        grid[r][c] = ch;
+      }
+    }
+  }
+
+  const torsoStart = 14 + (breathOffset < 0 ? -1 : 0);
+  for (let r = 0; r < SLEEPING_TORSO_ROWS.length; r += 1) {
+    const gr = torsoStart + r;
+    if (gr < 0 || gr >= totalHeight) continue;
+    const line = SLEEPING_TORSO_ROWS[r];
+    for (let c = 0; c < width; c += 1) {
+      const ch = line[c];
+      if (ch && ch !== '.') {
+        grid[gr][c] = ch;
+      }
+    }
+  }
+
+  return grid.map((chars) => chars.join(''));
+}
+
+const SEATED_HEAD_MONITOR: SpriteMatrix = [
+  '...............OOOOOOOOOO...........................',
+  '.............OOHHllhhhhhHOO.........................',
+  '............OHHllhhhhhhhhhHO........................',
+  '............OHhHHHHHHHHhhhHO........................',
+  '...........OGLsHHHHhHHHHHHhHO.......................',
+  '..........OGLRdsdHHHHHHHHHhhHO......................',
+  '..........OdtGssHHHHHHHHHHHhHO......................',
+  '...........OdssHHHHHHHHHHHHhHO......................',
+  '............OssHHHhHHHHHhHHHO.......................',
+  '.............OdsdHHHHHHHHHOO........................',
+  '..............OOddddssddOO..........................',
+  '................OOOOOOOO............................',
 ];
 
 const SEATED_HEAD_GLANCE_LEFT: SpriteMatrix = [
-  '............OOOOO................................',
-  '..........OOHllhhOOO.............................',
-  '.........OHllhhhhhHHHO...........................',
-  '........OHHlhHHHHHHhHHO..........................',
-  '........OHhHHtsdsstHHHO..........................',
-  '.......OHsGGGGGsGGGGGsHO.........................',
-  '.......OdsGELLGsGELLGsdO.........................',
-  '........OdGGGGGsGGGGGdO..........................',
-  '.........OspppstspppsO...........................',
-  '..........OOddsssddOO............................',
+  '..............OOOOOOOOOO............................',
+  '............OOHHllhhhhhHOO..........................',
+  '...........OHHllhhhhhhhhhHO.........................',
+  '...........OHhHHHHHHHHhhhHO.........................',
+  '..........OGLLsHHHHhHHHHHHhHO.......................',
+  '.........OGLRRdsdHHHHHHHHHhhHO......................',
+  '.........OdtGGssHHHHHHHHHHHhHO......................',
+  '..........OdssHHHHHHHHHHHHhHO.......................',
+  '...........OssHHHhHHHHHhHHHO........................',
+  '............OdsdHHHHHHHHHOO.........................',
+  '.............OOddddssddOO...........................',
+  '...............OOOOOOOO.............................',
+];
+
+const SEATED_HEAD_SIP_MUG: SpriteMatrix = [
+  '.................OOOOOOOOOO.........................',
+  '...............OOHhhhhhllHHOO.......................',
+  '..............OHhhhhhhhhhllHHO......................',
+  '..............OHhhhHHHHHHHHhHO......................',
+  '.............OHhHHHHHHhHHHHsLGO.....................',
+  '............OHhhHHHHHHHHHdsdRLGO....................',
+  '............OHhHHHHHHHHHHHssGtdO....................',
+  '............OHhHHHHHHHHHHHHssdO.....................',
+  '.............OHHHhHHHHHhHHHssO......................',
+  '..............OOHHHHHHHHHdsdO.......................',
+  '................OOddssddddOO........................',
+  '..................OOOOOOOO..........................',
 ];
 
 const SEATED_HEAD_TILT_LEFT: SpriteMatrix = [
-  '............OOOOO................................',
-  '...........OOHllhhOOO............................',
-  '.........OHllhhhhhHHHO...........................',
-  '.........OHHlhHHHHHHhHHO.........................',
-  '........OHhHHtsdsstHHHO..........................',
-  '........OHsGGGGGsGGGGGsHO........................',
-  '........OdsGKKKGsGKKKGsdO........................',
-  '.........OdGGGGGsGGGGGdO.........................',
-  '..........OspppstspppsO..........................',
-  '...........OOddsssddOO...........................',
+  '..............OOOOOOOOOO............................',
+  '............OOHHllhhhhhHOO..........................',
+  '...........OHHllhhhhhhhhhHO.........................',
+  '...........OHhHHHHHHHHhhhHO.........................',
+  '..........OGLsHHHHhHHHHHHhHO........................',
+  '..........OGLRdsdHHHHHHHHHhhHO......................',
+  '..........OdtGssHHHHHHHHHHHhHO......................',
+  '...........OdssHHHHHHHHHHHHhHO......................',
+  '............OssHHHhHHHHHhHHHO.......................',
+  '.............OdsdHHHHHHHHHOO........................',
+  '..............OOddddssddOO..........................',
+  '................OOOOOOOO............................',
 ];
 
 const SEATED_HEAD_TILT_RIGHT: SpriteMatrix = [
-  '..............OOOOO..............................',
-  '............OOHllhhOOO...........................',
-  '...........OHllhhhhhHHHO.........................',
-  '..........OHHlhHHHHHHhHHO........................',
-  '..........OHhHHtsdsstHHHO........................',
-  '.........OHsGGGGGsGGGGGsHO.......................',
-  '.........OdsGKKKGsGKKKGsdO.......................',
-  '..........OdGGGGGsGGGGGdO........................',
-  '...........OspppstspppsO.........................',
-  '............OOddsssddOO..........................',
+  '................OOOOOOOOOO..........................',
+  '..............OOHHllhhhhhHOO........................',
+  '.............OHHllhhhhhhhhhHO.......................',
+  '.............OHhHHHHHHHHhhhHO.......................',
+  '............OGLsHHHHhHHHHHHhHO......................',
+  '...........OGLRdsdHHHHHHHHHhhHO.....................',
+  '...........OdtGssHHHHHHHHHHHhHO.....................',
+  '............OdssHHHHHHHHHHHHhHO.....................',
+  '.............OssHHHhHHHHHhHHHO......................',
+  '..............OdsdHHHHHHHHHOO.......................',
+  '...............OOddddssddOO.........................',
+  '.................OOOOOOOO...........................',
 ];
 
 const SEATED_TORSO_HOME: SpriteMatrix = [
-  '.................................................',
-  '.....OOO...............OOO.......................',
-  '....OssOO.............OOssO......................',
-  '....OdsbO.............ObsdO......................',
-  '....ObbBOOOOBBmCmBBBOOOBbbO......................',
-  '.....OBBBbBBmCCCmBBbBBBBBBO......................',
-  '......OOOBBBBmCmBBBBBOOO.........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBbBBBBbBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OSSSSSSSSSSO...........................',
+  '....................................................',
+  '.....OOOO...............OOOO........................',
+  '....OtsdsO.............OdsdtO.......................',
+  '....ObdsbOO...OOOBmmBmBOObdsbO......................',
+  '....ObbbBOOOBBBbBmCCCmBbBBObbbbO....................',
+  '.....ObbBBbBBBBBmmCCCmmBBBBbBbbO....................',
+  '......OOBBBBBBBBBmmmmmBBBBBBBBBOO...................',
+  '.......OBBBBBBBBBBBBBBBBBBBBBBBBO...................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBbBBBBBBBBBBBBBBbBBBO....................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBBBSSSSBBBBBBBBSSSSBO....................',
+  '.........OBBBBSSSSBBBBBBBBSSSBO.....................',
+  '...........OBBBBBBBBBBBBBBBBBO......................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBSSSSBBBBBBBBSSSSO.....................',
+  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
+  '...........OOOOOOOOOOOOOOOOOOO......................',
 ];
 
 const SEATED_TORSO_TYPE_L: SpriteMatrix = [
-  '....OOO..........................................',
-  '...OssOO...............OOO.......................',
-  '...OdsbO..............OOssO......................',
-  '....ObbOO.............ObsdO......................',
-  '....ObbBOOOOBBmCmBBBOOOBbbO......................',
-  '.....OBBBbBBmCCCmBBbBBBBBBO......................',
-  '......OOOBBBBmCmBBBBBOOO.........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBbBBBBbBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OSSSSSSSSSSO...........................',
+  '.....OOOO...........................................',
+  '....OtsdsO..............OOOO........................',
+  '....ObdsbOO............OdsdtO.......................',
+  '....ObbbBOO...OOOBmmBmBOObdsbO......................',
+  '.....ObbBOOOBBBbBmCCCmBbBBObbbbO....................',
+  '.....ObbBBbBBBBBmmCCCmmBBBBbBbbO....................',
+  '......OOBBBBBBBBBmmmmmBBBBBBBBBOO...................',
+  '.......OBBBBBBBBBBBBBBBBBBBBBBBBO...................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBbBBBBBBBBBBBBBBbBBBO....................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBBBSSSSBBBBBBBBSSSSBO....................',
+  '.........OBBBBSSSSBBBBBBBBSSSBO.....................',
+  '...........OBBBBBBBBBBBBBBBBBO......................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBSSSSBBBBBBBBSSSSO.....................',
+  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
+  '...........OOOOOOOOOOOOOOOOOOO......................',
 ];
 
 const SEATED_TORSO_TYPE_R: SpriteMatrix = [
-  '.......................OOO.......................',
-  '.....OOO..............OOssO......................',
-  '....OssOO.............ObsdO......................',
-  '....OdsbO.............OObbO......................',
-  '....ObbBOOOOBBmCmBBBOOOBbbO......................',
-  '.....OBBBbBBmCCCmBBbBBBBBBO......................',
-  '......OOOBBBBmCmBBBBBOOO.........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBbBBBBbBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OSSSSSSSSSSO...........................',
+  '........................OOOO........................',
+  '.....OOOO..............OdsdtO.......................',
+  '....OtsdsO.............ObsdbO.......................',
+  '....ObdsbOO...OOOBmmBmBOObdbO.......................',
+  '....ObbbBOOOBBBbBmCCCmBbBBObbbO.....................',
+  '.....ObbBBbBBBBBmmCCCmmBBBBbBbbO....................',
+  '......OOBBBBBBBBBmmmmmBBBBBBBBBOO...................',
+  '.......OBBBBBBBBBBBBBBBBBBBBBBBBO...................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBbBBBBBBBBBBBBBBbBBBO....................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBBBSSSSBBBBBBBBSSSSBO....................',
+  '.........OBBBBSSSSBBBBBBBBSSSBO.....................',
+  '...........OBBBBBBBBBBBBBBBBBO......................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBSSSSBBBBBBBBSSSSO.....................',
+  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
+  '...........OOOOOOOOOOOOOOOOOOO......................',
 ];
 
 const SEATED_TORSO_MOUSE_A: SpriteMatrix = [
-  '.................................................',
-  '.....OOO........................OOOO.............',
-  '....OssOO.....................OOssdsO............',
-  '....OdsbO................OOOOObbddddO............',
-  '....ObbBOOOOBBmCmBBBOOOOObbbbbbbOOOO.............',
-  '.....OBBBbBBmCCCmBBbBBBBBBBBbbOO.................',
-  '......OOOBBBBmCmBBBBBOOOOOOO.....................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBbBBBBbBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OSSSSSSSSSSO...........................',
+  '....................................................',
+  '.....OOOO..........................OOOO.............',
+  '....OtsdsO........................OdsdtO............',
+  '....ObdsbOO...OOOBmmBmBOOOOOOO...ObbdddsO...........',
+  '....ObbbBOOOBBBbBmCCCmBbBBBBbbOOOObbbbbO............',
+  '.....ObbBBbBBBBBmmCCCmmBBBBBBBBbbbbbbOO.............',
+  '......OOBBBBBBBBBmmmmmBBBBBBBBBOOOOO................',
+  '.......OBBBBBBBBBBBBBBBBBBBBBBBBO...................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBbBBBBBBBBBBBBBBbBBBO....................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBBBSSSSBBBBBBBBSSSSBO....................',
+  '.........OBBBBSSSSBBBBBBBBSSSBO.....................',
+  '...........OBBBBBBBBBBBBBBBBBO......................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBSSSSBBBBBBBBSSSSO.....................',
+  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
+  '...........OOOOOOOOOOOOOOOOOOO......................',
 ];
 
 const SEATED_TORSO_MOUSE_B: SpriteMatrix = [
-  '.................................................',
-  '.....OOO.........................OOOO............',
-  '....OssOO......................OOssdsO...........',
-  '....OdsbO.................OOOOObbddddO...........',
-  '....ObbBOOOOBBmCmBBBOOOOOObbbbbbbOOOO............',
-  '.....OBBBbBBmCCCmBBbBBBBBBBBBbbOO................',
-  '......OOOBBBBmCmBBBBBOOOOOOOO....................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBbBBBBbBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OSSSSSSSSSSO...........................',
+  '....................................................',
+  '.....OOOO...........................OOOO............',
+  '....OtsdsO.........................OdsdtO...........',
+  '....ObdsbOO...OOOBmmBmBOOOOOOO....ObbdddsO..........',
+  '....ObbbBOOOBBBbBmCCCmBbBBBBbbOOOOObbbbbbO..........',
+  '.....ObbBBbBBBBBmmCCCmmBBBBBBBBbbbbbbbOO............',
+  '......OOBBBBBBBBBmmmmmBBBBBBBBBOOOOOO...............',
+  '.......OBBBBBBBBBBBBBBBBBBBBBBBBO...................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBbBBBBBBBBBBBBBBbBBBO....................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBBBSSSSBBBBBBBBSSSSBO....................',
+  '.........OBBBBSSSSBBBBBBBBSSSBO.....................',
+  '...........OBBBBBBBBBBBBBBBBBO......................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBSSSSBBBBBBBBSSSSO.....................',
+  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
+  '...........OOOOOOOOOOOOOOOOOOO......................',
 ];
 
 const SEATED_TORSO_REACH_MUG: SpriteMatrix = [
-  '.................................................',
-  '.....OOO..............................OOOO.......',
-  '....OssOO...........................OOssdsO......',
-  '....OdsbO....................OOOOOOObbddddO......',
-  '....ObbBOOOOBBmCmBBBOOOOOOOOObbbbbbbbbbOOOO......',
-  '.....OBBBbBBmCCCmBBbBBBBBBBBBBBBbbOOOO...........',
-  '......OOOBBBBmCmBBBBBOOOOOOOOOOOO................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBbBBBBbBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OSSSSSSSSSSO...........................',
+  '....................................................',
+  '.....OOOO...................................OOOO....',
+  '....OtsdsO.................................OdsdtO...',
+  '....ObdsbOO...OOOBmmBmBOOOOOOOOOOOOOOO....ObbdddsO..',
+  '....ObbbBOOOBBBbBmCCCmBbBBBBBBBBbbbbbOOOOOObbbbbO...',
+  '.....ObbBBbBBBBBmmCCCmmBBBBBBBBBBBBBBBBbbbbbbOO.....',
+  '......OOBBBBBBBBBmmmmmBBBBBBBBBOOOOOOOOOOOOO........',
+  '.......OBBBBBBBBBBBBBBBBBBBBBBBBO...................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBbBBBBBBBBBBBBBBbBBBO....................',
+  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
+  '........OBBBBBSSSSBBBBBBBBSSSSBO....................',
+  '.........OBBBBSSSSBBBBBBBBSSSBO.....................',
+  '...........OBBBBBBBBBBBBBBBBBO......................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBSSSSBBBBBBBBSSSSO.....................',
+  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
+  '...........OOOOOOOOOOOOOOOOOOO......................',
 ];
 
 const SEATED_TORSO_SIP_MUG: SpriteMatrix = [
-  '.......................OOOOO.....................',
-  '......................OMMMMcO....................',
-  '......................OMFFMcO....................',
-  '.....OOO..............OMMMssO....................',
-  '....OssOO.............ObbssOO....................',
-  '....OdsbO.............ObbBO......................',
-  '....ObbBOOOOBBmCmBBBOOOBbBO......................',
-  '.....OBBBbBBmCCCmBBbBBBBBBO......................',
-  '......OOOBBBBmCmBBBBBOOOO........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBbBBBBbBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OSSSSSSSSSSO...........................',
+  '............................OOOOOO..................',
+  '...........................OMMMMMcO.................',
+  '...........................OMFFFFcO.................',
+  '...........................OMMMMdsO.................',
+  '...........................ObbdsstO.................',
+  '...........................ObbbbssO.................',
+  '.....OOOO..................ObbbbbO..................',
+  '....OtsdsO.................ObbBbO...................',
+  '....ObdsbOO...OOOBmmBmBOOOObBbBO....................',
+  '....ObbbBOOOBBBbBmCCCmBbBBBBbbBO....................',
+  '.....ObbBBbBBBBBmmCCCmmBBBBBBBO.....................',
+  '......OOBBBBBBBBBmmmmmBBBBBBBOO.....................',
+  '.......OBBBBBBBBBBBBBBBBBBBBBO......................',
+  '........OBBBBBBBBBBBBBBBBBBBBO......................',
+  '........OBBBbBBBBBBBBBBBBbBBBO......................',
+  '........OBBBBBBBBBBBBBBBBBBBBO......................',
+  '........OBBBBBSSSSBBBBBBBSSSSO......................',
+  '.........OBBBBSSSSBBBBBBBSSSO.......................',
+  '...........OBBBBBBBBBBBBBBBBO.......................',
+  '...........OBBBBBBBBBBBBBBBBO.......................',
+  '..........OSSSSSSSSSSSSSSSSSSO......................',
+  '...........OOOOOOOOOOOOOOOOOO.......................',
 ];
 
 const SEATED_TORSO_STRETCH: SpriteMatrix = [
-  '....OOOO.................OOOO....................',
-  '...OssOO................OOssO....................',
-  '...OdsO..................OsdO....................',
-  '....ObO..................ObO.....................',
-  '....OBO..................OBO.....................',
-  '....ObO..................ObO.....................',
-  '.....ObO................ObO......................',
-  '.....OBBO..............OBBO......................',
-  '......OBbO............ObBO.......................',
-  '.......ObbOOOBBmCmBBBObbO........................',
-  '........OOBBBmCCCmBBBbOO.........................',
-  '..........OBBBmCmBBBBO...........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBBBSSBBBBO...........................',
-  '..........OBBbBBBBbBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBSSSSBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OBBBBBBBBBBO...........................',
-  '..........OSSSSSSSSSSO...........................',
+  '.....OOOO.........................OOOO..............',
+  '....OtsdsO.......................OdsdtO.............',
+  '....ObdsbO.......................ObsdbO.............',
+  '.....ObbBO.......................ObbbO..............',
+  '.....OBbBO.......................ObBBO..............',
+  '......OBbO.......................ObBO...............',
+  '.......OBbOO...OOOBmmBmBOOO.....ObBO................',
+  '........ObbbOOBBBbBmCCCmBbBBBOOObbO.................',
+  '.........OBBBBBBBBBmmmmmBBBBBBBBBO..................',
+  '.........OBBBBBBBBBBBBBBBBBBBBBBO...................',
+  '..........OBBBBBBBBBBBBBBBBBBBBO....................',
+  '..........OBBBbBBBBBBBBBBBBbBBBO....................',
+  '..........OBBBBBBBBBBBBBBBBBBBBO....................',
+  '..........OBBBBBSSSSBBBBBBBSSSSO....................',
+  '..........OBBBBBSSSSBBBBBBBSSSO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+  '..........OBBBSSSSBBBBBBBSSSSBO.....................',
+  '...........OSSSSSSSSSSSSSSSSSO......................',
+  '...........OBBBBBBBBBBBBBBBBBO......................',
+  '...........OBBBBBBBBBBBBBBBBBO......................',
+  '............OOOOOOOOOOOOOOOOO.......................',
 ];
 
-const SEATED_LEGS: SpriteMatrix = [
-  '..........OJJjjNNjjJJO...........................',
-  '..........OJJJJNNJJJJO...........................',
-  '..........OJJjjNNjjJJO...........................',
-  '..........OJJJNOONJJJO...........................',
-  '..........OJJNO..ONJJO...........................',
-  '..........OJJNO..ONJJO...........................',
-  '..........OJJNO..ONJJO...........................',
-  '..........OJJNO..ONJJO...........................',
-  '..........OUUUO..OUUUO...........................',
-  '..........OUUUO..OUUUO...........................',
-  '..........OWWWO..OWWWO...........................',
-  '..........OOOOO..OOOOO...........................',
-];
-
-function normalizeRows(rows: readonly string[], width = 49): SpriteMatrix {
+function normalizeRows(rows: readonly string[], width = SEATED_WIDTH): SpriteMatrix {
   return rows.map((row) =>
     row.length >= width ? row.slice(0, width) : row.padEnd(width, '.')
   );
@@ -600,378 +717,174 @@ function buildSeatedLongMatrix(
   head: SpriteMatrix,
   torso: SpriteMatrix,
   headDropPx: number,
-  _shoulderDropPx: number
+  shoulderDropPx: number
 ): SpriteMatrix {
-  const normHead = normalizeRows(head);
-  const normTorso = normalizeRows(torso);
-  const normLegs = normalizeRows(SEATED_LEGS);
+  const normHead = normalizeRows(head, SEATED_WIDTH);
+  const normTorso = normalizeRows(torso, SEATED_WIDTH);
 
-  const upperHeight = 23;
-  const grid: string[][] = Array.from({ length: upperHeight }, () =>
-    Array<string>(49).fill('.')
+  const grid: string[][] = Array.from({ length: SEATED_TOTAL_HEIGHT }, () =>
+    Array<string>(SEATED_WIDTH).fill('.')
   );
 
-  const torsoStart = upperHeight - normTorso.length;
-  for (let r = 0; r < normTorso.length; r += 1) {
+  const isSipPose = torso === SEATED_TORSO_SIP_MUG;
+  const torsoBase = torso === SEATED_TORSO_STRETCH ? 7 : isSipPose ? 6 : 11;
+  const torsoStart = Math.min(SEATED_TOTAL_HEIGHT - SEATED_TORSO_HEIGHT, torsoBase + shoulderDropPx);
+
+  for (let r = 0; r < SEATED_TORSO_HEIGHT; r += 1) {
     const gr = torsoStart + r;
-    if (gr < 0 || gr >= upperHeight) continue;
+    if (gr < 0 || gr >= SEATED_TOTAL_HEIGHT) continue;
     const rowStr = normTorso[r];
-    for (let c = 0; c < 49; c += 1) {
-      if (rowStr[c] !== '.') {
-        grid[gr][c] = rowStr[c];
+    for (let c = 0; c < SEATED_WIDTH; c += 1) {
+      const ch = rowStr[c];
+      if (ch !== '.') {
+        grid[gr][c] = ch;
       }
     }
   }
 
   const headStart = 1 + (headDropPx > 0 ? 1 : 0);
-  for (let r = 0; r < normHead.length; r += 1) {
+  for (let r = 0; r < SEATED_HEAD_HEIGHT; r += 1) {
     const gr = headStart + r;
-    if (gr < 0 || gr >= upperHeight) continue;
+    if (gr < 0 || gr >= SEATED_TOTAL_HEIGHT) continue;
     const rowStr = normHead[r];
-    for (let c = 0; c < 49; c += 1) {
+    for (let c = 0; c < SEATED_WIDTH; c += 1) {
       const ch = rowStr[c];
       if (ch === '.') continue;
       const existing = grid[gr][c];
       if (existing === 'M' || existing === 'F' || existing === 'c') continue;
-      if (c >= 23 && existing !== '.' && torso === SEATED_TORSO_SIP_MUG) continue;
+      if (isSipPose && c >= 26 && existing !== '.') continue;
       grid[gr][c] = ch;
     }
   }
 
-  return [...grid.map((chars) => chars.join('')), ...normLegs];
+  return grid.map((chars) => chars.join(''));
 }
 
-const WAKING_STAND_HEAD_OPEN: SpriteMatrix = [
-  '......OOOOO.............',
-  '....OOHllhhOOO..........',
-  '...OHllhhhhhHHHO........',
-  '..OHHlhHHHHHHhHHO.......',
-  '..OHhHHtsdsstHHHO.......',
-  '.OHsGGGGGsGGGGGsHO......',
-  '.OdsGGRLEGsGERLGsdO.....',
-  '..OdGGGGGsGGGGGdO.......',
-  '...OspppstspppsO........',
-  '....OOddsssddOO.........',
+const WAKING_HEAD_OPEN: SpriteMatrix = [
+  '......OOOOOOOO.......',
+  '....OOHllhhhhHOO.....',
+  '...OHllhhhhhhhhHO....',
+  '..OHHlhHHHHHHHHhHO...',
+  '..OHhHHtsdsstHHhHO...',
+  '.OHsGGGGGsGGGGGsHO...',
+  '.OdsGGRLEGsGERLGsdO..',
+  '..OdGGGGGsGGGGGdO....',
+  '...OspppstspppsO.....',
+  '....OOddsssddOO......',
 ];
 
-const WAKING_STAND_HEAD_BLINK: SpriteMatrix = [
-  '......OOOOO.............',
-  '....OOHllhhOOO..........',
-  '...OHllhhhhhHHHO........',
-  '..OHHlhHHHHHHhHHO.......',
-  '..OHhHHtsdsstHHHO.......',
-  '.OHsGGGGGsGGGGGsHO......',
-  '.OdsGKKKGsGKKKGsdO......',
-  '..OdGGGGGsGGGGGdO.......',
-  '...OspppstspppsO........',
-  '....OOddsssddOO.........',
+const WAKING_HEAD_BLINK: SpriteMatrix = [
+  '......OOOOOOOO.......',
+  '....OOHllhhhhHOO.....',
+  '...OHllhhhhhhhhHO....',
+  '..OHHlhHHHHHHHHhHO...',
+  '..OHhHHtsdsstHHhHO...',
+  '.OHsGGGGGsGGGGGsHO...',
+  '.OdsGKKKGsGKKKGsdO...',
+  '..OdGGGGGsGGGGGdO....',
+  '...OspppstspppsO.....',
+  '....OOddsssddOO......',
 ];
 
-const WAKING_STAND_HEAD_SIP: SpriteMatrix = [
-  '......OOOOO.............',
-  '....OOHllhhOOO..........',
-  '...OHllhhhhhHHHO........',
-  '..OHHlhHHHHHHhHHO.......',
-  '..OHhHHtsdsstHHHO.......',
-  '.OHsGGGGGsGGGGGsHO......',
-  '.OdsGKKKGsGKKKGsdO......',
-  '..OdGGGGGsGGGGGdO.......',
-  '...OspppstspppsO........',
-  '....OOddsssddOO.........',
+const WAKING_HEAD_SIP: SpriteMatrix = [
+  '......OOOOOOOO.......',
+  '....OOHllhhhhHOO.....',
+  '...OHllhhhhhhhhHO....',
+  '..OHHlhHHHHHHHHhHO...',
+  '..OHhHHtsdsstHHhHO...',
+  '.OHsGGGGGsGGGGGsHO...',
+  '.OdsGKKKGsGKKKGsdO...',
+  '..OdGGGGGsGGGGGdO....',
+  '...OspppstspppsO.....',
+  '....OOddsssddOO......',
 ];
 
 const WAKING_BODY_HOLD_CUP: SpriteMatrix = [
-  '...OOOBBmCmBBBOO........',
-  '..ObBBBBmCmBBBBbO.......',
-  '.ObBBBBBmCmBBBBBbO......',
-  '.OBBBObBBCCBBbOBBO......',
-  '.OBBOOBBBBBBBBOOBBO.....',
-  '.OBBOOBBBSSBBBOssOO.....',
-  '.OssOOBBBSSBBBOMFFMO....',
-  '.OdsOOBBBBBBBBOMMMcO....',
-  '..OO.OBBBSSBBBOMMMcO....',
-  '.....OSSSSSSSSO.OOO.....',
-  '.....OJJjjNNjjJO........',
-  '.....OJJJJNNJJJO........',
-  '.....OJJJNOONJJO........',
-  '.....OJJNO..ONJJO.......',
-  '.....OJJNO..ONJJO.......',
-  '.....OJJNO..ONJJO.......',
-  '.....OUUUO..OUUUO.......',
-  '.....OWWWO..OWWWO.......',
-  '.....OOOOO..OOOOO.......',
-  '....xxxxxx..xxxxxx......',
+  '...OOOBBmCmBBBOO.....',
+  '..ObBBBBmCmBBBBbO....',
+  '.ObBBBBBmCmBBBBBbO...',
+  '.OBBBObBBCCBBbOBBO...',
+  '.OBBOOBBBBBBBBOOBBO..',
+  '.OBBOOBBBSSBBBOssOO..',
+  '.OssOOBBBSSBBBOMFFMO.',
+  '.OdsOOBBBBBBBBOMMMcO.',
+  '..OO.OBBBSSBBBOMMMcO.',
+  '.....OSSSSSSSSO.OOO..',
+  '.....OJJjjNNjjJO.....',
+  '.....OJJJJNNJJJO.....',
+  '.....OJJJNOONJJO.....',
+  '.....OJJNO..ONJJO....',
+  '.....OJJNO..ONJJO....',
+  '.....OJJNO..ONJJO....',
+  '.....OJJNO..ONJJO....',
+  '.....OJJNO..ONJJO....',
+  '.....OUUUO..OUUUO....',
+  '.....OWWWO..OWWWO....',
+  '.....OOOOO..OOOOO....',
+  '....xxxxxx..xxxxxx...',
 ];
 
 const WAKING_BODY_LIFT_CUP: SpriteMatrix = [
-  '...OOOBBmCmBBBOO........',
-  '..ObBBBBmCmBBBBbO.......',
-  '.ObBBBBBmCmBBBOOO.......',
-  '.OBBBObBBCCBBbOMFFMO....',
-  '.OBBOOBBBBBBBBOMMMcO....',
-  '.OBBOOBBBSSBBBOMMMcO....',
-  '.OssOOBBBSSBBBOssOO.....',
-  '.OdsOOBBBBBBBBOOO.......',
-  '..OO.OBBBSSBBBO.........',
-  '.....OSSSSSSSSO.........',
-  '.....OJJjjNNjjJO........',
-  '.....OJJJJNNJJJO........',
-  '.....OJJJNOONJJO........',
-  '.....OJJNO..ONJJO.......',
-  '.....OJJNO..ONJJO.......',
-  '.....OJJNO..ONJJO.......',
-  '.....OUUUO..OUUUO.......',
-  '.....OWWWO..OWWWO.......',
-  '.....OOOOO..OOOOO.......',
-  '....xxxxxx..xxxxxx......',
+  '...OOOBBmCmBBBOO.....',
+  '..ObBBBBmCmBBBBbO....',
+  '.ObBBBBBmCmBBBOOO....',
+  '.OBBBObBBCCBBbOMFFMO.',
+  '.OBBOOBBBBBBBBOMMMcO.',
+  '.OBBOOBBBSSBBBOMMMcO.',
+  '.OssOOBBBSSBBBOssOO..',
+  '.OdsOOBBBBBBBBOOO....',
+  '..OO.OBBBSSBBBO......',
+  '.....OSSSSSSSSO......',
+  '.....OJJjjNNjjJO.....',
+  '.....OJJJJNNJJJO.....',
+  '.....OJJJNOONJJO.....',
+  '.....OJJNO..ONJJO....',
+  '.....OJJNO..ONJJO....',
+  '.....OJJNO..ONJJO....',
+  '.....OJJNO..ONJJO....',
+  '.....OJJNO..ONJJO....',
+  '.....OUUUO..OUUUO....',
+  '.....OWWWO..OWWWO....',
+  '.....OOOOO..OOOOO....',
+  '....xxxxxx..xxxxxx...',
 ];
 
 const WAKING_STRETCH_MATRIX: SpriteMatrix = [
-  '.OOOO............OOOO...',
-  'OssOO...OOOOO....OOssO..',
-  'OdsO..OOHllhhOOO..OdsO..',
-  '.ObO.OHllhhhhhHHHOObO...',
-  '.OBOOHHlhHHHHHHhHHOBO...',
-  '..OBOHhHHtsdsstHHHBO....',
-  '..ObOsGGGGGsGGGGGsObO...',
-  '...OdsGKKKGsGKKKGsdO....',
-  '....OdGGGGGsGGGGGdO.....',
-  '.....OspppstspppsO......',
-  '....OOddsssddOOOO.......',
-  '...ObBBBBmCmBBBBbO......',
-  '...OBBBBBmCmBBBBBO......',
-  '...OBBBBSSSSBBBBBO......',
-  '....OBBBBBBBBBBBO.......',
-  '....OSSSSSSSSSSSO.......',
-  '....OJJjjNNjjJJO........',
-  '....OJJJJNNJJJJO........',
-  '....OJJJNOONJJJO........',
-  '....OJJNO..ONJJO........',
-  '....OJJNO..ONJJO........',
-  '....OJJNO..ONJJO........',
-  '....OUUUO..OUUUO........',
-  '....OWWWO..OWWWO........',
-  '....OOOOO..OOOOO........',
-  '...xxxxxx..xxxxxx.......',
+  '.OOOO................',
+  'OssOO.OOOOOOOO.......',
+  'OdsOOOHllhhhhHOO.....',
+  '.ObOHllhhhhhhhhHO....',
+  '.OBOHlhHHHHHHHHhHO...',
+  '..OBOHHtsdsstHHhHO...',
+  '..ObOsGGGGGsGGGGGsHO.',
+  '...OdsGKKKGsGKKKGsdO.',
+  '....OdGGGGGsGGGGGdO..',
+  '.....OspppstspppsO...',
+  '....OOddsssddOOOO....',
+  '...ObBBBBmCmBBBBbO...',
+  '...OBBBBBmCmBBBBBO...',
+  '...OBBBBSSSSBBBBbO...',
+  '....OBBBBBBBBBOBssOO.',
+  '....OBBBBSSBBBOMFFMO.',
+  '....OBBBBBBBBBOMMMcO.',
+  '....OSSSSSSSSOOMMMcO.',
+  '.....OJJjjNNjjJO.OOO.',
+  '.....OJJJJNNJJJO.....',
+  '.....OJJJNOONJJO.....',
+  '.....OJJNO..ONJJO....',
+  '.....OJJNO..ONJJO....',
+  '.....OJJNO..ONJJO....',
+  '.....OJJNO..ONJJO....',
+  '.....OJJNO..ONJJO....',
+  '.....OUUUO..OUUUO....',
+  '.....OWWWO..OWWWO....',
+  '.....OOOOO..OOOOO....',
+  '....xxxxxx..xxxxxx...',
 ];
 
-const WAKING_WALK_FRAMES: readonly SpriteMatrix[] = [
-  [
-    '......OOOOO.............',
-    '....OOHllhhOOO..........',
-    '...OHllhhhhhHHHO........',
-    '..OHHlhHHHHHHhHHO.......',
-    '..OHhHHtsdsstHHHO.......',
-    '.OHsGGGGGsGGGGGsHO......',
-    '.OdsGGRLEGsGERLGsdO.....',
-    '..OdGGGGGsGGGGGdO.......',
-    '...OspppstspppsO........',
-    '....OOddsssddOO.........',
-    '...OOOBBmCmBBBOO........',
-    '..ObBBBBmCmBBBBbO.......',
-    '.ObBBBBBmCmBBBBBbO......',
-    '.OBBBObBBCCBBbOBBO......',
-    '.OBBOOBBBBBBBBOOBBO.....',
-    '.OBBOOBBBSSBBBOssOO.....',
-    '.OssOOBBBSSBBBOMFFMO....',
-    '..OO.OBBBBBBBBOMMMcO....',
-    '.....OSSSSSSSSO.OOO.....',
-    '.....OJJjjNNjjJO........',
-    '.....OJJJJNNJJJO........',
-    '....OJJJNO..ONJJJO......',
-    '...OJJNO......ONJJO.....',
-    '...OUUUO......OUUUO.....',
-    '...OWWWO......OWWWO.....',
-    '...OOOOO......OOOOO.....',
-    '..xxxxxx......xxxxxx....',
-  ],
-  [
-    '....OOHllhhOOO..........',
-    '...OHllhhhhhHHHO........',
-    '..OHHlhHHHHHHhHHO.......',
-    '..OHhHHtsdsstHHHO.......',
-    '.OHsGGGGGsGGGGGsHO......',
-    '.OdsGGRLEGsGERLGsdO.....',
-    '..OdGGGGGsGGGGGdO.......',
-    '...OspppstspppsO........',
-    '....OOddsssddOO.........',
-    '...OOOBBmCmBBBOO........',
-    '..ObBBBBmCmBBBBbO.......',
-    '.ObBBBBBmCmBBBBBbO......',
-    '.OBBBObBBCCBBbOBBO......',
-    '.OBBOOBBBBBBBBOOBBO.....',
-    '.OBBOOBBBSSBBBOssOO.....',
-    '.OssOOBBBSSBBBOMFFMO....',
-    '..OO.OBBBBBBBBOMMMcO....',
-    '.....OSSSSSSSSO.OOO.....',
-    '.....OJJjjNNjjJO........',
-    '.....OJJJJNNJJJO........',
-    '.....OJJJNOONJJO........',
-    '.....OJJNO..ONJJO.......',
-    '.....OUUUO..OUUUO.......',
-    '.....OWWWO..OWWWO.......',
-    '.....OOOOO..OOOOO.......',
-    '....xxxxxx..xxxxxx......',
-    '........................',
-  ],
-  [
-    '......OOOOO.............',
-    '....OOHllhhOOO..........',
-    '...OHllhhhhhHHHO........',
-    '..OHHlhHHHHHHhHHO.......',
-    '..OHhHHtsdsstHHHO.......',
-    '.OHsGGGGGsGGGGGsHO......',
-    '.OdsGGRLEGsGERLGsdO.....',
-    '..OdGGGGGsGGGGGdO.......',
-    '...OspppstspppsO........',
-    '....OOddsssddOO.........',
-    '...OOOBBmCmBBBOO........',
-    '..ObBBBBmCmBBBBbO.......',
-    '.ObBBBBBmCmBBBBBbO......',
-    '.OBBBObBBCCBBbOBBO......',
-    '.OBBOOBBBBBBBBOOBBO.....',
-    '.OBBOOBBBSSBBBOssOO.....',
-    '.OssOOBBBSSBBBOMFFMO....',
-    '..OO.OBBBBBBBBOMMMcO....',
-    '.....OSSSSSSSSO.OOO.....',
-    '.....OJJjjNNjjJO........',
-    '.....OJJJJNNJJJO........',
-    '......OJJNOONJJJO.......',
-    '.....OJJNO..ONJJO.......',
-    '.....OUUUO..OUUUO.......',
-    '.....OWWWO..OWWWO.......',
-    '.....OOOOO..OOOOO.......',
-    '....xxxxxx..xxxxxx......',
-  ],
-  [
-    '....OOHllhhOOO..........',
-    '...OHllhhhhhHHHO........',
-    '..OHHlhHHHHHHhHHO.......',
-    '..OHhHHtsdsstHHHO.......',
-    '.OHsGGGGGsGGGGGsHO......',
-    '.OdsGGRLEGsGERLGsdO.....',
-    '..OdGGGGGsGGGGGdO.......',
-    '...OspppstspppsO........',
-    '....OOddsssddOO.........',
-    '...OOOBBmCmBBBOO........',
-    '..ObBBBBmCmBBBBbO.......',
-    '.ObBBBBBmCmBBBBBbO......',
-    '.OBBBObBBCCBBbOBBO......',
-    '.OBBOOBBBBBBBBOOBBO.....',
-    '.OBBOOBBBSSBBBOssOO.....',
-    '.OssOOBBBSSBBBOMFFMO....',
-    '..OO.OBBBBBBBBOMMMcO....',
-    '.....OSSSSSSSSO.OOO.....',
-    '.....OJJjjNNjjJO........',
-    '.....OJJJJNNJJJO........',
-    '.....OJJJNOONJJO........',
-    '.....OJJNO..ONJJO.......',
-    '.....OUUUO..OUUUO.......',
-    '.....OWWWO..OWWWO.......',
-    '.....OOOOO..OOOOO.......',
-    '....xxxxxx..xxxxxx......',
-    '........................',
-  ],
-];
-
-const SLEEPING_BASE_BACK_0: SpriteMatrix = [
-  '..........................................',
-  '.........OOOOO............................',
-  '.......OOHllhhOOO.........................',
-  '......OHllhhhhhHHHO.......................',
-  '.....OHHssshhssddHHO........GGGGGGG.......',
-  '.....OHhssKKssKKssHO........GRLGGRL.......',
-  '.....OHsssppssssdsHO........GGGGGGG.......',
-  '......OsssdssssddHO.......................',
-  '......OOddCCddBBbOOOOOO...................',
-  '.......OBBmCCmBBBBBBBBbbOOOO..............',
-  '.......OBBBBBBBBBBBBBBBBBBBbOO............',
-  '......OBBBBBSSBBBBBBBBBBBBBBbO............',
-  '.....OOBBBBBBBBBBBBBBBBBBBBBO.............',
-  '.....OOZZZZZZZZZZZZZZZZZZZZZZOO...........',
-  '....OZZZZZZZZZZZZZZZZZZZZZZZZZZO..........',
-  '....OZZwwwwwwwwwwwwwwwwwwwwwwZZO..........',
-  '...OQQQqqQQQQQQQQqqQQQQQQqqQQQQQO.........',
-  '...OQQqqqQQQQQQQqqqQQQQQqqqQQQQQO.........',
-  '...OQQQQQQQqqQQQQQQQQqqQQQQQQQQQO.........',
-  '...OqqQQQQqqqQQQQQQQqqqQQQQQQqqQO.........',
-  '...uQQQQQQQQQQQQQQQQQQQQQQQQQQQQu.........',
-  '....uuuuuuuuuuuuuuuuuuuuuuuuuuuu..........',
-];
-
-const SLEEPING_BASE_BACK_1: SpriteMatrix = [
-  '..........................................',
-  '.........OOOOO............................',
-  '.......OOHllhhOOO.........................',
-  '......OHllhhhhhHHHO.......................',
-  '.....OHHssshhssddHHO........GGGGGGG.......',
-  '.....OHhssKKssKKssHO........GRLGGRL.......',
-  '.....OHsssppssssdsHO........GGGGGGG.......',
-  '......OsssdssssddHO.......................',
-  '......OOddCCddBBbOOOOOO...................',
-  '.......OBBmCCmBBBBBBBBbbOOOO..............',
-  '.......OBBBBBBBBBBBBBBBBBBBbOO............',
-  '......OBBBBBSSBBBBBBBBBBBBBBbO............',
-  '.....OOZZZZZZZZZZZZZZZZZZZZZZOO...........',
-  '....OZZZZZZZZZZZZZZZZZZZZZZZZZZO..........',
-  '....OZZwwwwwwwwwwwwwwwwwwwwwwZZO..........',
-  '...OQQQqqQQQQQQQQqqQQQQQQqqQQQQQO.........',
-  '...OQQqqqQQQQQQQqqqQQQQQqqqQQQQQO.........',
-  '...OQQQQQQQqqQQQQQQQQqqQQQQQQQQQO.........',
-  '...OqqQQQQqqqQQQQQQQqqqQQQQQQqqQO.........',
-  '...OQQQQQQQQQQQQQQQQQQQQQQQQQQQQO.........',
-  '...uQQQQqqqQQQQQQQQQQqqqQQQQQQQQu.........',
-  '....uuuuuuuuuuuuuuuuuuuuuuuuuuuu..........',
-];
-
-const SLEEPING_SIDE_TURN_0: SpriteMatrix = [
-  '..........................................',
-  '........OOOOO.............................',
-  '......OOHllhhOOO..........................',
-  '.....OHllhhhhHHHO.........................',
-  '....OHHHhHssddHHHO..........GGGGGGG.......',
-  '....OHhsKKssddHHHO..........GRLGGRL.......',
-  '....OHsspsssddHHO...........GGGGGGG.......',
-  '.....OsssddOOdHO..........................',
-  '......OOddCCBBbOOOOOOO....................',
-  '.......OBBmCBBBBBBBBbbOOOO................',
-  '.......OBBBBBBBBBBBBBBBBBbOO..............',
-  '......OBBBBBSSBBBBBBBBBBBBbO..............',
-  '.....OOBBBBBBBBBBBBBBBBBBBBO..............',
-  '.....OOZZZZZZZZZZZZZZZZZZZZZZOO...........',
-  '....OZZZZZZZZZZZZZZZZZZZZZZZZZZO..........',
-  '....OZZwwwwwwwwwwwwwwwwwwwwwwZZO..........',
-  '...OQQQqqQQQQQQQQqqQQQQQQqqQQQQQO.........',
-  '...OQQqqqQQQQQQQqqqQQQQQqqqQQQQQO.........',
-  '...OQQQQQQQqqQQQQQQQQqqQQQQQQQQQO.........',
-  '...OqqQQQQqqqQQQQQQQqqqQQQQQQqqQO.........',
-  '...uQQQQQQQQQQQQQQQQQQQQQQQQQQQQu.........',
-  '....uuuuuuuuuuuuuuuuuuuuuuuuuuuu..........',
-];
-
-const SLEEPING_SIDE_TURN_1: SpriteMatrix = [
-  '..........................................',
-  '........OOOOO.............................',
-  '......OOHllhhOOO..........................',
-  '.....OHllhhhhHHHO.........................',
-  '....OHHHhHssddHHHO..........GGGGGGG.......',
-  '....OHhsKKssddHHHO..........GRLGGRL.......',
-  '....OHsspsssddHHO...........GGGGGGG.......',
-  '.....OsssddOOdHO..........................',
-  '......OOddCCBBbOOOOOOO....................',
-  '.......OBBmCBBBBBBBBbbOOOO................',
-  '.......OBBBBBBBBBBBBBBBBBbOO..............',
-  '......OBBBBBSSBBBBBBBBBBBBbO..............',
-  '.....OOZZZZZZZZZZZZZZZZZZZZZZOO...........',
-  '....OZZZZZZZZZZZZZZZZZZZZZZZZZZO..........',
-  '....OZZwwwwwwwwwwwwwwwwwwwwwwZZO..........',
-  '...OQQQqqQQQQQQQQqqQQQQQQqqQQQQQO.........',
-  '...OQQqqqQQQQQQQqqqQQQQQqqqQQQQQO.........',
-  '...OQQQQQQQqqQQQQQQQQqqQQQQQQQQQO.........',
-  '...OqqQQQQqqqQQQQQQQqqqQQQQQQqqQO.........',
-  '...OQQQQQQQQQQQQQQQQQQQQQQQQQQQQO.........',
-  '...uQQQQqqqQQQQQQQQQQqqqQQQQQQQQu.........',
-  '....uuuuuuuuuuuuuuuuuuuuuuuuuuuu..........',
+const WAKING_IDLE_STEPS: readonly SpriteMatrix[] = [
+  [...WAKING_HEAD_OPEN, ...WAKING_BODY_HOLD_CUP],
+  [...WAKING_HEAD_BLINK, ...WAKING_BODY_HOLD_CUP],
 ];
 
 function getLongPalette(
@@ -984,38 +897,33 @@ function getLongPalette(
   const dim = isSleep && !lampOn;
 
   return {
-    O: isSleep ? palette.inkOutline : isLate ? '#1C172B' : '#26181A',
-    H: dim ? '#141826' : '#1B1E2C',
-    h: dim ? '#24293D' : '#32374E',
-    l: dim ? '#363D59' : isLate ? '#5A8AB5' : '#4F587A',
-    t: dim ? '#BA9582' : isLate ? '#E3BB9F' : '#FFDDC0',
-    s: dim ? '#A48070' : isLate ? '#D9A78A' : '#F3C29D',
-    d: dim ? '#856358' : isLate ? '#B6826B' : '#D39573',
-    a: dim ? '#694C42' : '#A66B4F',
-    p: dim ? '#A6686E' : isLate ? '#D07D82' : '#E88B83',
+    O: isSleep ? palette.inkOutline : isLate ? '#1B1526' : '#26181A',
+    H: dim ? '#221926' : isLate ? '#2B1C22' : '#2E1D1A',
+    h: dim ? '#382838' : isLate ? '#472E2F' : '#513329',
+    l: dim ? '#4F3D4F' : isLate ? '#6A4B44' : '#7A4E3B',
+    t: dim ? '#B89588' : isLate ? '#E6C0A6' : '#FFE0C2',
+    s: dim ? '#A07D73' : isLate ? '#D6A58A' : '#F2BF99',
+    d: dim ? '#7F5E59' : isLate ? '#B07D68' : '#CC8C6A',
+    p: dim ? '#9E6870' : isLate ? '#CC7A80' : '#E58880',
     G: '#1E2438',
-    L: isLate ? '#6BE3FF' : '#D8EEFF',
-    R: isLate ? '#C8FAFF' : '#FFFFFF',
+    L: isLate ? '#6BE3FF' : '#CFE9FF',
+    R: isLate ? '#D4FBFF' : '#FFFFFF',
     E: '#1A1D2B',
-    K: '#2B1C19',
-    C: dim ? '#A6A6B8' : isLate ? '#D4CED9' : '#F6EEDD',
-    m: dim ? '#828599' : isLate ? '#A9A4B5' : '#D6C9B0',
-    b: dim ? '#465370' : isLate ? (lampOn ? '#7E7D8B' : '#546485') : '#6B7C9C',
-    B: dim ? '#313A52' : isLate ? '#3A455E' : '#4A5670',
-    S: dim ? '#212738' : isLate ? '#262E42' : '#313A4E',
-    j: dim ? '#29334D' : '#3C4A69',
-    J: dim ? '#1D2438' : '#29334A',
+    K: isSleep ? '#1E1828' : '#2B1C19',
+    C: dim ? '#A4A7BA' : isLate ? '#D4CED9' : '#F6EEDD',
+    m: dim ? '#808499' : isLate ? '#A9A4B5' : '#D6C9B0',
+    b: dim ? '#485573' : isLate ? (lampOn ? '#7F7F8E' : '#56688A') : '#6F82A6',
+    B: dim ? '#343E57' : isLate ? '#3B4763' : '#4C5A78',
+    S: dim ? '#232A3E' : isLate ? '#273046' : '#323D54',
+    j: dim ? '#29334D' : '#3E4D6E',
+    J: dim ? '#1D2438' : '#2A354E',
     N: dim ? '#131826' : '#1C2336',
-    U: dim ? '#323B54' : '#4D5B78',
-    W: dim ? '#A5A2B0' : '#F0EAD8',
+    U: dim ? '#35405B' : '#4F5E80',
+    W: dim ? '#A5A2B0' : '#F2ECE0',
     M: '#FFF8EB',
     c: '#D4C4B0',
     F: '#5C3422',
-    Z: palette.sheetTrim,
-    w: palette.quiltLight,
-    Q: palette.quiltMid,
-    q: palette.quiltPattern,
-    u: palette.quiltShadow,
+    P: palette.pillowShadow,
     x: 'rgba(22, 16, 28, 0.34)',
   };
 }
@@ -1037,7 +945,6 @@ const CAPY_SIT_OPEN: SpriteMatrix = [
   '....ODDOODDOODDOO....',
   '....OOOO.OO..OOOO....',
   '...xxxxxx..xxxxxxx...',
-  '.....................',
 ];
 
 const CAPY_SIT_BLINK: SpriteMatrix = [
@@ -1057,7 +964,6 @@ const CAPY_SIT_BLINK: SpriteMatrix = [
   '....ODDOODDOODDOO....',
   '....OOOO.OO..OOOO....',
   '...xxxxxx..xxxxxxx...',
-  '.....................',
 ];
 
 const CAPY_SIT_EAR: SpriteMatrix = [
@@ -1077,7 +983,6 @@ const CAPY_SIT_EAR: SpriteMatrix = [
   '....ODDOODDOODDOO....',
   '....OOOO.OO..OOOO....',
   '...xxxxxx..xxxxxxx...',
-  '.....................',
 ];
 
 const CAPY_WALK_0: SpriteMatrix = [
@@ -1097,7 +1002,6 @@ const CAPY_WALK_0: SpriteMatrix = [
   '..ODDO....ODDO.ODDO..',
   '..OOOO....OOOO.OOOO..',
   '..xxxxx...xxxxxxxx...',
-  '.....................',
 ];
 
 const CAPY_WALK_1: SpriteMatrix = [
@@ -1116,7 +1020,6 @@ const CAPY_WALK_1: SpriteMatrix = [
   '....ODDO.ODDO.ODDO...',
   '....OOOO.OOOO.OOOO...',
   '....xxxxxxxxxxxxxxx..',
-  '.....................',
   '.....................',
 ];
 
@@ -1137,7 +1040,6 @@ const CAPY_WALK_2: SpriteMatrix = [
   '....ODDO..ODDO..ODDO.',
   '....OOOO..OOOO..OOOO.',
   '...xxxxxxxxxxxxxxxx..',
-  '.....................',
 ];
 
 const CAPY_DANCE_0: SpriteMatrix = [
@@ -1157,7 +1059,6 @@ const CAPY_DANCE_0: SpriteMatrix = [
   '....OOOO.OO..OOOO....',
   '.....................',
   '...xxxxxx..xxxxxxx...',
-  '.....................',
 ];
 
 const CAPY_DANCE_1: SpriteMatrix = [
@@ -1177,7 +1078,6 @@ const CAPY_DANCE_1: SpriteMatrix = [
   '..OOOO.OOOO..OOOO....',
   '.....................',
   '..xxxxxx..xxxxxxxx...',
-  '.....................',
 ];
 
 const CAPY_DROWSY_HALF: SpriteMatrix = [
@@ -1197,7 +1097,6 @@ const CAPY_DROWSY_HALF: SpriteMatrix = [
   '....OOOOOOOOOOOOO....',
   '...xxxxxxxxxxxxxxx...',
   '.....................',
-  '.....................',
 ];
 
 const CAPY_SLEEP_BREATH: SpriteMatrix = [
@@ -1216,7 +1115,6 @@ const CAPY_SLEEP_BREATH: SpriteMatrix = [
   '...OSSSSSSSSSSSSSO...',
   '....OOOOOOOOOOOOO....',
   '...xxxxxxxxxxxxxxx...',
-  '.....................',
   '.....................',
 ];
 
@@ -1400,19 +1298,20 @@ function drawZzzDrift(
   originX: number,
   originY: number,
   timeSec: number,
-  reducedMotion: boolean
+  reducedMotion: boolean,
+  riseSpan = 7
 ): void {
   if (reducedMotion) {
-    drawSpriteMatrix(ctx, Z_SMALL, Z_COLORS, originX, originY - 4);
-    drawSpriteMatrix(ctx, Z_LARGE, Z_COLORS, originX + 6, originY - 11);
+    drawSpriteMatrix(ctx, Z_SMALL, Z_COLORS, originX, originY - 2);
+    drawSpriteMatrix(ctx, Z_LARGE, Z_COLORS, originX + 6, originY - riseSpan);
     return;
   }
 
   const slots = [0, 0.33, 0.66];
   for (let i = 0; i < slots.length; i += 1) {
     const phase = (timeSec * 0.42 + slots[i]) % 1;
-    const drawX = originX + i * 3 + Math.round(Math.sin(phase * Math.PI * 2) * 1.6);
-    const drawY = originY - Math.round(phase * 14);
+    const drawX = originX + i * 3 + Math.round(Math.sin(phase * Math.PI * 2) * 1.4);
+    const drawY = originY - Math.round(phase * riseSpan);
     const alpha =
       phase < 0.2 ? phase / 0.2 : phase > 0.72 ? Math.max(0, (1 - phase) / 0.28) : 0.92;
     const mat = i === 1 ? Z_LARGE : Z_SMALL;
@@ -1428,7 +1327,8 @@ function drawSmoothSteam(
   originX: number,
   originY: number,
   timeSec: number,
-  reducedMotion: boolean
+  reducedMotion: boolean,
+  maxRise = 10
 ): void {
   if (reducedMotion) {
     ctx.save();
@@ -1448,8 +1348,8 @@ function drawSmoothSteam(
   for (let i = 0; i < wisps.length; i += 1) {
     const wisp = wisps[i];
     const phase = (timeSec * 0.58 + wisp.offset) % 1;
-    const py = Math.round(originY - phase * 10);
-    const px = Math.round(originX + wisp.dxBias + Math.sin(phase * Math.PI * 2 + i) * 1.3);
+    const py = Math.round(originY - phase * maxRise);
+    const px = Math.round(originX + wisp.dxBias + Math.sin(phase * Math.PI * 2 + i) * 1.1);
     const alpha = Math.sin(phase * Math.PI) * 0.72;
     if (alpha <= 0.05) continue;
     ctx.save();
@@ -1460,383 +1360,7 @@ function drawSmoothSteam(
 }
 
 function maskStaticDeskMug(ctx: CanvasRenderingContext2D, palette: RoomPalette): void {
-  fillPixelRect(ctx, DESK_MUG_X - 3, DESK_MUG_Y - 2, 10, 7, palette.woodMid);
-}
-
-function drawSeatedLong(
-  ctx: CanvasRenderingContext2D,
-  timeState: RoomTimeState,
-  lampOn: boolean,
-  isMusicActive: boolean,
-  palette: RoomPalette,
-  timeSec: number,
-  reducedMotion: boolean,
-  colors: SpriteColorMap
-): void {
-  const drawX = 156;
-  const drawY = 77;
-
-  if (reducedMotion) {
-    const matrix = buildSeatedLongMatrix(SEATED_HEAD_OPEN, SEATED_TORSO_HOME, 0, 0);
-    drawSpriteMatrix(ctx, matrix, colors, drawX, drawY);
-    return;
-  }
-
-  const cycle = timeState === 'late_night' ? timeSec % 16 : timeSec % 18;
-  const blinkNow = timeSec % 4.3 >= 4.08 && timeSec % 4.3 <= 4.24;
-  const musicBobDown = isMusicActive && Math.sin(timeSec * Math.PI * 3.1) > 0.35 ? 1 : 0;
-
-  let head: SpriteMatrix = blinkNow ? SEATED_HEAD_BLINK : SEATED_HEAD_OPEN;
-  let torso: SpriteMatrix = SEATED_TORSO_HOME;
-  let headDrop = musicBobDown;
-  const shoulderDrop = 0;
-
-  if (timeState === 'working') {
-    if (cycle >= 3.2 && cycle < 5.0) {
-      head = blinkNow ? SEATED_HEAD_BLINK : SEATED_HEAD_GLANCE_LEFT;
-    } else if (cycle >= 5.2 && cycle < 5.7) {
-      torso = SEATED_TORSO_REACH_MUG;
-    } else if (cycle >= 5.7 && cycle < 6.9) {
-      maskStaticDeskMug(ctx, palette);
-      head = SEATED_HEAD_BLINK;
-      torso = SEATED_TORSO_SIP_MUG;
-      drawSmoothSteam(ctx, 179, 79, timeSec, false);
-    } else if (cycle >= 6.9 && cycle < 7.4) {
-      torso = SEATED_TORSO_REACH_MUG;
-    } else if (cycle >= 10.8 && cycle < 13.4) {
-      head = cycle >= 11.4 && cycle < 12.6 ? SEATED_HEAD_TILT_LEFT : SEATED_HEAD_BLINK;
-      torso = SEATED_TORSO_STRETCH;
-      headDrop = 0;
-    } else if (cycle >= 14.8 && cycle < 16.4) {
-      head = blinkNow ? SEATED_HEAD_BLINK : SEATED_HEAD_GLANCE_LEFT;
-      torso = Math.floor(timeSec * 5) % 2 === 0 ? SEATED_TORSO_TYPE_L : SEATED_TORSO_TYPE_R;
-    } else if (cycle >= 8.2 && cycle < 10.2) {
-      torso = Math.floor(timeSec * 2.5) % 2 === 0 ? SEATED_TORSO_MOUSE_A : SEATED_TORSO_MOUSE_B;
-    } else {
-      const step = Math.floor(timeSec * 5.2) % 3;
-      torso =
-        step === 0
-          ? SEATED_TORSO_TYPE_L
-          : step === 1
-            ? SEATED_TORSO_TYPE_R
-            : SEATED_TORSO_HOME;
-    }
-  } else {
-    if (cycle >= 3.5 && cycle < 4.9) {
-      head = blinkNow ? SEATED_HEAD_BLINK : SEATED_HEAD_GLANCE_LEFT;
-    } else if (cycle >= 6.0 && cycle < 8.6) {
-      torso = SEATED_TORSO_STRETCH;
-      headDrop = 0;
-      if (cycle < 7.0) {
-        head = SEATED_HEAD_TILT_LEFT;
-      } else if (cycle < 7.9) {
-        head = SEATED_HEAD_TILT_RIGHT;
-      } else {
-        head = SEATED_HEAD_BLINK;
-      }
-    } else if (cycle >= 10.4 && cycle < 12.2) {
-      torso = Math.floor(timeSec * 2.4) % 2 === 0 ? SEATED_TORSO_MOUSE_A : SEATED_TORSO_MOUSE_B;
-    } else {
-      const step = Math.floor(timeSec * 4.8) % 3;
-      torso =
-        step === 0
-          ? SEATED_TORSO_TYPE_L
-          : step === 1
-            ? SEATED_TORSO_TYPE_R
-            : SEATED_TORSO_HOME;
-    }
-  }
-
-  const matrix = buildSeatedLongMatrix(head, torso, headDrop, shoulderDrop);
-  drawSpriteMatrix(ctx, matrix, colors, drawX, drawY);
-
-  if (lampOn && timeState === 'late_night') {
-    const hairRow = head[2] ?? '';
-    let rightHairCol = -1;
-    for (let c = hairRow.length - 1; c >= 0; c -= 1) {
-      if (hairRow[c] === 'H' || hairRow[c] === 'h' || hairRow[c] === 'l') {
-        rightHairCol = c;
-        break;
-      }
-    }
-    if (rightHairCol >= 0) {
-      fillPixelRect(ctx, drawX + rightHairCol, drawY + 3 + headDrop, 1, 2, '#FCD34D');
-    }
-    const sleeveRow = matrix[14] ?? '';
-    let rightArmCol = -1;
-    for (let c = sleeveRow.length - 1; c >= 0; c -= 1) {
-      if (sleeveRow[c] === 'B' || sleeveRow[c] === 'b') {
-        rightArmCol = c;
-        break;
-      }
-    }
-    if (rightArmCol >= 0) {
-      fillPixelRect(ctx, drawX + rightArmCol, drawY + 14, 1, 2, '#E9B872');
-    }
-  }
-}
-
-function drawWakingLong(
-  ctx: CanvasRenderingContext2D,
-  timeSec: number,
-  reducedMotion: boolean,
-  colors: SpriteColorMap
-): void {
-  if (reducedMotion) {
-    drawSpriteMatrix(ctx, [...WAKING_STAND_HEAD_OPEN, ...WAKING_BODY_HOLD_CUP], colors, 96, 71);
-    drawSmoothSteam(ctx, 111, 79, 0, true);
-    return;
-  }
-
-  const cycle = timeSec % 18;
-  const blinkNow = timeSec % 3.9 >= 3.68 && timeSec % 3.9 <= 3.84;
-
-  if (cycle < 1.8) {
-    const head = blinkNow ? WAKING_STAND_HEAD_BLINK : WAKING_STAND_HEAD_OPEN;
-    drawSpriteMatrix(ctx, [...head, ...WAKING_BODY_HOLD_CUP], colors, 96, 71);
-    drawSmoothSteam(ctx, 111, 79, timeSec, false);
-    return;
-  }
-
-  if (cycle < 4.8) {
-    const isPeakSip = cycle >= 2.3 && cycle < 4.2;
-    const head = isPeakSip
-      ? WAKING_STAND_HEAD_SIP
-      : blinkNow
-        ? WAKING_STAND_HEAD_BLINK
-        : WAKING_STAND_HEAD_OPEN;
-    const body = isPeakSip ? WAKING_BODY_LIFT_CUP : WAKING_BODY_HOLD_CUP;
-    drawSpriteMatrix(ctx, [...head, ...body], colors, 96, 71);
-    drawSmoothSteam(ctx, 111, isPeakSip ? 75 : 79, timeSec, false);
-    return;
-  }
-
-  if (cycle < 8.0) {
-    const progress = (cycle - 4.8) / 3.2;
-    const x = Math.round(96 + progress * 40);
-    const y = Math.round(71 + Math.sin(progress * Math.PI) * 5 + progress * 9);
-    const stepIdx = Math.floor(timeSec * 5.6) % WAKING_WALK_FRAMES.length;
-    drawSpriteMatrix(ctx, WAKING_WALK_FRAMES[stepIdx], colors, x, y, false);
-    drawSmoothSteam(ctx, x + 15, y + 7, timeSec, false);
-    return;
-  }
-
-  if (cycle < 12.2) {
-    drawSpriteMatrix(ctx, WAKING_MUG_ICON, WAKING_MUG_COLORS, 152, 74);
-    drawSmoothSteam(ctx, 154, 72, timeSec, false);
-
-    if (cycle >= 8.4 && cycle < 11.4) {
-      drawSpriteMatrix(ctx, WAKING_STRETCH_MATRIX, colors, 136, 76);
-    } else {
-      const head = blinkNow ? WAKING_STAND_HEAD_BLINK : WAKING_STAND_HEAD_OPEN;
-      drawSpriteMatrix(ctx, [...head, ...WAKING_BODY_HOLD_CUP], colors, 136, 80);
-    }
-    return;
-  }
-
-  if (cycle < 15.6) {
-    const progress = (cycle - 12.2) / 3.4;
-    const x = Math.round(136 - progress * 40);
-    const y = Math.round(80 + Math.sin(progress * Math.PI) * 5 - progress * 9);
-    const stepIdx = Math.floor(timeSec * 5.6) % WAKING_WALK_FRAMES.length;
-    drawSpriteMatrix(ctx, WAKING_WALK_FRAMES[stepIdx], colors, x, y, true);
-    drawSmoothSteam(ctx, x + 5, y + 7, timeSec, false);
-    return;
-  }
-
-  const head = blinkNow ? WAKING_STAND_HEAD_BLINK : WAKING_STAND_HEAD_OPEN;
-  drawSpriteMatrix(ctx, [...head, ...WAKING_BODY_HOLD_CUP], colors, 96, 71);
-  drawSmoothSteam(ctx, 111, 79, timeSec, false);
-}
-
-function drawSleepingLong(
-  ctx: CanvasRenderingContext2D,
-  timeSec: number,
-  reducedMotion: boolean,
-  colors: SpriteColorMap,
-  palette: RoomPalette
-): void {
-  if (reducedMotion) {
-    drawSpriteMatrix(ctx, SLEEPING_BASE_BACK_0, colors, 16, 84);
-    drawZzzDrift(ctx, 35, 79, 0, true);
-    return;
-  }
-
-  const turnCycle = timeSec % 16;
-  const isSideTurn = turnCycle >= 10.5 && turnCycle < 15.0;
-  const breath = (Math.sin(timeSec * ((Math.PI * 2) / 3.6)) + 1) * 0.5;
-  const inhale = breath > 0.52;
-
-  const matrix = isSideTurn
-    ? inhale
-      ? SLEEPING_SIDE_TURN_1
-      : SLEEPING_SIDE_TURN_0
-    : inhale
-      ? SLEEPING_BASE_BACK_1
-      : SLEEPING_BASE_BACK_0;
-
-  drawSpriteMatrix(ctx, matrix, colors, 16, 84);
-
-  if (breath > 0.72) {
-    fillPixelRect(ctx, 25, 96, 20, 1, palette.quiltLight);
-  }
-
-  drawZzzDrift(ctx, 35, 79, timeSec, false);
-}
-
-function drawLongHoang(
-  ctx: CanvasRenderingContext2D,
-  timeState: RoomTimeState,
-  lampOn: boolean,
-  isMusicActive: boolean,
-  palette: RoomPalette,
-  timeSec: number,
-  reducedMotion: boolean
-): void {
-  const colors = getLongPalette(timeState, lampOn, palette);
-
-  if (timeState === 'working' || timeState === 'late_night') {
-    drawSeatedLong(ctx, timeState, lampOn, isMusicActive, palette, timeSec, reducedMotion, colors);
-    return;
-  }
-
-  if (timeState === 'waking') {
-    drawWakingLong(ctx, timeSec, reducedMotion, colors);
-    return;
-  }
-
-  drawSleepingLong(ctx, timeSec, reducedMotion, colors, palette);
-}
-
-interface CapyPoseState {
-  x: number;
-  y: number;
-  flipX: boolean;
-  matrix: SpriteMatrix;
-}
-
-function getCapybaraState(
-  timeState: RoomTimeState,
-  isMusicActive: boolean,
-  timeSec: number,
-  reducedMotion: boolean
-): CapyPoseState {
-  if (timeState === 'sleeping') {
-    const breathUp = !reducedMotion && Math.sin(timeSec * 1.8) > 0.35;
-    return {
-      x: 186,
-      y: 130,
-      flipX: false,
-      matrix: breathUp ? CAPY_SLEEP_BREATH : CAPY_DROWSY_HALF,
-    };
-  }
-
-  if (timeState === 'late_night') {
-    const sleepyNod = isMusicActive && !reducedMotion && Math.sin(timeSec * Math.PI * 2.2) > 0.4;
-    return {
-      x: 186,
-      y: sleepyNod ? 129 : 130,
-      flipX: false,
-      matrix: CAPY_DROWSY_HALF,
-    };
-  }
-
-  if (reducedMotion) {
-    return {
-      x: 186,
-      y: 128,
-      flipX: false,
-      matrix: CAPY_SIT_OPEN,
-    };
-  }
-
-  const loop = timeSec % 20;
-  let cx = 186;
-  let cy = 128;
-  let flipX = false;
-  let isWalking = false;
-
-  if (loop < 3.5) {
-    cx = 186;
-    cy = 128;
-    flipX = false;
-  } else if (loop < 8.2) {
-    const p = (loop - 3.5) / 4.7;
-    cx = Math.round(186 - p * 50);
-    cy = Math.round(128 + Math.sin(p * Math.PI) * 2);
-    flipX = false;
-    isWalking = true;
-  } else if (loop < 12.2) {
-    cx = 136;
-    cy = 129;
-    flipX = loop >= 10.6;
-  } else if (loop < 17.0) {
-    const p = (loop - 12.2) / 4.8;
-    cx = Math.round(136 + p * 50);
-    cy = Math.round(129 - Math.sin(p * Math.PI) * 1);
-    flipX = true;
-    isWalking = true;
-  } else {
-    cx = 186;
-    cy = 128;
-    flipX = loop < 18.4;
-  }
-
-  const clampedX = Math.max(126, Math.min(197, cx));
-  const clampedY = Math.max(124, Math.min(131, cy));
-
-  if (isMusicActive) {
-    const danceFrame = Math.floor(timeSec * 4.4) % 2;
-    const hopY = danceFrame === 1 ? -1 : 0;
-    return {
-      x: clampedX,
-      y: Math.max(124, clampedY + hopY),
-      flipX,
-      matrix: danceFrame === 1 ? CAPY_DANCE_1 : CAPY_DANCE_0,
-    };
-  }
-
-  if (isWalking) {
-    const walkSequence = [CAPY_WALK_0, CAPY_WALK_1, CAPY_WALK_2, CAPY_WALK_1];
-    const step = Math.floor(timeSec * 5.2) % walkSequence.length;
-    return {
-      x: clampedX,
-      y: clampedY,
-      flipX,
-      matrix: walkSequence[step],
-    };
-  }
-
-  const blinkNow = timeSec % 4.1 >= 3.88;
-  const earTwitch = timeSec % 3.2 >= 2.96;
-  const sitMatrix = blinkNow ? CAPY_SIT_BLINK : earTwitch ? CAPY_SIT_EAR : CAPY_SIT_OPEN;
-
-  return {
-    x: clampedX,
-    y: clampedY,
-    flipX,
-    matrix: sitMatrix,
-  };
-}
-
-function drawCapybara(
-  ctx: CanvasRenderingContext2D,
-  timeState: RoomTimeState,
-  lampOn: boolean,
-  isMusicActive: boolean,
-  timeSec: number,
-  reducedMotion: boolean
-): CapyPoseState {
-  const colors = getCapyPalette(timeState, lampOn);
-  const state = getCapybaraState(timeState, isMusicActive, timeSec, reducedMotion);
-
-  drawSpriteMatrix(ctx, state.matrix, colors, state.x, state.y, state.flipX);
-
-  if (timeState === 'sleeping') {
-    drawZzzDrift(ctx, state.x - 4, state.y - 2, timeSec + 1.2, reducedMotion);
-  }
-
-  return state;
+  fillPixelRect(ctx, 196, 79, 10, 7, palette.woodMid);
 }
 
 function drawDeskCoffeeSteam(
@@ -1855,6 +1379,449 @@ function drawDeskCoffeeSteam(
     }
   }
   drawSmoothSteam(ctx, DESK_MUG_X - 1, DESK_MUG_Y - 3, timeSec, reducedMotion);
+}
+
+function drawWindowStars(
+  ctx: CanvasRenderingContext2D,
+  timeState: RoomTimeState,
+  timeSec: number
+): void {
+  if (timeState !== 'late_night' && timeState !== 'sleeping') {
+    return;
+  }
+
+  for (let i = 0; i < STAR_NODES.length; i += 1) {
+    const star = STAR_NODES[i];
+    const frame = (Math.floor(timeSec * 3.0) + star.phase) % 4;
+    const colors = star.blue ? STAR_COLORS_BLUE : STAR_COLORS_CREAM;
+    if (frame === 0) {
+      drawSpriteMatrix(ctx, STAR_TINY, colors, star.x + 1, star.y + 1);
+    } else if (frame === 2) {
+      drawSpriteMatrix(ctx, STAR_SPARKLE, colors, star.x, star.y);
+    } else {
+      drawSpriteMatrix(ctx, STAR_CROSS, colors, star.x + 1, star.y + 1);
+    }
+  }
+}
+
+export function getSleepingBreathOffset(timeSec: number, reducedMotion: boolean): number {
+  if (reducedMotion) {
+    return 0;
+  }
+  const breathWave = Math.sin(timeSec * ((Math.PI * 2) / 3.6));
+  return breathWave > 0.28 ? -1 : 0;
+}
+
+export function drawSleepingCharacter(
+  ctx: CanvasRenderingContext2D,
+  options: DrawCharacterAndEffectsOptions
+): void {
+  const { timeState, lampOn, palette, reducedMotion = false } = options;
+  const timeSec = resolveTimeSec(options);
+  const colors = getLongPalette(timeState, lampOn, palette);
+  const breathOffset = getSleepingBreathOffset(timeSec, reducedMotion);
+  const matrix = buildSleepingLongMatrix(breathOffset);
+
+  drawSpriteMatrix(ctx, matrix, colors, SLEEP_DRAW_X, SLEEP_DRAW_Y);
+  drawZzzDrift(ctx, 41, 80, timeSec, reducedMotion, 6);
+}
+
+export function drawRoomScreensAndSteam(
+  ctx: CanvasRenderingContext2D,
+  options: DrawCharacterAndEffectsOptions
+): void {
+  const { timeState, reducedMotion = false } = options;
+  const timeSec = resolveTimeSec(options);
+
+  drawWindowStars(ctx, timeState, timeSec);
+  drawMainMonitorScreen(ctx, timeState, timeSec, reducedMotion);
+  drawSideLaptopScreen(ctx, timeState, timeSec, reducedMotion);
+  drawDeskCoffeeSteam(ctx, timeState, timeSec, reducedMotion);
+}
+
+export function drawSeatedCharacter(
+  ctx: CanvasRenderingContext2D,
+  options: DrawCharacterAndEffectsOptions
+): void {
+  const { timeState, lampOn, isMusicActive, palette, reducedMotion = false } = options;
+  if (timeState !== 'working' && timeState !== 'late_night') {
+    return;
+  }
+
+  const timeSec = resolveTimeSec(options);
+  const colors = getLongPalette(timeState, lampOn, palette);
+
+  if (reducedMotion) {
+    const matrix = buildSeatedLongMatrix(SEATED_HEAD_MONITOR, SEATED_TORSO_HOME, 0, 0);
+    drawSpriteMatrix(ctx, matrix, colors, SEATED_DRAW_X, SEATED_DRAW_Y);
+    return;
+  }
+
+  const cycle = timeState === 'late_night' ? timeSec % 16 : timeSec % 18;
+  const musicBobDown = isMusicActive && Math.sin(timeSec * Math.PI * 3.1) > 0.32 ? 1 : 0;
+
+  let head: SpriteMatrix = SEATED_HEAD_MONITOR;
+  let torso: SpriteMatrix = SEATED_TORSO_HOME;
+  let headDrop = musicBobDown;
+  let shoulderDrop = musicBobDown;
+
+  if (timeState === 'working') {
+    if (cycle >= 3.2 && cycle < 5.0) {
+      head = SEATED_HEAD_GLANCE_LEFT;
+    } else if (cycle >= 5.2 && cycle < 5.7) {
+      torso = SEATED_TORSO_REACH_MUG;
+      shoulderDrop = 0;
+    } else if (cycle >= 5.7 && cycle < 6.9) {
+      maskStaticDeskMug(ctx, palette);
+      head = SEATED_HEAD_SIP_MUG;
+      torso = SEATED_TORSO_SIP_MUG;
+      headDrop = 0;
+      shoulderDrop = 0;
+      drawSmoothSteam(ctx, 182, 76, timeSec, false, 5);
+    } else if (cycle >= 6.9 && cycle < 7.4) {
+      torso = SEATED_TORSO_REACH_MUG;
+      shoulderDrop = 0;
+    } else if (cycle >= 10.8 && cycle < 13.4) {
+      head = cycle < 12.1 ? SEATED_HEAD_TILT_LEFT : SEATED_HEAD_TILT_RIGHT;
+      torso = SEATED_TORSO_STRETCH;
+      headDrop = 0;
+      shoulderDrop = 0;
+    } else if (cycle >= 14.8 && cycle < 16.4) {
+      head = SEATED_HEAD_GLANCE_LEFT;
+      torso = Math.floor(timeSec * 5) % 2 === 0 ? SEATED_TORSO_TYPE_L : SEATED_TORSO_TYPE_R;
+    } else if (cycle >= 8.2 && cycle < 10.2) {
+      torso = Math.floor(timeSec * 2.5) % 2 === 0 ? SEATED_TORSO_MOUSE_A : SEATED_TORSO_MOUSE_B;
+    } else {
+      const step = Math.floor(timeSec * 5.2) % 3;
+      torso =
+        step === 0
+          ? SEATED_TORSO_TYPE_L
+          : step === 1
+            ? SEATED_TORSO_TYPE_R
+            : SEATED_TORSO_HOME;
+    }
+  } else {
+    if (cycle >= 3.5 && cycle < 4.9) {
+      head = SEATED_HEAD_GLANCE_LEFT;
+    } else if (cycle >= 6.0 && cycle < 8.6) {
+      torso = SEATED_TORSO_STRETCH;
+      headDrop = 0;
+      shoulderDrop = 0;
+      head = cycle < 7.3 ? SEATED_HEAD_TILT_LEFT : SEATED_HEAD_TILT_RIGHT;
+    } else if (cycle >= 10.4 && cycle < 12.2) {
+      torso = Math.floor(timeSec * 2.4) % 2 === 0 ? SEATED_TORSO_MOUSE_A : SEATED_TORSO_MOUSE_B;
+    } else {
+      const step = Math.floor(timeSec * 4.8) % 3;
+      torso =
+        step === 0
+          ? SEATED_TORSO_TYPE_L
+          : step === 1
+            ? SEATED_TORSO_TYPE_R
+            : SEATED_TORSO_HOME;
+    }
+  }
+
+  const matrix = buildSeatedLongMatrix(head, torso, headDrop, shoulderDrop);
+  drawSpriteMatrix(ctx, matrix, colors, SEATED_DRAW_X, SEATED_DRAW_Y);
+
+  if (lampOn && timeState === 'late_night') {
+    const hairRow = head[3] ?? '';
+    let rightHairCol = -1;
+    for (let c = hairRow.length - 1; c >= 0; c -= 1) {
+      if (hairRow[c] === 'H' || hairRow[c] === 'h' || hairRow[c] === 'l') {
+        rightHairCol = c;
+        break;
+      }
+    }
+    if (rightHairCol >= 0) {
+      fillPixelRect(ctx, SEATED_DRAW_X + rightHairCol, SEATED_DRAW_Y + 4 + headDrop, 1, 2, '#FCD34D');
+    }
+    const sleeveRow = matrix[16] ?? '';
+    let rightArmCol = -1;
+    for (let c = sleeveRow.length - 1; c >= 0; c -= 1) {
+      if (sleeveRow[c] === 'B' || sleeveRow[c] === 'b') {
+        rightArmCol = c;
+        break;
+      }
+    }
+    if (rightArmCol >= 0) {
+      fillPixelRect(ctx, SEATED_DRAW_X + rightArmCol, SEATED_DRAW_Y + 16, 1, 2, '#E9B872');
+    }
+  }
+}
+
+interface WakingLongPose {
+  x: number;
+  y: number;
+  footY: number;
+  matrix: SpriteMatrix;
+  steamX: number;
+  steamY: number;
+}
+
+function getWakingLongPose(timeSec: number, reducedMotion: boolean): WakingLongPose {
+  const minX = WALKABLE_RECT.x + 3;
+  const maxX = Math.min(84, WALKABLE_RECT.x + WALKABLE_RECT.w - 22);
+  const clampX = (x: number): number => Math.max(minX, Math.min(maxX, Math.round(x)));
+  const clampY = (y: number, h: number): number =>
+    Math.max(WALKABLE_RECT.y, Math.min(148 - h + 1, Math.round(y)));
+
+  if (reducedMotion) {
+    const mat = WAKING_IDLE_STEPS[0];
+    const x = clampX(81);
+    const y = clampY(108, mat.length);
+    return {
+      x,
+      y,
+      footY: y + mat.length - 2,
+      matrix: mat,
+      steamX: x + 16,
+      steamY: y + 15,
+    };
+  }
+
+  const cycle = timeSec % 16;
+  const blinkNow = timeSec % 3.9 >= 3.68 && timeSec % 3.9 <= 3.84;
+  const swayOffset = Math.round(Math.sin(timeSec * 0.9) * 1.4);
+
+  if (cycle < 4.5) {
+    const head = blinkNow ? WAKING_HEAD_BLINK : WAKING_HEAD_OPEN;
+    const mat = [...head, ...WAKING_BODY_HOLD_CUP];
+    const x = clampX(81 + (cycle > 2.2 ? 1 : 0));
+    const y = clampY(108, mat.length);
+    return {
+      x,
+      y,
+      footY: y + mat.length - 2,
+      matrix: mat,
+      steamX: x + 16,
+      steamY: y + 15,
+    };
+  }
+
+  if (cycle < 8.2) {
+    const isPeakSip = cycle >= 5.0 && cycle < 7.5;
+    const head = isPeakSip ? WAKING_HEAD_SIP : blinkNow ? WAKING_HEAD_BLINK : WAKING_HEAD_OPEN;
+    const body = isPeakSip ? WAKING_BODY_LIFT_CUP : WAKING_BODY_HOLD_CUP;
+    const mat = [...head, ...body];
+    const x = clampX(82);
+    const y = clampY(108, mat.length);
+    return {
+      x,
+      y,
+      footY: y + mat.length - 2,
+      matrix: mat,
+      steamX: x + 16,
+      steamY: y + (isPeakSip ? 12 : 15),
+    };
+  }
+
+  if (cycle < 11.8) {
+    const mat = WAKING_STRETCH_MATRIX;
+    const x = clampX(81 + Math.max(-1, Math.min(1, swayOffset)));
+    const y = clampY(109, mat.length);
+    return {
+      x,
+      y,
+      footY: y + mat.length - 2,
+      matrix: mat,
+      steamX: x + 16,
+      steamY: y + 14,
+    };
+  }
+
+  const head = blinkNow ? WAKING_HEAD_BLINK : WAKING_HEAD_OPEN;
+  const mat = [...head, ...WAKING_BODY_HOLD_CUP];
+  const x = clampX(81 + Math.max(0, Math.min(2, swayOffset)));
+  const y = clampY(108 + (cycle >= 13.6 && cycle < 14.8 ? -1 : 0), mat.length);
+  return {
+    x,
+    y,
+    footY: y + mat.length - 2,
+    matrix: mat,
+    steamX: x + 16,
+    steamY: y + 15,
+  };
+}
+
+interface CapyPoseState {
+  x: number;
+  y: number;
+  footY: number;
+  flipX: boolean;
+  matrix: SpriteMatrix;
+}
+
+function clampCapyPos(rawX: number, rawY: number, matrix: SpriteMatrix): { x: number; y: number } {
+  const matW = matrix[0]?.length ?? 21;
+  const matH = matrix.length;
+  const minX = RUG_WALK_RECT.x;
+  const maxX = RUG_WALK_RECT.x + RUG_WALK_RECT.w - matW;
+  const minY = RUG_WALK_RECT.y;
+  const maxY = RUG_WALK_RECT.y + RUG_WALK_RECT.h - matH;
+  return {
+    x: Math.max(minX, Math.min(maxX, Math.round(rawX))),
+    y: Math.max(minY, Math.min(maxY, Math.round(rawY))),
+  };
+}
+
+function getCapybaraState(
+  timeState: RoomTimeState,
+  isMusicActive: boolean,
+  timeSec: number,
+  reducedMotion: boolean
+): CapyPoseState {
+  if (timeState === 'sleeping') {
+    const breathUp = !reducedMotion && Math.sin(timeSec * 1.8) > 0.35;
+    const mat = breathUp ? CAPY_SLEEP_BREATH : CAPY_DROWSY_HALF;
+    const pos = clampCapyPos(188, 132, mat);
+    return {
+      x: pos.x,
+      y: pos.y,
+      footY: pos.y + 13,
+      flipX: false,
+      matrix: mat,
+    };
+  }
+
+  if (timeState === 'late_night') {
+    const sleepyNod = isMusicActive && !reducedMotion && Math.sin(timeSec * Math.PI * 2.2) > 0.4;
+    const mat = CAPY_DROWSY_HALF;
+    const pos = clampCapyPos(188, sleepyNod ? 131 : 132, mat);
+    return {
+      x: pos.x,
+      y: pos.y,
+      footY: pos.y + 13,
+      flipX: false,
+      matrix: mat,
+    };
+  }
+
+  if (reducedMotion) {
+    const mat = CAPY_SIT_OPEN;
+    const pos = clampCapyPos(188, 131, mat);
+    return {
+      x: pos.x,
+      y: pos.y,
+      footY: pos.y + 14,
+      flipX: false,
+      matrix: mat,
+    };
+  }
+
+  const loop = timeSec % 20;
+  let cx = 188;
+  let cy = 131;
+  let flipX = false;
+  let isWalking = false;
+
+  if (loop < 3.5) {
+    cx = 188;
+    cy = 131;
+    flipX = false;
+  } else if (loop < 8.2) {
+    const p = (loop - 3.5) / 4.7;
+    cx = Math.round(188 - p * 54);
+    cy = Math.round(131 + Math.sin(p * Math.PI) * 2);
+    flipX = false;
+    isWalking = true;
+  } else if (loop < 12.2) {
+    cx = 134;
+    cy = 132;
+    flipX = loop >= 10.6;
+  } else if (loop < 17.0) {
+    const p = (loop - 12.2) / 4.8;
+    cx = Math.round(134 + p * 54);
+    cy = Math.round(132 - Math.sin(p * Math.PI) * 1);
+    flipX = true;
+    isWalking = true;
+  } else {
+    cx = 188;
+    cy = 131;
+    flipX = loop < 18.4;
+  }
+
+  if (isMusicActive) {
+    const danceFrame = Math.floor(timeSec * 4.4) % 2;
+    const hopY = danceFrame === 1 ? -2 : 0;
+    const mat = danceFrame === 1 ? CAPY_DANCE_1 : CAPY_DANCE_0;
+    const pos = clampCapyPos(cx, cy + hopY, mat);
+    return {
+      x: pos.x,
+      y: pos.y,
+      footY: pos.y + 14,
+      flipX,
+      matrix: mat,
+    };
+  }
+
+  if (isWalking) {
+    const walkSequence = [CAPY_WALK_0, CAPY_WALK_1, CAPY_WALK_2, CAPY_WALK_1];
+    const step = Math.floor(timeSec * 5.2) % walkSequence.length;
+    const mat = walkSequence[step];
+    const pos = clampCapyPos(cx, cy, mat);
+    return {
+      x: pos.x,
+      y: pos.y,
+      footY: pos.y + 14,
+      flipX,
+      matrix: mat,
+    };
+  }
+
+  const blinkNow = timeSec % 4.1 >= 3.88;
+  const earTwitch = timeSec % 3.2 >= 2.96;
+  const sitMatrix = blinkNow ? CAPY_SIT_BLINK : earTwitch ? CAPY_SIT_EAR : CAPY_SIT_OPEN;
+  const pos = clampCapyPos(cx, cy, sitMatrix);
+
+  return {
+    x: pos.x,
+    y: pos.y,
+    footY: pos.y + 14,
+    flipX,
+    matrix: sitMatrix,
+  };
+}
+
+export function drawWakingAndCapybaraLayer(
+  ctx: CanvasRenderingContext2D,
+  options: DrawCharacterAndEffectsOptions
+): void {
+  const { timeState, lampOn, isMusicActive, palette, reducedMotion = false } = options;
+  const timeSec = resolveTimeSec(options);
+
+  const capyState = getCapybaraState(timeState, isMusicActive, timeSec, reducedMotion);
+  const capyColors = getCapyPalette(timeState, lampOn);
+
+  const renderCapy = () => {
+    drawSpriteMatrix(ctx, capyState.matrix, capyColors, capyState.x, capyState.y, capyState.flipX);
+    if (timeState === 'sleeping') {
+      const zX = Math.max(RUG_WALK_RECT.x, capyState.x - 4);
+      const zY = Math.max(RUG_WALK_RECT.y + 5, capyState.y - 1);
+      drawZzzDrift(ctx, zX, zY, timeSec + 1.2, reducedMotion, 3);
+    }
+  };
+
+  if (timeState !== 'waking') {
+    renderCapy();
+    return;
+  }
+
+  const longPose = getWakingLongPose(timeSec, reducedMotion);
+  const longColors = getLongPalette(timeState, lampOn, palette);
+
+  const renderLong = () => {
+    drawSpriteMatrix(ctx, longPose.matrix, longColors, longPose.x, longPose.y);
+    drawSmoothSteam(ctx, longPose.steamX, longPose.steamY, timeSec, reducedMotion, 7);
+  };
+
+  if (longPose.footY <= capyState.footY) {
+    renderLong();
+    renderCapy();
+  } else {
+    renderCapy();
+    renderLong();
+  }
 }
 
 function drawEqualizerBars(
@@ -1987,29 +1954,6 @@ function drawMusicEffects(
   }
 }
 
-function drawWindowStars(
-  ctx: CanvasRenderingContext2D,
-  timeState: RoomTimeState,
-  timeSec: number
-): void {
-  if (timeState !== 'late_night' && timeState !== 'sleeping') {
-    return;
-  }
-
-  for (let i = 0; i < STAR_NODES.length; i += 1) {
-    const star = STAR_NODES[i];
-    const frame = (Math.floor(timeSec * 3.0) + star.phase) % 4;
-    const colors = star.blue ? STAR_COLORS_BLUE : STAR_COLORS_CREAM;
-    if (frame === 0) {
-      drawSpriteMatrix(ctx, STAR_TINY, colors, star.x + 1, star.y + 1);
-    } else if (frame === 2) {
-      drawSpriteMatrix(ctx, STAR_SPARKLE, colors, star.x, star.y);
-    } else {
-      drawSpriteMatrix(ctx, STAR_CROSS, colors, star.x + 1, star.y + 1);
-    }
-  }
-}
-
 function drawHotspotPointer(
   ctx: CanvasRenderingContext2D,
   hoveredHotspot: RoomHotspotId | null,
@@ -2047,31 +1991,21 @@ function drawHotspotPointer(
   drawSpriteMatrix(ctx, GBA_POINTER_ARROW, GBA_POINTER_COLORS, drawX, drawY);
 }
 
-export function drawCharacterAndEffects(
+export function drawMusicEffectsOverlay(
   ctx: CanvasRenderingContext2D,
   options: DrawCharacterAndEffectsOptions
 ): void {
   const {
     timeState,
-    lampOn,
     isMusicActive,
-    tick,
-    elapsedSec,
-    palette,
     hoveredHotspot,
     selectedHotspot,
     hoveredRegion,
     reducedMotion = false,
   } = options;
+  const timeSec = resolveTimeSec(options);
+  const capyState = getCapybaraState(timeState, isMusicActive, timeSec, reducedMotion);
 
-  const timeSec = reducedMotion ? 0 : (elapsedSec ?? tick / 15);
-
-  drawWindowStars(ctx, timeState, timeSec);
-  drawMainMonitorScreen(ctx, timeState, timeSec, reducedMotion);
-  drawSideLaptopScreen(ctx, timeState, timeSec, reducedMotion);
-  drawDeskCoffeeSteam(ctx, timeState, timeSec, reducedMotion);
-  drawLongHoang(ctx, timeState, lampOn, isMusicActive, palette, timeSec, reducedMotion);
-  const capyState = drawCapybara(ctx, timeState, lampOn, isMusicActive, timeSec, reducedMotion);
   drawMusicEffects(ctx, isMusicActive, timeSec, reducedMotion);
   drawHotspotPointer(
     ctx,
@@ -2082,4 +2016,18 @@ export function drawCharacterAndEffects(
     timeSec,
     reducedMotion
   );
+}
+
+export function drawCharacterAndEffects(
+  ctx: CanvasRenderingContext2D,
+  options: DrawCharacterAndEffectsOptions
+): void {
+  drawRoomScreensAndSteam(ctx, options);
+  if (options.timeState === 'sleeping') {
+    drawSleepingCharacter(ctx, options);
+  } else if (options.timeState === 'working' || options.timeState === 'late_night') {
+    drawSeatedCharacter(ctx, options);
+  }
+  drawWakingAndCapybaraLayer(ctx, options);
+  drawMusicEffectsOverlay(ctx, options);
 }

@@ -25,6 +25,17 @@ export interface DrawLightingOverlayOptions {
   palette: RoomPalette;
 }
 
+export interface PixelRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export const WALKABLE_RECT: PixelRect = { x: 76, y: 88, w: 30, h: 62 };
+
+export const RUG_WALK_RECT: PixelRect = { x: 118, y: 127, w: 108, h: 24 };
+
 function createHotspot(
   id: RoomHotspotId,
   x: number,
@@ -1022,7 +1033,7 @@ function drawDisplayShelfAndPlant(
   }
 }
 
-function drawBed(ctx: CanvasRenderingContext2D, palette: RoomPalette): void {
+export function drawBedBase(ctx: CanvasRenderingContext2D, palette: RoomPalette): void {
   rect(ctx, 13, 152, 58, 2, palette.aoColor);
   drawDitherBand(ctx, 13, 154, 59, 2, palette.aoColor, 0.5);
   drawDitherBand(ctx, 70, 78, 3, 74, palette.aoColor, 0.5);
@@ -1044,7 +1055,7 @@ function drawBed(ctx: CanvasRenderingContext2D, palette: RoomPalette): void {
   rect(ctx, 15, 88, 2, 58, palette.woodMid);
   rect(ctx, 67, 88, 2, 58, palette.woodShadow);
 
-  rect(ctx, 17, 88, 50, 16, palette.sheetTrim);
+  rect(ctx, 17, 88, 50, 59, palette.sheetTrim);
   rect(ctx, 17, 88, 50, 1, palette.pillowShadow);
 
   rect(ctx, 20, 89, 42, 13, palette.inkOutline);
@@ -1057,25 +1068,42 @@ function drawBed(ctx: CanvasRenderingContext2D, palette: RoomPalette): void {
   px(ctx, 20, 101, palette.sheetTrim);
   px(ctx, 61, 101, palette.sheetTrim);
 
-  rect(ctx, 17, 103, 50, 4, palette.sheetTrim);
-  rect(ctx, 17, 106, 50, 1, palette.pillowShadow);
+  rect(ctx, 15, 147, 54, 4, palette.woodMid);
+  rect(ctx, 15, 147, 54, 1, palette.woodHighlight);
+  rect(ctx, 15, 150, 54, 1, palette.woodShadow);
+}
 
-  rect(ctx, 16, 107, 52, 40, palette.inkOutline);
-  rect(ctx, 17, 108, 50, 38, palette.quiltMid);
-  rect(ctx, 17, 108, 50, 2, palette.quiltLight);
+export function drawBedBlanket(
+  ctx: CanvasRenderingContext2D,
+  palette: RoomPalette,
+  breathOffset = 0
+): void {
+  const b = Math.max(-1, Math.min(0, Math.round(breathOffset))) || 0;
+  const cuffTop = 103 + b;
+  const quiltTop = 107 + b;
+  const quiltBottom = 146;
+  const quiltHeight = quiltBottom - quiltTop + 1;
 
-  for (let qy = 110; qy < 145; qy += 1) {
+  rect(ctx, 17, cuffTop, 50, 4, palette.sheetTrim);
+  rect(ctx, 17, cuffTop + 3, 50, 1, palette.pillowShadow);
+
+  rect(ctx, 16, quiltTop, 52, quiltHeight, palette.inkOutline);
+  rect(ctx, 17, quiltTop + 1, 50, quiltHeight - 2, palette.quiltMid);
+  rect(ctx, 17, quiltTop + 1, 50, 2, palette.quiltLight);
+
+  const patternTop = quiltTop + 3;
+  for (let qy = patternTop; qy < 145; qy += 1) {
     for (let qx = 18; qx < 66; qx += 1) {
       const gx = (qx - 18) >> 2;
       const gy = (qy - 110) >> 2;
-      if ((gx + gy) % 2 === 0) {
+      if (((gx + gy) & 1) === 0) {
         px(ctx, qx, qy, palette.quiltPattern);
       }
     }
   }
 
-  rect(ctx, 17, 108, 2, 38, palette.quiltShadow);
-  rect(ctx, 65, 108, 2, 38, palette.quiltShadow);
+  rect(ctx, 17, quiltTop + 1, 2, quiltHeight - 2, palette.quiltShadow);
+  rect(ctx, 65, quiltTop + 1, 2, quiltHeight - 2, palette.quiltShadow);
 
   rect(ctx, 18, 118, 48, 1, palette.quiltShadow);
   rect(ctx, 20, 119, 44, 1, palette.quiltLight);
@@ -1084,10 +1112,6 @@ function drawBed(ctx: CanvasRenderingContext2D, palette: RoomPalette): void {
   rect(ctx, 18, 138, 48, 1, palette.quiltShadow);
   rect(ctx, 20, 139, 44, 1, palette.quiltLight);
   rect(ctx, 17, 144, 50, 2, palette.quiltShadow);
-
-  rect(ctx, 15, 147, 54, 4, palette.woodMid);
-  rect(ctx, 15, 147, 54, 1, palette.woodHighlight);
-  rect(ctx, 15, 150, 54, 1, palette.woodShadow);
 }
 
 function drawWovenRug(ctx: CanvasRenderingContext2D, palette: RoomPalette): void {
@@ -1160,10 +1184,14 @@ function drawDeskAndProps(
   palette: RoomPalette,
   timeState: RoomTimeState
 ): void {
-  drawDitherBand(ctx, 110, 107, 134, 5, palette.aoColor, 0.55);
+  drawDitherBand(ctx, 110, 107, 49, 5, palette.aoColor, 0.55);
+  drawDitherBand(ctx, 187, 107, 57, 5, palette.aoColor, 0.55);
   drawDitherBand(ctx, 110, 112, 134, 2, palette.aoColor, 0.25);
 
-  rect(ctx, 122, 97, 108, 8, palette.woodDeep);
+  rect(ctx, 122, 97, 39, 3, palette.woodDeep);
+  rect(ctx, 185, 97, 45, 3, palette.woodDeep);
+  rect(ctx, 122, 100, 37, 5, palette.woodDeep);
+  rect(ctx, 187, 100, 43, 5, palette.woodDeep);
   rect(ctx, 110, 97, 13, 15, palette.inkWood);
   rect(ctx, 111, 97, 11, 13, palette.woodShadow);
   rect(ctx, 112, 99, 9, 4, palette.woodMid);
@@ -1326,29 +1354,62 @@ function drawDeskLamp(ctx: CanvasRenderingContext2D, palette: RoomPalette): void
   }
 }
 
-function drawDeskChair(ctx: CanvasRenderingContext2D, palette: RoomPalette): void {
-  drawDitherBand(ctx, 161, 121, 24, 5, palette.aoColor, 0.5);
+function drawChairSeatBase(ctx: CanvasRenderingContext2D, palette: RoomPalette): void {
+  drawDitherBand(ctx, 161, 121, 24, 4, palette.aoColor, 0.5);
 
   rect(ctx, 172, 114, 2, 8, palette.inkIndigo);
   rect(ctx, 164, 119, 18, 2, palette.inkIndigo);
   rect(ctx, 165, 119, 16, 1, palette.chassisLight);
   rect(ctx, 162, 121, 3, 3, palette.inkIndigo);
+  px(ctx, 163, 122, palette.chassisLight);
   rect(ctx, 171, 122, 4, 3, palette.inkIndigo);
+  rect(ctx, 172, 123, 2, 1, palette.chassisLight);
   rect(ctx, 181, 121, 3, 3, palette.inkIndigo);
+  px(ctx, 182, 122, palette.chassisLight);
 
-  rect(ctx, 159, 100, 3, 10, palette.inkIndigo);
-  rect(ctx, 160, 101, 1, 8, palette.chairLight);
-  rect(ctx, 184, 100, 3, 10, palette.inkIndigo);
-  rect(ctx, 185, 101, 1, 8, palette.chairLight);
+  rect(ctx, 161, 96, 24, 10, palette.inkIndigo);
+  rect(ctx, 162, 97, 22, 8, palette.chairShadow);
+  rect(ctx, 162, 97, 22, 5, palette.chairMid);
+  rect(ctx, 163, 97, 20, 2, palette.chairLight);
 
-  rect(ctx, 161, 98, 24, 16, palette.inkIndigo);
-  rect(ctx, 162, 99, 22, 10, palette.chairMid);
-  rect(ctx, 163, 99, 20, 3, palette.chairLight);
-  rect(ctx, 162, 109, 22, 4, palette.chairShadow);
-  rect(ctx, 164, 111, 18, 2, palette.chairMid);
+  rect(ctx, 159, 100, 3, 8, palette.inkIndigo);
+  rect(ctx, 160, 101, 1, 6, palette.chairShadow);
+  rect(ctx, 184, 100, 3, 8, palette.inkIndigo);
+  rect(ctx, 185, 101, 1, 6, palette.chairShadow);
 }
 
-export function drawRoomEnvironment(
+export function drawChairBackOverlay(
+  ctx: CanvasRenderingContext2D,
+  palette: RoomPalette
+): void {
+  rect(ctx, 163, 97, 20, 1, palette.inkIndigo);
+  rect(ctx, 162, 98, 22, 1, palette.inkIndigo);
+  rect(ctx, 163, 98, 20, 1, palette.chairLight);
+  rect(ctx, 161, 99, 24, 13, palette.inkIndigo);
+  rect(ctx, 162, 99, 22, 2, palette.chairLight);
+  rect(ctx, 162, 101, 22, 8, palette.chairMid);
+  rect(ctx, 162, 101, 1, 8, palette.chairLight);
+  rect(ctx, 183, 101, 1, 8, palette.chairShadow);
+  rect(ctx, 164, 101, 18, 1, palette.chairLight);
+  rect(ctx, 165, 107, 16, 1, palette.chairShadow);
+  rect(ctx, 162, 109, 22, 3, palette.chairShadow);
+  rect(ctx, 164, 109, 18, 2, palette.chairMid);
+  rect(ctx, 162, 112, 22, 1, palette.inkIndigo);
+  rect(ctx, 163, 112, 20, 1, palette.chairShadow);
+  rect(ctx, 163, 113, 20, 1, palette.inkIndigo);
+
+  rect(ctx, 159, 98, 3, 10, palette.inkIndigo);
+  rect(ctx, 160, 99, 1, 2, palette.chairLight);
+  rect(ctx, 160, 101, 1, 5, palette.chairMid);
+  px(ctx, 160, 106, palette.chairShadow);
+
+  rect(ctx, 184, 98, 3, 10, palette.inkIndigo);
+  rect(ctx, 185, 99, 1, 2, palette.chairLight);
+  rect(ctx, 185, 101, 1, 5, palette.chairMid);
+  px(ctx, 185, 106, palette.chairShadow);
+}
+
+export function drawRoomBaseLayer(
   ctx: CanvasRenderingContext2D,
   options: DrawRoomEnvironmentOptions
 ): void {
@@ -1365,9 +1426,26 @@ export function drawRoomEnvironment(
   drawWovenRug(ctx, palette);
   drawDisplayShelfAndPlant(ctx, palette, timeSec);
   drawFairyLights(ctx, palette, timeState, timeSec);
-  drawBed(ctx, palette);
+  drawBedBase(ctx, palette);
+}
+
+export function drawDeskAndChairBase(
+  ctx: CanvasRenderingContext2D,
+  options: DrawRoomEnvironmentOptions
+): void {
+  const { timeState, palette } = options;
+  drawChairSeatBase(ctx, palette);
   drawDeskAndProps(ctx, palette, timeState);
-  drawDeskChair(ctx, palette);
+}
+
+export function drawRoomEnvironment(
+  ctx: CanvasRenderingContext2D,
+  options: DrawRoomEnvironmentOptions
+): void {
+  drawRoomBaseLayer(ctx, options);
+  drawBedBlanket(ctx, options.palette, 0);
+  drawDeskAndChairBase(ctx, options);
+  drawChairBackOverlay(ctx, options.palette);
 }
 
 function drawAmbientWithCutouts(
@@ -1439,7 +1517,7 @@ function drawBayerWindowBeam(
 
   ctx.save();
   ctx.fillStyle = palette.windowBeamColor;
-  ctx.globalAlpha = palette.windowBeamAlpha;
+  const gearAlpha = palette.windowBeamAlpha * 0.42;
 
   const yStart = 20;
   const yEnd = 152;
@@ -1448,25 +1526,37 @@ function drawBayerWindowBeam(
     const leftX = Math.floor(86 + dy * 0.24);
     const rightX = Math.ceil(138 + dy * 0.35);
     const vFactor = y < 52 ? 0.55 : Math.max(0, 1 - (y - 52) / 106);
+    const span = Math.max(1, rightX - leftX);
+    const edgeSpan = Math.min(10, span * 0.25);
 
     let runStart = -1;
-    for (let x = leftX; x <= rightX; x += 1) {
-      const span = Math.max(1, rightX - leftX);
-      const distEdge = Math.min(x - leftX, rightX - x);
-      const edgeFactor = Math.min(1, distEdge / Math.min(10, span * 0.25));
-      const intensity = vFactor * edgeFactor;
-      const lit = intensity * 16 > BAYER_4X4[y & 3][x & 3];
+    let runMode = 0;
 
-      if (lit && runStart === -1) {
-        runStart = x;
-      } else if (!lit && runStart !== -1) {
-        ctx.fillRect(runStart, y, x - runStart, 1);
-        runStart = -1;
+    const flushRun = (endX: number): void => {
+      if (runStart === -1) return;
+      ctx.globalAlpha = runMode === 2 ? gearAlpha : palette.windowBeamAlpha;
+      ctx.fillRect(runStart, y, endX - runStart, 1);
+      runStart = -1;
+      runMode = 0;
+    };
+
+    for (let x = leftX; x <= rightX; x += 1) {
+      const distEdge = Math.min(x - leftX, rightX - x);
+      const edgeFactor = Math.min(1, distEdge / edgeSpan);
+      const inDeskGear = x >= 111 && x <= 190 && y >= 56 && y <= 92;
+      const intensity = vFactor * edgeFactor * (inDeskGear ? 0.34 : 1);
+      const lit = intensity * 16 > BAYER_4X4[y & 3][x & 3];
+      const nextMode = lit ? (inDeskGear ? 2 : 1) : 0;
+
+      if (nextMode !== runMode) {
+        flushRun(x);
+        if (nextMode !== 0) {
+          runStart = x;
+          runMode = nextMode;
+        }
       }
     }
-    if (runStart !== -1) {
-      ctx.fillRect(runStart, y, rightX - runStart + 1, 1);
-    }
+    flushRun(rightX + 1);
   }
 
   if (timeState === 'waking' || timeState === 'working') {
@@ -1481,7 +1571,8 @@ function drawBayerWindowBeam(
       const swayX = Math.round(Math.sin(timeSec * 0.9 + i * 1.4) * 2.4);
       const mx = Math.max(minBeamX, Math.min(maxBeamX, minBeamX + laneOffset + swayX));
       const shimmer = 0.32 + 0.38 * (0.5 + 0.5 * Math.sin(timeSec * 1.8 + i * 2.1));
-      ctx.globalAlpha = shimmer;
+      const inDeskGear = mx >= 111 && mx <= 190 && my >= 56 && my <= 92;
+      ctx.globalAlpha = inDeskGear ? shimmer * 0.45 : shimmer;
       ctx.fillRect(mx, my, 1, 1);
     }
   }

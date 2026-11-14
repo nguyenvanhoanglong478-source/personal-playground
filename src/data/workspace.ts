@@ -46,25 +46,19 @@ export interface WorkspaceConfig {
 export interface WorkspaceUiLabels {
   sectionTag: string;
   title: string;
-  subtitle: string;
   autoModeLabel: string;
   gmtSuffix: string;
   spotifyHeader: string;
   spotifyDemoBtn: string;
   spotifyDemoStopBtn: string;
   spotifyIdleText: string;
-  spotifyPausedText: string;
-  spotifyUnconfiguredHint: string;
-  dialogPromptHint: string;
   lampToggleBtn: string;
   lampOnLabel: string;
   lampOffLabel: string;
-  loadingText: string;
   spotifyLiveBadge: string;
   spotifyDemoBadge: string;
   spotifyPausedBadge: string;
   canvasAriaLabel: string;
-  hotspotsAriaLabel: string;
   hotspotNames: Record<RoomHotspotId, string>;
 }
 
@@ -232,25 +226,19 @@ export const WORKSPACE_UI_LABELS: Record<Locale, WorkspaceUiLabels> = {
   vi: {
     sectionTag: 'KHÔNG GIAN CÁ NHÂN',
     title: 'Góc làm việc của Long',
-    subtitle: '',
     autoModeLabel: 'Tự động · Giờ VN',
     gmtSuffix: 'GMT+7',
     spotifyHeader: 'Long đang nghe',
     spotifyDemoBtn: 'Nghe thử Lofi',
     spotifyDemoStopBtn: 'Tắt Demo',
     spotifyIdleText: 'Hiện chưa phát bài nào',
-    spotifyPausedText: 'Đang tạm dừng',
-    spotifyUnconfiguredHint: 'Chưa kết nối Spotify trực tiếp, bạn có thể nghe thử nhạc lo-fi.',
-    dialogPromptHint: '',
     lampToggleBtn: 'Đèn bàn',
     lampOnLabel: 'Đang bật',
     lampOffLabel: 'Đang tắt',
-    loadingText: 'Đang mở căn phòng...',
     spotifyLiveBadge: 'Trực tiếp',
     spotifyDemoBadge: 'Demo',
     spotifyPausedBadge: 'Tạm dừng',
     canvasAriaLabel: 'Phòng làm việc pixel art tương tác của Long Hoàng',
-    hotspotsAriaLabel: 'Các đồ vật tương tác trong phòng',
     hotspotNames: {
       monitor: 'Màn hình',
       speakers: 'Cặp loa',
@@ -264,25 +252,19 @@ export const WORKSPACE_UI_LABELS: Record<Locale, WorkspaceUiLabels> = {
   en: {
     sectionTag: 'PERSONAL WORKSPACE',
     title: "Long's Workspace",
-    subtitle: '',
     autoModeLabel: 'Auto · VN Time',
     gmtSuffix: 'GMT+7',
     spotifyHeader: 'Long is listening',
     spotifyDemoBtn: 'Play Lo-fi Demo',
     spotifyDemoStopBtn: 'Stop Demo',
     spotifyIdleText: 'Nothing playing right now',
-    spotifyPausedText: 'Paused',
-    spotifyUnconfiguredHint: 'Live Spotify is offline, try the lo-fi demo instead.',
-    dialogPromptHint: '',
     lampToggleBtn: 'Desk lamp',
     lampOnLabel: 'On',
     lampOffLabel: 'Off',
-    loadingText: 'Loading workspace...',
     spotifyLiveBadge: 'Live',
     spotifyDemoBadge: 'Demo',
     spotifyPausedBadge: 'Paused',
     canvasAriaLabel: "Long Hoàng's interactive pixel art workspace room",
-    hotspotsAriaLabel: 'Interactive room objects',
     hotspotNames: {
       monitor: 'Monitor',
       speakers: 'Speakers',

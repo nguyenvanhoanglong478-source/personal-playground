@@ -61,6 +61,24 @@ const musicTracker: MusicVisualTracker = {
   lastSeenTimeSec: 0,
 };
 
+export function assertUniformMatrixWidth(
+  matrix: SpriteMatrix,
+  expectedWidth?: number
+): SpriteMatrix {
+  if (matrix.length === 0) {
+    throw new Error('SpriteMatrix cannot be empty');
+  }
+  const targetWidth = expectedWidth ?? matrix[0].length;
+  for (let i = 0; i < matrix.length; i += 1) {
+    if (matrix[i].length !== targetWidth) {
+      throw new Error(
+        `SpriteMatrix row ${i} length ${matrix[i].length} does not match expected width ${targetWidth}`
+      );
+    }
+  }
+  return matrix;
+}
+
 export function drawSpriteMatrix(
   ctx: CanvasRenderingContext2D,
   matrix: SpriteMatrix,
@@ -371,33 +389,39 @@ function drawSideLaptopScreen(
   }
 }
 
-const SLEEPING_HEAD_ROWS: SpriteMatrix = [
-  '...........OOOOOOOOOOOO...........',
-  '.........OOHllhhhhhhllHOO.........',
-  '........OHllhhhhhhhhhhllHO........',
-  '.......POHhHHhHHHHHHhHHhHOP.......',
-  '.......POHhHhtsdsstsdstHHOP.......',
-  '.......POHsdstttttttttdsHOP.......',
-  '......POdsstsssssssssstssdOP......',
-  '......POdssssKKKssKKKssssdOP......',
-  '......POdssppsssdtsssppssdOP......',
-  '.......POsssssssppsssssssOP.......',
-  '........POdssssddddssssdOP........',
-  '.........POOddddssddddOOP.........',
-  '...........OOOdsddsdOOO...........',
-  '.........OOObCdsddsdCbOOO.........',
-];
+const SLEEPING_HEAD_ROWS: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '...........oooooooooooo...........',
+    '.........oohlllhhhhllhoo..........',
+    '........ohlllhhhhhhhhllho.........',
+    '.......PohllhhhhhhhhhllhoP........',
+    '.......PoHHhHHHHhHHHHHHhHoP.......',
+    '.......PoHHhdttHHhdttdhHHoP.......',
+    '.......PodttttttttttttttdoP.......',
+    '.......kttttdKKKtttKKKdtttk.......',
+    '.......PktttpttttttttptttkP.......',
+    '........PkttttttttttttttkP........',
+    '.........PkdttttttttttdkP.........',
+    '..........PkddddttddddkP..........',
+    '...........PkkddddddkkP...........',
+    '...........ObbBBddBBbbO...........',
+  ],
+  34
+);
 
-const SLEEPING_TORSO_ROWS: SpriteMatrix = [
-  '......OOOBbbCCddddddCCbbBOOO.OOOO.',
-  '....OOBBBBBbCCmmmmmmCCbBBBBBOtsstO',
-  '...OBBBBBBBbCCmmmmmmCCbBBBBBOsdssO',
-  '...OBBBBBBBBBCCCCCCCCBBBBBBBObbbsO',
-  '...OBBBBBBBBBBBBBBBBBBBBBBBBObbbOO',
-  '...OBBBBBSSSSBBBBBBBBBBSSSSBBBBBO.',
-  '....OSSSSSSSSSSSSSSSSSSSSSSSSSSO..',
-  '.....OOOOOOOOOOOOOOOOOOOOOOOOOO...',
-];
+const SLEEPING_TORSO_ROWS: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '.......ObbbbBBBBCCBBBBbbbbO.......',
+    '.....ObbbbBBBBBzBBBBBBbbbbO..kkk..',
+    '....ObbbbBBBBBBzBBBBBBBbbbOkttddk.',
+    '....OBBBBBBBBBBzBBBBBBBBBBBOkdddk.',
+    '....OBBBBBBBBBBBBBBBBBBBBBBO......',
+    '....OBBBBBSSSSBBBBBBBBBBSSSSBO....',
+    '.....OSSSSSSSSSSSSSSSSSSSSSSSO....',
+    '......OOOOOOOOOOOOOOOOOOOOOOO.....',
+  ],
+  34
+);
 
 function buildSleepingLongMatrix(breathOffset: number): SpriteMatrix {
   const width = 34;
@@ -429,287 +453,332 @@ function buildSleepingLongMatrix(breathOffset: number): SpriteMatrix {
     }
   }
 
-  return grid.map((chars) => chars.join(''));
+  return assertUniformMatrixWidth(
+    grid.map((chars) => chars.join('')),
+    width
+  );
 }
 
-const SEATED_HEAD_MONITOR: SpriteMatrix = [
-  '...............OOOOOOOOOO...........................',
-  '.............OOHHllhhhhhHOO.........................',
-  '............OHHllhhhhhhhhhHO........................',
-  '............OHhHHHHHHHHhhhHO........................',
-  '...........OGLsHHHHhHHHHHHhHO.......................',
-  '..........OGLRdsdHHHHHHHHHhhHO......................',
-  '..........OdtGssHHHHHHHHHHHhHO......................',
-  '...........OdssHHHHHHHHHHHHhHO......................',
-  '............OssHHHhHHHHHhHHHO.......................',
-  '.............OdsdHHHHHHHHHOO........................',
-  '..............OOddddssddOO..........................',
-  '................OOOOOOOO............................',
-];
+const SEATED_HEAD_MONITOR: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '................oooooooooo..........................',
+    '..............oohlllhhhhhhoo........................',
+    '.............ohllhhhhhhhhlhho.......................',
+    '.............ohHHhhhHHHHhhhHho......................',
+    '............oHhhhHHHHHHHHhHHhHo.....................',
+    '............kLGdHHHHHHHHhhHHHhHo....................',
+    '............ktGGdHHHHHHHHHHHHhHo....................',
+    '.............ktdHHHHHHHHHHHHHhHo....................',
+    '.............oHHHhHHHHHhHHHHhho.....................',
+    '..............oHhHHHHHHHhHHHho......................',
+    '...............ooddHHHHddooo........................',
+    '..................ObbddbbO..........................',
+  ],
+  SEATED_WIDTH
+);
 
-const SEATED_HEAD_GLANCE_LEFT: SpriteMatrix = [
-  '..............OOOOOOOOOO............................',
-  '............OOHHllhhhhhHOO..........................',
-  '...........OHHllhhhhhhhhhHO.........................',
-  '...........OHhHHHHHHHHhhhHO.........................',
-  '..........OGLLsHHHHhHHHHHHhHO.......................',
-  '.........OGLRRdsdHHHHHHHHHhhHO......................',
-  '.........OdtGGssHHHHHHHHHHHhHO......................',
-  '..........OdssHHHHHHHHHHHHhHO.......................',
-  '...........OssHHHhHHHHHhHHHO........................',
-  '............OdsdHHHHHHHHHOO.........................',
-  '.............OOddddssddOO...........................',
-  '...............OOOOOOOO.............................',
-];
+const SEATED_HEAD_GLANCE_LEFT: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '...............oooooooooo...........................',
+    '.............oohlllhhhhhhoo.........................',
+    '............ohllhhhhhhhhlhho........................',
+    '............ohHHhhhHHHHhhhHho.......................',
+    '...........ohhhhHHHHHHHHhHHhHo......................',
+    '...........oHGGLdHHHHHHHHhhHHo......................',
+    '..........ktGWEtdHHHHHHHHHHHHhHo....................',
+    '..........kptEEtdHHHHHHHHHHHHhHo....................',
+    '...........ktdHHHHHHHHHHHHHhHo......................',
+    '............oddHHHHHHHHHHHhho.......................',
+    '..............ooddddddHdooo.........................',
+    '.................ObbddbbO...........................',
+  ],
+  SEATED_WIDTH
+);
 
-const SEATED_HEAD_SIP_MUG: SpriteMatrix = [
-  '.................OOOOOOOOOO.........................',
-  '...............OOHhhhhhllHHOO.......................',
-  '..............OHhhhhhhhhhllHHO......................',
-  '..............OHhhhHHHHHHHHhHO......................',
-  '.............OHhHHHHHHhHHHHsLGO.....................',
-  '............OHhhHHHHHHHHHdsdRLGO....................',
-  '............OHhHHHHHHHHHHHssGtdO....................',
-  '............OHhHHHHHHHHHHHHssdO.....................',
-  '.............OHHHhHHHHHhHHHssO......................',
-  '..............OOHHHHHHHHHdsdO.......................',
-  '................OOddssddddOO........................',
-  '..................OOOOOOOO..........................',
-];
+const SEATED_HEAD_SIP_MUG: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '.................oooooooooo.........................',
+    '...............oohhhhhllhhoo........................',
+    '..............ohlhhhhhhhhhllho......................',
+    '..............ohHhhhHHHHhhhHHho.....................',
+    '.............ohHHhHHHHHHHHhhhho.....................',
+    '.............ohHHhhHHHHHHHHdLGGo....................',
+    '.............ohHHHHHHHHHHHHdtKKtk...................',
+    '.............ohHHHHHHHHHHHHHdtptk...................',
+    '..............ohHHHHHHHHHHHHdtk.....................',
+    '...............oHHHHHHHHHHddo.......................',
+    '................oodddddddoo.........................',
+    '..................ObbddbbO..........................',
+  ],
+  SEATED_WIDTH
+);
 
-const SEATED_HEAD_TILT_LEFT: SpriteMatrix = [
-  '..............OOOOOOOOOO............................',
-  '............OOHHllhhhhhHOO..........................',
-  '...........OHHllhhhhhhhhhHO.........................',
-  '...........OHhHHHHHHHHhhhHO.........................',
-  '..........OGLsHHHHhHHHHHHhHO........................',
-  '..........OGLRdsdHHHHHHHHHhhHO......................',
-  '..........OdtGssHHHHHHHHHHHhHO......................',
-  '...........OdssHHHHHHHHHHHHhHO......................',
-  '............OssHHHhHHHHHhHHHO.......................',
-  '.............OdsdHHHHHHHHHOO........................',
-  '..............OOddddssddOO..........................',
-  '................OOOOOOOO............................',
-];
+const SEATED_HEAD_TILT_LEFT: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '...............oooooooooo...........................',
+    '.............oohlllhhhhhhoo.........................',
+    '............ohllhhhhhhhhlhho........................',
+    '............ohHHhhhHHHHhhhHho.......................',
+    '...........oHhhhHHHHHHHHhHHhHo......................',
+    '...........kLGdHHHHHHHHhhHHHhHo.....................',
+    '...........ktGGdHHHHHHHHHHHHhHo.....................',
+    '............ktdHHHHHHHHHHHHHhHo.....................',
+    '............oHHHhHHHHHhHHHHhho......................',
+    '.............oHhHHHHHHHhHHHho.......................',
+    '..............ooddHHHHddooo.........................',
+    '.................ObbddbbO...........................',
+  ],
+  SEATED_WIDTH
+);
 
-const SEATED_HEAD_TILT_RIGHT: SpriteMatrix = [
-  '................OOOOOOOOOO..........................',
-  '..............OOHHllhhhhhHOO........................',
-  '.............OHHllhhhhhhhhhHO.......................',
-  '.............OHhHHHHHHHHhhhHO.......................',
-  '............OGLsHHHHhHHHHHHhHO......................',
-  '...........OGLRdsdHHHHHHHHHhhHO.....................',
-  '...........OdtGssHHHHHHHHHHHhHO.....................',
-  '............OdssHHHHHHHHHHHHhHO.....................',
-  '.............OssHHHhHHHHHhHHHO......................',
-  '..............OdsdHHHHHHHHHOO.......................',
-  '...............OOddddssddOO.........................',
-  '.................OOOOOOOO...........................',
-];
+const SEATED_HEAD_TILT_RIGHT: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '.................oooooooooo.........................',
+    '...............oohlllhhhhhhoo.......................',
+    '..............ohlhhhhhhhhhllho......................',
+    '..............ohHhhhHHHHhhhHHho.....................',
+    '.............oHhhhHHHHHHHHhHHhHo....................',
+    '.............kLGdHHHHHHHHhhHHHhHo...................',
+    '.............ktGGdHHHHHHHHHHHHhHo...................',
+    '..............ktdHHHHHHHHHHHHHhHo...................',
+    '..............oHHHhHHHHHhHHHHhho....................',
+    '...............oHhHHHHHHHhHHHho.....................',
+    '................ooddHHHHddooo.......................',
+    '...................ObbddbbO.........................',
+  ],
+  SEATED_WIDTH
+);
 
-const SEATED_TORSO_HOME: SpriteMatrix = [
-  '....................................................',
-  '.....OOOO...............OOOO........................',
-  '....OtsdsO.............OdsdtO.......................',
-  '....ObdsbOO...OOOBmmBmBOObdsbO......................',
-  '....ObbbBOOOBBBbBmCCCmBbBBObbbbO....................',
-  '.....ObbBBbBBBBBmmCCCmmBBBBbBbbO....................',
-  '......OOBBBBBBBBBmmmmmBBBBBBBBBOO...................',
-  '.......OBBBBBBBBBBBBBBBBBBBBBBBBO...................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBbBBBBBBBBBBBBBBbBBBO....................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBBBSSSSBBBBBBBBSSSSBO....................',
-  '.........OBBBBSSSSBBBBBBBBSSSBO.....................',
-  '...........OBBBBBBBBBBBBBBBBBO......................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBSSSSBBBBBBBBSSSSO.....................',
-  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
-  '...........OOOOOOOOOOOOOOOOOOO......................',
-];
+const SEATED_TORSO_HOME: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '....................................................',
+    '.....kkkk...............kkkk........................',
+    '....kttdk..............ktddtk.......................',
+    '....ObbtO....OOObBCCBbOOO..kdbtO....................',
+    '....ObbBOOObbBBbSBBBBBSbBBBbbObbbbO.................',
+    '.....ObbBBbBBBBbSSSSSSSbBBBBbBbbO...................',
+    '......OOBBBBBBBBbbbbbBBBBBBBBBOO....................',
+    '.......OBBBBBBBBBBBBBBBBBBBBBBO.....................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBbBBBBBBBBBBBBbBBBO......................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBBBSSSSBBBBBBSSSSBO......................',
+    '.........OBBBBSSSSBBBBBBSSSBO.......................',
+    '...........OBBBBBBBBBBBBBBBBO.......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OBBBSSSSBBBBBBBSSSSO......................',
+    '..........OSSSSSSSSSSSSSSSSSSO......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OSSSSSSSSSSSSSSSSSSO......................',
+    '...........OOOOOOOOOOOOOOOOOO.......................',
+  ],
+  SEATED_WIDTH
+);
 
-const SEATED_TORSO_TYPE_L: SpriteMatrix = [
-  '.....OOOO...........................................',
-  '....OtsdsO..............OOOO........................',
-  '....ObdsbOO............OdsdtO.......................',
-  '....ObbbBOO...OOOBmmBmBOObdsbO......................',
-  '.....ObbBOOOBBBbBmCCCmBbBBObbbbO....................',
-  '.....ObbBBbBBBBBmmCCCmmBBBBbBbbO....................',
-  '......OOBBBBBBBBBmmmmmBBBBBBBBBOO...................',
-  '.......OBBBBBBBBBBBBBBBBBBBBBBBBO...................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBbBBBBBBBBBBBBBBbBBBO....................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBBBSSSSBBBBBBBBSSSSBO....................',
-  '.........OBBBBSSSSBBBBBBBBSSSBO.....................',
-  '...........OBBBBBBBBBBBBBBBBBO......................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBSSSSBBBBBBBBSSSSO.....................',
-  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
-  '...........OOOOOOOOOOOOOOOOOOO......................',
-];
+const SEATED_TORSO_TYPE_L: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '.....kkkk...........................................',
+    '....kttdk...............kkkk........................',
+    '....ObbtO..............ktddtk.......................',
+    '....ObbBO....OOObBCCBbOOO..kdbtO....................',
+    '.....ObbOOObbBBbSBBBBBSbBBBbbObbbbO.................',
+    '.....ObbBBbBBBBbSSSSSSSbBBBBbBbbO...................',
+    '......OOBBBBBBBBbbbbbBBBBBBBBBOO....................',
+    '.......OBBBBBBBBBBBBBBBBBBBBBBO.....................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBbBBBBBBBBBBBBbBBBO......................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBBBSSSSBBBBBBSSSSBO......................',
+    '.........OBBBBSSSSBBBBBBSSSBO.......................',
+    '...........OBBBBBBBBBBBBBBBBO.......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OBBBSSSSBBBBBBBSSSSO......................',
+    '..........OSSSSSSSSSSSSSSSSSSO......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OSSSSSSSSSSSSSSSSSSO......................',
+    '...........OOOOOOOOOOOOOOOOOO.......................',
+  ],
+  SEATED_WIDTH
+);
 
-const SEATED_TORSO_TYPE_R: SpriteMatrix = [
-  '........................OOOO........................',
-  '.....OOOO..............OdsdtO.......................',
-  '....OtsdsO.............ObsdbO.......................',
-  '....ObdsbOO...OOOBmmBmBOObdbO.......................',
-  '....ObbbBOOOBBBbBmCCCmBbBBObbbO.....................',
-  '.....ObbBBbBBBBBmmCCCmmBBBBbBbbO....................',
-  '......OOBBBBBBBBBmmmmmBBBBBBBBBOO...................',
-  '.......OBBBBBBBBBBBBBBBBBBBBBBBBO...................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBbBBBBBBBBBBBBBBbBBBO....................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBBBSSSSBBBBBBBBSSSSBO....................',
-  '.........OBBBBSSSSBBBBBBBBSSSBO.....................',
-  '...........OBBBBBBBBBBBBBBBBBO......................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBSSSSBBBBBBBBSSSSO.....................',
-  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
-  '...........OOOOOOOOOOOOOOOOOOO......................',
-];
+const SEATED_TORSO_TYPE_R: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '........................kkkk........................',
+    '.....kkkk..............ktddtk.......................',
+    '....kttdk..............ObdtkO.......................',
+    '....ObbtO....OOObBCCBbOOO..kbtO.....................',
+    '....ObbBOOObbBBbSBBBBBSbBBBbbObbbO..................',
+    '.....ObbBBbBBBBbSSSSSSSbBBBBbBbbO...................',
+    '......OOBBBBBBBBbbbbbBBBBBBBBBOO....................',
+    '.......OBBBBBBBBBBBBBBBBBBBBBBO.....................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBbBBBBBBBBBBBBbBBBO......................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBBBSSSSBBBBBBSSSSBO......................',
+    '.........OBBBBSSSSBBBBBBSSSBO.......................',
+    '...........OBBBBBBBBBBBBBBBBO.......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OBBBSSSSBBBBBBBSSSSO......................',
+    '..........OSSSSSSSSSSSSSSSSSSO......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OSSSSSSSSSSSSSSSSSSO......................',
+    '...........OOOOOOOOOOOOOOOOOO.......................',
+  ],
+  SEATED_WIDTH
+);
 
-const SEATED_TORSO_MOUSE_A: SpriteMatrix = [
-  '....................................................',
-  '.....OOOO..........................OOOO.............',
-  '....OtsdsO........................OdsdtO............',
-  '....ObdsbOO...OOOBmmBmBOOOOOOO...ObbdddsO...........',
-  '....ObbbBOOOBBBbBmCCCmBbBBBBbbOOOObbbbbO............',
-  '.....ObbBBbBBBBBmmCCCmmBBBBBBBBbbbbbbOO.............',
-  '......OOBBBBBBBBBmmmmmBBBBBBBBBOOOOO................',
-  '.......OBBBBBBBBBBBBBBBBBBBBBBBBO...................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBbBBBBBBBBBBBBBBbBBBO....................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBBBSSSSBBBBBBBBSSSSBO....................',
-  '.........OBBBBSSSSBBBBBBBBSSSBO.....................',
-  '...........OBBBBBBBBBBBBBBBBBO......................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBSSSSBBBBBBBBSSSSO.....................',
-  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
-  '...........OOOOOOOOOOOOOOOOOOO......................',
-];
+const SEATED_TORSO_MOUSE_A: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '....................................................',
+    '.....kkkk..........................kkkk.............',
+    '....kttdk.........................ktddtk............',
+    '....ObbtO....OOObBCCBbOOOOO.......Obbddtk...........',
+    '....ObbBOOObbBBbSBBBBBSbBBBbbOOOOObbbbbO............',
+    '.....ObbBBbBBBBbSSSSSSSbBBBBBBBbbbbbbOO.............',
+    '......OOBBBBBBBBbbbbbBBBBBBBBBOOOOO.................',
+    '.......OBBBBBBBBBBBBBBBBBBBBBBO.....................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBbBBBBBBBBBBBBbBBBO......................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBBBSSSSBBBBBBSSSSBO......................',
+    '.........OBBBBSSSSBBBBBBSSSBO.......................',
+    '...........OBBBBBBBBBBBBBBBBO.......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OBBBSSSSBBBBBBBSSSSO......................',
+    '..........OSSSSSSSSSSSSSSSSSSO......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OSSSSSSSSSSSSSSSSSSO......................',
+    '...........OOOOOOOOOOOOOOOOOO.......................',
+  ],
+  SEATED_WIDTH
+);
 
-const SEATED_TORSO_MOUSE_B: SpriteMatrix = [
-  '....................................................',
-  '.....OOOO...........................OOOO............',
-  '....OtsdsO.........................OdsdtO...........',
-  '....ObdsbOO...OOOBmmBmBOOOOOOO....ObbdddsO..........',
-  '....ObbbBOOOBBBbBmCCCmBbBBBBbbOOOOObbbbbbO..........',
-  '.....ObbBBbBBBBBmmCCCmmBBBBBBBBbbbbbbbOO............',
-  '......OOBBBBBBBBBmmmmmBBBBBBBBBOOOOOO...............',
-  '.......OBBBBBBBBBBBBBBBBBBBBBBBBO...................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBbBBBBBBBBBBBBBBbBBBO....................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBBBSSSSBBBBBBBBSSSSBO....................',
-  '.........OBBBBSSSSBBBBBBBBSSSBO.....................',
-  '...........OBBBBBBBBBBBBBBBBBO......................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBSSSSBBBBBBBBSSSSO.....................',
-  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
-  '...........OOOOOOOOOOOOOOOOOOO......................',
-];
+const SEATED_TORSO_MOUSE_B: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '....................................................',
+    '.....kkkk...........................kkkk............',
+    '....kttdk..........................ktddtk...........',
+    '....ObbtO....OOObBCCBbOOOOO........Obbddtk..........',
+    '....ObbBOOObbBBbSBBBBBSbBBBbbOOOOOObbbbbbO..........',
+    '.....ObbBBbBBBBbSSSSSSSbBBBBBBBbbbbbbbOO............',
+    '......OOBBBBBBBBbbbbbBBBBBBBBBOOOOOO................',
+    '.......OBBBBBBBBBBBBBBBBBBBBBBO.....................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBbBBBBBBBBBBBBbBBBO......................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBBBSSSSBBBBBBSSSSBO......................',
+    '.........OBBBBSSSSBBBBBBSSSBO.......................',
+    '...........OBBBBBBBBBBBBBBBBO.......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OBBBSSSSBBBBBBBSSSSO......................',
+    '..........OSSSSSSSSSSSSSSSSSSO......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OSSSSSSSSSSSSSSSSSSO......................',
+    '...........OOOOOOOOOOOOOOOOOO.......................',
+  ],
+  SEATED_WIDTH
+);
 
-const SEATED_TORSO_REACH_MUG: SpriteMatrix = [
-  '....................................................',
-  '.....OOOO...................................OOOO....',
-  '....OtsdsO.................................OdsdtO...',
-  '....ObdsbOO...OOOBmmBmBOOOOOOOOOOOOOOO....ObbdddsO..',
-  '....ObbbBOOOBBBbBmCCCmBbBBBBBBBBbbbbbOOOOOObbbbbO...',
-  '.....ObbBBbBBBBBmmCCCmmBBBBBBBBBBBBBBBBbbbbbbOO.....',
-  '......OOBBBBBBBBBmmmmmBBBBBBBBBOOOOOOOOOOOOO........',
-  '.......OBBBBBBBBBBBBBBBBBBBBBBBBO...................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBbBBBBBBBBBBBBBBbBBBO....................',
-  '........OBBBBBBBBBBBBBBBBBBBBBBO....................',
-  '........OBBBBBSSSSBBBBBBBBSSSSBO....................',
-  '.........OBBBBSSSSBBBBBBBBSSSBO.....................',
-  '...........OBBBBBBBBBBBBBBBBBO......................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBSSSSBBBBBBBBSSSSO.....................',
-  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OSSSSSSSSSSSSSSSSSSSO.....................',
-  '...........OOOOOOOOOOOOOOOOOOO......................',
-];
+const SEATED_TORSO_REACH_MUG: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '....................................................',
+    '.....kkkk...................................kkkk....',
+    '....kttdk..................................ktddtk...',
+    '....ObbtO....OOObBCCBbOOOOOOO..............Obbddtk..',
+    '....ObbBOOObbBBbSBBBBBSbBBBBbbOOOOOOOOOOOOObbbbbbO..',
+    '.....ObbBBbBBBBbSSSSSSSbBBBBBBBBBBbbbbbbbbbbbbbOO...',
+    '......OOBBBBBBBBbbbbbBBBBBBBBBOOOOOOOOOOOOOO........',
+    '.......OBBBBBBBBBBBBBBBBBBBBBBO.....................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBbBBBBBBBBBBBBbBBBO......................',
+    '........OBBBBBBBBBBBBBBBBBBBBO......................',
+    '........OBBBBBSSSSBBBBBBSSSSBO......................',
+    '.........OBBBBSSSSBBBBBBSSSBO.......................',
+    '...........OBBBBBBBBBBBBBBBBO.......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OBBBSSSSBBBBBBBSSSSO......................',
+    '..........OSSSSSSSSSSSSSSSSSSO......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OBBBBBBBBBBBBBBBBBBO......................',
+    '..........OSSSSSSSSSSSSSSSSSSO......................',
+    '...........OOOOOOOOOOOOOOOOOO.......................',
+  ],
+  SEATED_WIDTH
+);
 
-const SEATED_TORSO_SIP_MUG: SpriteMatrix = [
-  '............................OOOOOO..................',
-  '...........................OMMMMMcO.................',
-  '...........................OMFFFFcO.................',
-  '...........................OMMMMdsO.................',
-  '...........................ObbdsstO.................',
-  '...........................ObbbbssO.................',
-  '.....OOOO..................ObbbbbO..................',
-  '....OtsdsO.................ObbBbO...................',
-  '....ObdsbOO...OOOBmmBmBOOOObBbBO....................',
-  '....ObbbBOOOBBBbBmCCCmBbBBBBbbBO....................',
-  '.....ObbBBbBBBBBmmCCCmmBBBBBBBO.....................',
-  '......OOBBBBBBBBBmmmmmBBBBBBBOO.....................',
-  '.......OBBBBBBBBBBBBBBBBBBBBBO......................',
-  '........OBBBBBBBBBBBBBBBBBBBBO......................',
-  '........OBBBbBBBBBBBBBBBBbBBBO......................',
-  '........OBBBBBBBBBBBBBBBBBBBBO......................',
-  '........OBBBBBSSSSBBBBBBBSSSSO......................',
-  '.........OBBBBSSSSBBBBBBBSSSO.......................',
-  '...........OBBBBBBBBBBBBBBBBO.......................',
-  '...........OBBBBBBBBBBBBBBBBO.......................',
-  '..........OSSSSSSSSSSSSSSSSSSO......................',
-  '...........OOOOOOOOOOOOOOOOOO.......................',
-];
+const SEATED_TORSO_SIP_MUG: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '............................mmmmmm..................',
+    '...........................mMMMMMcO.................',
+    '...........................mMFFFFcm.................',
+    '...........................mMMMMdk..................',
+    '...........................ObbdkktO.................',
+    '...........................Obbbbtdk.................',
+    '.....kkkk..................ObbbbbO..................',
+    '....kttdk..................ObbBbO...................',
+    '....ObbtO....OOObBCCBbOOOOObBbBO....................',
+    '....ObbBOOObbBBbSBBBBBSbBBBBbbO.....................',
+    '.....ObbBBbBBBBbSSSSSSSbBBBBBO......................',
+    '......OOBBBBBBBBbbbbbBBBBBBBOO......................',
+    '.......OBBBBBBBBBBBBBBBBBBBBO.......................',
+    '........OBBBBBBBBBBBBBBBBBBBO.......................',
+    '........OBBBbBBBBBBBBBBBbBBBO.......................',
+    '........OBBBBBBBBBBBBBBBBBBBO.......................',
+    '........OBBBBBSSSSBBBBBBSSSSO.......................',
+    '.........OBBBBSSSSBBBBBBSSSO........................',
+    '...........OBBBBBBBBBBBBBBO.........................',
+    '...........OBBBBBBBBBBBBBBO.........................',
+    '..........OSSSSSSSSSSSSSSSSO........................',
+    '...........OOOOOOOOOOOOOOOO.........................',
+  ],
+  SEATED_WIDTH
+);
 
-const SEATED_TORSO_STRETCH: SpriteMatrix = [
-  '.....OOOO.........................OOOO..............',
-  '....OtsdsO.......................OdsdtO.............',
-  '....ObdsbO.......................ObsdbO.............',
-  '.....ObbBO.......................ObbbO..............',
-  '.....OBbBO.......................ObBBO..............',
-  '......OBbO.......................ObBO...............',
-  '.......OBbOO...OOOBmmBmBOOO.....ObBO................',
-  '........ObbbOOBBBbBmCCCmBbBBBOOObbO.................',
-  '.........OBBBBBBBBBmmmmmBBBBBBBBBO..................',
-  '.........OBBBBBBBBBBBBBBBBBBBBBBO...................',
-  '..........OBBBBBBBBBBBBBBBBBBBBO....................',
-  '..........OBBBbBBBBBBBBBBBBbBBBO....................',
-  '..........OBBBBBBBBBBBBBBBBBBBBO....................',
-  '..........OBBBBBSSSSBBBBBBBSSSSO....................',
-  '..........OBBBBBSSSSBBBBBBBSSSO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBBBBBBBBBBBBBBBBBO.....................',
-  '..........OBBBSSSSBBBBBBBSSSSBO.....................',
-  '...........OSSSSSSSSSSSSSSSSSO......................',
-  '...........OBBBBBBBBBBBBBBBBBO......................',
-  '...........OBBBBBBBBBBBBBBBBBO......................',
-  '............OOOOOOOOOOOOOOOOO.......................',
-];
+const SEATED_TORSO_STRETCH: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '.....kkkk.........................kkkk..............',
+    '....kttdk........................ktddtk.............',
+    '....kbdtk........................kbddtk.............',
+    '.....ObbO........................ObbbO..............',
+    '.....OBbO........................ObBBO..............',
+    '......OBbO.......................ObBO...............',
+    '.......OBbO...OOObBCCBbOOO.......ObBO...............',
+    '........ObbbOObbBBbSSSSSbBBBBbOObbO.................',
+    '.........OBBBBBBBBBbbbbbBBBBBBBBBO..................',
+    '.........OBBBBBBBBBBBBBBBBBBBBBBO...................',
+    '..........OBBBBBBBBBBBBBBBBBBBBO....................',
+    '..........OBBBbBBBBBBBBBBBBbBBBO....................',
+    '..........OBBBBBBBBBBBBBBBBBBBBO....................',
+    '..........OBBBBBSSSSBBBBBBSSSSO.....................',
+    '..........OBBBBBSSSSBBBBBBSSSO......................',
+    '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+    '..........OBBBBBBBBBBBBBBBBBBBO.....................',
+    '..........OBBBSSSSBBBBBBSSSSBO......................',
+    '...........OSSSSSSSSSSSSSSSSO.......................',
+    '...........OBBBBBBBBBBBBBBBBO.......................',
+    '...........OBBBBBBBBBBBBBBBBO.......................',
+    '............OOOOOOOOOOOOOOOO........................',
+  ],
+  SEATED_WIDTH
+);
 
 function normalizeRows(rows: readonly string[], width = SEATED_WIDTH): SpriteMatrix {
-  return rows.map((row) =>
-    row.length >= width ? row.slice(0, width) : row.padEnd(width, '.')
+  return assertUniformMatrixWidth(
+    rows.map((row) =>
+      row.length >= width ? row.slice(0, width) : row.padEnd(width, '.')
+    ),
+    width
   );
 }
 
@@ -751,140 +820,187 @@ function buildSeatedLongMatrix(
       const ch = rowStr[c];
       if (ch === '.') continue;
       const existing = grid[gr][c];
-      if (existing === 'M' || existing === 'F' || existing === 'c') continue;
+      if (existing === 'M' || existing === 'F' || existing === 'c' || existing === 'm') continue;
       if (isSipPose && c >= 26 && existing !== '.') continue;
       grid[gr][c] = ch;
     }
   }
 
-  return grid.map((chars) => chars.join(''));
+  return assertUniformMatrixWidth(
+    grid.map((chars) => chars.join('')),
+    SEATED_WIDTH
+  );
 }
 
-const WAKING_HEAD_OPEN: SpriteMatrix = [
-  '......OOOOOOOO.......',
-  '....OOHllhhhhHOO.....',
-  '...OHllhhhhhhhhHO....',
-  '..OHHlhHHHHHHHHhHO...',
-  '..OHhHHtsdsstHHhHO...',
-  '.OHsGGGGGsGGGGGsHO...',
-  '.OdsGGRLEGsGERLGsdO..',
-  '..OdGGGGGsGGGGGdO....',
-  '...OspppstspppsO.....',
-  '....OOddsssddOO......',
-];
+const WAKING_HEAD_OPEN: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '......oooooooo........',
+    '....oohlllhhhhoo......',
+    '...ohlllhhhhhhhho.....',
+    '..ohllhhhhhhhhhhho....',
+    '..ohHHHHhhlhhhhHHo....',
+    '..oHHhdttHhdtthHHo....',
+    '..oHdtGGGtttGGGtHo....',
+    '..ktttLWEgGgWELtk.....',
+    '..ktttpEEtttEEptk.....',
+    '...kttttdttttttk......',
+    '....kkddtttddkk.......',
+    '....ObbBdddBbbO.......',
+  ],
+  22
+);
 
-const WAKING_HEAD_BLINK: SpriteMatrix = [
-  '......OOOOOOOO.......',
-  '....OOHllhhhhHOO.....',
-  '...OHllhhhhhhhhHO....',
-  '..OHHlhHHHHHHHHhHO...',
-  '..OHhHHtsdsstHHhHO...',
-  '.OHsGGGGGsGGGGGsHO...',
-  '.OdsGKKKGsGKKKGsdO...',
-  '..OdGGGGGsGGGGGdO....',
-  '...OspppstspppsO.....',
-  '....OOddsssddOO......',
-];
+const WAKING_HEAD_BLINK: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '......oooooooo........',
+    '....oohlllhhhhoo......',
+    '...ohlllhhhhhhhho.....',
+    '..ohllhhhhhhhhhhho....',
+    '..ohHHHHhhlhhhhHHo....',
+    '..oHHhdttHhdtthHHo....',
+    '..oHdtGGGtttGGGtHo....',
+    '..ktttLKKgGgKKLtk.....',
+    '..ktttpttttttpttk.....',
+    '...kttttdttttttk......',
+    '....kkddtttddkk.......',
+    '....ObbBdddBbbO.......',
+  ],
+  22
+);
 
-const WAKING_HEAD_SIP: SpriteMatrix = [
-  '......OOOOOOOO.......',
-  '....OOHllhhhhHOO.....',
-  '...OHllhhhhhhhhHO....',
-  '..OHHlhHHHHHHHHhHO...',
-  '..OHhHHtsdsstHHhHO...',
-  '.OHsGGGGGsGGGGGsHO...',
-  '.OdsGKKKGsGKKKGsdO...',
-  '..OdGGGGGsGGGGGdO....',
-  '...OspppstspppsO.....',
-  '....OOddsssddOO......',
-];
+const WAKING_HEAD_SIP: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '......oooooooo........',
+    '....oohlllhhhhoo......',
+    '...ohlllhhhhhhhho.....',
+    '..ohllhhhhhhhhhhho....',
+    '..ohHHHHhhlhhhhHHo....',
+    '..oHHhdttHhdtthHHo....',
+    '..oHdtGGGtttGGGtHo....',
+    '..ktttLKKgGgKKLtk.....',
+    '..ktttpttttttpttk.....',
+    '...kttttdttttttk......',
+    '....kkddtttddkk.......',
+    '....ObbBdddBbbO.......',
+  ],
+  22
+);
 
-const WAKING_BODY_HOLD_CUP: SpriteMatrix = [
-  '...OOOBBmCmBBBOO.....',
-  '..ObBBBBmCmBBBBbO....',
-  '.ObBBBBBmCmBBBBBbO...',
-  '.OBBBObBBCCBBbOBBO...',
-  '.OBBOOBBBBBBBBOOBBO..',
-  '.OBBOOBBBSSBBBOssOO..',
-  '.OssOOBBBSSBBBOMFFMO.',
-  '.OdsOOBBBBBBBBOMMMcO.',
-  '..OO.OBBBSSBBBOMMMcO.',
-  '.....OSSSSSSSSO.OOO..',
-  '.....OJJjjNNjjJO.....',
-  '.....OJJJJNNJJJO.....',
-  '.....OJJJNOONJJO.....',
-  '.....OJJNO..ONJJO....',
-  '.....OJJNO..ONJJO....',
-  '.....OJJNO..ONJJO....',
-  '.....OJJNO..ONJJO....',
-  '.....OJJNO..ONJJO....',
-  '.....OUUUO..OUUUO....',
-  '.....OWWWO..OWWWO....',
-  '.....OOOOO..OOOOO....',
-  '....xxxxxx..xxxxxx...',
-];
+const WAKING_BODY_HOLD_CUP: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '...ObbBBCCCBBbbO......',
+    '..ObbBBBBzBBBBbO......',
+    '..ObBSBBBzBBBSO.mmm...',
+    '..OBBSBBBzBBBbOmFFMmm.',
+    '..OBBSBBBzBBBSbtMMcm.m',
+    '..OkdtOBSBzBSOkdMMcmm.',
+    '...kkOSSSSSSSO.kmmmm..',
+    '.....OOOOOOOOO........',
+    '.....QJjJNJjJQ........',
+    '.....QJjQQQjJQ........',
+    '.....QJjQ.QjJQ........',
+    '.....QJjQ.QjJQ........',
+    '.....QJjQ.QjJQ........',
+    '.....QJJQ.QJJQ........',
+    '.....QuvQ.QuvQ........',
+    '....QuuuQ.QuuuQ.......',
+    '....QwwwQ.QwwwQ.......',
+    '.....QQQ...QQQ........',
+    '....xxxxx.xxxxx.......',
+  ],
+  22
+);
 
-const WAKING_BODY_LIFT_CUP: SpriteMatrix = [
-  '...OOOBBmCmBBBOO.....',
-  '..ObBBBBmCmBBBBbO....',
-  '.ObBBBBBmCmBBBOOO....',
-  '.OBBBObBBCCBBbOMFFMO.',
-  '.OBBOOBBBBBBBBOMMMcO.',
-  '.OBBOOBBBSSBBBOMMMcO.',
-  '.OssOOBBBSSBBBOssOO..',
-  '.OdsOOBBBBBBBBOOO....',
-  '..OO.OBBBSSBBBO......',
-  '.....OSSSSSSSSO......',
-  '.....OJJjjNNjjJO.....',
-  '.....OJJJJNNJJJO.....',
-  '.....OJJJNOONJJO.....',
-  '.....OJJNO..ONJJO....',
-  '.....OJJNO..ONJJO....',
-  '.....OJJNO..ONJJO....',
-  '.....OJJNO..ONJJO....',
-  '.....OJJNO..ONJJO....',
-  '.....OUUUO..OUUUO....',
-  '.....OWWWO..OWWWO....',
-  '.....OOOOO..OOOOO....',
-  '....xxxxxx..xxxxxx...',
-];
+const WAKING_BODY_BREATHE: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '...ObbbBCCCBBbbO......',
+    '..ObbbBBBzBBBBbO......',
+    '..ObBSBBBzBBBSO.mmm...',
+    '..OBBSBBBzBBBbOmFFMmm.',
+    '..OBBSBBBzBBBSbtMMcm.m',
+    '..OkdtOBSBzBSOkdMMcmm.',
+    '...kkOSSSSSSSO.kmmmm..',
+    '.....OOOOOOOOO........',
+    '.....QJjJNJjJQ........',
+    '.....QJjQQQjJQ........',
+    '.....QJjQ.QjJQ........',
+    '.....QJjQ.QjJQ........',
+    '.....QJjQ.QjJQ........',
+    '.....QJJQ.QJJQ........',
+    '.....QuvQ.QuvQ........',
+    '....QuuuQ.QuuuQ.......',
+    '....QwwwQ.QwwwQ.......',
+    '.....QQQ...QQQ........',
+    '....xxxxx.xxxxx.......',
+  ],
+  22
+);
 
-const WAKING_STRETCH_MATRIX: SpriteMatrix = [
-  '.OOOO................',
-  'OssOO.OOOOOOOO.......',
-  'OdsOOOHllhhhhHOO.....',
-  '.ObOHllhhhhhhhhHO....',
-  '.OBOHlhHHHHHHHHhHO...',
-  '..OBOHHtsdsstHHhHO...',
-  '..ObOsGGGGGsGGGGGsHO.',
-  '...OdsGKKKGsGKKKGsdO.',
-  '....OdGGGGGsGGGGGdO..',
-  '.....OspppstspppsO...',
-  '....OOddsssddOOOO....',
-  '...ObBBBBmCmBBBBbO...',
-  '...OBBBBBmCmBBBBBO...',
-  '...OBBBBSSSSBBBBbO...',
-  '....OBBBBBBBBBOBssOO.',
-  '....OBBBBSSBBBOMFFMO.',
-  '....OBBBBBBBBBOMMMcO.',
-  '....OSSSSSSSSOOMMMcO.',
-  '.....OJJjjNNjjJO.OOO.',
-  '.....OJJJJNNJJJO.....',
-  '.....OJJJNOONJJO.....',
-  '.....OJJNO..ONJJO....',
-  '.....OJJNO..ONJJO....',
-  '.....OJJNO..ONJJO....',
-  '.....OJJNO..ONJJO....',
-  '.....OJJNO..ONJJO....',
-  '.....OUUUO..OUUUO....',
-  '.....OWWWO..OWWWO....',
-  '.....OOOOO..OOOOO....',
-  '....xxxxxx..xxxxxx...',
-];
+const WAKING_BODY_LIFT_CUP: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '...ObbBBCCCBBbO.mmm...',
+    '..ObbBBBBzBBBBOmFFMmm.',
+    '..ObBSBBBzBBBBbtMMcm.m',
+    '..OBBSBBBzBBBOkdMMcmm.',
+    '..OBBSBBBzBBBO.kmmmm..',
+    '..OkdtBSBzBSBO........',
+    '...kkOSSSSSSSO........',
+    '.....OOOOOOOOO........',
+    '.....QJjJNJjJQ........',
+    '.....QJjQQQjJQ........',
+    '.....QJjQ.QjJQ........',
+    '.....QJjQ.QjJQ........',
+    '.....QJjQ.QjJQ........',
+    '.....QJJQ.QJJQ........',
+    '.....QuvQ.QuvQ........',
+    '....QuuuQ.QuuuQ.......',
+    '....QwwwQ.QwwwQ.......',
+    '.....QQQ...QQQ........',
+    '....xxxxx.xxxxx.......',
+  ],
+  22
+);
+
+const WAKING_STRETCH_MATRIX: SpriteMatrix = assertUniformMatrixWidth(
+  [
+    '......oooooooo........',
+    '....oohlllhhhhoo......',
+    '...ohlllhhhhhhhho.....',
+    '..ohllhhhhhhhhhhho....',
+    '..ohHHHHhhlhhhhHHo....',
+    '..oHHhdttHhdtthHHo....',
+    '..oHdtGGGtttGGGtHo....',
+    '..ktttLKKgGgKKLtk.....',
+    '..ktttpttttttpttk.....',
+    'kdtkttttdttttttk......',
+    'ObbOkkddtttddkk.......',
+    'OBbBObbBdddBbbO.......',
+    'OBBbbBBCCCBBbbO.......',
+    '.ObbbBBBBzBBBBbO......',
+    '..ObBSBBBzBBBSbO.mmm..',
+    '..OBBSBBBzBBBSbOmFFmm.',
+    '..OBBSBBBzBBBbtMMcmcm.',
+    '..OkdtOBSBzBSBOkdMMmm.',
+    '...kkOSSSSSSSO..mmmm..',
+    '.....OOOOOOOOO........',
+    '.....QJjJNJjJQ........',
+    '.....QJjQQQjJQ........',
+    '.....QJjQ.QjJQ........',
+    '.....QJjQ.QjJQ........',
+    '.....QJjQ.QjJQ........',
+    '.....QJJQ.QJJQ........',
+    '.....QuvQ.QuvQ........',
+    '....QuuuQ.QuuuQ.......',
+    '....QwwwQ.QwwwQ.......',
+    '.....QQQ...QQQ........',
+    '....xxxxx.xxxxx.......',
+  ],
+  22
+);
 
 const WAKING_IDLE_STEPS: readonly SpriteMatrix[] = [
-  [...WAKING_HEAD_OPEN, ...WAKING_BODY_HOLD_CUP],
-  [...WAKING_HEAD_BLINK, ...WAKING_BODY_HOLD_CUP],
+  assertUniformMatrixWidth([...WAKING_HEAD_OPEN, ...WAKING_BODY_HOLD_CUP], 22),
+  assertUniformMatrixWidth([...WAKING_HEAD_BLINK, ...WAKING_BODY_HOLD_CUP], 22),
 ];
 
 function getLongPalette(
@@ -897,34 +1013,39 @@ function getLongPalette(
   const dim = isSleep && !lampOn;
 
   return {
-    O: isSleep ? palette.inkOutline : isLate ? '#1B1526' : '#26181A',
-    H: dim ? '#221926' : isLate ? '#2B1C22' : '#2E1D1A',
-    h: dim ? '#382838' : isLate ? '#472E2F' : '#513329',
-    l: dim ? '#4F3D4F' : isLate ? '#6A4B44' : '#7A4E3B',
-    t: dim ? '#B89588' : isLate ? '#E6C0A6' : '#FFE0C2',
-    s: dim ? '#A07D73' : isLate ? '#D6A58A' : '#F2BF99',
-    d: dim ? '#7F5E59' : isLate ? '#B07D68' : '#CC8C6A',
-    p: dim ? '#9E6870' : isLate ? '#CC7A80' : '#E58880',
-    G: '#1E2438',
-    L: isLate ? '#6BE3FF' : '#CFE9FF',
-    R: isLate ? '#D4FBFF' : '#FFFFFF',
-    E: '#1A1D2B',
-    K: isSleep ? '#1E1828' : '#2B1C19',
-    C: dim ? '#A4A7BA' : isLate ? '#D4CED9' : '#F6EEDD',
-    m: dim ? '#808499' : isLate ? '#A9A4B5' : '#D6C9B0',
-    b: dim ? '#485573' : isLate ? (lampOn ? '#7F7F8E' : '#56688A') : '#6F82A6',
-    B: dim ? '#343E57' : isLate ? '#3B4763' : '#4C5A78',
-    S: dim ? '#232A3E' : isLate ? '#273046' : '#323D54',
-    j: dim ? '#29334D' : '#3E4D6E',
-    J: dim ? '#1D2438' : '#2A354E',
-    N: dim ? '#131826' : '#1C2336',
-    U: dim ? '#35405B' : '#4F5E80',
-    W: dim ? '#A5A2B0' : '#F2ECE0',
-    M: '#FFF8EB',
-    c: '#D4C4B0',
+    o: dim ? '#1E161C' : isLate ? '#241814' : '#2B1D17',
+    k: dim ? '#684339' : isLate ? '#7D4D3A' : '#8F5943',
+    O: dim ? '#151926' : isLate ? '#181D2C' : '#1E2436',
+    Q: dim ? '#121824' : '#182030',
+    m: dim ? '#5D524C' : '#786B63',
+    H: dim ? '#2C1E26' : isLate ? '#322019' : '#3B261D',
+    h: dim ? '#432E37' : isLate ? '#4D3125' : '#5A3A2B',
+    l: dim ? '#634650' : isLate ? '#734B37' : '#84573F',
+    t: dim ? '#C49B8B' : isLate ? '#E8B99B' : '#F5CBB0',
+    d: dim ? '#9E7668' : isLate ? '#C98E72' : '#DDA284',
+    p: dim ? '#AD706C' : isLate ? '#D88B7E' : '#ECA092',
+    E: '#1F2433',
+    W: '#FFFFFF',
+    K: isSleep ? '#4A302C' : '#5C382C',
+    G: '#475569',
+    g: '#9E8C89',
+    L: isLate ? '#8CEAF8' : '#CCE7F2',
+    C: dim ? '#B5B2C0' : isLate ? '#DFD9CE' : '#F5F0E6',
+    b: dim ? '#3D485E' : isLate ? (lampOn ? '#58677D' : '#435066') : '#475569',
+    B: dim ? '#273145' : isLate ? '#2D3A4D' : '#334155',
+    S: dim ? '#1C2333' : isLate ? '#1F293A' : '#243042',
+    z: dim ? '#3F4B61' : isLate ? '#52627A' : '#64748B',
+    j: dim ? '#29374F' : '#334460',
+    J: dim ? '#1D2638' : '#233044',
+    N: dim ? '#141B29' : '#1B2536',
+    u: dim ? '#B8C0CC' : '#F1F5F9',
+    v: dim ? '#737E91' : '#94A3B8',
+    w: dim ? '#949EAE' : '#CBD5E1',
+    M: '#FFFDF9',
+    c: '#D6CFC2',
     F: '#5C3422',
     P: palette.pillowShadow,
-    x: 'rgba(22, 16, 28, 0.34)',
+    x: 'rgba(22, 16, 28, 0.28)',
   };
 }
 
@@ -1576,17 +1697,19 @@ function getWakingLongPose(timeSec: number, reducedMotion: boolean): WakingLongP
       footY: y + mat.length - 2,
       matrix: mat,
       steamX: x + 16,
-      steamY: y + 15,
+      steamY: y + 13,
     };
   }
 
   const cycle = timeSec % 16;
   const blinkNow = timeSec % 3.9 >= 3.68 && timeSec % 3.9 <= 3.84;
+  const breatheNow = Math.sin(timeSec * ((Math.PI * 2) / 3.2)) > 0.35;
+  const idleBody = breatheNow ? WAKING_BODY_BREATHE : WAKING_BODY_HOLD_CUP;
   const swayOffset = Math.round(Math.sin(timeSec * 0.9) * 1.4);
 
   if (cycle < 4.5) {
     const head = blinkNow ? WAKING_HEAD_BLINK : WAKING_HEAD_OPEN;
-    const mat = [...head, ...WAKING_BODY_HOLD_CUP];
+    const mat = [...head, ...idleBody];
     const x = clampX(81 + (cycle > 2.2 ? 1 : 0));
     const y = clampY(108, mat.length);
     return {
@@ -1595,14 +1718,14 @@ function getWakingLongPose(timeSec: number, reducedMotion: boolean): WakingLongP
       footY: y + mat.length - 2,
       matrix: mat,
       steamX: x + 16,
-      steamY: y + 15,
+      steamY: y + 13,
     };
   }
 
   if (cycle < 8.2) {
     const isPeakSip = cycle >= 5.0 && cycle < 7.5;
     const head = isPeakSip ? WAKING_HEAD_SIP : blinkNow ? WAKING_HEAD_BLINK : WAKING_HEAD_OPEN;
-    const body = isPeakSip ? WAKING_BODY_LIFT_CUP : WAKING_BODY_HOLD_CUP;
+    const body = isPeakSip ? WAKING_BODY_LIFT_CUP : idleBody;
     const mat = [...head, ...body];
     const x = clampX(82);
     const y = clampY(108, mat.length);
@@ -1612,26 +1735,26 @@ function getWakingLongPose(timeSec: number, reducedMotion: boolean): WakingLongP
       footY: y + mat.length - 2,
       matrix: mat,
       steamX: x + 16,
-      steamY: y + (isPeakSip ? 12 : 15),
+      steamY: y + (isPeakSip ? 11 : 13),
     };
   }
 
   if (cycle < 11.8) {
     const mat = WAKING_STRETCH_MATRIX;
     const x = clampX(81 + Math.max(-1, Math.min(1, swayOffset)));
-    const y = clampY(109, mat.length);
+    const y = clampY(108, mat.length);
     return {
       x,
       y,
       footY: y + mat.length - 2,
       matrix: mat,
       steamX: x + 16,
-      steamY: y + 14,
+      steamY: y + 13,
     };
   }
 
   const head = blinkNow ? WAKING_HEAD_BLINK : WAKING_HEAD_OPEN;
-  const mat = [...head, ...WAKING_BODY_HOLD_CUP];
+  const mat = [...head, ...idleBody];
   const x = clampX(81 + Math.max(0, Math.min(2, swayOffset)));
   const y = clampY(108 + (cycle >= 13.6 && cycle < 14.8 ? -1 : 0), mat.length);
   return {
@@ -1640,7 +1763,7 @@ function getWakingLongPose(timeSec: number, reducedMotion: boolean): WakingLongP
     footY: y + mat.length - 2,
     matrix: mat,
     steamX: x + 16,
-    steamY: y + 15,
+    steamY: y + 13,
   };
 }
 

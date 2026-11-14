@@ -350,3 +350,18 @@ Cập nhật lần cuối: 2026-11-13
   - AST TypeScript check (`ts.createSourceFile`): `0` comment trong 7 tệp workspace (`src/data/workspace.ts`, `src/hooks/useSpotifyStatus.ts`, `src/components/WorkspacePage.tsx`, `src/components/workspace/*`) và `0` dấu ngoặc/em-dash thừa trong chuỗi `workspace.ts`.
   - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`): thoát `0`, `0` lỗi (`dist/assets/WorkspacePage-CgZyTSlI.js 100.04 kB`).
   - Playwright trên `vite preview` (`127.0.0.1:4173`) ở Desktop `1440×900` và Mobile cảm ứng `375×812` (kiểm tra 11 ảnh chụp màn hình qua `read_file`): đạt cả 4 trạng thái (`Sáng`, `Làm việc`, `Tối`, `Đi ngủ`), xác nhận không còn hàng nút dưới `.pokemon-gba-dialog`, bấm trực tiếp lên `<canvas>` (`bed`, `capybara`, `monitor`) cập nhật đúng hộp thoại trên cả Desktop & Mobile, đồng bộ Spotify Play -> Pause đóng băng ở `00:44`, `Hồ sơ` không hồi quy, `0` lỗi console/page, `0` tràn ngang và `7/7` nút trong `#workspace` đạt `>= 44×44px` trên Mobile.
+
+
+## 25. Thiết Kế Lại Toàn Bộ Sprite Chibi Pixel Art Nhân Vật Long Hoàng (`pixelSprites.ts`)
+
+- **Chuẩn Hóa Ma Trận & Selective Colored Outlines (`src/components/workspace/pixelSprites.ts`)**:
+  - Ép độ rộng hàng đồng nhất bằng `assertUniformMatrixWidth` trên mọi khung ma trận nhân vật (không lệch cột).
+  - Áp dụng viền màu có chọn lọc `1px` theo chất liệu thay cho viền đen/dày: tóc `o` (`#2B1D17` / `#241814` / `#1E161C`), da `k` (`#8F5943` / `#7D4D3A` / `#684339`), áo `O` (`#1E2436` / `#181D2C` / `#151926`), quần/giày `Q` (`#182030` / `#121824`), cốc sứ `m` (`#786B63` / `#5D524C`).
+- **Tái Thiết Kế 3 Tư Thế Nhân Vật (`waking`, `working`/`late_night`, `sleeping`)**:
+  - `waking` (`22×31`): tỷ lệ chibi gọn gàng, tóc nâu hạt dẻ 3 sắc độ (`H`, `h`, `l`) bo tròn có lọn mái, mắt sáng `W` (`#FFFFFF`) + `E` (`#1F2433`), kính gọng mảnh `1px` (`G`/`g`) nối cầu mũi kèm phản quang nhẹ `L`, cổ `1px` (`ddd`) nối cổ áo `CCC` (bỏ hẳn dải da kéo dài giữa ngực), hoodie kéo khóa xám-navy, quần jeans tối, giày sneaker trắng/xám và cốc cà phê gốm trắng (`M`/`c`/`F`) có quai rỗng (`WAKING_BODY_HOLD_CUP`, `WAKING_BODY_BREATHE`, `WAKING_BODY_LIFT_CUP`).
+  - `working` & `late_night` (`52×33`): tư thế ngồi góc `3/4` hướng màn hình với gáy tóc tạo lớp rõ nét, cổ áo gọn không tràn xuống phím, chuyển động gõ phím / di chuột / nhấp cà phê, ôm khít phía sau bởi `drawChairBackOverlay`.
+  - `sleeping` (`34×22`): đầu và vai tỷ lệ chuẩn đặt giữa gối giường, bàn tay đặt nhẹ sát mép chăn và nằm dưới lớp chăn caro `drawBedBlanket`.
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`): thoát `0`, `0` lỗi (`dist/assets/WorkspacePage-Buaw_-pi.js 101.21 kB`).
+  - Kiểm tra AST (`ts.createSourceFile`) & runtime: `AST_COMMENT_COUNT=0`, `MATRIX_RUNTIME_ALL_POSES_OK=true`.
+  - Playwright trên `vite preview` (`127.0.0.1:4174`): chụp và đối chiếu cận cảnh phóng đại `8×` nearest-neighbor cho 4 tư thế (`waking` đứng, `working` ngồi, `late_night` ngồi, `sleeping` trên giường) cùng toàn cảnh Desktop `1440×900` và Mobile `375×812` — `0` console error, `0` page error.

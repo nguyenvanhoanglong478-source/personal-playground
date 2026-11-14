@@ -27,7 +27,91 @@ export interface EditionStyle {
 
 export const PASS_WIDTH = 640;
 export const PASS_HEIGHT = 1040;
+export const PASS_TEX_SCALE = 2;
 export const STUB_SPLIT_RATIO = 0.775;
+
+function fadeSmooth(t: number): number {
+  return t * t * (3 - 2 * t);
+}
+
+function hashGrid2(ix: number, iy: number, period: number): number {
+  const wx = ((ix % period) + period) % period;
+  const wy = ((iy % period) + period) % period;
+  let h = (wx * 374761393 + wy * 668265263) | 0;
+  h = ((h ^ (h >> 13)) * 1274126177) | 0;
+  return ((h ^ (h >> 16)) >>> 0) / 4294967295;
+}
+
+function tileValueNoise(u: number, v: number, freq: number): number {
+  const x = u * freq;
+  const y = v * freq;
+  const ix = Math.floor(x);
+  const iy = Math.floor(y);
+  const fx = fadeSmooth(x - ix);
+  const fy = fadeSmooth(y - iy);
+  const v00 = hashGrid2(ix, iy, freq);
+  const v10 = hashGrid2(ix + 1, iy, freq);
+  const v01 = hashGrid2(ix, iy + 1, freq);
+  const v11 = hashGrid2(ix + 1, iy + 1, freq);
+  const vx0 = v00 + (v10 - v00) * fx;
+  const vx1 = v01 + (v11 - v01) * fx;
+  return vx0 + (vx1 - vx0) * fy;
+}
+
+export function createFoilSilkTexture(size = 1024): HTMLCanvasElement {
+  const baseSize = 256;
+  const lowCanvas = document.createElement('canvas');
+  lowCanvas.width = baseSize;
+  lowCanvas.height = baseSize;
+  const lowCtx = lowCanvas.getContext('2d');
+
+  const texCanvas = document.createElement('canvas');
+  texCanvas.width = size;
+  texCanvas.height = size;
+  const ctx = texCanvas.getContext('2d');
+  if (!lowCtx || !ctx) return texCanvas;
+
+  const img = lowCtx.createImageData(baseSize, baseSize);
+  const data = img.data;
+  const twoPi = Math.PI * 2;
+
+  for (let y = 0; y < baseSize; y++) {
+    const v = y / baseSize;
+    for (let x = 0; x < baseSize; x++) {
+      const u = x / baseSize;
+      const diagA = u + v;
+      const diagB = u - v;
+
+      const waveRibbon =
+        0.5 +
+        0.30 * Math.sin(twoPi * diagA * 2.0 + Math.cos(twoPi * diagB) * 0.65) +
+        0.20 * Math.cos(twoPi * diagA * 3.0 - Math.sin(twoPi * v) * 0.45);
+
+      const nLow = tileValueNoise(u, v, 4);
+      const nMid = tileValueNoise(u, v, 8);
+      const smoothSilk = Math.max(0, Math.min(1, nLow * 0.68 + nMid * 0.32));
+
+      const satinFlow =
+        0.5 +
+        0.32 * Math.sin(twoPi * (diagA + smoothSilk * 0.25)) +
+        0.18 * Math.cos(twoPi * (diagB * 2.0 + smoothSilk * 0.18));
+
+      const idx = (y * baseSize + x) * 4;
+      data[idx] = Math.round(Math.max(0, Math.min(255, waveRibbon * 255)));
+      data[idx + 1] = Math.round(Math.max(0, Math.min(255, satinFlow * 255)));
+      data[idx + 2] = Math.round(Math.max(0, Math.min(255, smoothSilk * 255)));
+      data[idx + 3] = 255;
+    }
+  }
+
+  lowCtx.putImageData(img, 0, 0);
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(lowCanvas, 0, 0, size, size);
+
+  return texCanvas;
+}
 
 export const EDITION_STYLES: Record<FoilEdition, EditionStyle> = {
   'silver-holo': {
@@ -168,43 +252,23 @@ function paintCardSubstrate(
 ) {
   const grad = ctx.createLinearGradient(0, 0, w, h);
   grad.addColorStop(0, palette.cardBgTop);
+  grad.addColorStop(0.52, palette.cardBgTop);
   grad.addColorStop(1, palette.cardBgBottom);
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 
   ctx.save();
-  ctx.strokeStyle =
-    palette.id === 'obsidian-gold'
-      ? 'rgba(255, 255, 255, 0.022)'
-      : 'rgba(17, 17, 17, 0.018)';
-  ctx.lineWidth = 1;
-  for (let i = -h; i < w + h; i += 12) {
-    ctx.beginPath();
-    ctx.moveTo(i, 0);
-    ctx.lineTo(i + h * 0.42, h);
-    ctx.stroke();
-  }
-  ctx.restore();
-
-  ctx.save();
-  const sheen = ctx.createRadialGradient(
-    w * 0.28,
-    h * 0.18,
-    12,
-    w * 0.5,
-    h * 0.45,
-    w * 0.95
-  );
+  const ribbonGlow = ctx.createLinearGradient(0, h * 0.12, w, h * 0.88);
   if (palette.id === 'obsidian-gold') {
-    sheen.addColorStop(0, 'rgba(255, 255, 255, 0.045)');
-    sheen.addColorStop(0.6, 'rgba(255, 255, 255, 0.015)');
-    sheen.addColorStop(1, 'rgba(0, 0, 0, 0.18)');
+    ribbonGlow.addColorStop(0, 'rgba(255, 255, 255, 0.030)');
+    ribbonGlow.addColorStop(0.48, 'rgba(255, 255, 255, 0.006)');
+    ribbonGlow.addColorStop(1, 'rgba(255, 255, 255, 0.022)');
   } else {
-    sheen.addColorStop(0, 'rgba(255, 255, 255, 0.72)');
-    sheen.addColorStop(0.6, 'rgba(240, 244, 250, 0.16)');
-    sheen.addColorStop(1, 'rgba(200, 210, 224, 0.18)');
+    ribbonGlow.addColorStop(0, 'rgba(255, 255, 255, 0.65)');
+    ribbonGlow.addColorStop(0.5, 'rgba(244, 247, 252, 0.20)');
+    ribbonGlow.addColorStop(1, 'rgba(218, 226, 238, 0.16)');
   }
-  ctx.fillStyle = sheen;
+  ctx.fillStyle = ribbonGlow;
   ctx.fillRect(0, 0, w, h);
   ctx.restore();
 }
@@ -226,28 +290,16 @@ function paintFoilBand(
 
   const bandSheen = ctx.createLinearGradient(x, y, x + w, y + h);
   if (palette.id === 'obsidian-gold') {
-    bandSheen.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+    bandSheen.addColorStop(0, 'rgba(255, 255, 255, 0.09)');
     bandSheen.addColorStop(0.5, 'rgba(255, 255, 255, 0.02)');
-    bandSheen.addColorStop(1, 'rgba(255, 255, 255, 0.06)');
+    bandSheen.addColorStop(1, 'rgba(255, 255, 255, 0.07)');
   } else {
-    bandSheen.addColorStop(0, 'rgba(17, 17, 17, 0.04)');
-    bandSheen.addColorStop(0.5, 'rgba(255, 255, 255, 0.45)');
-    bandSheen.addColorStop(1, 'rgba(17, 17, 17, 0.05)');
+    bandSheen.addColorStop(0, 'rgba(17, 17, 17, 0.035)');
+    bandSheen.addColorStop(0.5, 'rgba(255, 255, 255, 0.55)');
+    bandSheen.addColorStop(1, 'rgba(17, 17, 17, 0.045)');
   }
   ctx.fillStyle = bandSheen;
   ctx.fillRect(x, y, w, h);
-
-  ctx.strokeStyle =
-    palette.id === 'obsidian-gold'
-      ? 'rgba(255, 255, 255, 0.045)'
-      : 'rgba(17, 17, 17, 0.045)';
-  ctx.lineWidth = 1;
-  for (let gx = x - h; gx < x + w + h; gx += 14) {
-    ctx.beginPath();
-    ctx.moveTo(gx, y);
-    ctx.lineTo(gx + h, y + h);
-    ctx.stroke();
-  }
   ctx.restore();
 
   ctx.save();
@@ -644,10 +696,12 @@ export function renderFrontPassTexture(
   theme: 'light' | 'dark',
   _avatarImage?: HTMLImageElement | null
 ) {
-  canvas.width = PASS_WIDTH;
-  canvas.height = PASS_HEIGHT;
+  canvas.width = PASS_WIDTH * PASS_TEX_SCALE;
+  canvas.height = PASS_HEIGHT * PASS_TEX_SCALE;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
+
+  ctx.setTransform(PASS_TEX_SCALE, 0, 0, PASS_TEX_SCALE, 0, 0);
 
   const w = PASS_WIDTH;
   const h = PASS_HEIGHT;
@@ -823,10 +877,12 @@ export function renderBackPassTexture(
   edition: FoilEdition,
   theme: 'light' | 'dark'
 ) {
-  canvas.width = PASS_WIDTH;
-  canvas.height = PASS_HEIGHT;
+  canvas.width = PASS_WIDTH * PASS_TEX_SCALE;
+  canvas.height = PASS_HEIGHT * PASS_TEX_SCALE;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
+
+  ctx.setTransform(PASS_TEX_SCALE, 0, 0, PASS_TEX_SCALE, 0, 0);
 
   const w = PASS_WIDTH;
   const h = PASS_HEIGHT;

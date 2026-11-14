@@ -418,3 +418,17 @@ Cập nhật lần cuối: 2026-11-14
 - **Kiểm chứng (`task-5128` + build + Playwright)**:
   - `cmd /c "npm run verify"` thoát `0` (`dist/assets/AboutFoilPass-CX3g9nWQ.js 41.06 kB`, `dist/assets/index-B0KqgGoL.css 61.06 kB`).
   - Playwright ở cả Dark Mode & Light Mode (Desktop `1440×900` & Mobile `375×812`): `idle_filter === drag_filter === "drop-shadow(rgba(0, 0, 0, 0.22) 0px 14px 24px)"`, xác nhận ánh nhũ bạc sắc nét khi nghiêng/uốn vé, lật mặt thành công, không tràn ngang và `0` lỗi console/page.
+
+## 29. Làm Mượt Toàn Diện Texture `2×` / `1024×1024`, Khử Răng Cưa Lưới & Triệt Tiêu Tụ Xoáy Hologram (`AboutFoilPass`)
+- **Texture 2D HiDPI `2×` & Bản Đồ Sóng Lụa Mượt `1024×1024` (`src/components/aboutPassTextures.ts`)**:
+  - Nâng độ phân giải canvas mặt trước & mặt sau lên `PASS_TEX_SCALE = 2` (`1280×2080`) giữ nguyên lưới pixel Onsen Capybara nguyên bội `14px/cell`, giúp chữ nhỏ, viền thẻ, QR và mã vạch sắc nét ở mọi mức DPR.
+  - Gỡ bỏ các vạch chéo `1px` trên nền `paintCardSubstrate` và dải tiêu đề `paintFoilBand` để loại bỏ moiré/răng cưa khi nghiêng thẻ.
+  - Bổ sung `createFoilSilkTexture(1024)` tạo texture sóng lụa tuần hoàn mượt bằng value noise nội suy `fadeSmooth` kết hợp sóng chéo chu kỳ nguyên (không chứa tụ xoáy tâm `(0.5, 0.5)` hay nhiễu hạt gắt).
+- **Lưới `36×54` Mịn, Pháp Tuyến Laplacian, Mipmap + Anisotropy 8× & Shader Không Tụ Xoáy (`src/components/AboutFoilPass.tsx`)**:
+  - Ưu tiên ngữ cảnh `webgl2` (`antialias: true`, `dpr <= 2`, fallback `webgl`), kích hoạt `gl.generateMipmap`, `LINEAR_MIPMAP_LINEAR` và `EXT_texture_filter_anisotropic` (`Math.min(8, maxAniso)`).
+  - Tăng mật độ lưới từ `24×36` (`864` đỉnh) lên `36×54` (`1.944` đỉnh: Thân `36×42` + Cuống `36×12`), bổ sung 2 lượt làm mượt Laplacian trên trường vector pháp tuyến `computeNormals` (nối thông qua ranh giới cuống khi chưa xé) và snap phẳng toàn bộ đỉnh về `restX/restY/0` khi dừng chuyển động để viền trái/phải luôn thẳng tuyệt đối lúc nghỉ; dùng profile uốn vòm mượt khi kéo trên thân vé để triệt tiêu gợn sóng biên khi uốn 3D.
+  - Trong `FRAG_SHADER_SRC`: loại bỏ hoàn toàn `atan(N.y, N.x)` (triệt tiêu điểm tụ xoáy tâm sau chữ) và dải sin/cos tần số cao `pow(..., 4..6)` gây răng cưa tam giác; thay bằng pha sóng lụa chéo mượt kết hợp `uFoilMap` (`clamp`), `smoothstep`, dải pastel/ngọc trai mịn cho Light Mode (`brightSurface`) cùng vùng bảo vệ khung tranh Onsen (`0.24`) và vùng chữ trung tâm (`0.56` + `inkContrastKeep`).
+- **Kiểm chứng (`task-5351` + `task-5355`)**:
+  - AST comment check (`src/components/AboutFoilPass.tsx` & `src/components/aboutPassTextures.ts`): `TS_COMMENTS=0`.
+  - `cmd /c "npx tsc --noEmit && npm run build"` thoát `0` (`dist/assets/AboutFoilPass-CQGZNd0c.js 44.81 kB`).
+  - Playwright trên Dark & Light Mode (Desktop `1440×900` & Mobile `375×812`): xác nhận trực quan qua ảnh chụp [desktop_light_drag_bend.png](file:///C:/Users/nguye/.gemini/antigravity/brain/1e1cdb84-a2c6-471b-92e4-cdc112bcc778/scratch/pass_verify/desktop_light_drag_bend.png) và [desktop_dark_drag_bend.png](file:///C:/Users/nguye/.gemini/antigravity/brain/1e1cdb84-a2c6-471b-92e4-cdc112bcc778/scratch/pass_verify/desktop_dark_drag_bend.png) không còn răng cưa tam giác, không còn điểm tụ xoáy sau chữ, không còn đường nối cuống vé, ánh nhũ cầu vồng loang mịn, viền cong mượt khi kéo (`drag_bent_during_drag: "true"`), lật mặt (`flipped_after_click: "true"`), xé (`torn_after_drag: "true"`) và khôi phục (`restored_torn: "false"`) hoạt động đầy đủ, không tràn ngang và `0` lỗi console/page.

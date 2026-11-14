@@ -7,6 +7,7 @@ import {
   PASS_HEIGHT,
   PASS_WIDTH,
   STUB_SPLIT_RATIO,
+  createFoilSilkTexture,
   renderBackPassTexture,
   renderFrontPassTexture,
 } from './aboutPassTextures';
@@ -16,9 +17,9 @@ interface AboutFoilPassProps {
   theme: 'light' | 'dark';
 }
 
-const COLS = 24;
-const BODY_ROWS = 28;
-const STUB_ROWS = 8;
+const COLS = 36;
+const BODY_ROWS = 42;
+const STUB_ROWS = 12;
 const ROWS = BODY_ROWS + STUB_ROWS;
 const BODY_VERTS = COLS * BODY_ROWS;
 const STUB_VERTS = COLS * STUB_ROWS;
@@ -29,7 +30,7 @@ const CARD_H = 1.48;
 const CARD_W = CARD_H * (PASS_WIDTH / PASS_HEIGHT);
 const HALF_W = CARD_W * 0.5;
 const HALF_H = CARD_H * 0.5;
-const PBD_ITERATIONS = 16;
+const PBD_ITERATIONS = 20;
 
 interface ConstraintsData {
   i1: Int32Array;
@@ -167,6 +168,7 @@ const FRAG_SHADER_SRC = `
 
   uniform sampler2D uFrontTex;
   uniform sampler2D uBackTex;
+  uniform sampler2D uFoilMap;
   uniform vec2 uPointer;
   uniform float uBend;
   uniform float uPartAlpha;
@@ -217,49 +219,62 @@ const FRAG_SHADER_SRC = `
 
     vec3 N = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
     vec3 V = normalize(vec3(0.0, 0.0, 3.2) - vWorldPos);
-    vec3 L = normalize(vec3(-0.35 + uPointer.x * 0.38, 0.52 - uPointer.y * 0.35, 0.84));
+    vec3 L = normalize(vec3(-0.35 + uPointer.x * 0.35, 0.52 - uPointer.y * 0.32, 0.85));
     vec3 H = normalize(L + V);
 
     float ndl = dot(N, L);
-    float diffuse = clamp(0.80 + 0.20 * ndl, 0.44, 1.0);
+    float diffuse = clamp(0.82 + 0.18 * ndl, 0.48, 1.0);
 
-    float normalTilt = 1.0 - abs(N.z);
-    float curvature = clamp(length(N.xy) * 1.55, 0.0, 1.0);
-    float creaseShadow = smoothstep(0.0, 0.65, curvature * max(0.0, -ndl + 0.18));
-    diffuse -= creaseShadow * 0.28;
+    float normalSlope = clamp(1.0 - N.z * N.z, 0.0, 1.0);
+    float curvature = smoothstep(0.0, 0.75, length(N.xy) * 1.45);
+    float creaseShadow = smoothstep(0.0, 0.70, curvature * max(0.0, -ndl + 0.16));
+    diffuse -= creaseShadow * 0.20;
 
     float ndv = clamp(dot(N, V), 0.0, 1.0);
-    float fresnel = pow(1.0 - ndv, 2.5);
+    float fresnel = pow(1.0 - ndv, 2.4);
 
-    float specPower = mix(28.0, 68.0, curvature);
+    float specPower = mix(18.0, 38.0, curvature);
     float spec = pow(max(dot(N, H), 0.0), specPower);
 
-    float foilPhase =
-      vUv.x * 0.65 +
-      vUv.y * 0.42 +
-      atan(N.y, N.x) * 0.35 +
-      normalTilt * 2.1 +
-      uPointer.x * 0.34 +
-      uPointer.y * 0.22;
+    vec2 foilUv = clamp(vUv * vec2(0.84, 0.88) + vec2(0.08, 0.06) + vec2(uPointer.x * 0.04, -uPointer.y * 0.04), 0.0, 1.0);
+    vec4 silkSample = texture2D(uFoilMap, foilUv);
+    float silkWave = silkSample.r * 0.45 + silkSample.g * 0.30;
 
-    float bandPrimary = pow(max(0.0, sin(foilPhase * 7.5)), 4.0);
-    float bandSecondary = pow(max(0.0, cos(foilPhase * 13.0 + 1.1)), 6.0);
-    float foilBands = bandPrimary * 0.62 + bandSecondary * 0.85;
+    float foilPhase =
+      vUv.x * 0.48 +
+      vUv.y * 0.30 +
+      N.x * 0.46 -
+      N.y * 0.30 +
+      normalSlope * 0.50 +
+      silkWave * 0.38 +
+      uPointer.x * 0.26 +
+      uPointer.y * 0.16 +
+      uBend * 0.18;
+
+    float waveA = smoothstep(0.14, 0.92, 0.5 + 0.5 * cos(foilPhase * 3.8));
+    float waveB = smoothstep(0.22, 0.95, 0.5 + 0.5 * cos(foilPhase * 6.0 + 1.05));
+    float foilBands = waveA * 0.58 + waveB * 0.42;
 
     float isHeader = smoothstep(0.095, 0.035, vUv.y);
-    float artBoxX = step(0.315, vUv.x) * step(vUv.x, 0.685);
-    float artBoxY = step(0.113, vUv.y) * step(vUv.y, 0.340);
+    float artBoxX = smoothstep(0.295, 0.325, vUv.x) * (1.0 - smoothstep(0.675, 0.705, vUv.x));
+    float artBoxY = smoothstep(0.100, 0.125, vUv.y) * (1.0 - smoothstep(0.325, 0.355, vUv.y));
     float artMask = gl_FrontFacing ? (artBoxX * artBoxY) : 0.0;
-    float foilProtection = mix(1.0, 0.26, artMask);
 
-    float tiltActivation = clamp(curvature * 1.05 + normalTilt * 1.45 + uBend * 0.90 + fresnel * 0.55, 0.0, 1.25);
-    float headerActivation = isHeader * (0.24 + 0.76 * clamp(curvature * 1.6 + uBend * 1.1, 0.0, 1.0));
+    float textBoxX = smoothstep(0.05, 0.14, vUv.x) * (1.0 - smoothstep(0.86, 0.95, vUv.x));
+    float textBoxY = smoothstep(0.34, 0.44, vUv.y);
+    float centerTextMask = gl_FrontFacing ? (textBoxX * textBoxY) : (textBoxX * smoothstep(0.50, 0.60, vUv.y));
+
+    float foilProtection = mix(1.0, 0.24, artMask) * mix(1.0, 0.56, centerTextMask);
+
+    float tiltActivation = clamp(curvature * 0.95 + normalSlope * 1.15 + uBend * 0.85 + fresnel * 0.50, 0.0, 1.2);
+    float headerActivation = isHeader * (0.26 + 0.74 * clamp(curvature * 1.4 + uBend * 1.0, 0.0, 1.0));
     float luma = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
-    float inkContrastKeep = mix(0.62, 1.0, smoothstep(0.08, 0.42, luma));
-    float foilWeight = (foilBands * (tiltActivation * 0.38 + headerActivation * 0.28 + 0.055 * (0.4 + 0.6 * length(uPointer))) + spec * (0.09 + 0.18 * tiltActivation + 0.14 * isHeader)) * foilProtection * inkContrastKeep;
+    float inkContrastKeep = mix(0.58, 1.0, smoothstep(0.08, 0.45, luma));
+    float pointerDrive = 0.22 + 0.78 * clamp(length(uPointer), 0.0, 1.2);
+    float foilWeight = (foilBands * (tiltActivation * 0.34 + headerActivation * 0.28 + 0.045 * pointerDrive) + spec * (0.07 + 0.15 * tiltActivation + 0.12 * isHeader)) * foilProtection * inkContrastKeep;
 
-    vec3 rainbow = 0.54 + 0.46 * cos(6.28318 * (foilPhase * 1.15 + vec3(0.00, 0.33, 0.67)));
-    vec3 foilColor = mix(rainbow, vec3(1.0), bandSecondary * 0.25);
+    vec3 rainbow = 0.58 + 0.42 * cos(6.28318 * (foilPhase * 0.72 + vec3(0.00, 0.33, 0.67)));
+    vec3 foilColor = mix(rainbow, vec3(1.0), 0.22 + waveB * 0.26);
 
     if (distToCut < 0.0050) {
       float fiberBlend = smoothstep(0.0050, 0.0005, distToCut);
@@ -269,7 +284,10 @@ const FRAG_SHADER_SRC = `
     }
 
     vec3 lit = tex.rgb * diffuse;
-    lit += foilColor * foilWeight;
+    float brightSurface = smoothstep(0.48, 0.88, luma);
+    vec3 pastelSilk = mix(vec3(1.0), rainbow, 0.65);
+    vec3 lightFoilLit = mix(lit, pastelSilk * (0.95 + 0.05 * diffuse), clamp(foilWeight * 2.15, 0.0, 0.48)) + foilColor * (foilWeight * 0.20);
+    lit = mix(lit + foilColor * foilWeight, lightFoilLit, brightSurface);
 
     float outAlpha = tex.a * uPartAlpha;
     gl_FragColor = vec4(clamp(lit, 0.0, 1.0), outAlpha);
@@ -280,7 +298,7 @@ function buildGridConstraints(
   restX: Float32Array,
   restY: Float32Array
 ): ConstraintsData {
-  const maxConstraints = 8000;
+  const maxConstraints = COLS * ROWS * 10;
   const i1 = new Int32Array(maxConstraints);
   const i2 = new Int32Array(maxConstraints);
   const restLen = new Float32Array(maxConstraints);
@@ -316,43 +334,43 @@ function buildGridConstraints(
       const idx = r * COLS + c;
 
       if (c + 1 < COLS) {
-        add(idx, idx + 1, 0.98, false, -1);
+        add(idx, idx + 1, 0.99, false, -1);
       }
 
       if (r + 1 < ROWS) {
         const next = (r + 1) * COLS + c;
         const isSeam = r === TEAR_ROW - 1;
-        add(idx, next, 0.98, isSeam, isSeam ? c : -1, isSeam ? 0.0 : undefined);
+        add(idx, next, 0.99, isSeam, isSeam ? c : -1, isSeam ? 0.0 : undefined);
       }
 
       if (r + 1 < ROWS && c + 1 < COLS) {
         const d1 = (r + 1) * COLS + (c + 1);
         const isSeam = r === TEAR_ROW - 1;
-        add(idx, d1, 0.85, isSeam, isSeam ? c : -1);
+        add(idx, d1, 0.90, isSeam, isSeam ? c : -1);
       }
       if (r + 1 < ROWS && c - 1 >= 0) {
         const d2 = (r + 1) * COLS + (c - 1);
         const isSeam = r === TEAR_ROW - 1;
-        add(idx, d2, 0.85, isSeam, isSeam ? c : -1);
+        add(idx, d2, 0.90, isSeam, isSeam ? c : -1);
       }
 
       if (c + 2 < COLS) {
-        add(idx, idx + 2, 0.42, false, -1);
+        add(idx, idx + 2, 0.52, false, -1);
       }
       if (c + 3 < COLS) {
-        add(idx, idx + 3, 0.28, false, -1);
+        add(idx, idx + 3, 0.36, false, -1);
       }
 
       if (r + 2 < ROWS) {
         const next2 = (r + 2) * COLS + c;
         const isSeam = r === TEAR_ROW - 2 || r === TEAR_ROW - 1;
-        add(idx, next2, 0.42, isSeam, isSeam ? c : -1);
+        add(idx, next2, 0.52, isSeam, isSeam ? c : -1);
       }
       if (r + 3 < ROWS) {
         const next3 = (r + 3) * COLS + c;
         const isSeam =
           r === TEAR_ROW - 3 || r === TEAR_ROW - 2 || r === TEAR_ROW - 1;
-        add(idx, next3, 0.28, isSeam, isSeam ? c : -1);
+        add(idx, next3, 0.36, isSeam, isSeam ? c : -1);
       }
     }
   }
@@ -504,6 +522,10 @@ function createMeshState(): MeshState {
   };
 }
 
+const smoothNormX = new Float32Array(TOTAL_VERTS);
+const smoothNormY = new Float32Array(TOTAL_VERTS);
+const smoothNormZ = new Float32Array(TOTAL_VERTS);
+
 function computeNormals(mesh: MeshState) {
   const { x, y, z, nx, ny, nz, seamBroken } = mesh;
 
@@ -562,9 +584,9 @@ function computeNormals(mesh: MeshState) {
       const vy = y[iU] - y[iD];
       const vz = z[iU] - z[iD];
 
-      let cx = uy * vz - uz * vy;
-      let cy = uz * vx - ux * vz;
-      let cz = ux * vy - uy * vx;
+      const cx = uy * vz - uz * vy;
+      const cy = uz * vx - ux * vz;
+      const cz = ux * vy - uy * vx;
       const len = Math.hypot(cx, cy, cz) || 1;
 
       nx[idx] = cx / len;
@@ -572,10 +594,100 @@ function computeNormals(mesh: MeshState) {
       nz[idx] = cz / len;
     }
   }
+
+  for (let pass = 0; pass < 2; pass++) {
+    smoothNormX.set(nx);
+    smoothNormY.set(ny);
+    smoothNormZ.set(nz);
+
+    for (let r = 0; r < ROWS; r++) {
+      const isBody = r < BODY_ROWS;
+      const rowOffset = isBody ? r * COLS : BODY_VERTS + (r - BODY_ROWS) * COLS;
+      for (let c = 0; c < COLS; c++) {
+        const idx = rowOffset + c;
+        let sx = smoothNormX[idx] * 2.0;
+        let sy = smoothNormY[idx] * 2.0;
+        let sz = smoothNormZ[idx] * 2.0;
+        let wSum = 2.0;
+
+        if (c > 0) {
+          sx += smoothNormX[idx - 1];
+          sy += smoothNormY[idx - 1];
+          sz += smoothNormZ[idx - 1];
+          wSum += 1.0;
+        }
+        if (c + 1 < COLS) {
+          sx += smoothNormX[idx + 1];
+          sy += smoothNormY[idx + 1];
+          sz += smoothNormZ[idx + 1];
+          wSum += 1.0;
+        }
+
+        if (isBody) {
+          if (r > 0) {
+            const up = (r - 1) * COLS + c;
+            sx += smoothNormX[up];
+            sy += smoothNormY[up];
+            sz += smoothNormZ[up];
+            wSum += 1.0;
+          }
+          if (r + 1 < BODY_ROWS) {
+            const dn = (r + 1) * COLS + c;
+            sx += smoothNormX[dn];
+            sy += smoothNormY[dn];
+            sz += smoothNormZ[dn];
+            wSum += 1.0;
+          } else if (seamBroken[c] === 0) {
+            const dn = BODY_VERTS + 1 * COLS + c;
+            sx += smoothNormX[dn];
+            sy += smoothNormY[dn];
+            sz += smoothNormZ[dn];
+            wSum += 1.0;
+          }
+        } else {
+          const stubRow = r - BODY_ROWS;
+          if (stubRow > 0) {
+            const up = BODY_VERTS + (stubRow - 1) * COLS + c;
+            sx += smoothNormX[up];
+            sy += smoothNormY[up];
+            sz += smoothNormZ[up];
+            wSum += 1.0;
+          } else if (seamBroken[c] === 0) {
+            const up = (BODY_ROWS - 2) * COLS + c;
+            sx += smoothNormX[up];
+            sy += smoothNormY[up];
+            sz += smoothNormZ[up];
+            wSum += 1.0;
+          }
+          if (stubRow + 1 < STUB_ROWS) {
+            const dn = BODY_VERTS + (stubRow + 1) * COLS + c;
+            sx += smoothNormX[dn];
+            sy += smoothNormY[dn];
+            sz += smoothNormZ[dn];
+            wSum += 1.0;
+          }
+        }
+
+        const ax = sx / wSum;
+        const ay = sy / wSum;
+        const az = sz / wSum;
+        const len = Math.hypot(ax, ay, az) || 1;
+        nx[idx] = ax / len;
+        ny[idx] = ay / len;
+        nz[idx] = az / len;
+      }
+    }
+  }
+}
+
+type GlRenderingContext = WebGLRenderingContext | WebGL2RenderingContext;
+
+function isPowerOfTwo(v: number): boolean {
+  return v > 0 && (v & (v - 1)) === 0;
 }
 
 function compileShader(
-  gl: WebGLRenderingContext,
+  gl: GlRenderingContext,
   type: number,
   source: string
 ): WebGLShader | null {
@@ -590,7 +702,7 @@ function compileShader(
   return shader;
 }
 
-function createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
+function createProgram(gl: GlRenderingContext): WebGLProgram | null {
   const vs = compileShader(gl, gl.VERTEX_SHADER, VERT_SHADER_SRC);
   const fs = compileShader(gl, gl.FRAGMENT_SHADER, FRAG_SHADER_SRC);
   if (!vs || !fs) return null;
@@ -607,15 +719,32 @@ function createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
 }
 
 function uploadCanvasTexture(
-  gl: WebGLRenderingContext,
+  gl: GlRenderingContext,
+  isWebGL2: boolean,
   tex: WebGLTexture,
-  source: HTMLCanvasElement
+  source: HTMLCanvasElement,
+  repeat = false
 ) {
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  const wrapMode = repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrapMode);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrapMode);
+
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+
+  const canMipmap =
+    isWebGL2 || (isPowerOfTwo(source.width) && isPowerOfTwo(source.height));
+  if (canMipmap) {
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(
+      gl.TEXTURE_2D,
+      gl.TEXTURE_MIN_FILTER,
+      gl.LINEAR_MIPMAP_LINEAR
+    );
+  } else {
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  }
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
   const ext =
@@ -626,15 +755,14 @@ function uploadCanvasTexture(
     gl.texParameterf(
       gl.TEXTURE_2D,
       ext.TEXTURE_MAX_ANISOTROPY_EXT,
-      Math.min(4, maxAniso)
+      Math.min(8, maxAniso)
     );
   }
-
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
 }
 
 interface GlContextState {
-  gl: WebGLRenderingContext;
+  gl: GlRenderingContext;
+  isWebGL2: boolean;
   program: WebGLProgram;
   posBuffer: WebGLBuffer;
   normBuffer: WebGLBuffer;
@@ -644,6 +772,7 @@ interface GlContextState {
   stubIdxBuffer: WebGLBuffer;
   frontTex: WebGLTexture;
   backTex: WebGLTexture;
+  foilTex: WebGLTexture;
   locs: {
     aPos: number;
     aNormal: number;
@@ -651,6 +780,7 @@ interface GlContextState {
     aSeamBroken: number;
     uFrontTex: WebGLUniformLocation | null;
     uBackTex: WebGLUniformLocation | null;
+    uFoilMap: WebGLUniformLocation | null;
     uFlipAngle: WebGLUniformLocation | null;
     uTiltX: WebGLUniformLocation | null;
     uTiltY: WebGLUniformLocation | null;
@@ -817,6 +947,10 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     gl.bindTexture(gl.TEXTURE_2D, glState.backTex);
     gl.uniform1i(locs.uBackTex, 1);
 
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, glState.foilTex);
+    gl.uniform1i(locs.uFoilMap, 2);
+
     const tiltX = mesh.hovering && !mesh.dragActive ? mesh.hoverNdcY * 0.09 : 0;
     const tiltY = mesh.hovering && !mesh.dragActive ? -mesh.hoverNdcX * 0.09 : 0;
 
@@ -968,9 +1102,11 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         const dragDist = Math.hypot(deltaScreenX, deltaScreenY);
 
         if (dragDist > 1e-4) {
-          const pullX = Math.max(-0.11, Math.min(0.11, deltaScreenX * HALF_W * 0.36));
-          const pullY = Math.max(-0.14, Math.min(0.12, deltaScreenY * HALF_H * 0.36));
+          const pullX = Math.max(-0.09, Math.min(0.09, deltaScreenX * HALF_W * 0.30));
+          const pullY = Math.max(-0.12, Math.min(0.10, deltaScreenY * HALF_H * 0.30));
           const effectiveDrag = Math.min(1.15, dragDist);
+          const dirX = deltaScreenX / dragDist;
+          const dirY = deltaScreenY / dragDist;
 
           for (let i = 0; i < TOTAL_VERTS; i++) {
             const isStub = i >= BODY_VERTS;
@@ -982,21 +1118,23 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
             const dv = v - mesh.grabV;
             const dist = Math.hypot(du, dv * (PASS_HEIGHT / PASS_WIDTH));
 
-            const peelWeight = Math.exp(-dist * 2.2);
-
-            if (peelWeight > 0.005) {
-              const curlZ =
-                (effectiveDrag * 0.24 +
-                  Math.sin(Math.min(Math.PI, dist * 3.2)) *
-                    0.13 *
-                    Math.min(1.0, effectiveDrag * 1.45)) *
-                peelWeight *
-                curlSign;
-
-              const grabStrength = 0.48 * peelWeight;
-              x[i] += (restX[i] + pullX - x[i]) * grabStrength;
-              y[i] += (restY[i] + pullY - y[i]) * grabStrength;
-              z[i] += (curlZ - z[i]) * grabStrength;
+            if (mesh.dragZone === 'body') {
+              const proj = du * dirX - dv * dirY;
+              const arch = Math.exp(-(proj * proj) * 1.25) - 0.18 * (du * du + dv * dv);
+              const curlZ = effectiveDrag * 0.22 * arch * curlSign;
+              const blend = 0.28;
+              x[i] += (restX[i] + pullX * (0.65 + 0.20 * arch) - x[i]) * blend;
+              y[i] += (restY[i] + pullY * (0.65 + 0.20 * arch) - y[i]) * blend;
+              z[i] += (curlZ - z[i]) * 0.32;
+            } else {
+              const peelWeight = Math.exp(-dist * 1.8);
+              if (peelWeight > 0.005) {
+                const curlZ = effectiveDrag * 0.26 * peelWeight * curlSign;
+                const grabStrength = 0.44 * peelWeight;
+                x[i] += (restX[i] + pullX - x[i]) * grabStrength;
+                y[i] += (restY[i] + pullY - y[i]) * grabStrength;
+                z[i] += (curlZ - z[i]) * grabStrength;
+              }
             }
           }
         }
@@ -1035,21 +1173,26 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
           setIsTorn(true);
           setIsInteracting(false);
 
-          for (let r = 24; r < BODY_ROWS; r++) {
-            const rowFactor = (r - 23) / 4.0;
+          const startCurlRow = Math.max(0, BODY_ROWS - 6);
+          for (let r = startCurlRow; r < BODY_ROWS; r++) {
+            const rowFactor = (r - (startCurlRow - 1)) / 6.0;
             for (let c = 0; c < COLS; c++) {
               const bIdx = r * COLS + c;
               y[bIdx] += 0.005 * rowFactor;
               oldY[bIdx] = y[bIdx] - 0.002 * rowFactor;
               z[bIdx] +=
-                (Math.sin(c * 0.5) * 0.005 + 0.003) * rowFactor * curlSign;
+                (Math.sin(c * 0.35) * 0.004 + 0.0025) * rowFactor * curlSign;
             }
           }
         }
       }
 
       const iterations =
-        mesh.dragActive || mesh.bendIntensity > 0.12 ? PBD_ITERATIONS : 8;
+        mesh.dragActive && mesh.dragZone === 'body'
+          ? 8
+          : mesh.dragActive || mesh.bendIntensity > 0.12
+            ? PBD_ITERATIONS
+            : 8;
 
       for (let it = 0; it < iterations; it++) {
         for (let c = 0; c < count; c++) {
@@ -1119,15 +1262,28 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
       renderFrame();
 
       const stubActive = mesh.isTorn && mesh.stubAlpha > 0.01;
-      if (mesh.dragActive || mesh.hovering || stubActive || kinetic > 0.003) {
+      if (mesh.dragActive || mesh.hovering || stubActive || kinetic > 0.002) {
         rafRef.current = requestAnimationFrame(stepPhysicsAndRender);
       } else {
         mesh.flipAngle = mesh.targetFlipAngle;
         mesh.bendIntensity = 0;
+        const settleCount = mesh.isTorn ? BODY_VERTS : TOTAL_VERTS;
+        for (let i = 0; i < settleCount; i++) {
+          x[i] = restX[i];
+          y[i] = restY[i];
+          z[i] = 0;
+          oldX[i] = restX[i];
+          oldY[i] = restY[i];
+          oldZ[i] = 0;
+          mesh.nx[i] = 0;
+          mesh.ny[i] = 0;
+          mesh.nz[i] = 1;
+        }
         if (dragBentRef.current) {
           dragBentRef.current = false;
           setIsDragBent(false);
         }
+        renderFrame();
         rafRef.current = null;
       }
     },
@@ -1158,8 +1314,18 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
 
     const glState = glStateRef.current;
     if (glState) {
-      uploadCanvasTexture(glState.gl, glState.frontTex, frontCanvas);
-      uploadCanvasTexture(glState.gl, glState.backTex, backCanvas);
+      uploadCanvasTexture(
+        glState.gl,
+        glState.isWebGL2,
+        glState.frontTex,
+        frontCanvas
+      );
+      uploadCanvasTexture(
+        glState.gl,
+        glState.isWebGL2,
+        glState.backTex,
+        backCanvas
+      );
     }
     renderFrame();
   }, [edition, locale, renderFrame, theme]);
@@ -1176,12 +1342,17 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const gl = canvas.getContext('webgl', {
+    const contextOptions: WebGLContextAttributes = {
       alpha: true,
       antialias: true,
       premultipliedAlpha: false,
       powerPreference: 'high-performance',
-    });
+    };
+
+    const gl2 = canvas.getContext('webgl2', contextOptions);
+    const gl: GlRenderingContext | null =
+      gl2 || canvas.getContext('webgl', contextOptions);
+    const isWebGL2 = Boolean(gl2);
 
     if (gl) {
       const program = createProgram(gl);
@@ -1195,6 +1366,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         const stubIdxBuffer = gl.createBuffer();
         const frontTex = gl.createTexture();
         const backTex = gl.createTexture();
+        const foilTex = gl.createTexture();
 
         if (
           posBuffer &&
@@ -1204,7 +1376,8 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
           bodyIdxBuffer &&
           stubIdxBuffer &&
           frontTex &&
-          backTex
+          backTex &&
+          foilTex
         ) {
           gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
           gl.bufferData(gl.ARRAY_BUFFER, mesh.uv, gl.STATIC_DRAW);
@@ -1223,6 +1396,9 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
             gl.STATIC_DRAW
           );
 
+          const foilSilkCanvas = createFoilSilkTexture(1024);
+          uploadCanvasTexture(gl, isWebGL2, foilTex, foilSilkCanvas, true);
+
           gl.enable(gl.BLEND);
           gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
           gl.enable(gl.DEPTH_TEST);
@@ -1230,6 +1406,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
 
           glStateRef.current = {
             gl,
+            isWebGL2,
             program,
             posBuffer,
             normBuffer,
@@ -1239,6 +1416,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
             stubIdxBuffer,
             frontTex,
             backTex,
+            foilTex,
             locs: {
               aPos: gl.getAttribLocation(program, 'aPos'),
               aNormal: gl.getAttribLocation(program, 'aNormal'),
@@ -1246,6 +1424,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
               aSeamBroken: gl.getAttribLocation(program, 'aSeamBroken'),
               uFrontTex: gl.getUniformLocation(program, 'uFrontTex'),
               uBackTex: gl.getUniformLocation(program, 'uBackTex'),
+              uFoilMap: gl.getUniformLocation(program, 'uFoilMap'),
               uFlipAngle: gl.getUniformLocation(program, 'uFlipAngle'),
               uTiltX: gl.getUniformLocation(program, 'uTiltX'),
               uTiltY: gl.getUniformLocation(program, 'uTiltY'),
@@ -1287,6 +1466,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         ctx.deleteBuffer(currentGlState.stubIdxBuffer);
         ctx.deleteTexture(currentGlState.frontTex);
         ctx.deleteTexture(currentGlState.backTex);
+        ctx.deleteTexture(currentGlState.foilTex);
         ctx.deleteProgram(currentGlState.program);
         glStateRef.current = null;
       }

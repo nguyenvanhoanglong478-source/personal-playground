@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi" data-theme="dark" data-type="software">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="page-type" content="software" />
+    <meta name="site-kind" content="software" />
+    <title>Long Hoàng | Designer tự do &amp; Người làm sản phẩm</title>
+    <meta
+      name="description"
+      content="Hồ sơ cá nhân của Long Hoàng: Designer tự do &amp; Người làm sản phẩm chuyên về web, trò chơi tương tác và ứng dụng Android."
+    />
+    <meta property="og:title" content="Long Hoàng | Designer tự do &amp; Người làm sản phẩm" />
+    <meta
+      property="og:description"
+      content="Trang cá nhân của Long Hoàng: thiết kế giao diện, tự lập trình và 6 dự án web, game và Android."
+    />
+    <meta property="og:image" content="./avatar.jpg" />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#131314" />
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('longhoang_folio_theme_v1');
+          if (theme !== 'light' && theme !== 'dark') {
+            theme =
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: light)').matches
+                ? 'light'
+                : 'dark';
+          }
+          document.documentElement.setAttribute('data-theme', theme);
+          var metaTheme = document.querySelector('meta[name="theme-color"]');
+          if (metaTheme) {
+            metaTheme.setAttribute(
+              'content',
+              theme === 'dark' ? '#131314' : '#F8F9FA'
+            );
+          }
+          var locale = localStorage.getItem('longhoang_folio_locale_v1');
+          if (locale === 'vi' || locale === 'en') {
+            document.documentElement.lang = locale;
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="preload" as="image" href="./avatar.jpg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="./assets/index-COuhBZy6.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/motion-CRJdlLlB.js">
+    <link rel="modulepreload" crossorigin href="./assets/vendor-M0jyYypC.js">
+    <link rel="modulepreload" crossorigin href="./assets/icons-BBa_4hwr.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-prhVbFbk.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

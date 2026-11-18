@@ -422,3 +422,22 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_COMMENTS=0` trong `src/components/AboutFoilPass.tsx` và `CSS_COMMENTS=0` trong `src/index.css`.
   - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`): thoát `0`, `0` lỗi (`dist/assets/AboutFoilPass-l2hasdhh.js 41.54 kB`, `dist/assets/index-prhVbFbk.css 61.01 kB`).
   - Playwright trên `vite preview` (`Desktop 1440×900` & `Mobile 375×812`, Dark & Light): `idle_filter: "none"`, `drag_filter: "none"`, `interacting_during_drag: "true"`, `drag_bent_during_drag: "true"`, `flipped_after_click: "true"`, `torn_after_drag: "true"`, `restored_torn: "false"`, `no_overflow: true`, `console_errors: []`, `page_errors: []`, chữ Light Mode và tranh Capybara Onsen sắc nét.
+
+
+## 29. Thiết Kế Lại Phòng Pixel `320×180` Phong Cách Pixel Office Loft & Sprite Chibi Selout (`pixelPalette.ts`, `roomEnvironment.ts`, `pixelSprites.ts`)
+
+- **Bảng Màu Pixel Office Loft (`src/components/workspace/pixelPalette.ts`)**:
+  - Nâng cấp `RoomPalette` theo 4 khung giờ (`waking`, `working`, `late_night`, `sleeping`) với hệ token vật liệu studio loft: gạch mộc (`brickHi`, `brickMid`, `brickSh`, `brickMortar`), lam gỗ ốp tường (`wainscotHighlight`–`wainscotShadow`, `baseboardTrim`), sàn gỗ sồi mật ong/hun khói (`floorHighlight`, `floorMid`, `floorShadow`, `floorGrain`, `floorSeam`, `floorRimReflect`), khung thép cửa sổ (`mullionDark`, `mullionHi`), ánh sáng đường chân trời (`citySkyGlow`, `cityWinAmber`, `cityWinCyan`), đèn thả trần (`pendantShade`, `pendantGlow`), dây đèn (`fairyWire`, `fairyBulbCore`, `fairyBulbWarm`, `fairyGlowColor`), máy đĩa than (`vinylDisc`, `vinylLabel`) và màu selout riêng (`capySelout`, `charSelout`).
+- **Không Gian Studio Loft `320×180` (`src/components/workspace/roomEnvironment.ts`)**:
+  - `drawBackWall` & `drawBrickPatch`: tường kết hợp mảng gạch mộc lộ thiên với lam gỗ ốp chân tường và phào chỉ.
+  - `drawWindow` & `drawWindowSky`: cửa sổ toàn cảnh chia ô thép mảnh hiển thị mây trôi/chim bay ban ngày và đường chân trời thành phố rực sáng kèm trăng sao ban đêm.
+  - `drawOverheadPendants` & `drawFairyLights`: bổ sung cụm đèn thả trần và dây đèn fairy light phát quầng sáng ấm (`drawFairyGlow`) kết hợp Ordered Bayer 4×4 dithering (`drawBayerWindowBeam`, `drawBayerLampCone`, `drawBayerRadialPool`).
+  - `drawFloorPlanks` & `drawWovenRug`: lát sàn gỗ sồi ghép thanh so le mảnh, giữ nguyên ranh giới di chuyển `WALKABLE_RECT` (`74, 84, 32×66`) và `RUG_WALK_RECT` (`116, 125, 112×28`) trên tấm thảm **Kilim** dệt hoa văn kèm tua rua hai đầu.
+  - `drawDisplayShelfAndPlant`: kệ gỗ óc chó trưng bày mô hình **Honda Cub xanh kem**, máy đĩa than **Vinyl turntable** đang quay, thẻ Holo ánh kim, đồng hồ treo tường và dây trầu bà rủ nhẹ.
+- **Sprite Chibi Long Điêu Khắc & Linh Vật Capybara Selout (`src/components/workspace/pixelSprites.ts`)**:
+  - Áp dụng bộ tạo lưới pixel và viền màu chọn lọc (`createPixelGrid`, `applySeloutLayer`, `seloutFromHex`, `mirrorPixelGrid`, `drawPixelGrid`).
+  - Tái thiết kế 3 bộ khung chibi của **Long Hoàng** (`buildWakingLongGrid` đi/uống cà phê, `buildSeatedLongGrid` ngồi gõ phím/nhìn màn hình phía sau `drawChairBackOverlay`, `buildSleepingLongGrid` nằm gối đầu dưới lớp chăn `drawBedBlanket`) cùng **Capybara mascot** selout (`buildCapyGrid`) tương tác trên thảm Kilim.
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_COMMENTS=0` trên `pixelPalette.ts`, `roomEnvironment.ts`, `pixelSprites.ts`, `WorkspaceRoom.tsx`.
+  - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`): thoát `0`, `0` lỗi (`1961` modules).
+  - Playwright trên `vite preview` (`1440×900` & `375×812`): `console_errors: []`, `page_errors: []`, `0` tràn ngang (`1440/1440`, `375/375`), đạt 7/7 hotspot canvas (`window`, `shelf`, `bed`, `monitor`, `speakers`, `lamp`, `capybara`), bật/tắt đèn bàn, Spotify Lo-fi Demo Play/Stop, tab `Hồ sơ` không hồi quy, và rà soát trực tiếp ảnh chụp `working_light`, `morning_light`, `late_night_dark`, `sleeping_dark`, `mobile_375_dark`, `closeup_room`, `closeup_room_late_night`.

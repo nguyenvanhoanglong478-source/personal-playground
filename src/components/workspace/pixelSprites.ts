@@ -1,6 +1,6 @@
 import type { RoomHotspotId, RoomHotspotRegion, RoomTimeState } from '../../data/workspace';
 import type { RoomPalette } from './pixelPalette';
-import { RUG_WALK_RECT, WALKABLE_RECT } from './roomEnvironment';
+import { ROOM_HOTSPOTS, RUG_WALK_RECT, WALKABLE_RECT } from './roomEnvironment';
 
 export type SpriteMatrix = readonly string[];
 
@@ -27,22 +27,22 @@ export interface DrawCharacterAndEffectsOptions {
 
 const MUSIC_FADE_DURATION_SEC = 0.4;
 
-const MAIN_SCREEN_X = 155;
+const MAIN_SCREEN_X = 153;
 const MAIN_SCREEN_Y = 49;
-const MAIN_SCREEN_W = 36;
+const MAIN_SCREEN_W = 40;
 const MAIN_SCREEN_H = 19;
 
-const SIDE_LAPTOP_X = 136;
-const SIDE_LAPTOP_Y = 63;
-const SIDE_LAPTOP_W = 11;
+const SIDE_LAPTOP_X = 134;
+const SIDE_LAPTOP_Y = 62;
+const SIDE_LAPTOP_W = 12;
 const SIDE_LAPTOP_H = 8;
 
-const DESK_MUG_X = 199;
+const DESK_MUG_X = 200;
 const DESK_MUG_Y = 81;
 
-const LEFT_WOOFER_X = 117;
+const LEFT_WOOFER_X = 115;
 const LEFT_WOOFER_Y = 68;
-const RIGHT_WOOFER_X = 211;
+const RIGHT_WOOFER_X = 203;
 const RIGHT_WOOFER_Y = 68;
 
 const DEFAULT_SEAT_ANCHOR: SeatAnchor = {
@@ -50,22 +50,19 @@ const DEFAULT_SEAT_ANCHOR: SeatAnchor = {
   seatTopY: 96,
 };
 
-const HEAD_WIDTH = 12;
-const HEAD_HEIGHT = 12;
-const TORSO_WIDTH = 14;
+const WAKING_WIDTH = 24;
+const WAKING_HEIGHT = 30;
 
-const SEATED_WIDTH = 50;
-const SEATED_TOTAL_HEIGHT = 20;
-const SEATED_TORSO_X = 11;
-const SEATED_HEAD_X = 12;
+const SEATED_WIDTH = 58;
+const SEATED_HEIGHT = 23;
 
-const SLEEP_WIDTH = 20;
+const SLEEP_WIDTH = 24;
 const SLEEP_HEIGHT = 19;
-const SLEEP_DRAW_X = 32;
+const SLEEP_DRAW_X = 29;
 const SLEEP_DRAW_Y = 89;
 
-const WAKING_WIDTH = 21;
-const WAKING_HEIGHT = 29;
+const CAPY_WIDTH = 22;
+const CAPY_HEIGHT = 17;
 
 interface MusicVisualTracker {
   wasActive: boolean;
@@ -78,6 +75,197 @@ const musicTracker: MusicVisualTracker = {
   fadeStartAtSec: null,
   lastSeenTimeSec: 0,
 };
+
+interface ShadeRamp {
+  readonly hi: string;
+  readonly mid: string;
+  readonly sh: string;
+}
+
+interface LongColorTheme {
+  readonly selout: string;
+  readonly skin: ShadeRamp & { readonly blush: string };
+  readonly hair: ShadeRamp;
+  readonly eye: { readonly hi: string; readonly mid: string; readonly dark: string };
+  readonly glassesRim: string;
+  readonly glassesLower: string;
+  readonly glassesGlint: string;
+  readonly hoodie: ShadeRamp;
+  readonly sleeve: ShadeRamp;
+  readonly tee: ShadeRamp;
+  readonly pants: ShadeRamp & { readonly cuff: string };
+  readonly shoes: ShadeRamp & { readonly stripe: string };
+  readonly mugBody: ShadeRamp;
+  readonly mugCoffee: string;
+  readonly monitorRim: string;
+  readonly monitorRimSoft: string;
+  readonly lampRimHair: string;
+  readonly lampRimSleeve: string;
+  readonly groundCore: string;
+  readonly groundSoft: string;
+}
+
+interface CapyColorTheme {
+  readonly selout: string;
+  readonly fur: ShadeRamp & { readonly ear: string; readonly snout: string; readonly blush: string };
+  readonly eye: string;
+  readonly eyeGlint: string;
+  readonly yuzu: ShadeRamp;
+  readonly leaf: ShadeRamp;
+  readonly groundCore: string;
+  readonly groundSoft: string;
+}
+
+type PixelGrid = (string | null)[];
+
+const seloutBlendCache = new Map<string, string>();
+
+function seloutFromHex(hex: string, baseOutline: string): string {
+  if (!hex || hex[0] !== '#' || hex.length !== 7) {
+    return baseOutline;
+  }
+  const cacheKey = `${baseOutline}|${hex}`;
+  const cached = seloutBlendCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const br = baseOutline[0] === '#' && baseOutline.length === 7 ? parseInt(baseOutline.slice(1, 3), 16) : 28;
+  const bg = baseOutline[0] === '#' && baseOutline.length === 7 ? parseInt(baseOutline.slice(3, 5), 16) : 24;
+  const bb = baseOutline[0] === '#' && baseOutline.length === 7 ? parseInt(baseOutline.slice(5, 7), 16) : 41;
+
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const weight = lum > 165 ? 0.14 : 0.22;
+
+  const or = Math.max(18, Math.min(82, Math.round(br + (r - br) * weight)));
+  const og = Math.max(16, Math.min(76, Math.round(bg + (g - bg) * weight)));
+  const ob = Math.max(24, Math.min(92, Math.round(bb + (b - bb) * weight)));
+
+  const result = `#${or.toString(16).padStart(2, '0')}${og.toString(16).padStart(2, '0')}${ob.toString(16).padStart(2, '0')}`;
+  seloutBlendCache.set(cacheKey, result);
+  return result;
+}
+
+function createPixelGrid(width: number, height: number): PixelGrid {
+  return new Array<string | null>(width * height).fill(null);
+}
+
+function setPx(grid: PixelGrid, w: number, h: number, x: number, y: number, color: string | null): void {
+  const ix = Math.round(x);
+  const iy = Math.round(y);
+  if (ix < 0 || ix >= w || iy < 0 || iy >= h || !color) return;
+  grid[iy * w + ix] = color;
+}
+
+function getPx(grid: PixelGrid, w: number, h: number, x: number, y: number): string | null {
+  if (x < 0 || x >= w || y < 0 || y >= h) return null;
+  return grid[y * w + x];
+}
+
+function setSpan(grid: PixelGrid, w: number, h: number, x1: number, x2: number, y: number, color: string): void {
+  for (let x = x1; x <= x2; x += 1) {
+    setPx(grid, w, h, x, y, color);
+  }
+}
+
+function setRect(
+  grid: PixelGrid,
+  w: number,
+  h: number,
+  x: number,
+  y: number,
+  rw: number,
+  rh: number,
+  color: string
+): void {
+  for (let yy = y; yy < y + rh; yy += 1) {
+    for (let xx = x; xx < x + rw; xx += 1) {
+      setPx(grid, w, h, xx, yy, color);
+    }
+  }
+}
+
+function applySeloutLayer(
+  body: PixelGrid,
+  detail: PixelGrid,
+  w: number,
+  h: number,
+  baseOutline: string,
+  bottomDarkY: number
+): PixelGrid {
+  const out = createPixelGrid(w, h);
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const c = getPx(body, w, h, x, y);
+      if (c) {
+        out[y * w + x] = c;
+        continue;
+      }
+      const below = getPx(body, w, h, x, y + 1);
+      const right = getPx(body, w, h, x + 1, y);
+      const left = getPx(body, w, h, x - 1, y);
+      const above = getPx(body, w, h, x, y - 1);
+      if (!below && !right && !left && !above) continue;
+
+      if (((above || left) && !(below || right)) || y >= bottomDarkY) {
+        out[y * w + x] = baseOutline;
+      } else {
+        const src = below || right || left || above;
+        out[y * w + x] = src ? seloutFromHex(src, baseOutline) : baseOutline;
+      }
+    }
+  }
+  for (let i = 0; i < detail.length; i += 1) {
+    if (detail[i]) {
+      out[i] = detail[i];
+    }
+  }
+  return out;
+}
+
+function mirrorPixelGrid(grid: PixelGrid, w: number, h: number): PixelGrid {
+  const out = createPixelGrid(w, h);
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const c = grid[y * w + x];
+      if (c) {
+        out[y * w + (w - 1 - x)] = c;
+      }
+    }
+  }
+  return out;
+}
+
+function drawPixelGrid(
+  ctx: CanvasRenderingContext2D,
+  grid: PixelGrid,
+  w: number,
+  h: number,
+  x: number,
+  y: number,
+  flipX = false
+): void {
+  const baseX = Math.round(x);
+  const baseY = Math.round(y);
+  let lastColor = '';
+
+  for (let row = 0; row < h; row += 1) {
+    const drawY = baseY + row;
+    for (let col = 0; col < w; col += 1) {
+      const color = grid[row * w + col];
+      if (!color) continue;
+      const drawX = flipX ? baseX + (w - 1 - col) : baseX + col;
+      if (color !== lastColor) {
+        ctx.fillStyle = color;
+        lastColor = color;
+      }
+      ctx.fillRect(drawX, drawY, 1, 1);
+    }
+  }
+}
 
 export function assertUniformMatrixWidth(
   matrix: SpriteMatrix,
@@ -158,61 +346,150 @@ function resolveTimeSec(options: DrawCharacterAndEffectsOptions): number {
   return reduced ? 0 : (options.elapsedSec ?? options.tick / 15);
 }
 
+function getLongTheme(
+  timeState: RoomTimeState,
+  lampOn: boolean,
+  palette: RoomPalette
+): LongColorTheme {
+  const isSleep = timeState === 'sleeping';
+  const isLate = timeState === 'late_night';
+  const dim = isSleep && !lampOn;
+
+  return {
+    selout: palette.charSelout || '#1C1829',
+    skin: dim
+      ? { hi: '#D4AC9B', mid: '#BA8F7E', sh: '#8F685B', blush: '#A86B68' }
+      : isLate
+        ? { hi: '#FAD5BA', mid: '#E8B899', sh: '#BD866A', blush: '#DC8578' }
+        : { hi: '#FFE5CF', mid: '#F5C29E', sh: '#CC8F6E', blush: '#ED9487' },
+    hair: dim
+      ? { hi: '#593F39', mid: '#402B29', sh: '#281B1D' }
+      : isLate
+        ? { hi: '#734A38', mid: '#523225', sh: '#331D16' }
+        : { hi: '#82543E', mid: '#5D3928', sh: '#3B2118' },
+    eye: { hi: '#4A5D8F', mid: '#2A3352', dark: '#19172B' },
+    glassesRim: dim ? '#1D2230' : '#262E42',
+    glassesLower: dim ? '#353D52' : '#4C5A78',
+    glassesGlint: isLate ? '#8CEAF8' : '#BCEEFF',
+    hoodie: dim
+      ? { hi: '#2E3A4F', mid: '#20293A', sh: '#141B29' }
+      : isLate
+        ? { hi: '#3C4D69', mid: '#29364C', sh: '#192233' }
+        : { hi: '#425675', mid: '#2D3C54', sh: '#1C2638' },
+    sleeve: dim
+      ? { hi: '#435169', mid: '#2F3B4F', sh: '#1E2738' }
+      : isLate
+        ? { hi: '#576B87', mid: '#3F4F66', sh: '#273345' }
+        : { hi: '#617694', mid: '#475973', sh: '#2D3A4F' },
+    tee: dim
+      ? { hi: '#BDB8C4', mid: '#9B96A6', sh: '#747080' }
+      : isLate
+        ? { hi: '#EFE8DC', mid: '#D4CCC0', sh: '#A89F94' }
+        : { hi: '#FFFBF2', mid: '#EAE2D3', sh: '#C2B7A5' },
+    pants: dim
+      ? { hi: '#2F405C', mid: '#212E45', sh: '#141D2E', cuff: '#496187' }
+      : { hi: '#46618C', mid: '#2F4366', sh: '#1E2C45', cuff: '#6988B8' },
+    shoes: dim
+      ? { hi: '#B4BCC9', mid: '#788294', sh: '#3F4759', stripe: '#D8DFE8' }
+      : { hi: '#EDF2FA', mid: '#9AA8BD', sh: '#4E596E', stripe: '#FFFDF7' },
+    mugBody: dim
+      ? { hi: '#B0ABB5', mid: '#88838F', sh: '#615D69' }
+      : { hi: '#FFFDF8', mid: '#EBE3D5', sh: '#C2B6A5' },
+    mugCoffee: dim ? '#3B231A' : '#5C3422',
+    monitorRim: '#9CF3FF',
+    monitorRimSoft: '#6ADBF0',
+    lampRimHair: '#FCD34D',
+    lampRimSleeve: '#E9B872',
+    groundCore: 'rgba(20, 15, 29, 0.30)',
+    groundSoft: 'rgba(20, 15, 29, 0.14)',
+  };
+}
+
+function getCapyTheme(
+  timeState: RoomTimeState,
+  lampOn: boolean,
+  palette: RoomPalette
+): CapyColorTheme {
+  const dim = timeState === 'sleeping' && !lampOn;
+  const late = timeState === 'late_night';
+  return {
+    selout: palette.capySelout || '#241922',
+    fur: dim
+      ? { hi: '#9E7358', mid: '#7D5841', sh: '#5A3C2C', ear: '#472E22', snout: '#4E3325', blush: '#A86764' }
+      : late
+        ? { hi: '#C98E63', mid: '#A36B46', sh: '#75492E', ear: '#593622', snout: '#663E28', blush: '#D47B73' }
+        : { hi: '#E0A16E', mid: '#BD7B4C', sh: '#8C5432', ear: '#693D24', snout: '#73452A', blush: '#EB8F85' },
+    eye: '#241612',
+    eyeGlint: '#FFF8EB',
+    yuzu: dim
+      ? { hi: '#CC9A1E', mid: '#A87312', sh: '#7A4D0A' }
+      : { hi: '#FDE047', mid: '#F59E0B', sh: '#C26408' },
+    leaf: dim
+      ? { hi: '#3C8C4E', mid: '#276638', sh: '#184224' }
+      : { hi: '#68D975', mid: '#34A853', sh: '#1E7037' },
+    groundCore: 'rgba(26, 16, 22, 0.30)',
+    groundSoft: 'rgba(26, 16, 22, 0.14)',
+  };
+}
+
 const HOTSPOT_POINTER_ANCHORS: Record<RoomHotspotId, { pointerX: number; pointerY: number }> = {
-  window: { pointerX: 112, pointerY: 6 },
-  shelf: { pointerX: 254, pointerY: 12 },
-  bed: { pointerX: 42, pointerY: 70 },
-  monitor: { pointerX: 173, pointerY: 43 },
-  speakers: { pointerX: 121, pointerY: 54 },
-  lamp: { pointerX: 234, pointerY: 50 },
-  capybara: { pointerX: 174, pointerY: 118 },
+  window: { pointerX: 108, pointerY: 5 },
+  shelf: { pointerX: 266, pointerY: 7 },
+  bed: { pointerX: 40, pointerY: 66 },
+  monitor: { pointerX: 173, pointerY: 42 },
+  speakers: { pointerX: 119, pointerY: 53 },
+  lamp: { pointerX: 226, pointerY: 48 },
+  capybara: { pointerX: 173, pointerY: 112 },
 };
 
 const CODE_TOKENS: readonly string[] = [
-  'KKKBFWDDDDDDDDDDDDDDD',
-  'DDBFFOSSSSSSSSSSDDDDD',
-  'DDDDKKKKBFWODDDDDDDDD',
-  'DDDDDDBFFWONNNWDDDDDD',
-  'DDBKDFFWDDDDDDDDDDDDD',
-  'DDDDFFFOSSSSSSSSSDDDD',
-  'DDDDDDBFWWONNNDDDDDDD',
-  'DDWDDDDDDDDDDDDDDDDDD',
+  'KKKBFWDDDDDDDDDDDDDDDD',
+  'DDBFFOSSSSSSSSSSSDDDDD',
+  'DDDDKKKKBFWODDDDDDDDDD',
+  'DDDDDDBFFWONNNWDDDDDDD',
+  'DDBKDFFWDDDDDDDDDDDDDD',
+  'DDDDFFFOSSSSSSSSSSDDDD',
+  'DDDDDDBFWWONNNDDDDDDDD',
+  'DDWDDDDDDDDDDDDDDDDDDD',
+  'KKKBFWWCDDDDDDDDDDDDDD',
+  'DDBFFSSSSSSSSSDDDDDDDD',
 ];
 
 const UI_MOCK_SCROLL: readonly string[] = [
-  'PPPPPPPPPPP',
-  'PAAAAAAAAAP',
-  'PAFFAAYYAAP',
-  'PAAAAAAAAAP',
-  'PAWWWWWWAPP',
-  'PAWWWWAAAAP',
-  'PGGGGGGPPPP',
-  'PPPPPPPPPPP',
-  'PAAAAAAAAAP',
-  'PAKKKKAWWAP',
-  'PAAAAWWWAAP',
-  'PAASSSAAFFP',
-  'PPPPPPPPPPP',
+  'PPPPPPPPPPPPPP',
+  'PAAAAAAAAAAAAp',
+  'PAFFAAYYAAUUAp',
+  'PAAAAAAAAAAAAp',
+  'PAWWWWWWWWWWAp',
+  'PAWWWWAAAAWWAp',
+  'PGGGGGGGGGGGPP',
+  'PPPPPPPPPPPPPP',
+  'PAAAAAAAAAAAAp',
+  'PAKKKKAWWAAFFp',
+  'PAAAAWWWWAASSAp',
+  'PAASSSAAFFAAAp',
+  'PPPPPPPPPPPPPP',
 ];
 
 const MONITOR_CODE_COLORS: Record<string, string> = {
-  B: '#192136',
-  T: '#242F4A',
-  A: '#323F61',
+  B: '#1A233A',
+  T: '#25314F',
+  A: '#334166',
   U: '#60A5FA',
   R: '#EA4335',
   Y: '#FBBC04',
   G: '#34A853',
   D: '#111726',
-  V: '#222B42',
+  V: '#232D47',
   N: '#4E5D80',
-  K: '#B794F4',
+  K: '#C084FC',
   F: '#60A5FA',
   S: '#4ADE80',
   O: '#F472B6',
   W: '#E2E8F0',
   C: '#67E8F9',
   P: '#171F34',
+  p: '#1E2942',
 };
 
 const MONITOR_CODE_COLORS_NIGHT: Record<string, string> = {
@@ -222,6 +499,7 @@ const MONITOR_CODE_COLORS_NIGHT: Record<string, string> = {
   U: '#38BDF8',
   C: '#22D3EE',
   P: '#11192B',
+  p: '#162038',
 };
 
 const GEMINI_STAR_SPRITE: SpriteMatrix = [
@@ -275,10 +553,10 @@ function drawMainMonitorScreen(
     const bounceSpanX = sw - starW - 2;
     const bounceSpanY = sh - starH - 2;
     const starX = reducedMotion
-      ? sx + 6
+      ? sx + 7
       : Math.round(sx + 1 + pingPong(timeSec * 9.5 + 3, bounceSpanX));
     const starY = reducedMotion
-      ? sy + 4
+      ? sy + 5
       : Math.round(sy + 1 + pingPong(timeSec * 6.2 + 2, bounceSpanY));
 
     if (!reducedMotion) {
@@ -307,7 +585,7 @@ function drawMainMonitorScreen(
     fillPixelRect(ctx, sx + 1, sy, 1, 1, '#EA4335');
     fillPixelRect(ctx, sx + 3, sy, 1, 1, '#FBBC04');
     fillPixelRect(ctx, sx + 5, sy, 1, 1, '#34A853');
-    fillPixelRect(ctx, sx + 8, sy, 12, 1, '#5A3E30');
+    fillPixelRect(ctx, sx + 8, sy, 14, 1, '#5A3E30');
 
     drawSpriteMatrix(ctx, WAKING_MUG_ICON, WAKING_MUG_COLORS, sx + 4, sy + 7);
     const steamTick = reducedMotion ? 0 : Math.floor(timeSec * 3.5) % 3;
@@ -317,11 +595,11 @@ function drawMainMonitorScreen(
     const checkStep = reducedMotion ? 2 : Math.floor(timeSec * 1.2) % 3;
     for (let i = 0; i < 3; i += 1) {
       const rowY = sy + 5 + i * 4;
-      fillPixelRect(ctx, sx + 16, rowY, 2, 2, i <= checkStep ? '#34A853' : '#6E4C3A');
-      fillPixelRect(ctx, sx + 19, rowY, i === 1 ? 13 : 11, 1, '#F5EFE6');
-      fillPixelRect(ctx, sx + 19, rowY + 1, 8, 1, '#B89B82');
+      fillPixelRect(ctx, sx + 17, rowY, 2, 2, i <= checkStep ? '#34A853' : '#6E4C3A');
+      fillPixelRect(ctx, sx + 20, rowY, i === 1 ? 15 : 13, 1, '#F5EFE6');
+      fillPixelRect(ctx, sx + 20, rowY + 1, 10, 1, '#B89B82');
     }
-    fillPixelRect(ctx, sx + 2, sy + sh - 2, 14, 1, '#F59E0B');
+    fillPixelRect(ctx, sx + 2, sy + sh - 2, 18, 1, '#F59E0B');
     return;
   }
 
@@ -331,9 +609,9 @@ function drawMainMonitorScreen(
   fillPixelRect(ctx, sx + 1, sy, 1, 1, palette.R);
   fillPixelRect(ctx, sx + 3, sy, 1, 1, palette.Y);
   fillPixelRect(ctx, sx + 5, sy, 1, 1, palette.G);
-  fillPixelRect(ctx, sx + 8, sy, 8, 1, palette.U);
-  fillPixelRect(ctx, sx + 17, sy, 6, 1, palette.A);
-  fillPixelRect(ctx, sx + 24, sy, 11, 2, palette.P);
+  fillPixelRect(ctx, sx + 8, sy, 9, 1, palette.U);
+  fillPixelRect(ctx, sx + 18, sy, 6, 1, palette.A);
+  fillPixelRect(ctx, sx + 25, sy, sw - 25, 2, palette.P);
 
   const codeRows = sh - 3;
   const scrollRow = reducedMotion ? 0 : Math.floor(timeSec * 2.2) % CODE_TOKENS.length;
@@ -346,30 +624,32 @@ function drawMainMonitorScreen(
     fillPixelRect(ctx, sx + 1, py, 1, 1, r % 2 === 0 ? palette.N : palette.B);
     fillPixelRect(ctx, sx + 2, py, 1, 1, palette.V);
 
-    for (let c = 0; c < 20; c += 1) {
+    for (let c = 0; c < 21; c += 1) {
       const ch = tokenLine[c];
       if (!ch || ch === 'D') continue;
       fillPixelRect(ctx, sx + 3 + c, py, 1, 1, palette[ch] ?? palette.W);
     }
     if (cursorVisible && r === 4) {
-      fillPixelRect(ctx, sx + 14, py, 1, 1, palette.C);
+      fillPixelRect(ctx, sx + 15, py, 1, 1, palette.C);
     }
   }
 
-  fillPixelRect(ctx, sx + 23, sy + 2, 1, codeRows, palette.V);
+  fillPixelRect(ctx, sx + 24, sy + 2, 1, codeRows, palette.V);
 
   const uiScroll = reducedMotion ? 0 : Math.floor(timeSec * 1.4) % UI_MOCK_SCROLL.length;
+  const previewCols = sw - 26;
   for (let r = 0; r < codeRows; r += 1) {
     const uiRow = UI_MOCK_SCROLL[(r + uiScroll) % UI_MOCK_SCROLL.length];
     const py = sy + 2 + r;
-    for (let c = 0; c < 11; c += 1) {
-      const ch = uiRow[c];
-      fillPixelRect(ctx, sx + 24 + c, py, 1, 1, palette[ch] ?? palette.P);
+    for (let c = 0; c < previewCols; c += 1) {
+      const ch = uiRow[c] ?? 'P';
+      fillPixelRect(ctx, sx + 25 + c, py, 1, 1, palette[ch] ?? palette.P);
     }
   }
 
   fillPixelRect(ctx, sx, sy + sh - 1, sw, 1, palette.B);
-  fillPixelRect(ctx, sx + 1, sy + sh - 1, 4, 1, palette.U);
+  fillPixelRect(ctx, sx + 1, sy + sh - 1, 5, 1, palette.U);
+  fillPixelRect(ctx, sx + 8, sy + sh - 1, 4, 1, palette.C);
   fillPixelRect(ctx, sx + sw - 5, sy + sh - 1, 3, 1, palette.G);
 }
 
@@ -407,818 +687,662 @@ function drawSideLaptopScreen(
   }
 }
 
-interface RigPlacement {
-  readonly matrix: SpriteMatrix;
-  readonly x: number;
-  readonly y: number;
-  readonly overwrite?: boolean;
-}
+function buildWakingLongGrid(
+  theme: LongColorTheme,
+  dir: 'down' | 'left' | 'right',
+  state: 'walk' | 'coffee' | 'sip' | 'stretch' | 'idle',
+  frame: number,
+  blink: boolean,
+  breatheDown: boolean
+): PixelGrid {
+  const w = WAKING_WIDTH;
+  const h = WAKING_HEIGHT;
+  const body = createPixelGrid(w, h);
+  const detail = createPixelGrid(w, h);
 
-function createEmptyGrid(width: number, height: number): string[][] {
-  return Array.from({ length: height }, () => Array<string>(width).fill('.'));
-}
+  const walkBob = state === 'walk' && (frame === 1 || frame === 3) ? -1 : 0;
+  const breath = state === 'idle' || state === 'coffee' ? (breatheDown ? 1 : 0) : 0;
+  const by = walkBob;
+  const upperBy = by + breath;
+  const hy = 3 + upperBy;
+  const ty = 14 + upperBy;
 
-function stampGridLayer(grid: string[][], placement: RigPlacement): void {
-  const { matrix, x, y, overwrite = true } = placement;
-  const height = grid.length;
-  const width = grid[0]?.length ?? 0;
-
-  for (let r = 0; r < matrix.length; r += 1) {
-    const gr = y + r;
-    if (gr < 0 || gr >= height) continue;
-    const row = matrix[r];
-    for (let c = 0; c < row.length; c += 1) {
-      const ch = row[c];
-      if (ch === '.' || ch === ' ') continue;
-      const gc = x + c;
-      if (gc < 0 || gc >= width) continue;
-      if (overwrite || grid[gr][gc] === '.') {
-        grid[gr][gc] = ch;
+  if (dir === 'left' || dir === 'right') {
+    const hipY = 22 + by;
+    if (state === 'walk') {
+      if (frame === 0) {
+        setSpan(body, w, h, 8, 14, hipY, theme.pants.mid);
+        setRect(body, w, h, 7, hipY + 1, 3, 3, theme.pants.sh);
+        setRect(body, w, h, 6, hipY + 4, 4, 1, theme.shoes.sh);
+        setRect(body, w, h, 12, hipY + 1, 3, 2, theme.pants.mid);
+        setPx(detail, w, h, 12, hipY + 1, theme.pants.hi);
+        setSpan(detail, w, h, 12, 14, hipY + 3, theme.pants.cuff);
+        setRect(body, w, h, 12, hipY + 4, 4, 1, theme.shoes.mid);
+        setPx(detail, w, h, 12, hipY + 4, theme.shoes.hi);
+      } else if (frame === 2) {
+        setSpan(body, w, h, 8, 14, hipY, theme.pants.mid);
+        setRect(body, w, h, 12, hipY + 1, 3, 3, theme.pants.sh);
+        setRect(body, w, h, 12, hipY + 4, 4, 1, theme.shoes.sh);
+        setRect(body, w, h, 7, hipY + 1, 3, 2, theme.pants.hi);
+        setSpan(detail, w, h, 7, 9, hipY + 3, theme.pants.cuff);
+        setRect(body, w, h, 6, hipY + 4, 4, 1, theme.shoes.mid);
+        setPx(detail, w, h, 6, hipY + 4, theme.shoes.hi);
+      } else {
+        setRect(body, w, h, 10, hipY, 4, 3, theme.pants.mid);
+        setPx(detail, w, h, 10, hipY + 1, theme.pants.hi);
+        setSpan(detail, w, h, 10, 13, hipY + 2, theme.pants.cuff);
+        setRect(body, w, h, 8, hipY + 3, 6, 2, theme.shoes.mid);
+        setPx(detail, w, h, 9, hipY + 3, theme.shoes.hi);
+        setSpan(detail, w, h, 8, 13, hipY + 4, theme.shoes.sh);
       }
+    } else {
+      setRect(body, w, h, 10, hipY, 4, 3, theme.pants.mid);
+      setSpan(detail, w, h, 10, 13, hipY + 2, theme.pants.cuff);
+      setRect(body, w, h, 8, hipY + 3, 6, 2, theme.shoes.mid);
+      setPx(detail, w, h, 9, hipY + 3, theme.shoes.hi);
+      setSpan(detail, w, h, 8, 13, hipY + 4, theme.shoes.sh);
+    }
+
+    setSpan(body, w, h, 10, 12, ty - 1, theme.skin.sh);
+    setSpan(body, w, h, 9, 14, ty, theme.hoodie.hi);
+    setRect(body, w, h, 8, ty + 1, 7, 5, theme.hoodie.mid);
+    setSpan(body, w, h, 9, 14, ty + 6, theme.hoodie.sh);
+    setSpan(body, w, h, 8, 15, ty + 7, theme.tee.mid);
+    for (let row = 1; row <= 5; row += 1) {
+      setPx(body, w, h, 8, ty + row, theme.hoodie.hi);
+      setPx(body, w, h, 14, ty + row, theme.hoodie.sh);
+    }
+    setSpan(detail, w, h, 9, 14, ty, theme.sleeve.mid);
+    setSpan(detail, w, h, 9, 14, ty + 7, theme.tee.hi);
+
+    setSpan(body, w, h, 9, 14, hy, theme.skin.hi);
+    setSpan(body, w, h, 8, 15, hy + 1, theme.skin.hi);
+    setRect(body, w, h, 7, hy + 2, 9, 6, theme.skin.mid);
+    setSpan(body, w, h, 8, 15, hy + 8, theme.skin.mid);
+    setSpan(body, w, h, 9, 13, hy + 9, theme.skin.sh);
+    setPx(body, w, h, 6, hy + 6, theme.skin.mid);
+    setPx(detail, w, h, 10, hy + 7, theme.skin.blush);
+    setPx(detail, w, h, 12, hy + 5, theme.skin.sh);
+
+    setSpan(body, w, h, 9, 14, hy - 1, theme.hair.hi);
+    setSpan(body, w, h, 8, 15, hy, theme.hair.hi);
+    setSpan(body, w, h, 7, 15, hy + 1, theme.hair.mid);
+    setSpan(body, w, h, 7, 10, hy + 2, theme.hair.mid);
+    setRect(body, w, h, 12, hy + 1, 4, 8, theme.hair.mid);
+    setRect(body, w, h, 14, hy + 2, 2, 7, theme.hair.sh);
+    setPx(body, w, h, 12, hy - 2, theme.hair.hi);
+    setPx(body, w, h, 13, hy - 3, theme.hair.mid);
+
+    const eyeY = hy + 5;
+    setSpan(detail, w, h, 8, 9, hy + 4, theme.hair.sh);
+    if (blink) {
+      setSpan(detail, w, h, 8, 9, eyeY + 1, theme.eye.dark);
+    } else {
+      setPx(detail, w, h, 8, eyeY, '#FFF9EB');
+      setPx(detail, w, h, 9, eyeY, theme.eye.hi);
+      setPx(detail, w, h, 8, eyeY + 1, theme.eye.mid);
+      setPx(detail, w, h, 9, eyeY + 1, theme.eye.dark);
+    }
+    setSpan(detail, w, h, 7, 10, eyeY - 1, theme.glassesRim);
+    setPx(detail, w, h, 7, eyeY, theme.glassesRim);
+    setPx(detail, w, h, 7, eyeY + 1, theme.glassesRim);
+    setPx(detail, w, h, 10, eyeY, theme.glassesRim);
+    setPx(detail, w, h, 10, eyeY + 1, theme.glassesRim);
+    setSpan(detail, w, h, 8, 9, eyeY + 2, theme.glassesLower);
+
+    if (state === 'coffee' || state === 'sip') {
+      const sip = state === 'sip' ? -1 : 0;
+      setRect(body, w, h, 10, ty + 1, 2, 4, theme.sleeve.hi);
+      setRect(body, w, h, 7, ty + 3 + sip, 3, 2, theme.skin.mid);
+      setRect(body, w, h, 4, ty + 2 + sip, 3, 3, theme.mugBody.mid);
+      setPx(detail, w, h, 4, ty + 2 + sip, theme.mugBody.hi);
+      setSpan(detail, w, h, 4, 6, ty + 2 + sip, theme.mugCoffee);
+    } else {
+      let swing = 0;
+      if (state === 'walk') {
+        if (frame === 0) swing = -2;
+        else if (frame === 2) swing = 2;
+      }
+      setRect(body, w, h, 10 + swing, ty + 1, 3, 4, theme.sleeve.hi);
+      setPx(detail, w, h, 12 + swing, ty + 2, theme.sleeve.sh);
+      setRect(body, w, h, 10 + swing, ty + 5, 2, 1, theme.skin.mid);
+    }
+
+    const baseGrid = applySeloutLayer(body, detail, w, h, theme.selout, 24);
+    const oriented = dir === 'right' ? mirrorPixelGrid(baseGrid, w, h) : baseGrid;
+    for (let sx = 7; sx <= 16; sx += 1) {
+      if (!getPx(oriented, w, h, sx, 28)) setPx(oriented, w, h, sx, 28, theme.groundCore);
+    }
+    for (let sx = 9; sx <= 14; sx += 1) {
+      if (!getPx(oriented, w, h, sx, 29)) setPx(oriented, w, h, sx, 29, theme.groundSoft);
+    }
+    return oriented;
+  }
+
+  const hipY = 22 + by;
+  setSpan(body, w, h, 8, 15, hipY, theme.pants.mid);
+  setPx(detail, w, h, 11, hipY, theme.pants.sh);
+  setPx(detail, w, h, 12, hipY, theme.pants.sh);
+
+  let lLegOff = 0;
+  let rLegOff = 0;
+  if (state === 'walk') {
+    if (frame === 0) { lLegOff = 0; rLegOff = -1; }
+    else if (frame === 2) { lLegOff = -1; rLegOff = 0; }
+  }
+
+  setRect(body, w, h, 8, hipY + 1, 3, 2 + lLegOff, theme.pants.mid);
+  setPx(detail, w, h, 8, hipY + 1, theme.pants.hi);
+  setPx(detail, w, h, 10, hipY + 1, theme.pants.sh);
+  setSpan(detail, w, h, 8, 10, hipY + 2 + lLegOff, theme.pants.cuff);
+  setRect(body, w, h, 7, hipY + 3 + lLegOff, 4, 2, theme.shoes.mid);
+  setPx(detail, w, h, 8, hipY + 3 + lLegOff, theme.shoes.hi);
+  setPx(detail, w, h, 7, hipY + 4 + lLegOff, theme.shoes.stripe);
+  setSpan(detail, w, h, 8, 10, hipY + 4 + lLegOff, theme.shoes.sh);
+
+  setRect(body, w, h, 13, hipY + 1, 3, 2 + rLegOff, theme.pants.mid);
+  setPx(detail, w, h, 13, hipY + 1, theme.pants.sh);
+  setPx(detail, w, h, 15, hipY + 1, theme.pants.hi);
+  setSpan(detail, w, h, 13, 15, hipY + 2 + rLegOff, theme.pants.cuff);
+  setRect(body, w, h, 13, hipY + 3 + rLegOff, 4, 2, theme.shoes.mid);
+  setPx(detail, w, h, 14, hipY + 3 + rLegOff, theme.shoes.hi);
+  setPx(detail, w, h, 16, hipY + 4 + rLegOff, theme.shoes.stripe);
+  setSpan(detail, w, h, 13, 15, hipY + 4 + rLegOff, theme.shoes.sh);
+
+  setSpan(body, w, h, 10, 13, ty - 1, theme.skin.sh);
+  setSpan(body, w, h, 8, 15, ty, theme.hoodie.hi);
+  setSpan(body, w, h, 7, 16, ty + 1, theme.hoodie.mid);
+  setSpan(body, w, h, 7, 16, ty + 2, theme.hoodie.mid);
+  setSpan(body, w, h, 7, 16, ty + 3, theme.hoodie.mid);
+  setSpan(body, w, h, 7, 16, ty + 4, theme.hoodie.mid);
+  setSpan(body, w, h, 8, 15, ty + 5, theme.hoodie.mid);
+  setSpan(body, w, h, 8, 15, ty + 6, theme.hoodie.sh);
+  setSpan(body, w, h, 7, 16, ty + 7, theme.tee.mid);
+
+  for (let row = 1; row <= 4; row += 1) {
+    setPx(body, w, h, 7, ty + row, theme.hoodie.hi);
+    setPx(body, w, h, 16, ty + row, theme.hoodie.sh);
+  }
+  setSpan(detail, w, h, 9, 14, ty, theme.sleeve.mid);
+  setSpan(detail, w, h, 10, 13, ty, theme.tee.hi);
+  setRect(detail, w, h, 9, ty + 5, 6, 2, theme.sleeve.mid);
+  setSpan(detail, w, h, 10, 13, ty + 5, theme.sleeve.hi);
+  setPx(detail, w, h, 10, ty + 1, theme.tee.hi);
+  setPx(detail, w, h, 10, ty + 2, theme.tee.mid);
+  setPx(detail, w, h, 13, ty + 1, theme.tee.hi);
+  setPx(detail, w, h, 13, ty + 2, theme.tee.mid);
+  setSpan(detail, w, h, 8, 15, ty + 7, theme.tee.hi);
+
+  if (state === 'stretch') {
+    setRect(body, w, h, 4, ty - 3, 2, 5, theme.sleeve.mid);
+    setPx(detail, w, h, 4, ty - 2, theme.sleeve.hi);
+    setRect(body, w, h, 4, ty - 4, 2, 1, theme.skin.mid);
+    setRect(body, w, h, 18, ty - 3, 2, 5, theme.sleeve.mid);
+    setPx(detail, w, h, 19, ty - 2, theme.sleeve.sh);
+    setRect(body, w, h, 18, ty - 4, 2, 1, theme.skin.mid);
+  } else if (state === 'coffee' || state === 'sip') {
+    const sipLift = state === 'sip' ? -2 : 0;
+    setRect(body, w, h, 5, ty + 1, 2, 4, theme.sleeve.mid);
+    setPx(detail, w, h, 5, ty + 1, theme.sleeve.hi);
+    setPx(detail, w, h, 6, ty + 2, theme.sleeve.sh);
+    setRect(body, w, h, 5, ty + 5, 2, 1, theme.skin.mid);
+
+    setRect(body, w, h, 17, ty + 1, 2, 3, theme.sleeve.mid);
+    setRect(body, w, h, 16, ty + 3 + sipLift, 2, 2, theme.skin.mid);
+    setRect(body, w, h, 16, ty + 2 + sipLift, 3, 3, theme.mugBody.mid);
+    setPx(detail, w, h, 16, ty + 2 + sipLift, theme.mugBody.hi);
+    setSpan(detail, w, h, 16, 18, ty + 2 + sipLift, theme.mugCoffee);
+    setPx(body, w, h, 19, ty + 3 + sipLift, theme.mugBody.sh);
+    setPx(detail, w, h, 16, ty + 4 + sipLift, theme.mugBody.sh);
+  } else {
+    let lArmOff = 0;
+    let rArmOff = 0;
+    if (state === 'walk') {
+      if (frame === 0) { lArmOff = 1; rArmOff = -1; }
+      else if (frame === 2) { lArmOff = -1; rArmOff = 1; }
+    }
+    setRect(body, w, h, 5, ty + 1 + lArmOff, 2, 4, theme.sleeve.mid);
+    setPx(detail, w, h, 5, ty + 1 + lArmOff, theme.sleeve.hi);
+    setPx(detail, w, h, 6, ty + 2 + lArmOff, theme.sleeve.sh);
+    setRect(body, w, h, 5, ty + 5 + lArmOff, 2, 1, theme.skin.mid);
+
+    setRect(body, w, h, 17, ty + 1 + rArmOff, 2, 4, theme.sleeve.mid);
+    setPx(detail, w, h, 18, ty + 1 + rArmOff, theme.sleeve.sh);
+    setPx(detail, w, h, 17, ty + 2 + rArmOff, theme.sleeve.sh);
+    setRect(body, w, h, 17, ty + 5 + rArmOff, 2, 1, theme.skin.mid);
+  }
+
+  setSpan(body, w, h, 8, 15, hy, theme.skin.hi);
+  setSpan(body, w, h, 7, 16, hy + 1, theme.skin.hi);
+  setSpan(body, w, h, 6, 17, hy + 2, theme.skin.mid);
+  setSpan(body, w, h, 6, 17, hy + 3, theme.skin.mid);
+  setSpan(body, w, h, 6, 17, hy + 4, theme.skin.mid);
+  setSpan(body, w, h, 6, 17, hy + 5, theme.skin.mid);
+  setSpan(body, w, h, 6, 17, hy + 6, theme.skin.mid);
+  setSpan(body, w, h, 7, 16, hy + 7, theme.skin.mid);
+  setSpan(body, w, h, 8, 15, hy + 8, theme.skin.mid);
+  setSpan(body, w, h, 9, 14, hy + 9, theme.skin.sh);
+
+  setPx(body, w, h, 6, hy + 5, theme.skin.sh);
+  setPx(body, w, h, 6, hy + 6, theme.skin.sh);
+  setPx(body, w, h, 17, hy + 5, theme.skin.sh);
+  setPx(body, w, h, 17, hy + 6, theme.skin.sh);
+  setPx(body, w, h, 7, hy + 7, theme.skin.sh);
+  setPx(body, w, h, 16, hy + 7, theme.skin.sh);
+  setPx(body, w, h, 8, hy + 8, theme.skin.sh);
+  setPx(body, w, h, 15, hy + 8, theme.skin.sh);
+  setSpan(body, w, h, 10, 13, hy + 9, theme.skin.mid);
+  setSpan(body, w, h, 9, 14, hy + 2, theme.skin.hi);
+
+  setPx(body, w, h, 5, hy + 5, theme.skin.mid);
+  setPx(body, w, h, 5, hy + 6, theme.skin.sh);
+  setPx(body, w, h, 18, hy + 5, theme.skin.mid);
+  setPx(body, w, h, 18, hy + 6, theme.skin.sh);
+
+  setSpan(body, w, h, 8, 15, hy + 3, theme.skin.sh);
+
+  setSpan(body, w, h, 8, 15, hy - 1, theme.hair.hi);
+  setSpan(body, w, h, 7, 16, hy, theme.hair.hi);
+  setSpan(body, w, h, 6, 17, hy + 1, theme.hair.mid);
+  setSpan(body, w, h, 6, 17, hy + 2, theme.hair.mid);
+  setSpan(body, w, h, 9, 13, hy, theme.hair.hi);
+  setPx(body, w, h, 8, hy + 1, theme.hair.hi);
+  setPx(body, w, h, 14, hy + 1, theme.hair.hi);
+  setRect(body, w, h, 6, hy + 2, 1, 5, theme.hair.mid);
+  setPx(body, w, h, 6, hy + 6, theme.hair.sh);
+  setRect(body, w, h, 17, hy + 2, 1, 5, theme.hair.mid);
+  setPx(body, w, h, 17, hy + 6, theme.hair.sh);
+  setPx(body, w, h, 7, hy + 3, theme.hair.mid);
+  setPx(body, w, h, 9, hy + 3, theme.hair.hi);
+  setPx(body, w, h, 11, hy + 3, theme.hair.mid);
+  setPx(body, w, h, 13, hy + 3, theme.hair.hi);
+  setPx(body, w, h, 16, hy + 3, theme.hair.sh);
+  setPx(body, w, h, 11, hy - 2, theme.hair.hi);
+  setPx(body, w, h, 12, hy - 3, theme.hair.mid);
+
+  const eyeY = hy + 5;
+  setPx(detail, w, h, 7, hy + 7, theme.skin.blush);
+  setPx(detail, w, h, 16, hy + 7, theme.skin.blush);
+  setSpan(detail, w, h, 8, 9, hy + 4, theme.hair.sh);
+  setSpan(detail, w, h, 14, 15, hy + 4, theme.hair.sh);
+
+  if (blink || state === 'sip' || state === 'stretch') {
+    setSpan(detail, w, h, 8, 9, eyeY + 1, theme.eye.dark);
+    setSpan(detail, w, h, 14, 15, eyeY + 1, theme.eye.dark);
+  } else {
+    setPx(detail, w, h, 8, eyeY, '#FFF9EB');
+    setPx(detail, w, h, 9, eyeY, theme.eye.hi);
+    setPx(detail, w, h, 8, eyeY + 1, theme.eye.mid);
+    setPx(detail, w, h, 9, eyeY + 1, theme.eye.dark);
+
+    setPx(detail, w, h, 14, eyeY, '#FFF9EB');
+    setPx(detail, w, h, 15, eyeY, theme.eye.hi);
+    setPx(detail, w, h, 14, eyeY + 1, theme.eye.mid);
+    setPx(detail, w, h, 15, eyeY + 1, theme.eye.dark);
+  }
+
+  setSpan(detail, w, h, 11, 12, hy + 8, state === 'stretch' || state === 'sip' ? '#9C4E44' : theme.skin.sh);
+
+  setSpan(detail, w, h, 7, 10, eyeY - 1, theme.glassesRim);
+  setSpan(detail, w, h, 13, 16, eyeY - 1, theme.glassesRim);
+  setPx(detail, w, h, 7, eyeY, theme.glassesRim);
+  setPx(detail, w, h, 7, eyeY + 1, theme.glassesRim);
+  setPx(detail, w, h, 10, eyeY, theme.glassesRim);
+  setPx(detail, w, h, 10, eyeY + 1, theme.glassesRim);
+  setSpan(detail, w, h, 11, 12, eyeY, theme.glassesRim);
+  setPx(detail, w, h, 13, eyeY, theme.glassesRim);
+  setPx(detail, w, h, 13, eyeY + 1, theme.glassesRim);
+  setPx(detail, w, h, 16, eyeY, theme.glassesRim);
+  setPx(detail, w, h, 16, eyeY + 1, theme.glassesRim);
+  setSpan(detail, w, h, 8, 9, eyeY + 2, theme.glassesLower);
+  setSpan(detail, w, h, 14, 15, eyeY + 2, theme.glassesLower);
+  setPx(detail, w, h, 10, eyeY, theme.glassesGlint);
+  setPx(detail, w, h, 16, eyeY, theme.glassesGlint);
+
+  const out = applySeloutLayer(body, detail, w, h, theme.selout, 24);
+  for (let sx = 7; sx <= 16; sx += 1) {
+    if (!getPx(out, w, h, sx, 28)) setPx(out, w, h, sx, 28, theme.groundCore);
+  }
+  for (let sx = 9; sx <= 14; sx += 1) {
+    if (!getPx(out, w, h, sx, 29)) setPx(out, w, h, sx, 29, theme.groundSoft);
+  }
+  return out;
+}
+
+type SeatedHeadPose = 'center' | 'glance_left' | 'glance_right';
+type SeatedArmPose = 'home' | 'type_l' | 'type_r' | 'mouse_a' | 'mouse_b' | 'reach_mug' | 'sip_mug' | 'stretch';
+
+function buildSeatedLongGrid(
+  theme: LongColorTheme,
+  headPose: SeatedHeadPose,
+  armPose: SeatedArmPose,
+  headDropPx: number,
+  bodyDropPx: number,
+  lampRim: boolean
+): PixelGrid {
+  const w = SEATED_WIDTH;
+  const h = SEATED_HEIGHT;
+  const body = createPixelGrid(w, h);
+  const detail = createPixelGrid(w, h);
+
+  const ty = 12 + (bodyDropPx > 0 ? 1 : 0);
+  const hy = 2 + (headDropPx > 0 ? 1 : 0);
+  const cx = 25;
+
+  setSpan(body, w, h, cx - 2, cx + 1, ty - 1, theme.skin.sh);
+  setSpan(body, w, h, cx - 5, cx + 4, ty, theme.hoodie.hi);
+  setSpan(body, w, h, cx - 6, cx + 5, ty + 1, theme.hoodie.mid);
+  setSpan(body, w, h, cx - 6, cx + 5, ty + 2, theme.hoodie.mid);
+  setSpan(body, w, h, cx - 6, cx + 5, ty + 3, theme.hoodie.mid);
+  setSpan(body, w, h, cx - 6, cx + 5, ty + 4, theme.hoodie.mid);
+  setSpan(body, w, h, cx - 5, cx + 4, ty + 5, theme.hoodie.sh);
+  setSpan(body, w, h, cx - 5, cx + 4, ty + 6, theme.hoodie.sh);
+  setSpan(body, w, h, cx - 6, cx + 5, ty + 7, theme.tee.mid);
+
+  for (let row = 1; row <= 4; row += 1) {
+    setPx(body, w, h, cx - 6, ty + row, theme.hoodie.hi);
+    setPx(body, w, h, cx + 5, ty + row, theme.hoodie.sh);
+  }
+  setSpan(detail, w, h, cx - 3, cx + 2, ty, theme.sleeve.hi);
+  setSpan(detail, w, h, cx - 4, cx + 3, ty + 1, theme.sleeve.mid);
+  setSpan(detail, w, h, cx - 3, cx + 2, ty + 2, theme.sleeve.sh);
+  setPx(detail, w, h, cx - 5, ty, theme.monitorRimSoft);
+  setPx(detail, w, h, cx + 4, ty, theme.monitorRimSoft);
+
+  const lShX = cx - 7;
+  const rShX = cx + 6;
+  const armDrop = bodyDropPx > 0 ? 1 : 0;
+
+  if (armPose === 'home') {
+    setRect(body, w, h, lShX, ty + 1, 2, 4, theme.sleeve.mid);
+    setRect(body, w, h, lShX - 2, ty - 2, 2, 4, theme.sleeve.hi);
+    setRect(body, w, h, lShX - 2, ty - 4, 2, 2, theme.skin.mid);
+    setRect(body, w, h, rShX - 1, ty + 1, 2, 4, theme.sleeve.mid);
+    setRect(body, w, h, rShX, ty - 2, 2, 4, theme.sleeve.hi);
+    setRect(body, w, h, rShX, ty - 4, 2, 2, theme.skin.mid);
+  } else if (armPose === 'type_l' || armPose === 'type_r') {
+    const lTap = armPose === 'type_l' ? -1 : 0;
+    const rTap = armPose === 'type_r' ? -1 : 0;
+    setRect(body, w, h, lShX, ty + 1, 2, 4, theme.sleeve.mid);
+    setRect(body, w, h, lShX - 2, ty - 3 + lTap, 2, 4, theme.sleeve.hi);
+    setRect(body, w, h, lShX - 2, ty - 5 + lTap, 2, 2, theme.skin.mid);
+    setPx(detail, w, h, lShX - 2, ty - 5 + lTap, theme.monitorRim);
+
+    setRect(body, w, h, rShX - 1, ty + 1, 2, 4, theme.sleeve.mid);
+    setRect(body, w, h, rShX, ty - 3 + rTap, 2, 4, theme.sleeve.hi);
+    setRect(body, w, h, rShX, ty - 5 + rTap, 2, 2, theme.skin.mid);
+    setPx(detail, w, h, rShX + 1, ty - 5 + rTap, theme.monitorRim);
+  } else if (armPose === 'mouse_a' || armPose === 'mouse_b') {
+    const mx = armPose === 'mouse_b' ? 40 : 39;
+    setRect(body, w, h, lShX, ty + 1, 2, 4, theme.sleeve.mid);
+    setRect(body, w, h, lShX - 2, ty - 2, 2, 4, theme.sleeve.hi);
+    setRect(body, w, h, lShX - 2, ty - 4, 2, 2, theme.skin.mid);
+
+    setRect(body, w, h, rShX - 1, ty + 1, 3, 2, theme.sleeve.mid);
+    setRect(body, w, h, rShX + 2, ty - 1, 3, 2, theme.sleeve.hi);
+    setRect(body, w, h, mx - 3, ty - 3, 4, 2, theme.sleeve.mid);
+    setRect(body, w, h, mx, ty - 5, 3, 2, theme.skin.mid);
+    setPx(detail, w, h, mx, ty - 5, theme.monitorRim);
+  } else if (armPose === 'reach_mug') {
+    setRect(body, w, h, lShX, ty + 1, 2, 4, theme.sleeve.mid);
+    setRect(body, w, h, lShX - 2, ty - 2, 2, 4, theme.sleeve.hi);
+    setRect(body, w, h, lShX - 2, ty - 4, 2, 2, theme.skin.mid);
+
+    setRect(body, w, h, rShX - 1, ty + 1, 3, 2, theme.sleeve.mid);
+    setRect(body, w, h, rShX + 2, ty - 1, 5, 2, theme.sleeve.hi);
+    setRect(body, w, h, rShX + 7, ty - 3, 6, 2, theme.sleeve.mid);
+    setRect(body, w, h, rShX + 13, ty - 5, 5, 2, theme.sleeve.hi);
+    setRect(body, w, h, rShX + 17, ty - 7, 3, 2, theme.skin.mid);
+  } else if (armPose === 'sip_mug') {
+    setRect(body, w, h, lShX, ty + 1, 2, 4, theme.sleeve.mid);
+    setRect(body, w, h, lShX - 2, ty - 2, 2, 4, theme.sleeve.hi);
+    setRect(body, w, h, lShX - 2, ty - 4, 2, 2, theme.skin.mid);
+
+    setRect(body, w, h, rShX, ty - 2, 3, 4, theme.sleeve.mid);
+    setRect(body, w, h, rShX + 1, ty - 5, 2, 3, theme.sleeve.hi);
+    setRect(body, w, h, rShX, ty - 7, 2, 2, theme.skin.mid);
+    setRect(body, w, h, rShX - 1, ty - 9, 4, 4, theme.mugBody.mid);
+    setPx(detail, w, h, rShX - 1, ty - 9, theme.mugBody.hi);
+    setSpan(detail, w, h, rShX - 1, rShX + 1, ty - 9, theme.mugCoffee);
+    setPx(body, w, h, rShX + 3, ty - 8, theme.mugBody.sh);
+  } else if (armPose === 'stretch') {
+    setRect(body, w, h, lShX - 2, ty - 3, 3, 5, theme.sleeve.mid);
+    setRect(body, w, h, lShX - 5, ty - 7, 3, 4, theme.sleeve.hi);
+    setRect(body, w, h, lShX - 6, ty - 9, 2, 2, theme.skin.mid);
+
+    setRect(body, w, h, rShX, ty - 3, 3, 5, theme.sleeve.mid);
+    setRect(body, w, h, rShX + 3, ty - 7, 3, 4, theme.sleeve.hi);
+    setRect(body, w, h, rShX + 5, ty - 9, 2, 2, theme.skin.mid);
+  }
+
+  const headX = cx - 6;
+  setSpan(body, w, h, headX + 2, headX + 9, hy, theme.hair.hi);
+  setSpan(body, w, h, headX + 1, headX + 10, hy + 1, theme.hair.hi);
+  setSpan(body, w, h, headX, headX + 11, hy + 2, theme.hair.mid);
+  setRect(body, w, h, headX, hy + 3, 12, 6, theme.hair.mid);
+  setSpan(body, w, h, headX + 1, headX + 10, hy + 9, theme.hair.sh);
+  setSpan(body, w, h, headX + 2, headX + 9, hy + 8, theme.hair.sh);
+
+  setPx(body, w, h, headX + 3, hy + 3, theme.hair.hi);
+  setPx(body, w, h, headX + 8, hy + 3, theme.hair.hi);
+  setPx(body, w, h, headX + 5, hy + 4, theme.hair.hi);
+  setPx(body, w, h, headX + 2, hy + 7, theme.hair.sh);
+  setPx(body, w, h, headX + 9, hy + 7, theme.hair.sh);
+  setPx(body, w, h, headX + 5, hy - 1, theme.hair.hi);
+  setPx(body, w, h, headX + 6, hy - 2, theme.hair.mid);
+
+  setPx(body, w, h, headX - 1, hy + 5, theme.skin.mid);
+  setPx(body, w, h, headX - 1, hy + 6, theme.skin.sh);
+  setPx(body, w, h, headX + 12, hy + 5, theme.skin.mid);
+  setPx(body, w, h, headX + 12, hy + 6, theme.skin.sh);
+
+  if (headPose === 'glance_left') {
+    setRect(body, w, h, headX, hy + 5, 2, 3, theme.skin.mid);
+    setPx(detail, w, h, headX, hy + 6, theme.glassesRim);
+    setPx(detail, w, h, headX + 1, hy + 7, theme.skin.blush);
+  } else if (headPose === 'glance_right') {
+    setRect(body, w, h, headX + 10, hy + 5, 2, 3, theme.skin.mid);
+    setPx(detail, w, h, headX + 11, hy + 6, theme.glassesRim);
+    setPx(detail, w, h, headX + 10, hy + 7, theme.skin.blush);
+  }
+
+  setSpan(detail, w, h, headX + 2, headX + 9, hy, theme.monitorRim);
+  setPx(detail, w, h, headX + 1, hy + 1, theme.monitorRimSoft);
+  setPx(detail, w, h, headX + 10, hy + 1, theme.monitorRimSoft);
+
+  if (lampRim) {
+    setPx(detail, w, h, headX + 10, hy + 2, theme.lampRimHair);
+    setPx(detail, w, h, headX + 11, hy + 3, theme.lampRimHair);
+    setPx(detail, w, h, rShX + 1, ty + 1 + armDrop, theme.lampRimSleeve);
+    setPx(detail, w, h, rShX + 1, ty + 2 + armDrop, theme.lampRimSleeve);
+  }
+
+  return applySeloutLayer(body, detail, w, h, theme.selout, h);
+}
+
+function buildSleepingLongGrid(theme: LongColorTheme, breathOffset: number): PixelGrid {
+  const w = SLEEP_WIDTH;
+  const h = SLEEP_HEIGHT;
+  const body = createPixelGrid(w, h);
+  const detail = createPixelGrid(w, h);
+
+  const hx = 5;
+  const hy = 1;
+  const torsoOffset = breathOffset < 0 ? -1 : 0;
+  const ty = 11 + torsoOffset;
+
+  setSpan(body, w, h, hx + 2, hx + 9, hy, theme.skin.hi);
+  setSpan(body, w, h, hx + 1, hx + 10, hy + 1, theme.skin.hi);
+  setRect(body, w, h, hx, hy + 2, 12, 5, theme.skin.mid);
+  setSpan(body, w, h, hx + 1, hx + 10, hy + 7, theme.skin.mid);
+  setSpan(body, w, h, hx + 2, hx + 9, hy + 8, theme.skin.mid);
+  setSpan(body, w, h, hx + 3, hx + 8, hy + 9, theme.skin.sh);
+
+  setPx(body, w, h, hx - 1, hy + 5, theme.skin.mid);
+  setPx(body, w, h, hx - 1, hy + 6, theme.skin.sh);
+  setPx(body, w, h, hx + 12, hy + 5, theme.skin.mid);
+  setPx(body, w, h, hx + 12, hy + 6, theme.skin.sh);
+
+  setSpan(body, w, h, hx + 2, hx + 9, hy - 1, theme.hair.hi);
+  setSpan(body, w, h, hx + 1, hx + 10, hy, theme.hair.hi);
+  setSpan(body, w, h, hx, hx + 11, hy + 1, theme.hair.mid);
+  setSpan(body, w, h, hx, hx + 11, hy + 2, theme.hair.mid);
+  setRect(body, w, h, hx, hy + 2, 1, 5, theme.hair.mid);
+  setRect(body, w, h, hx + 11, hy + 2, 1, 5, theme.hair.mid);
+  setPx(body, w, h, hx + 1, hy + 3, theme.hair.mid);
+  setPx(body, w, h, hx + 3, hy + 3, theme.hair.hi);
+  setPx(body, w, h, hx + 5, hy + 3, theme.hair.mid);
+  setPx(body, w, h, hx + 7, hy + 3, theme.hair.hi);
+  setPx(body, w, h, hx + 10, hy + 3, theme.hair.sh);
+
+  setSpan(detail, w, h, hx + 2, hx + 3, hy + 4, theme.hair.sh);
+  setSpan(detail, w, h, hx + 8, hx + 9, hy + 4, theme.hair.sh);
+  setSpan(detail, w, h, hx + 2, hx + 3, hy + 6, theme.eye.dark);
+  setSpan(detail, w, h, hx + 8, hx + 9, hy + 6, theme.eye.dark);
+  setPx(detail, w, h, hx + 1, hy + 7, theme.skin.blush);
+  setPx(detail, w, h, hx + 10, hy + 7, theme.skin.blush);
+  setPx(detail, w, h, hx + 5, hy + 8, theme.skin.sh);
+
+  setSpan(body, w, h, hx + 4, hx + 7, ty - 1, theme.skin.sh);
+  setSpan(body, w, h, 5, 16, ty, theme.hoodie.hi);
+  setSpan(body, w, h, 4, 17, ty + 1, theme.hoodie.mid);
+  setSpan(body, w, h, 4, 17, ty + 2, theme.hoodie.mid);
+  setSpan(body, w, h, 4, 17, ty + 3, theme.hoodie.mid);
+  setSpan(body, w, h, 5, 16, ty + 4, theme.hoodie.sh);
+  setSpan(detail, w, h, 7, 14, ty, theme.sleeve.mid);
+  setSpan(detail, w, h, 8, 13, ty, theme.tee.hi);
+
+  setRect(body, w, h, 18, ty + 1, 3, 2, theme.skin.mid);
+  setPx(detail, w, h, 19, ty + 2, theme.skin.sh);
+
+  return applySeloutLayer(body, detail, w, h, theme.selout, 16);
+}
+
+type CapyPoseKind = 'sit' | 'blink' | 'ear' | 'walk_0' | 'walk_1' | 'walk_2' | 'walk_3' | 'dance_0' | 'dance_1' | 'drowsy' | 'sleep';
+
+function buildCapyGrid(theme: CapyColorTheme, pose: CapyPoseKind): PixelGrid {
+  const w = CAPY_WIDTH;
+  const h = CAPY_HEIGHT;
+  const body = createPixelGrid(w, h);
+  const detail = createPixelGrid(w, h);
+
+  const isDrowsy = pose === 'drowsy' || pose === 'sleep';
+  const yuzuBob = pose === 'walk_1' || pose === 'walk_3' || pose === 'dance_1' ? -1 : 0;
+  const headDrop = isDrowsy ? 1 : pose === 'dance_1' ? -1 : 0;
+  const bodyDrop = isDrowsy ? 1 : pose === 'dance_1' ? -1 : 0;
+
+  const yy = 1 + yuzuBob + headDrop;
+  setSpan(body, w, h, 5, 7, yy, theme.yuzu.hi);
+  setSpan(body, w, h, 4, 8, yy + 1, theme.yuzu.mid);
+  setSpan(body, w, h, 5, 7, yy + 2, theme.yuzu.sh);
+  setPx(detail, w, h, 5, yy + 1, theme.yuzu.hi);
+  setPx(body, w, h, 6, yy - 1, theme.leaf.mid);
+  setPx(body, w, h, 7, yy - 1, theme.leaf.hi);
+  setPx(body, w, h, 8, yy, theme.leaf.sh);
+
+  const hy = 4 + headDrop;
+  const earLift = pose === 'ear' || pose === 'dance_1' ? -1 : 0;
+  setRect(body, w, h, 9, hy - 1 + earLift, 2, 2, theme.fur.ear);
+  setPx(detail, w, h, 9, hy - 1 + earLift, theme.fur.mid);
+
+  setSpan(body, w, h, 4, 9, hy, theme.fur.hi);
+  setSpan(body, w, h, 2, 10, hy + 1, theme.fur.mid);
+  setSpan(body, w, h, 1, 10, hy + 2, theme.fur.mid);
+  setSpan(body, w, h, 1, 10, hy + 3, theme.fur.mid);
+  setSpan(body, w, h, 2, 9, hy + 4, theme.fur.sh);
+
+  setSpan(detail, w, h, 4, 8, hy, theme.fur.hi);
+  setRect(detail, w, h, 1, hy + 2, 2, 2, theme.fur.snout);
+  setPx(detail, w, h, 1, hy + 2, theme.fur.sh);
+  setPx(detail, w, h, 8, hy + 3, theme.fur.blush);
+
+  if (pose === 'dance_0' || pose === 'dance_1') {
+    setPx(detail, w, h, 4, hy + 2, theme.eye);
+    setPx(detail, w, h, 5, hy + 1, theme.eye);
+    setPx(detail, w, h, 6, hy + 2, theme.eye);
+  } else if (pose === 'blink' || isDrowsy) {
+    setSpan(detail, w, h, 4, 6, hy + 2, theme.eye);
+  } else {
+    setRect(detail, w, h, 4, hy + 1, 2, 2, theme.eye);
+    setPx(detail, w, h, 4, hy + 1, theme.eyeGlint);
+  }
+
+  const by = 7 + bodyDrop;
+  setSpan(body, w, h, 10, 17, by, theme.fur.hi);
+  setSpan(body, w, h, 8, 18, by + 1, theme.fur.hi);
+  setSpan(body, w, h, 6, 19, by + 2, theme.fur.mid);
+  setSpan(body, w, h, 5, 19, by + 3, theme.fur.mid);
+  setSpan(body, w, h, 5, 18, by + 4, theme.fur.mid);
+  setSpan(body, w, h, 6, 17, by + 5, theme.fur.sh);
+  if (pose === 'sleep') {
+    setPx(body, w, h, 19, by + 2, theme.fur.hi);
+    setPx(body, w, h, 19, by + 3, theme.fur.mid);
+  }
+  setSpan(detail, w, h, 11, 16, by + 1, theme.fur.hi);
+  setSpan(detail, w, h, 10, 15, by + 4, theme.fur.mid);
+
+  if (!isDrowsy) {
+    const legY = by + 5;
+    if (pose === 'walk_0') {
+      setRect(body, w, h, 5, legY, 3, 3, theme.fur.sh);
+      setRect(body, w, h, 10, legY, 3, 2, theme.fur.mid);
+      setRect(body, w, h, 14, legY, 3, 3, theme.fur.sh);
+    } else if (pose === 'walk_1' || pose === 'walk_3') {
+      setRect(body, w, h, 6, legY, 3, 2, theme.fur.sh);
+      setRect(body, w, h, 11, legY, 2, 2, theme.fur.mid);
+      setRect(body, w, h, 14, legY, 3, 2, theme.fur.sh);
+    } else if (pose === 'walk_2') {
+      setRect(body, w, h, 7, legY, 3, 2, theme.fur.mid);
+      setRect(body, w, h, 11, legY, 3, 3, theme.fur.sh);
+      setRect(body, w, h, 15, legY, 3, 3, theme.fur.sh);
+    } else if (pose === 'dance_1') {
+      setRect(body, w, h, 5, legY, 3, 2, theme.fur.sh);
+      setRect(body, w, h, 10, legY, 3, 2, theme.fur.mid);
+      setRect(body, w, h, 15, legY, 3, 2, theme.fur.sh);
+    } else {
+      setRect(body, w, h, 6, legY, 3, 2, theme.fur.sh);
+      setRect(body, w, h, 10, legY, 3, 2, theme.fur.mid);
+      setRect(body, w, h, 14, legY, 3, 2, theme.fur.sh);
     }
   }
-}
 
-function finalizeGridMatrix(grid: string[][], expectedWidth: number): SpriteMatrix {
-  return assertUniformMatrixWidth(
-    grid.map((chars) => chars.join('')),
-    expectedWidth
-  );
-}
-
-const HEAD_FRONT_OPEN: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '...oooooo...',
-    '..olllhhho..',
-    '.ollllhhhho.',
-    'oohlllHHHhoo',
-    'ohhhhhHHHHho',
-    'oHHhtHHthHHo',
-    '.oHGGggGGHo.',
-    '.ktWEttWEtk.',
-    '.kpEEttEEpk.',
-    '..kttttttk..',
-    '...kkddkk...',
-    '....kddk....',
-  ],
-  HEAD_WIDTH
-);
-
-const HEAD_FRONT_BLINK: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '...oooooo...',
-    '..olllhhho..',
-    '.ollllhhhho.',
-    'oohlllHHHhoo',
-    'ohhhhhHHHHho',
-    'oHHhtHHthHHo',
-    '.oHGGggGGHo.',
-    '.ktKKttKKtk.',
-    '.kpttttttpk.',
-    '..kttttttk..',
-    '...kkddkk...',
-    '....kddk....',
-  ],
-  HEAD_WIDTH
-);
-
-const HEAD_FRONT_SIP: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '...oooooo...',
-    '..olllhhho..',
-    '.ollllhhhho.',
-    'oohlllHHHhoo',
-    'ohhhhhHHHHho',
-    'oHHhtHHthHHo',
-    '.oHGGggGGHo.',
-    '.ktKKttKKtk.',
-    '.kpttttttpk.',
-    '..kttttttk..',
-    '...kkddkk...',
-    '....kddk....',
-  ],
-  HEAD_WIDTH
-);
-
-const HEAD_BACK_CENTER: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '...oooooo...',
-    '..olllhhho..',
-    '.ollllhhhho.',
-    'oolllhhhHHho',
-    'ohllhhhhHHho',
-    'ohhhhhhHHHho',
-    'kthhHHHHHhtk',
-    'kdhHHHHHHHdk',
-    '.oHHHHHHHHo.',
-    '..ooHHHHoo..',
-    '...ooHHoo...',
-    '....kddk....',
-  ],
-  HEAD_WIDTH
-);
-
-const HEAD_BACK_GLANCE_LEFT: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '..ooooooo...',
-    '.olllhhhhoo.',
-    '.ollllhhhho.',
-    'oolllhhHHHho',
-    'ohllhhhHHHho',
-    'ohhhhhHHHHho',
-    'kthHHHHHHhtk',
-    'kdHHHHHHHHdk',
-    '.oHHHHHHHHo.',
-    '..ooHHHHoo..',
-    '...ooHHoo...',
-    '....kddk....',
-  ],
-  HEAD_WIDTH
-);
-
-const HEAD_BACK_GLANCE_RIGHT: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '...ooooooo..',
-    '.oohhhhlllo.',
-    '.ohhhhllllo.',
-    'ohHHHhhllloo',
-    'ohHHHhhhllho',
-    'ohHHHHhhhhho',
-    'kthHHHHHHhtk',
-    'kdHHHHHHHHdk',
-    '.oHHHHHHHHo.',
-    '..ooHHHHoo..',
-    '...ooHHoo...',
-    '....kddk....',
-  ],
-  HEAD_WIDTH
-);
-
-const HEAD_SLEEP: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '...oooooo...',
-    '..olllhhho..',
-    '.ollllhhhho.',
-    'oohlllHHHhoo',
-    'ohhhhhHHHHho',
-    'oHHhtHHthHHo',
-    '.oHttttttHo.',
-    '.ktKKttKKtk.',
-    '.kpttttttpk.',
-    '..kttttttk..',
-    '...kkddkk...',
-    '....kddk....',
-  ],
-  HEAD_WIDTH
-);
-
-const TORSO_FRONT: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '.ObbBBCCBBbbO.',
-    'ObbBBBzBBBBbbO',
-    'ObBSBBzBBBSbbO',
-    'OBBSBBzBBBBSbO',
-    '.OBBSBzBBBBSO.',
-    '.OBBBBzBBBBSO.',
-    '.OSSSSSSSSSSO.',
-    '..OOOOOOOOOO..',
-  ],
-  TORSO_WIDTH
-);
-
-const TORSO_FRONT_BREATHE: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '.ObbBBCCBBbbO.',
-    'ObbbBBzBBBBbbO',
-    'ObBSBBzBBBSbbO',
-    'OBBSBBzBBBBSbO',
-    '.OBBSBzBBBBSO.',
-    '.OBBBBzBBBBSO.',
-    '.OSSSSSSSSSSO.',
-    '..OOOOOOOOOO..',
-  ],
-  TORSO_WIDTH
-);
-
-const TORSO_BACK: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '..OObDDDDbOO..',
-    '.OObDDDDDDbOO.',
-    'ObBSbDDDDbSBbO',
-    'OBBSSDDDDSSBBO',
-    'OBBBSSbbSSBBBO',
-    '.OBBBSSSSBBBO.',
-    '.OBBbBBBBbBBO.',
-    '.OBBBBBBBBBBO.',
-    '.OSSSSSSSSSSO.',
-    '..OOOOOOOOOO..',
-  ],
-  TORSO_WIDTH
-);
-
-const TORSO_SLEEP: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '.ObbBBCCBBbbO.',
-    'ObbBBBzBBBBbbO',
-    'ObBSBBzBBBSbbO',
-    'OBBBBBzBBBBBBO',
-    '.OBBBBSSSSBBO.',
-    '.OSSSSSSSSSSO.',
-    '..OOOOOOOOOO..',
-  ],
-  TORSO_WIDTH
-);
-
-const SLEEP_RESTING_HAND: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '.kkk.',
-    'kttdk',
-    'kddk.',
-  ],
-  5
-);
-
-const LEGS_FRONT: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '..QJjJNNJjJQ..',
-    '..QJjQQQQjJQ..',
-    '..QJjQ..QjJQ..',
-    '..QJjQ..QjJQ..',
-    '..QJJQ..QJJQ..',
-    '..QuvQ..QuvQ..',
-    '.QuuuQ..QuuuQ.',
-    '.QwwwQ..QwwwQ.',
-    '..QQQ....QQQ..',
-    '.xxxx....xxxx.',
-  ],
-  TORSO_WIDTH
-);
-
-function buildSleepingLongMatrix(breathOffset: number): SpriteMatrix {
-  const grid = createEmptyGrid(SLEEP_WIDTH, SLEEP_HEIGHT);
-  const torsoOffset = breathOffset < 0 ? -1 : 0;
-
-  stampGridLayer(grid, { matrix: HEAD_SLEEP, x: 4, y: 0 });
-  stampGridLayer(grid, { matrix: TORSO_SLEEP, x: 3, y: 11 + torsoOffset });
-  stampGridLayer(grid, { matrix: SLEEP_RESTING_HAND, x: 15, y: 11 + torsoOffset });
-
-  return finalizeGridMatrix(grid, SLEEP_WIDTH);
-}
-
-const SEATED_ARMS_HOME: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '..................................................',
-    '..................................................',
-    '..................................................',
-    '.......kkk.............kkk........................',
-    '......kttdk...........ktdk........................',
-    '.......Obdk...........Obdk........................',
-    '........ObO............ObO........................',
-    '.........ObO..........ObO.........................',
-    '.........ObO..........ObO.........................',
-    '..........ObO........ObO..........................',
-    '..........ObB.........BBbO........................',
-    '..................................................',
-    '..................................................',
-  ],
-  SEATED_WIDTH
-);
-
-const SEATED_ARMS_TYPE_L: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '..................................................',
-    '..................................................',
-    '.......kkk........................................',
-    '......kttdk............kkk........................',
-    '.......Obdk...........ktdk........................',
-    '........ObO...........Obdk........................',
-    '........ObO............ObO........................',
-    '.........ObO..........ObO.........................',
-    '.........ObO..........ObO.........................',
-    '..........ObO........ObO..........................',
-    '..........ObB.........BBbO........................',
-    '..................................................',
-    '..................................................',
-  ],
-  SEATED_WIDTH
-);
-
-const SEATED_ARMS_TYPE_R: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '..................................................',
-    '..................................................',
-    '.......................kkk........................',
-    '.......kkk............ktdk........................',
-    '......kttdk...........Obdk........................',
-    '.......Obdk............ObO........................',
-    '........ObO............ObO........................',
-    '.........ObO..........ObO.........................',
-    '.........ObO..........ObO.........................',
-    '..........ObO........ObO..........................',
-    '..........ObB.........BBbO........................',
-    '..................................................',
-    '..................................................',
-  ],
-  SEATED_WIDTH
-);
-
-const SEATED_ARMS_MOUSE_A: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '..................................................',
-    '..................................................',
-    '.................................kkk..............',
-    '.......kkk......................ktddk.............',
-    '......kttdk....................Obbtk..............',
-    '.......Obdk...................ObO.................',
-    '........ObO..................ObO..................',
-    '.........ObO................ObO...................',
-    '.........ObO..............ObbO....................',
-    '..........ObO...........OObbO.....................',
-    '..........ObB..........BBbbO......................',
-    '..................................................',
-    '..................................................',
-  ],
-  SEATED_WIDTH
-);
-
-const SEATED_ARMS_MOUSE_B: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '..................................................',
-    '..................................................',
-    '..................................kkk.............',
-    '.......kkk.......................ktddk............',
-    '......kttdk.....................Obbtk.............',
-    '.......Obdk....................ObO................',
-    '........ObO...................ObO.................',
-    '.........ObO.................ObO..................',
-    '.........ObO...............ObbO...................',
-    '..........ObO............OObbO....................',
-    '..........ObB...........BBbbO.....................',
-    '..................................................',
-    '..................................................',
-  ],
-  SEATED_WIDTH
-);
-
-const SEATED_ARMS_REACH_MUG: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '..................................................',
-    '.........................................kkk......',
-    '........................................ktddk.....',
-    '.......kkk.............................Obbtk......',
-    '......kttdk.........................OOObbO........',
-    '.......Obdk......................OOObbO...........',
-    '........ObO...................OOObbO..............',
-    '.........ObO................OObbO.................',
-    '.........ObO..............OObbO...................',
-    '..........ObO...........OObbO.....................',
-    '..........ObB..........BBbbO......................',
-    '..................................................',
-    '..................................................',
-  ],
-  SEATED_WIDTH
-);
-
-const SEATED_ARMS_SIP_MUG: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '..................................................',
-    '..................................................',
-    '..................................................',
-    '.........................mmmm.....................',
-    '........................mMMMrO....................',
-    '.......kkk..............mMFFrO....................',
-    '......kttdk.............mMMMdk....................',
-    '.......Obdk.............ObbkktO...................',
-    '........ObO..............Obbtdk...................',
-    '.........ObO.............ObbO.....................',
-    '..........ObB............BBbO.....................',
-    '..................................................',
-    '..................................................',
-  ],
-  SEATED_WIDTH
-);
-
-const SEATED_ARMS_STRETCH: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '......kkk.....................kkk.................',
-    '.....ktdk....................ktddk................',
-    '.....ObO.....................ObbO.................',
-    '......ObO...................ObO...................',
-    '.......ObO.................ObO....................',
-    '.......ObO.................ObO....................',
-    '........ObO...............ObO.....................',
-    '........ObO...............ObO.....................',
-    '.........ObO.............ObO......................',
-    '..........ObO...........ObO.......................',
-    '..........ObB...........BbO.......................',
-    '..................................................',
-    '..................................................',
-  ],
-  SEATED_WIDTH
-);
-
-function buildSeatedLongMatrix(
-  head: SpriteMatrix,
-  arms: SpriteMatrix,
-  headDropPx: number,
-  bodyDropPx: number
-): SpriteMatrix {
-  const grid = createEmptyGrid(SEATED_WIDTH, SEATED_TOTAL_HEIGHT);
-  const drop = bodyDropPx > 0 ? 1 : 0;
-  const hDrop = headDropPx > 0 ? 1 : 0;
-
-  stampGridLayer(grid, { matrix: TORSO_BACK, x: SEATED_TORSO_X, y: 9 + drop });
-  stampGridLayer(grid, { matrix: arms, x: 0, y: drop });
-  stampGridLayer(grid, { matrix: head, x: SEATED_HEAD_X, y: hDrop });
-
-  return finalizeGridMatrix(grid, SEATED_WIDTH);
-}
-
-const WAKING_ARMS_HOLD_CUP: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '.....................',
-    '.....................',
-    '................mmm..',
-    '...............mFFMm.',
-    '...ktt........btMMcm.',
-    '....kk.........kdMcm.',
-    '................kmmm.',
-    '.....................',
-  ],
-  WAKING_WIDTH
-);
-
-const WAKING_ARMS_LIFT_CUP: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '................mmm..',
-    '...............mFFMm.',
-    '..............btMMcm.',
-    '...ktt.........kdMcm.',
-    '....kk..........kmmm.',
-    '.....................',
-    '.....................',
-    '.....................',
-  ],
-  WAKING_WIDTH
-);
-
-const WAKING_ARMS_STRETCH: SpriteMatrix = assertUniformMatrixWidth(
-  [
-    '.kkk............kkk..',
-    'ktdk............ktdk.',
-    'ObbO............ObbO.',
-    '.ObO............ObO..',
-    '.....................',
-    '.....................',
-    '.....................',
-    '.....................',
-    '.....................',
-    '.....................',
-  ],
-  WAKING_WIDTH
-);
-
-function buildWakingLongMatrix(
-  head: SpriteMatrix,
-  torso: SpriteMatrix,
-  arms: SpriteMatrix,
-  armsY: number
-): SpriteMatrix {
-  const grid = createEmptyGrid(WAKING_WIDTH, WAKING_HEIGHT);
-
-  stampGridLayer(grid, { matrix: LEGS_FRONT, x: 2, y: 19 });
-  stampGridLayer(grid, { matrix: head, x: 3, y: 0 });
-  stampGridLayer(grid, { matrix: torso, x: 2, y: 11 });
-  stampGridLayer(grid, { matrix: arms, x: 0, y: armsY });
-
-  return finalizeGridMatrix(grid, WAKING_WIDTH);
-}
-
-const WAKING_IDLE_DEFAULT = buildWakingLongMatrix(
-  HEAD_FRONT_OPEN,
-  TORSO_FRONT,
-  WAKING_ARMS_HOLD_CUP,
-  11
-);
-
-const CHAR_PALETTE = {
-  day: {
-    o: '#2B1D17',
-    k: '#8F5943',
-    O: '#1E2436',
-    Q: '#182030',
-    m: '#786B63',
-    H: '#3D261C',
-    h: '#5D3A29',
-    l: '#7E513A',
-    t: '#F5CBB0',
-    d: '#DCA183',
-    p: '#EB9E90',
-    E: '#1F2433',
-    W: '#FFFFFF',
-    K: '#5C382C',
-    G: '#434E63',
-    g: '#9C8B88',
-    L: '#CBE6F2',
-    C: '#F5F0E6',
-    b: '#475569',
-    B: '#334155',
-    D: '#5D6F8A',
-    S: '#243042',
-    z: '#64748B',
-    j: '#334460',
-    J: '#233044',
-    N: '#1B2536',
-    u: '#F1F5F9',
-    v: '#94A3B8',
-    w: '#CBD5E1',
-    M: '#FFFDF9',
-    r: '#D6CFC2',
-    F: '#5C3422',
-    c: '#D6CFC2',
-    x: 'rgba(22, 16, 28, 0.28)',
-  },
-} as const;
-
-function getLongPalette(
-  timeState: RoomTimeState,
-  lampOn: boolean,
-  palette: RoomPalette
-): SpriteColorMap {
-  const isSleep = timeState === 'sleeping';
-  const isLate = timeState === 'late_night';
-  const dim = isSleep && !lampOn;
-  const base = CHAR_PALETTE.day;
-
-  return {
-    ...base,
-    o: dim ? '#1E161C' : isLate ? '#241814' : base.o,
-    k: dim ? '#684339' : isLate ? '#7D4D3A' : base.k,
-    O: dim ? '#151926' : isLate ? '#181D2C' : base.O,
-    Q: dim ? '#121824' : base.Q,
-    m: dim ? '#5D524C' : base.m,
-    H: dim ? '#2C1E26' : isLate ? '#322019' : base.H,
-    h: dim ? '#452E37' : isLate ? '#4E3124' : base.h,
-    l: dim ? '#634650' : isLate ? '#734B37' : base.l,
-    t: dim ? '#C49B8B' : isLate ? '#E8B99B' : base.t,
-    d: dim ? '#9E7668' : isLate ? '#C98E72' : base.d,
-    p: dim ? '#AD706C' : isLate ? '#D88B7E' : base.p,
-    K: isSleep ? '#4A302C' : base.K,
-    L: isLate ? '#8CEAF8' : base.L,
-    C: dim ? '#B5B2C0' : isLate ? '#DFD9CE' : base.C,
-    b: dim ? '#3D485E' : isLate ? (lampOn ? '#58677D' : '#435066') : base.b,
-    B: dim ? '#273145' : isLate ? '#2D3A4D' : base.B,
-    D: dim ? '#48566E' : isLate ? (lampOn ? '#64758F' : '#4E5E78') : base.D,
-    S: dim ? '#1C2333' : isLate ? '#1F293A' : base.S,
-    z: dim ? '#3F4B61' : isLate ? '#52627A' : base.z,
-    j: dim ? '#29374F' : base.j,
-    J: dim ? '#1D2638' : base.J,
-    N: dim ? '#141B29' : base.N,
-    u: dim ? '#B8C0CC' : base.u,
-    v: dim ? '#737E91' : base.v,
-    w: dim ? '#949EAE' : base.w,
-    P: palette.pillowShadow,
-  };
-}
-
-const CAPY_SIT_OPEN: SpriteMatrix = [
-  '.....gGGO............',
-  '....OYRRO............',
-  '....ORRUO.OO.........',
-  '...OOHHHOODO.........',
-  '.OOHFFFFFHHO.........',
-  'OKKFFEFFFPFFO........',
-  'OKFFFFFSSSFFOOOOO....',
-  '.OOFSSSSFHHHHHHHHHO..',
-  '..OFFFFFFFFFFBFFFFFO.',
-  '..OFFFFFFFFBBBBFFFFO.',
-  '..OSFFFFFFFBBBBFFSSO.',
-  '...OSSSSSSBBBBSSSSO..',
-  '....ODDOODDOODDOO....',
-  '....ODDOODDOODDOO....',
-  '....OOOO.OO..OOOO....',
-  '...xxxxxx..xxxxxxx...',
-];
-
-const CAPY_SIT_BLINK: SpriteMatrix = [
-  '.....gGGO............',
-  '....OYRRO............',
-  '....ORRUO.OO.........',
-  '...OOHHHOODO.........',
-  '.OOHFFFFFHHO.........',
-  'OKKFFKKFFPFFO........',
-  'OKFFFFFSSSFFOOOOO....',
-  '.OOFSSSSFHHHHHHHHHO..',
-  '..OFFFFFFFFFFBFFFFFO.',
-  '..OFFFFFFFFBBBBFFFFO.',
-  '..OSFFFFFFFBBBBFFSSO.',
-  '...OSSSSSSBBBBSSSSO..',
-  '....ODDOODDOODDOO....',
-  '....ODDOODDOODDOO....',
-  '....OOOO.OO..OOOO....',
-  '...xxxxxx..xxxxxxx...',
-];
-
-const CAPY_SIT_EAR: SpriteMatrix = [
-  '....gGGO.............',
-  '...OYRRO...O.........',
-  '...ORRUO..ODO........',
-  '...OOHHHHOOD.........',
-  '.OOHFFFFFHHO.........',
-  'OKKFFEFFFPFFO........',
-  'OKFFFFFSSSFFOOOOO....',
-  '.OOFSSSSFHHHHHHHHHO..',
-  '..OFFFFFFFFFFBFFFFFO.',
-  '..OFFFFFFFFBBBBFFFFO.',
-  '..OSFFFFFFFBBBBFFSSO.',
-  '...OSSSSSSBBBBSSSSO..',
-  '....ODDOODDOODDOO....',
-  '....ODDOODDOODDOO....',
-  '....OOOO.OO..OOOO....',
-  '...xxxxxx..xxxxxxx...',
-];
-
-const CAPY_WALK_0: SpriteMatrix = [
-  '.....gGGO............',
-  '....OYRRO............',
-  '....ORRUO.OO.........',
-  '...OOHHHOODO.........',
-  '.OOHFFFFFHHO.........',
-  'OKKFFEFFFPFFO........',
-  'OKFFFFFSSSFFOOOOO....',
-  '.OOFSSSSFHHHHHHHHHO..',
-  '..OFFFFFFFFFFBFFFFFO.',
-  '..OFFFFFFFFBBBBFFFFO.',
-  '..OSFFFFFFFBBBBFFSSO.',
-  '...OSSSSSSBBBBSSSSO..',
-  '...ODDO..ODDO.ODDO...',
-  '..ODDO....ODDO.ODDO..',
-  '..OOOO....OOOO.OOOO..',
-  '..xxxxx...xxxxxxxx...',
-];
-
-const CAPY_WALK_1: SpriteMatrix = [
-  '....OYRRO............',
-  '....ORRUO.OO.........',
-  '...OOHHHOODO.........',
-  '.OOHFFFFFHHO.........',
-  'OKKFFEFFFPFFO........',
-  'OKFFFFFSSSFFOOOOO....',
-  '.OOFSSSSFHHHHHHHHHO..',
-  '..OFFFFFFFFFFBFFFFFO.',
-  '..OFFFFFFFFBBBBFFFFO.',
-  '..OSFFFFFFFBBBBFFSSO.',
-  '...OSSSSSSBBBBSSSSO..',
-  '....ODDO.ODDO.ODDO...',
-  '....ODDO.ODDO.ODDO...',
-  '....OOOO.OOOO.OOOO...',
-  '....xxxxxxxxxxxxxxx..',
-  '.....................',
-];
-
-const CAPY_WALK_2: SpriteMatrix = [
-  '.....gGGO............',
-  '....OYRRO............',
-  '....ORRUO.OO.........',
-  '...OOHHHOODO.........',
-  '.OOHFFFFFHHO.........',
-  'OKKFFEFFFPFFO........',
-  'OKFFFFFSSSFFOOOOO....',
-  '.OOFSSSSFHHHHHHHHHO..',
-  '..OFFFFFFFFFFBFFFFFO.',
-  '..OFFFFFFFFBBBBFFFFO.',
-  '..OSFFFFFFFBBBBFFSSO.',
-  '...OSSSSSSBBBBSSSSO..',
-  '....ODDO.ODDO..ODDO..',
-  '....ODDO..ODDO..ODDO.',
-  '....OOOO..OOOO..OOOO.',
-  '...xxxxxxxxxxxxxxxx..',
-];
-
-const CAPY_DANCE_0: SpriteMatrix = [
-  '.....gGGO............',
-  '....OYRRO............',
-  '....ORRUO.OO.........',
-  '...OOHHHOODO.........',
-  '.OOHFFKFFHHO.........',
-  'OKKFFKFKFPFFO........',
-  'OKFFFFFSSSFFOOOOO....',
-  '.OOFSSSSFHHHHHHHHHO..',
-  '..OFFFFFFFFFFBFFFFFO.',
-  '..OFFFFFFFFBBBBFFFFO.',
-  '..OSFFFFFFFBBBBFFSSO.',
-  '...OSSSSSSBBBBSSSSO..',
-  '....ODDOODDOODDOO....',
-  '....OOOO.OO..OOOO....',
-  '.....................',
-  '...xxxxxx..xxxxxxx...',
-];
-
-const CAPY_DANCE_1: SpriteMatrix = [
-  '....gGGO.............',
-  '...OYRRO.............',
-  '...ORRUO..OO.........',
-  '...OOHHHOODO.........',
-  '.OOHFFKFFHHO.........',
-  'OKKFFKFKFPFFO........',
-  'OKFFFFFSSSFFOOOOO....',
-  '.OOFSSSSFHHHHHHHHHO..',
-  '..OFFFFFFFFFFBFFFFFO.',
-  '..OFFFFFFFFBBBBFFFFO.',
-  '..OSFFFFFFFBBBBFFSSO.',
-  '...OSSSSSSBBBBSSSSO..',
-  '..ODDO.ODDO..ODDO....',
-  '..OOOO.OOOO..OOOO....',
-  '.....................',
-  '..xxxxxx..xxxxxxxx...',
-];
-
-const CAPY_DROWSY_HALF: SpriteMatrix = [
-  '.....................',
-  '.....gGGO............',
-  '....OYRRO............',
-  '....ORRUO.OO.........',
-  '...OOHHHOODO.........',
-  '.OOHFFFFFHHO.........',
-  'OKKFFKKFFPFFOOOO.....',
-  'OKFFFFFSSSFFHHHHHHO..',
-  '.OOFSSSSFHHFFFFFFFFO.',
-  '..OFFFFFFFFFBBBFFFFO.',
-  '..OFFFFFFFFBBBBFFSSO.',
-  '..OSSSSSSSBBBBSSSSO..',
-  '...OSSSSSSSSSSSSSO...',
-  '....OOOOOOOOOOOOO....',
-  '...xxxxxxxxxxxxxxx...',
-  '.....................',
-];
-
-const CAPY_SLEEP_BREATH: SpriteMatrix = [
-  '.....................',
-  '.....gGGO............',
-  '....OYRRO............',
-  '....ORRUO.OO.........',
-  '...OOHHHOODO.........',
-  '.OOHFFFFFHHO.........',
-  'OKKFFKKFFPFFOOOOO....',
-  'OKFFFFFSSSFFHHHHHHHO.',
-  '.OOFSSSSFHHFFFFFFFFO.',
-  '..OFFFFFFFFFBBBBFFFO.',
-  '..OFFFFFFFFBBBBFFSSO.',
-  '..OSSSSSSSBBBBSSSSO..',
-  '...OSSSSSSSSSSSSSO...',
-  '....OOOOOOOOOOOOO....',
-  '...xxxxxxxxxxxxxxx...',
-  '.....................',
-];
-
-function getCapyPalette(timeState: RoomTimeState, lampOn: boolean): SpriteColorMap {
-  const isSleep = timeState === 'sleeping' && !lampOn;
-  return {
-    O: '#3B241A',
-    K: '#2A1810',
-    E: '#2A1810',
-    F: isSleep ? '#7E5A44' : '#A67855',
-    H: isSleep ? '#987258' : '#C89872',
-    B: isSleep ? '#8A6750' : '#B58966',
-    S: isSleep ? '#5D402E' : '#7D563B',
-    D: isSleep ? '#452D1E' : '#5C3C28',
-    P: isSleep ? '#B46A67' : '#E68A82',
-    R: isSleep ? '#C66F00' : '#FB8C00',
-    Y: isSleep ? '#CF9B04' : '#FBBC04',
-    U: isSleep ? '#A34F00' : '#D96800',
-    G: isSleep ? '#288240' : '#34A853',
-    g: '#267A3D',
-    x: 'rgba(34, 20, 16, 0.32)',
-  };
+  const out = applySeloutLayer(body, detail, w, h, theme.selout, isDrowsy ? 12 : 14);
+  const shadowY = isDrowsy ? 14 : 15;
+  for (let sx = 4; sx <= 18; sx += 1) {
+    if (!getPx(out, w, h, sx, shadowY)) setPx(out, w, h, sx, shadowY, theme.groundCore);
+  }
+  for (let sx = 6; sx <= 16; sx += 1) {
+    if (!getPx(out, w, h, sx, shadowY + 1)) setPx(out, w, h, sx, shadowY + 1, theme.groundSoft);
+  }
+  return out;
 }
 
 const WOOFER_FRAME_0: SpriteMatrix = [
-  '.OOOOOO.',
-  'OSSSSSSO',
-  'OSMDDMSO',
-  'OMDCCDMO',
-  'OMDCCDMO',
-  'OSMDDMSO',
-  'OSSSSSSO',
-  '.OOOOOO.',
+  'SSSSSSSS',
+  'SMDDDDMS',
+  'SDCCCCDS',
+  'SDCCCCDS',
+  'SDCCCCDS',
+  'SDCCCCDS',
+  'SMDDDDMS',
+  'SSSSSSSS',
 ];
 
 const WOOFER_FRAME_1: SpriteMatrix = [
-  '.OOOOOO.',
-  'OGGGGGGO',
-  'OGMCCMGO',
-  'OGCAACGO',
-  'OGCAACGO',
-  'OGMCCMGO',
-  'OGGGGGGO',
-  '.OOOOOO.',
+  'GGGGGGGG',
+  'GMCCCCMG',
+  'GCAACCCG',
+  'GCAAAACG',
+  'GCAAAACG',
+  'GCAACCCG',
+  'GMCCCCMG',
+  'GGGGGGGG',
 ];
 
 const WOOFER_COLORS: SpriteColorMap = {
-  O: '#181E2E',
-  S: '#334155',
+  S: '#1E2434',
   M: '#64748B',
-  D: '#475569',
+  D: '#334155',
   C: '#CBD5E1',
   G: '#34A853',
   A: '#86EFAC',
@@ -1286,11 +1410,6 @@ const Z_LARGE: SpriteMatrix = [
   'OOOOOO',
 ];
 
-const Z_COLORS: SpriteColorMap = {
-  O: '#1E2438',
-  Z: '#E2E8F0',
-};
-
 const STAR_TINY: SpriteMatrix = [
   '...',
   '.M.',
@@ -1322,12 +1441,11 @@ const STAR_COLORS_BLUE: SpriteColorMap = {
 };
 
 const STAR_NODES: readonly { x: number; y: number; phase: number; blue: boolean }[] = [
-  { x: 95, y: 16, phase: 0, blue: false },
-  { x: 103, y: 22, phase: 1, blue: true },
-  { x: 114, y: 16, phase: 2, blue: false },
-  { x: 131, y: 17, phase: 3, blue: true },
-  { x: 98, y: 32, phase: 1, blue: false },
-  { x: 122, y: 31, phase: 2, blue: true },
+  { x: 82, y: 12, phase: 0, blue: false },
+  { x: 89, y: 18, phase: 1, blue: true },
+  { x: 102, y: 12, phase: 2, blue: false },
+  { x: 111, y: 18, phase: 3, blue: true },
+  { x: 122, y: 19, phase: 1, blue: false },
 ];
 
 const GBA_POINTER_ARROW: SpriteMatrix = [
@@ -1352,11 +1470,13 @@ function drawZzzDrift(
   originY: number,
   timeSec: number,
   reducedMotion: boolean,
+  outlineColor: string,
   riseSpan = 7
 ): void {
+  const zColors: SpriteColorMap = { O: outlineColor, Z: '#E2E8F0' };
   if (reducedMotion) {
-    drawSpriteMatrix(ctx, Z_SMALL, Z_COLORS, originX, originY - 2);
-    drawSpriteMatrix(ctx, Z_LARGE, Z_COLORS, originX + 6, originY - riseSpan);
+    drawSpriteMatrix(ctx, Z_SMALL, zColors, originX, originY - 2);
+    drawSpriteMatrix(ctx, Z_LARGE, zColors, originX + 6, originY - riseSpan);
     return;
   }
 
@@ -1370,7 +1490,7 @@ function drawZzzDrift(
     const mat = i === 1 ? Z_LARGE : Z_SMALL;
     ctx.save();
     ctx.globalAlpha = alpha;
-    drawSpriteMatrix(ctx, mat, Z_COLORS, drawX, drawY);
+    drawSpriteMatrix(ctx, mat, zColors, drawX, drawY);
     ctx.restore();
   }
 }
@@ -1413,7 +1533,8 @@ function drawSmoothSteam(
 }
 
 function maskStaticDeskMug(ctx: CanvasRenderingContext2D, palette: RoomPalette): void {
-  fillPixelRect(ctx, 196, 79, 10, 7, palette.woodMid);
+  fillPixelRect(ctx, 197, 79, 1, 9, palette.inkIndigo);
+  fillPixelRect(ctx, 198, 79, 9, 9, palette.woodMid);
 }
 
 function drawDeskCoffeeSteam(
@@ -1471,12 +1592,12 @@ export function drawSleepingCharacter(
 ): void {
   const { timeState, lampOn, palette, reducedMotion = false } = options;
   const timeSec = resolveTimeSec(options);
-  const colors = getLongPalette(timeState, lampOn, palette);
+  const theme = getLongTheme(timeState, lampOn, palette);
   const breathOffset = getSleepingBreathOffset(timeSec, reducedMotion);
-  const matrix = buildSleepingLongMatrix(breathOffset);
+  const grid = buildSleepingLongGrid(theme, breathOffset);
 
-  drawSpriteMatrix(ctx, matrix, colors, SLEEP_DRAW_X, SLEEP_DRAW_Y);
-  drawZzzDrift(ctx, 44, 83, timeSec, reducedMotion, 6);
+  drawPixelGrid(ctx, grid, SLEEP_WIDTH, SLEEP_HEIGHT, SLEEP_DRAW_X, SLEEP_DRAW_Y);
+  drawZzzDrift(ctx, 44, 82, timeSec, reducedMotion, theme.selout, 6);
 }
 
 export function drawRoomScreensAndSteam(
@@ -1502,209 +1623,180 @@ export function drawSeatedCharacter(
   }
 
   const seatAnchor = options.seatAnchor ?? DEFAULT_SEAT_ANCHOR;
-  const drawX = Math.round(seatAnchor.seatCenterX - 18);
-  const drawY = Math.round(seatAnchor.seatTopY - 13);
+  const drawX = Math.round(seatAnchor.seatCenterX - 25);
+  const drawY = Math.round(seatAnchor.seatTopY - 14);
   const timeSec = resolveTimeSec(options);
-  const colors = getLongPalette(timeState, lampOn, palette);
+  const theme = getLongTheme(timeState, lampOn, palette);
+  const lampRim = lampOn && timeState === 'late_night';
 
   if (reducedMotion) {
-    const matrix = buildSeatedLongMatrix(HEAD_BACK_CENTER, SEATED_ARMS_HOME, 0, 0);
-    drawSpriteMatrix(ctx, matrix, colors, drawX, drawY);
+    const grid = buildSeatedLongGrid(theme, 'center', 'home', 0, 0, lampRim);
+    drawPixelGrid(ctx, grid, SEATED_WIDTH, SEATED_HEIGHT, drawX, drawY);
     return;
   }
 
   const cycle = timeState === 'late_night' ? timeSec % 16 : timeSec % 18;
+  const focusSway = Math.sin(timeSec * Math.PI * 0.7) > 0.86 ? 1 : 0;
   const musicBobDown = isMusicActive && Math.sin(timeSec * Math.PI * 3.1) > 0.32 ? 1 : 0;
 
-  let head: SpriteMatrix = HEAD_BACK_CENTER;
-  let arms: SpriteMatrix = SEATED_ARMS_HOME;
-  let headDrop = musicBobDown;
+  let headPose: SeatedHeadPose = 'center';
+  let armPose: SeatedArmPose = 'home';
+  let headDrop = musicBobDown || focusSway;
   let shoulderDrop = musicBobDown;
 
   if (timeState === 'working') {
     if (cycle >= 3.2 && cycle < 5.0) {
-      head = HEAD_BACK_GLANCE_LEFT;
+      headPose = 'glance_left';
     } else if (cycle >= 5.2 && cycle < 5.7) {
-      arms = SEATED_ARMS_REACH_MUG;
+      armPose = 'reach_mug';
       shoulderDrop = 0;
     } else if (cycle >= 5.7 && cycle < 6.9) {
       maskStaticDeskMug(ctx, palette);
-      head = HEAD_BACK_GLANCE_RIGHT;
-      arms = SEATED_ARMS_SIP_MUG;
+      headPose = 'glance_right';
+      armPose = 'sip_mug';
       headDrop = 0;
       shoulderDrop = 0;
-      drawSmoothSteam(ctx, drawX + 28, drawY + 2, timeSec, false, 5);
+      drawSmoothSteam(ctx, drawX + 33, drawY + 2, timeSec, false, 5);
     } else if (cycle >= 6.9 && cycle < 7.4) {
-      arms = SEATED_ARMS_REACH_MUG;
+      armPose = 'reach_mug';
       shoulderDrop = 0;
     } else if (cycle >= 10.8 && cycle < 13.4) {
-      head = cycle < 12.1 ? HEAD_BACK_GLANCE_LEFT : HEAD_BACK_GLANCE_RIGHT;
-      arms = SEATED_ARMS_STRETCH;
+      headPose = cycle < 12.1 ? 'glance_left' : 'glance_right';
+      armPose = 'stretch';
       headDrop = 0;
       shoulderDrop = 0;
     } else if (cycle >= 14.8 && cycle < 16.4) {
-      head = HEAD_BACK_GLANCE_LEFT;
-      arms = Math.floor(timeSec * 5) % 2 === 0 ? SEATED_ARMS_TYPE_L : SEATED_ARMS_TYPE_R;
+      headPose = 'glance_left';
+      armPose = Math.floor(timeSec * 5) % 2 === 0 ? 'type_l' : 'type_r';
     } else if (cycle >= 8.2 && cycle < 10.2) {
-      arms = Math.floor(timeSec * 2.5) % 2 === 0 ? SEATED_ARMS_MOUSE_A : SEATED_ARMS_MOUSE_B;
+      armPose = Math.floor(timeSec * 2.5) % 2 === 0 ? 'mouse_a' : 'mouse_b';
     } else {
       const step = Math.floor(timeSec * 5.2) % 3;
-      arms =
-        step === 0
-          ? SEATED_ARMS_TYPE_L
-          : step === 1
-            ? SEATED_ARMS_TYPE_R
-            : SEATED_ARMS_HOME;
+      armPose = step === 0 ? 'type_l' : step === 1 ? 'type_r' : 'home';
     }
   } else {
     if (cycle >= 3.5 && cycle < 4.9) {
-      head = HEAD_BACK_GLANCE_LEFT;
+      headPose = 'glance_left';
     } else if (cycle >= 6.0 && cycle < 8.6) {
-      arms = SEATED_ARMS_STRETCH;
+      armPose = 'stretch';
       headDrop = 0;
       shoulderDrop = 0;
-      head = cycle < 7.3 ? HEAD_BACK_GLANCE_LEFT : HEAD_BACK_GLANCE_RIGHT;
+      headPose = cycle < 7.3 ? 'glance_left' : 'glance_right';
     } else if (cycle >= 10.4 && cycle < 12.2) {
-      arms = Math.floor(timeSec * 2.4) % 2 === 0 ? SEATED_ARMS_MOUSE_A : SEATED_ARMS_MOUSE_B;
+      armPose = Math.floor(timeSec * 2.4) % 2 === 0 ? 'mouse_a' : 'mouse_b';
     } else {
       const step = Math.floor(timeSec * 4.8) % 3;
-      arms =
-        step === 0
-          ? SEATED_ARMS_TYPE_L
-          : step === 1
-            ? SEATED_ARMS_TYPE_R
-            : SEATED_ARMS_HOME;
+      armPose = step === 0 ? 'type_l' : step === 1 ? 'type_r' : 'home';
     }
   }
 
-  const matrix = buildSeatedLongMatrix(head, arms, headDrop, shoulderDrop);
-  drawSpriteMatrix(ctx, matrix, colors, drawX, drawY);
-
-  if (lampOn && timeState === 'late_night') {
-    const hairRow = head[3] ?? '';
-    let rightHairCol = -1;
-    for (let c = hairRow.length - 1; c >= 0; c -= 1) {
-      if (hairRow[c] === 'H' || hairRow[c] === 'h' || hairRow[c] === 'l') {
-        rightHairCol = c;
-        break;
-      }
-    }
-    if (rightHairCol >= 0) {
-      fillPixelRect(
-        ctx,
-        drawX + SEATED_HEAD_X + rightHairCol,
-        drawY + 3 + headDrop,
-        1,
-        2,
-        '#FCD34D'
-      );
-    }
-    const sleeveRow = matrix[11] ?? '';
-    let rightArmCol = -1;
-    for (let c = sleeveRow.length - 1; c >= 0; c -= 1) {
-      if (sleeveRow[c] === 'B' || sleeveRow[c] === 'b') {
-        rightArmCol = c;
-        break;
-      }
-    }
-    if (rightArmCol >= 0) {
-      fillPixelRect(ctx, drawX + rightArmCol, drawY + 11 + shoulderDrop, 1, 2, '#E9B872');
-    }
-  }
+  const grid = buildSeatedLongGrid(theme, headPose, armPose, headDrop, shoulderDrop, lampRim);
+  drawPixelGrid(ctx, grid, SEATED_WIDTH, SEATED_HEIGHT, drawX, drawY);
 }
 
 interface WakingLongPose {
   x: number;
   y: number;
   footY: number;
-  matrix: SpriteMatrix;
+  grid: PixelGrid;
   steamX: number;
   steamY: number;
 }
 
-function getWakingLongPose(timeSec: number, reducedMotion: boolean): WakingLongPose {
-  const minX = WALKABLE_RECT.x + 3;
-  const maxX = Math.min(85, WALKABLE_RECT.x + WALKABLE_RECT.w - WAKING_WIDTH);
+function getWakingLongPose(
+  theme: LongColorTheme,
+  timeSec: number,
+  reducedMotion: boolean
+): WakingLongPose {
+  const minX = WALKABLE_RECT.x + 1;
+  const maxX = Math.min(82, WALKABLE_RECT.x + WALKABLE_RECT.w - WAKING_WIDTH);
   const clampX = (x: number): number => Math.max(minX, Math.min(maxX, Math.round(x)));
-  const clampY = (y: number, h: number): number =>
-    Math.max(WALKABLE_RECT.y, Math.min(148 - h + 1, Math.round(y)));
+  const clampY = (y: number): number =>
+    Math.max(WALKABLE_RECT.y, Math.min(WALKABLE_RECT.y + WALKABLE_RECT.h - WAKING_HEIGHT, Math.round(y)));
 
   if (reducedMotion) {
-    const x = clampX(81);
-    const y = clampY(110, WAKING_IDLE_DEFAULT.length);
+    const x = clampX(80);
+    const y = clampY(108);
     return {
       x,
       y,
-      footY: y + WAKING_IDLE_DEFAULT.length - 2,
-      matrix: WAKING_IDLE_DEFAULT,
-      steamX: x + 16,
-      steamY: y + 12,
+      footY: y + WAKING_HEIGHT - 2,
+      grid: buildWakingLongGrid(theme, 'down', 'coffee', 0, false, false),
+      steamX: x + 17,
+      steamY: y + 14,
     };
   }
 
   const cycle = timeSec % 16;
-  const blinkNow = timeSec % 3.9 >= 3.68 && timeSec % 3.9 <= 3.84;
+  const blinkNow = timeSec % 3.8 >= 3.64;
   const breatheNow = Math.sin(timeSec * ((Math.PI * 2) / 3.2)) > 0.35;
-  const idleTorso = breatheNow ? TORSO_FRONT_BREATHE : TORSO_FRONT;
-  const swayOffset = Math.round(Math.sin(timeSec * 0.9) * 1.4);
 
-  if (cycle < 4.5) {
-    const head = blinkNow ? HEAD_FRONT_BLINK : HEAD_FRONT_OPEN;
-    const mat = buildWakingLongMatrix(head, idleTorso, WAKING_ARMS_HOLD_CUP, 11);
-    const x = clampX(81 + (cycle > 2.2 ? 1 : 0));
-    const y = clampY(110, mat.length);
+  if (cycle < 3.4) {
+    const p = cycle / 3.4;
+    const x = clampX(75 + p * 6);
+    const y = clampY(111 - Math.round(Math.sin(p * Math.PI) * 2));
+    const walkFrame = Math.floor(timeSec * 6.0) % 4;
     return {
       x,
       y,
-      footY: y + mat.length - 2,
-      matrix: mat,
-      steamX: x + 16,
-      steamY: y + 12,
-    };
-  }
-
-  if (cycle < 8.2) {
-    const isPeakSip = cycle >= 5.0 && cycle < 7.5;
-    const head = isPeakSip ? HEAD_FRONT_SIP : blinkNow ? HEAD_FRONT_BLINK : HEAD_FRONT_OPEN;
-    const arms = isPeakSip ? WAKING_ARMS_LIFT_CUP : WAKING_ARMS_HOLD_CUP;
-    const mat = buildWakingLongMatrix(head, idleTorso, arms, 11);
-    const x = clampX(82);
-    const y = clampY(110, mat.length);
-    return {
-      x,
-      y,
-      footY: y + mat.length - 2,
-      matrix: mat,
-      steamX: x + 16,
-      steamY: y + (isPeakSip ? 10 : 12),
-    };
-  }
-
-  if (cycle < 11.8) {
-    const mat = buildWakingLongMatrix(HEAD_FRONT_BLINK, TORSO_FRONT, WAKING_ARMS_STRETCH, 8);
-    const x = clampX(81 + Math.max(-1, Math.min(1, swayOffset)));
-    const y = clampY(110, mat.length);
-    return {
-      x,
-      y,
-      footY: y + mat.length - 2,
-      matrix: mat,
+      footY: y + WAKING_HEIGHT - 2,
+      grid: buildWakingLongGrid(theme, 'right', 'walk', walkFrame, blinkNow, false),
       steamX: -10,
       steamY: -10,
     };
   }
 
-  const head = blinkNow ? HEAD_FRONT_BLINK : HEAD_FRONT_OPEN;
-  const mat = buildWakingLongMatrix(head, idleTorso, WAKING_ARMS_HOLD_CUP, 11);
-  const x = clampX(81 + Math.max(0, Math.min(2, swayOffset)));
-  const y = clampY(110 + (cycle >= 13.6 && cycle < 14.8 ? -1 : 0), mat.length);
+  if (cycle < 7.2) {
+    const isPeakSip = cycle >= 4.4 && cycle < 6.4;
+    const x = clampX(81);
+    const y = clampY(110);
+    return {
+      x,
+      y,
+      footY: y + WAKING_HEIGHT - 2,
+      grid: buildWakingLongGrid(theme, 'down', isPeakSip ? 'sip' : 'coffee', 0, blinkNow, breatheNow),
+      steamX: x + 17,
+      steamY: y + (isPeakSip ? 12 : 14),
+    };
+  }
+
+  if (cycle < 10.6) {
+    const x = clampX(80 + Math.round(Math.sin(timeSec * 1.1) * 1));
+    const y = clampY(110);
+    return {
+      x,
+      y,
+      footY: y + WAKING_HEIGHT - 2,
+      grid: buildWakingLongGrid(theme, 'down', 'stretch', 0, true, false),
+      steamX: -10,
+      steamY: -10,
+    };
+  }
+
+  if (cycle < 13.8) {
+    const p = (cycle - 10.6) / 3.2;
+    const x = clampX(81 - p * 6);
+    const y = clampY(110 + Math.round(Math.sin(p * Math.PI) * 1));
+    const walkFrame = Math.floor(timeSec * 6.0) % 4;
+    return {
+      x,
+      y,
+      footY: y + WAKING_HEIGHT - 2,
+      grid: buildWakingLongGrid(theme, 'left', 'walk', walkFrame, blinkNow, false),
+      steamX: -10,
+      steamY: -10,
+    };
+  }
+
+  const x = clampX(75);
+  const y = clampY(111);
   return {
     x,
     y,
-    footY: y + mat.length - 2,
-    matrix: mat,
-    steamX: x + 16,
-    steamY: y + 12,
+    footY: y + WAKING_HEIGHT - 2,
+    grid: buildWakingLongGrid(theme, 'down', 'coffee', 0, blinkNow, breatheNow),
+    steamX: x + 17,
+    steamY: y + 14,
   };
 }
 
@@ -1713,16 +1805,14 @@ interface CapyPoseState {
   y: number;
   footY: number;
   flipX: boolean;
-  matrix: SpriteMatrix;
+  pose: CapyPoseKind;
 }
 
-function clampCapyPos(rawX: number, rawY: number, matrix: SpriteMatrix): { x: number; y: number } {
-  const matW = matrix[0]?.length ?? 21;
-  const matH = matrix.length;
+function clampCapyPos(rawX: number, rawY: number): { x: number; y: number } {
   const minX = RUG_WALK_RECT.x;
-  const maxX = RUG_WALK_RECT.x + RUG_WALK_RECT.w - matW;
+  const maxX = RUG_WALK_RECT.x + RUG_WALK_RECT.w - CAPY_WIDTH;
   const minY = RUG_WALK_RECT.y;
-  const maxY = RUG_WALK_RECT.y + RUG_WALK_RECT.h - matH;
+  const maxY = RUG_WALK_RECT.y + RUG_WALK_RECT.h - CAPY_HEIGHT;
   return {
     x: Math.max(minX, Math.min(maxX, Math.round(rawX))),
     y: Math.max(minY, Math.min(maxY, Math.round(rawY))),
@@ -1737,39 +1827,36 @@ function getCapybaraState(
 ): CapyPoseState {
   if (timeState === 'sleeping') {
     const breathUp = !reducedMotion && Math.sin(timeSec * 1.8) > 0.35;
-    const mat = breathUp ? CAPY_SLEEP_BREATH : CAPY_DROWSY_HALF;
-    const pos = clampCapyPos(188, 132, mat);
-    return {
-      x: pos.x,
-      y: pos.y,
-      footY: pos.y + 13,
-      flipX: false,
-      matrix: mat,
-    };
-  }
-
-  if (timeState === 'late_night') {
-    const sleepyNod = isMusicActive && !reducedMotion && Math.sin(timeSec * Math.PI * 2.2) > 0.4;
-    const mat = CAPY_DROWSY_HALF;
-    const pos = clampCapyPos(188, sleepyNod ? 131 : 132, mat);
-    return {
-      x: pos.x,
-      y: pos.y,
-      footY: pos.y + 13,
-      flipX: false,
-      matrix: mat,
-    };
-  }
-
-  if (reducedMotion) {
-    const mat = CAPY_SIT_OPEN;
-    const pos = clampCapyPos(188, 131, mat);
+    const pos = clampCapyPos(188, 132);
     return {
       x: pos.x,
       y: pos.y,
       footY: pos.y + 14,
       flipX: false,
-      matrix: mat,
+      pose: breathUp ? 'sleep' : 'drowsy',
+    };
+  }
+
+  if (timeState === 'late_night') {
+    const sleepyNod = isMusicActive && !reducedMotion && Math.sin(timeSec * Math.PI * 2.2) > 0.4;
+    const pos = clampCapyPos(188, sleepyNod ? 131 : 132);
+    return {
+      x: pos.x,
+      y: pos.y,
+      footY: pos.y + 14,
+      flipX: false,
+      pose: 'drowsy',
+    };
+  }
+
+  if (reducedMotion) {
+    const pos = clampCapyPos(188, 131);
+    return {
+      x: pos.x,
+      y: pos.y,
+      footY: pos.y + 14,
+      flipX: false,
+      pose: 'sit',
     };
   }
 
@@ -1807,43 +1894,41 @@ function getCapybaraState(
 
   if (isMusicActive) {
     const danceFrame = Math.floor(timeSec * 4.4) % 2;
-    const hopY = danceFrame === 1 ? -2 : 0;
-    const mat = danceFrame === 1 ? CAPY_DANCE_1 : CAPY_DANCE_0;
-    const pos = clampCapyPos(cx, cy + hopY, mat);
+    const hopY = danceFrame === 1 ? -1 : 0;
+    const pos = clampCapyPos(cx, cy + hopY);
     return {
       x: pos.x,
       y: pos.y,
       footY: pos.y + 14,
       flipX,
-      matrix: mat,
+      pose: danceFrame === 1 ? 'dance_1' : 'dance_0',
     };
   }
 
   if (isWalking) {
-    const walkSequence = [CAPY_WALK_0, CAPY_WALK_1, CAPY_WALK_2, CAPY_WALK_1];
-    const step = Math.floor(timeSec * 5.2) % walkSequence.length;
-    const mat = walkSequence[step];
-    const pos = clampCapyPos(cx, cy, mat);
+    const walkPoses: readonly CapyPoseKind[] = ['walk_0', 'walk_1', 'walk_2', 'walk_3'];
+    const step = Math.floor(timeSec * 5.6) % walkPoses.length;
+    const pos = clampCapyPos(cx, cy);
     return {
       x: pos.x,
       y: pos.y,
       footY: pos.y + 14,
       flipX,
-      matrix: mat,
+      pose: walkPoses[step],
     };
   }
 
   const blinkNow = timeSec % 4.1 >= 3.88;
   const earTwitch = timeSec % 3.2 >= 2.96;
-  const sitMatrix = blinkNow ? CAPY_SIT_BLINK : earTwitch ? CAPY_SIT_EAR : CAPY_SIT_OPEN;
-  const pos = clampCapyPos(cx, cy, sitMatrix);
+  const sitPose: CapyPoseKind = blinkNow ? 'blink' : earTwitch ? 'ear' : 'sit';
+  const pos = clampCapyPos(cx, cy);
 
   return {
     x: pos.x,
     y: pos.y,
     footY: pos.y + 14,
     flipX,
-    matrix: sitMatrix,
+    pose: sitPose,
   };
 }
 
@@ -1855,14 +1940,15 @@ export function drawWakingAndCapybaraLayer(
   const timeSec = resolveTimeSec(options);
 
   const capyState = getCapybaraState(timeState, isMusicActive, timeSec, reducedMotion);
-  const capyColors = getCapyPalette(timeState, lampOn);
+  const capyTheme = getCapyTheme(timeState, lampOn, palette);
+  const capyGrid = buildCapyGrid(capyTheme, capyState.pose);
 
   const renderCapy = () => {
-    drawSpriteMatrix(ctx, capyState.matrix, capyColors, capyState.x, capyState.y, capyState.flipX);
+    drawPixelGrid(ctx, capyGrid, CAPY_WIDTH, CAPY_HEIGHT, capyState.x, capyState.y, capyState.flipX);
     if (timeState === 'sleeping') {
       const zX = Math.max(RUG_WALK_RECT.x, capyState.x - 4);
       const zY = Math.max(RUG_WALK_RECT.y + 5, capyState.y - 1);
-      drawZzzDrift(ctx, zX, zY, timeSec + 1.2, reducedMotion, 3);
+      drawZzzDrift(ctx, zX, zY, timeSec + 1.2, reducedMotion, capyTheme.selout, 3);
     }
   };
 
@@ -1871,11 +1957,11 @@ export function drawWakingAndCapybaraLayer(
     return;
   }
 
-  const longPose = getWakingLongPose(timeSec, reducedMotion);
-  const longColors = getLongPalette(timeState, lampOn, palette);
+  const longTheme = getLongTheme(timeState, lampOn, palette);
+  const longPose = getWakingLongPose(longTheme, timeSec, reducedMotion);
 
   const renderLong = () => {
-    drawSpriteMatrix(ctx, longPose.matrix, longColors, longPose.x, longPose.y);
+    drawPixelGrid(ctx, longPose.grid, WAKING_WIDTH, WAKING_HEIGHT, longPose.x, longPose.y);
     if (longPose.steamX >= 0) {
       drawSmoothSteam(ctx, longPose.steamX, longPose.steamY, timeSec, reducedMotion, 7);
     }
@@ -1900,7 +1986,7 @@ function drawEqualizerBars(
   const barColors = ['#34A853', '#FBBC04', '#60A5FA'];
   for (let b = 0; b < 3; b += 1) {
     const wave = (Math.sin(timeSec * 8.5 + phaseOffset + b * 1.9) + 1) * 0.5;
-    const h = 2 + Math.round(wave * 6);
+    const h = 2 + Math.round(wave * 5);
     const bx = baseX + b * 2;
     const by = baseY - h;
     fillPixelRect(ctx, bx, by, 1, h, barColors[b]);
@@ -1927,8 +2013,8 @@ function drawMusicEffects(
     drawSpriteMatrix(ctx, WOOFER_FRAME_0, WOOFER_COLORS, RIGHT_WOOFER_X, RIGHT_WOOFER_Y);
     ctx.save();
     ctx.globalAlpha = 0.9;
-    drawSpriteMatrix(ctx, NOTE_SINGLE, NOTE_COLORS_GREEN, 121, 47);
-    drawSpriteMatrix(ctx, NOTE_DOUBLE, NOTE_COLORS_GOLD, 215, 46);
+    drawSpriteMatrix(ctx, NOTE_SINGLE, NOTE_COLORS_GREEN, 118, 46);
+    drawSpriteMatrix(ctx, NOTE_DOUBLE, NOTE_COLORS_GOLD, 204, 45);
     ctx.restore();
     return;
   }
@@ -1970,8 +2056,8 @@ function drawMusicEffects(
     drawSpriteMatrix(ctx, wooferMatrix, WOOFER_COLORS, LEFT_WOOFER_X, LEFT_WOOFER_Y);
     drawSpriteMatrix(ctx, wooferMatrix, WOOFER_COLORS, RIGHT_WOOFER_X, RIGHT_WOOFER_Y);
 
-    drawEqualizerBars(ctx, 113, 58, timeSec, 0);
-    drawEqualizerBars(ctx, 207, 58, timeSec, 1.4);
+    drawEqualizerBars(ctx, 116, 56, timeSec, 0);
+    drawEqualizerBars(ctx, 204, 56, timeSec, 1.4);
   }
 
   if (noteFadeMultiplier <= 0) {
@@ -1987,10 +2073,11 @@ function drawMusicEffects(
     colors: SpriteColorMap;
     arcAmp: number;
   }[] = [
-    { baseX: 124, baseY: 54, offsetSec: 0, doubleNote: false, colors: NOTE_COLORS_GREEN, arcAmp: 2.6 },
-    { baseX: 124, baseY: 54, offsetSec: 1.2, doubleNote: true, colors: NOTE_COLORS_BLUE, arcAmp: -2.4 },
-    { baseX: 218, baseY: 54, offsetSec: 0.6, doubleNote: true, colors: NOTE_COLORS_GOLD, arcAmp: 2.6 },
-    { baseX: 218, baseY: 54, offsetSec: 1.8, doubleNote: false, colors: NOTE_COLORS_CORAL, arcAmp: -2.6 },
+    { baseX: 119, baseY: 53, offsetSec: 0, doubleNote: false, colors: NOTE_COLORS_GREEN, arcAmp: 2.6 },
+    { baseX: 119, baseY: 53, offsetSec: 1.2, doubleNote: true, colors: NOTE_COLORS_BLUE, arcAmp: -2.4 },
+    { baseX: 207, baseY: 53, offsetSec: 0.6, doubleNote: true, colors: NOTE_COLORS_GOLD, arcAmp: 2.6 },
+    { baseX: 207, baseY: 53, offsetSec: 1.8, doubleNote: false, colors: NOTE_COLORS_CORAL, arcAmp: -2.6 },
+    { baseX: 256, baseY: 43, offsetSec: 0.9, doubleNote: false, colors: NOTE_COLORS_GOLD, arcAmp: 1.8 },
   ];
 
   for (let i = 0; i < notes.length; i += 1) {
@@ -2005,7 +2092,7 @@ function drawMusicEffects(
 
     const phase = ((timeSec + item.offsetSec) % cycleSec) / cycleSec;
     const drawX = item.baseX - 3 + Math.round(Math.sin(phase * Math.PI * 2) * item.arcAmp);
-    const drawY = item.baseY - Math.round(phase * 24);
+    const drawY = item.baseY - Math.round(phase * 22);
     const baseAlpha =
       phase < 0.16 ? phase / 0.16 : phase > 0.65 ? Math.max(0, (1 - phase) / 0.35) : 0.95;
     const finalAlpha = Math.max(0, Math.min(1, baseAlpha * noteFadeMultiplier));
@@ -2020,6 +2107,47 @@ function drawMusicEffects(
   }
 }
 
+function drawHotspotBrackets(
+  ctx: CanvasRenderingContext2D,
+  bx: number,
+  by: number,
+  bw: number,
+  bh: number,
+  isHovered: boolean,
+  timeSec: number,
+  reducedMotion: boolean
+): void {
+  const x0 = Math.max(1, Math.round(bx));
+  const y0 = Math.max(1, Math.round(by));
+  const x1 = Math.min(318, Math.round(bx + bw - 1));
+  const y1 = Math.min(178, Math.round(by + bh - 1));
+  const pulse = reducedMotion || isHovered ? 0.92 : 0.58 + 0.22 * Math.sin(timeSec * 3.4);
+  const arm = 3;
+  const col = isHovered ? '#FFF3B0' : '#FBBC04';
+  const shadow = '#2A1C16';
+
+  ctx.save();
+  ctx.globalAlpha = pulse;
+
+  fillPixelRect(ctx, x0, y0, arm, 1, col);
+  fillPixelRect(ctx, x0, y0, 1, arm, col);
+  fillPixelRect(ctx, x0 + 1, y0 + 1, 1, 1, shadow);
+
+  fillPixelRect(ctx, x1 - arm + 1, y0, arm, 1, col);
+  fillPixelRect(ctx, x1, y0, 1, arm, col);
+  fillPixelRect(ctx, x1 - 1, y0 + 1, 1, 1, shadow);
+
+  fillPixelRect(ctx, x0, y1, arm, 1, col);
+  fillPixelRect(ctx, x0, y1 - arm + 1, 1, arm, col);
+  fillPixelRect(ctx, x0 + 1, y1 - 1, 1, 1, shadow);
+
+  fillPixelRect(ctx, x1 - arm + 1, y1, arm, 1, col);
+  fillPixelRect(ctx, x1, y1 - arm + 1, 1, arm, col);
+  fillPixelRect(ctx, x1 - 1, y1 - 1, 1, 1, shadow);
+
+  ctx.restore();
+}
+
 function drawHotspotPointer(
   ctx: CanvasRenderingContext2D,
   hoveredHotspot: RoomHotspotId | null,
@@ -2029,10 +2157,57 @@ function drawHotspotPointer(
   timeSec: number,
   reducedMotion: boolean
 ): void {
+  if (selectedHotspot && selectedHotspot !== hoveredHotspot) {
+    if (selectedHotspot === 'capybara') {
+      drawHotspotBrackets(
+        ctx,
+        capyState.x - 1,
+        capyState.y - 1,
+        CAPY_WIDTH + 2,
+        CAPY_HEIGHT + 1,
+        false,
+        timeSec,
+        reducedMotion
+      );
+    } else {
+      for (let i = 0; i < ROOM_HOTSPOTS.length; i += 1) {
+        const reg = ROOM_HOTSPOTS[i];
+        if (reg.id === selectedHotspot) {
+          drawHotspotBrackets(ctx, reg.x, reg.y, reg.w, reg.h, false, timeSec, reducedMotion);
+        }
+      }
+    }
+  }
+
   let pointerX: number | null = null;
   let pointerY: number | null = null;
-
   const activeId = hoveredRegion ? hoveredRegion.id : hoveredHotspot ?? selectedHotspot;
+
+  if (hoveredRegion) {
+    if (hoveredRegion.id === 'capybara') {
+      drawHotspotBrackets(
+        ctx,
+        capyState.x - 1,
+        capyState.y - 1,
+        CAPY_WIDTH + 2,
+        CAPY_HEIGHT + 1,
+        true,
+        timeSec,
+        reducedMotion
+      );
+    } else {
+      drawHotspotBrackets(
+        ctx,
+        hoveredRegion.x,
+        hoveredRegion.y,
+        hoveredRegion.w,
+        hoveredRegion.h,
+        true,
+        timeSec,
+        reducedMotion
+      );
+    }
+  }
 
   if (activeId === 'capybara') {
     pointerX = capyState.x + 10;

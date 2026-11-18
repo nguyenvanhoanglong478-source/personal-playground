@@ -62,8 +62,8 @@ export interface WorkspaceUiLabels {
   hotspotNames: Record<RoomHotspotId, string>;
 }
 
-export const ROOM_WIDTH = 320;
-export const ROOM_HEIGHT = 180;
+export const ROOM_WIDTH = 480;
+export const ROOM_HEIGHT = 320;
 
 export const WORKSPACE_CONFIG: WorkspaceConfig = {
   timezone: 'Asia/Ho_Chi_Minh',
@@ -86,7 +86,7 @@ export const SIMULATED_LOFI_TRACKS: SpotifyTrackInfo[] = [
     isDemo: true,
     title: 'Trà Đá & Pixel Grid',
     artist: 'Bình Thạnh Lo-Fi',
-    album: '320x180 Sessions',
+    album: '480x320 Sessions',
     durationMs: 202000,
   },
   {
@@ -111,32 +111,32 @@ export const TIME_STATE_META: Record<
     label: { vi: 'Sáng', en: 'Morning' },
     hours: '07:00 - 08:59',
     hint: {
-      vi: 'Pha ly cà phê sữa đá bên cửa sổ nắng sớm trước khi ngồi vào bàn.',
-      en: 'Grabbing iced milk coffee by the sunlit window before starting the day.',
+      vi: 'Pha ly cà phê sữa đá ở quầy bar bên cửa sổ nắng sớm khi cả studio bắt đầu ngày mới.',
+      en: 'Grabbing iced milk coffee at the espresso bar by the sunlit window as the studio wakes up.',
     },
   },
   working: {
     label: { vi: 'Làm việc', en: 'Working' },
     hours: '09:00 - 17:59',
     hint: {
-      vi: 'Ngồi trước màn hình vẽ giao diện, viết code và chỉnh từng chi tiết nhỏ.',
-      en: 'At the desk designing layouts, writing code, and testing small interactions.',
+      vi: 'Ngồi tại bàn chính vẽ giao diện, viết code và trao đổi nhịp nhàng cùng các bạn trong studio.',
+      en: 'At the main desk designing layouts, writing code, and building alongside studio teammates.',
     },
   },
   late_night: {
     label: { vi: 'Tối', en: 'Late night' },
     hours: '18:00 - 23:59',
     hint: {
-      vi: 'Bật đèn bàn vàng ấm để làm nốt mấy phần còn dang dở trong đêm.',
-      en: 'Warm desk lamp switched on while wrapping up late-night builds.',
+      vi: 'Bật đèn bàn vàng ấm để cùng vài cú đêm trong studio làm nốt mấy phần còn dang dở.',
+      en: 'Warm desk lamps switched on while wrapping up late-night builds with fellow night owls.',
     },
   },
   sleeping: {
     label: { vi: 'Đi ngủ', en: 'Sleeping' },
     hours: '00:00 - 06:59',
     hint: {
-      vi: 'Cả phòng tắt đèn nghỉ ngơi bên ánh trăng và chú capybara đang ngủ.',
-      en: 'Lights out for the night under moonlight with a sleepy capybara on the rug.',
+      vi: 'Cả studio dịu đèn nghỉ ngơi, Long chợp mắt trên sofa góc phòng bên chú capybara ngủ trên thảm Kilim.',
+      en: 'Lights dim over the studio as Long rests on the lounge sofa while the capybara naps on the Kilim rug.',
     },
   },
 };
@@ -144,80 +144,80 @@ export const TIME_STATE_META: Record<
 export const HOTSPOT_DIALOGUES: Record<RoomHotspotId, Record<Locale, string[]>> = {
   monitor: {
     vi: [
-      'Màn hình chính mở song song bản vẽ giao diện và trình soạn code.',
-      'Mọi khoảng cách pixel và dấu tiếng Việt đều được căn chỉnh trực tiếp tại đây.',
-      'Bản dựng cục bộ luôn được bấm thử hết các luồng trước khi đưa lên mạng.',
+      'Bàn làm việc chính của Long mở song song bản vẽ giao diện và trình soạn code.',
+      'Mọi khoảng cách pixel và dấu tiếng Việt đều được căn chỉnh trực tiếp tại cụm bàn đầu.',
+      'Cả nhóm đối chiếu bảng Kanban kính và bấm thử hết các luồng trước khi đưa lên mạng.',
     ],
     en: [
-      'The main screen splits cleanly between UI layouts and the code editor.',
-      'Every pixel margin and contrast check gets tuned right at this desk.',
-      'Local builds get clicked through end to end before anything ships live.',
+      'Long works at the lead workstation with UI layouts and the code editor side by side.',
+      'Every pixel margin and contrast check gets tuned right at the front desk cluster.',
+      'Teammates check the glass Kanban board and click through local builds before anything ships.',
     ],
   },
   speakers: {
     vi: [
-      'Cặp loa hai bên bàn giữ nhạc lofi nhỏ nhẹ đủ để tập trung code.',
-      'Khi nhạc dừng, căn phòng chỉ còn lại tiếng gõ phím lách tách.',
+      'Cặp loa studio giữ nhạc lofi nhỏ nhẹ đủ để cả nhóm tập trung code.',
+      'Khi nhạc dừng, căn phòng chỉ còn lại tiếng gõ phím lách tách và tiếng máy pha cà phê.',
       'Vài bản nhạc chậm ban đêm giúp giữ nhịp đều lúc dò lỗi giao diện.',
     ],
     en: [
-      'Desk speakers keep soft lo-fi low enough to stay focused.',
-      'When music stops, the room settles into quiet mechanical keystrokes.',
+      'Studio speakers keep soft lo-fi low enough for everyone to stay focused.',
+      'When music stops, the loft settles into quiet keystrokes and soft espresso steam.',
       'Slow beats late at night keep a steady pace while fixing layout bugs.',
     ],
   },
   lamp: {
     vi: [
-      'Đèn bàn cổ ngỗng đang tỏa ánh vàng ấm dịu mắt cho cả góc làm việc.',
-      'Ban ngày đèn nghỉ dưới nắng tự nhiên và chỉ sáng lên khi trời tối.',
+      'Đèn bàn đồng đang tỏa ánh vàng ấm dịu mắt cho góc làm việc của Long.',
+      'Ban ngày đèn nghỉ dưới nắng tự nhiên và chỉ sáng lên khi trời chuyển tối.',
     ],
     en: [
-      'The gooseneck desk lamp casts a warm yellow pool across the desk.',
-      'The lamp stays off in daylight and takes over once dusk rolls in.',
+      "The brass desk lamp casts a warm yellow pool across Long's workstation.",
+      'The lamp stays off in daylight and takes over once dusk rolls into the loft.',
     ],
   },
   window: {
     vi: [
-      'Khung cửa sổ đổi màu trời, nắng và trăng sao theo đúng giờ Việt Nam.',
-      'Nắng sớm nghiêng qua rèm vào ban ngày rồi nhường chỗ cho trăng sao ban đêm.',
+      'Khung cửa sổ lớn đổi màu trời, nắng sớm và phố đêm theo đúng giờ Việt Nam.',
+      'Nắng mai nghiêng qua cửa kính vào ban ngày rồi nhường chỗ cho trăng sao và đèn phố ban đêm.',
     ],
     en: [
-      'The window shifts sky colors, sunbeams, and stars with real Vietnam time.',
-      'Morning sunbeams slant past the curtains and trade for stars after dusk.',
+      'The panoramic windows shift sky colors, sunbeams, and city lights with real Vietnam time.',
+      'Morning sunbeams slant through the studio glass and trade for stars and skyline lights after dusk.',
     ],
   },
   bed: {
     vi: [
-      'Chiếc giường gỗ sát tường luôn được gấp gọn chăn kẻ ô vào ban ngày.',
-      'Quá nửa đêm rồi thì gập máy lại đi ngủ cho đầu óc tỉnh táo.',
+      'Góc sofa nhung ấm cúng kèm gối tựa và chăn len cho những lúc nghỉ giải lao giữa buổi.',
+      'Quá nửa đêm rồi thì gập máy lại, ngả lưng trên sofa studio chợp mắt một lát cho tỉnh táo.',
     ],
     en: [
-      'The wooden bed against the wall keeps a folded plaid quilt by day.',
-      'Once midnight passes, it is time to close the laptop and get some sleep.',
+      'A cozy velvet lounge sofa with knit pillows tucked in the corner for midday breaks.',
+      'Once midnight passes, it is time to close the laptop and catch a late nap on the studio sofa.',
     ],
   },
   capybara: {
     vi: [
-      'Chú capybara đội quả cam nhỏ đang thư giãn ngay trên tấm thảm dệt.',
-      'Người bạn nhỏ ở chân trang luôn giữ vẻ bình tĩnh dù code có nhiều lỗi.',
-      'Đêm xuống chú cuộn tròn ngủ khò ngay cạnh góc bàn làm việc.',
+      'Chú capybara đội quả cam nhỏ đang thư giãn ngay trên tấm thảm Kilim giữa studio.',
+      'Người bạn nhỏ của studio luôn giữ vẻ bình tĩnh dù code có nhiều lỗi đến đâu.',
+      'Đêm xuống chú cuộn tròn ngủ khò trên tấm thảm Kilim ngay cạnh góc sofa nghỉ ngơi.',
     ],
     en: [
-      'A chill capybara balances a tiny orange on its head on the woven rug.',
-      'This little companion from the footer stays calm even when bugs pile up.',
-      'At night it curls up into a sleepy loaf right beside the desk.',
+      'A chill capybara balances a tiny orange on its head on the Kilim rug in the studio.',
+      'This little studio companion stays calm even when bugs pile up.',
+      'At night it curls up into a sleepy loaf on the Kilim rug beside the lounge sofa.',
     ],
   },
   shelf: {
     vi: [
-      'Trên kệ gỗ có mô hình Honda Cub xanh kem kỷ niệm dự án Deliver Simulator.',
-      'Cạnh chiếc Cub là mấy cuốn sổ phác thảo và chậu cây xanh tưới mỗi sáng.',
-      'Trên tường gần kệ còn treo khung thẻ Holo lấp lánh làm cảm hứng pixel.',
+      'Trên kệ gỗ óc chó có mô hình Honda Cub xanh kem kỷ niệm dự án Deliver Simulator.',
+      'Cạnh chiếc Cub là giá sách, máy đĩa than, sổ phác thảo và mấy chậu cây xanh của studio.',
+      'Trên tường gần kệ còn treo khung tranh hoàng hôn làm cảm hứng phối màu cho cả căn phòng.',
     ],
     en: [
-      'The wooden shelf holds a cream and green Honda Cub model honoring Deliver Simulator.',
-      'Next to the Cub sit wireframe sketchbooks and a potted plant watered each morning.',
-      'A framed holo card hangs nearby as inspiration for the pixel room details.',
+      'The walnut shelf holds a cream and green Honda Cub model honoring Deliver Simulator.',
+      'Beside the Cub sit wireframe sketchbooks, a vinyl turntable, and studio plants watered each morning.',
+      'A framed sunset poster hangs nearby as color inspiration for the studio loft.',
     ],
   },
 };
@@ -244,7 +244,7 @@ export const WORKSPACE_UI_LABELS: Record<Locale, WorkspaceUiLabels> = {
       speakers: 'Cặp loa',
       lamp: 'Đèn bàn',
       window: 'Cửa sổ',
-      bed: 'Giường ngủ',
+      bed: 'Góc nghỉ ngơi',
       capybara: 'Capybara',
       shelf: 'Kệ xe Cub',
     },
@@ -270,7 +270,7 @@ export const WORKSPACE_UI_LABELS: Record<Locale, WorkspaceUiLabels> = {
       speakers: 'Speakers',
       lamp: 'Desk lamp',
       window: 'Window',
-      bed: 'Bed',
+      bed: 'Lounge sofa',
       capybara: 'Capybara',
       shelf: 'Cub shelf',
     },
@@ -405,8 +405,8 @@ export function getHotspotDialogue(
     }
     if (timeState === 'sleeping') {
       return locale === 'vi'
-        ? 'Màn hình đang chạy trình bảo vệ sao nhỏ lướt nhẹ trong đêm.'
-        : 'The monitor rests in sleep mode with a tiny star screensaver drifting by.';
+        ? 'Màn hình đang chạy trình bảo vệ sao nhỏ trong lúc Long chợp mắt trên sofa studio.'
+        : 'The monitor rests in sleep mode with drifting stars while Long naps on the lounge sofa.';
     }
     return HOTSPOT_DIALOGUES.monitor[locale][0];
   }
@@ -414,13 +414,13 @@ export function getHotspotDialogue(
   if (id === 'bed') {
     if (timeState === 'sleeping') {
       return locale === 'vi'
-        ? 'Long đang ngủ say dưới chiếc chăn kẻ ô sau một ngày dài làm sản phẩm.'
-        : 'Long is fast asleep under the plaid quilt after a full day of building.';
+        ? 'Long đang nghỉ ngơi trên chiếc sofa góc studio trong khi cả không gian dịu đèn yên tĩnh.'
+        : 'Long is resting on the cozy studio lounge sofa while the loft winds down for the night.';
     }
     if (timeState === 'waking') {
       return locale === 'vi'
-        ? 'Chăn gối đã gấp gọn sau khi thức dậy đón buổi sáng.'
-        : 'The plaid quilt is neatly folded right after waking up.';
+        ? 'Gối tựa và chăn len trên sofa góc phòng đã được xếp gọn đón cả studio vào buổi sáng.'
+        : 'The lounge sofa pillows and knit blanket are neatly folded for a fresh studio morning.';
     }
     return HOTSPOT_DIALOGUES.bed[locale][timeState === 'late_night' ? 1 : 0];
   }
@@ -431,18 +431,18 @@ export function getHotspotDialogue(
     }
     if (timeState === 'late_night') {
       return locale === 'vi'
-        ? 'Chú capybara đội cam nhỏ đang lim dim mắt nghỉ trên thảm dệt.'
-        : 'The orange-topped capybara is getting drowsy on the woven rug.';
+        ? 'Chú capybara đội cam nhỏ đang lim dim mắt nghỉ trên tấm thảm Kilim.'
+        : 'The orange-topped capybara is getting drowsy on the Kilim rug.';
     }
     if (track && track.isPlaying) {
       return locale === 'vi'
-        ? 'Chú capybara đội cam đang nhún nhảy trên thảm theo nhịp nhạc lofi.'
-        : 'The orange-topped capybara is dancing on the rug to the beat.';
+        ? 'Chú capybara đội cam đang nhún nhảy trên thảm Kilim theo nhịp nhạc lofi.'
+        : 'The orange-topped capybara is dancing on the Kilim rug to the beat.';
     }
     if (track && !track.isPlaying) {
       return locale === 'vi'
-        ? 'Chú capybara ngồi ngoan trên tấm thảm đợi nhạc bật lại.'
-        : 'The capybara sits calmly on the rug waiting for the music to resume.';
+        ? 'Chú capybara ngồi ngoan trên tấm thảm Kilim đợi nhạc bật lại.'
+        : 'The capybara sits calmly on the Kilim rug waiting for the music to resume.';
     }
     return HOTSPOT_DIALOGUES.capybara[locale][0];
   }

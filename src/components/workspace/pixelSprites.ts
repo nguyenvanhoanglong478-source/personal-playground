@@ -1,68 +1,227 @@
-import type { RoomHotspotId, RoomHotspotRegion, RoomTimeState } from '../../data/workspace';
+import {
+  ROOM_HEIGHT,
+  ROOM_WIDTH,
+  type RoomHotspotId,
+  type RoomHotspotRegion,
+  type RoomTimeState,
+} from '../../data/workspace';
 import type { RoomPalette } from './pixelPalette';
-import { ROOM_HOTSPOTS, RUG_WALK_RECT, WALKABLE_RECT } from './roomEnvironment';
+import { ROOM_HOTSPOTS } from './roomEnvironment';
 
-export type SpriteMatrix = readonly string[];
+export const SPRITE_W = 24;
+export const SPRITE_H = 32;
 
-export type SpriteColorMap = Record<string, string | undefined>;
+export type CharacterArchetype =
+  | 'coordinator'
+  | 'engineer'
+  | 'researcher'
+  | 'designer'
+  | 'verifier'
+  | 'architect'
+  | 'monitor'
+  | 'specialist';
 
-export interface SeatAnchor {
-  readonly seatCenterX: number;
-  readonly seatTopY: number;
+export type CharacterAnimState =
+  | 'idle'
+  | 'walk'
+  | 'work'
+  | 'think'
+  | 'rest_coffee'
+  | 'rest_sit'
+  | 'rest_sleep'
+  | 'error'
+  | 'talk';
+
+export type CharacterDir = 'down' | 'up' | 'left' | 'right';
+
+export const ARCHETYPES: readonly CharacterArchetype[] = [
+  'coordinator',
+  'engineer',
+  'researcher',
+  'designer',
+  'verifier',
+  'architect',
+  'monitor',
+  'specialist',
+];
+
+export const STATES: readonly CharacterAnimState[] = [
+  'idle',
+  'walk',
+  'work',
+  'think',
+  'rest_coffee',
+  'rest_sit',
+  'rest_sleep',
+  'error',
+  'talk',
+];
+
+export interface DrawCharacterOptions {
+  archetype: CharacterArchetype;
+  seed: number;
+  state: CharacterAnimState;
+  dir: CharacterDir;
+  frame: number;
+  x: number;
+  y: number;
+  scale?: number;
+  isLong?: boolean;
+  variant?: 'long';
 }
 
-export interface DrawCharacterAndEffectsOptions {
+export interface DrawDeskAndMusicEffectsOptions {
   timeState: RoomTimeState;
   lampOn: boolean;
   isMusicActive: boolean;
   tick: number;
-  elapsedSec?: number;
+  elapsedSec: number;
   palette: RoomPalette;
   hoveredHotspot: RoomHotspotId | null;
   selectedHotspot: RoomHotspotId | null;
   hoveredRegion?: RoomHotspotRegion | null;
   reducedMotion?: boolean;
-  seatAnchor?: SeatAnchor;
+  capyAnchor?: { x: number; y: number } | null;
 }
 
-const MUSIC_FADE_DURATION_SEC = 0.4;
+export interface DrawCapybaraPetOptions {
+  timeState: RoomTimeState;
+  isMusicActive: boolean;
+  elapsedSec: number;
+  palette: RoomPalette;
+  bounds: { x: number; y: number; w: number; h: number };
+  lampOn?: boolean;
+  reducedMotion?: boolean;
+}
 
-const MAIN_SCREEN_X = 153;
-const MAIN_SCREEN_Y = 49;
-const MAIN_SCREEN_W = 40;
-const MAIN_SCREEN_H = 19;
+interface ShadeRamp {
+  readonly hi: string;
+  readonly mid: string;
+  readonly sh: string;
+}
 
-const SIDE_LAPTOP_X = 134;
-const SIDE_LAPTOP_Y = 62;
-const SIDE_LAPTOP_W = 12;
-const SIDE_LAPTOP_H = 8;
+interface HairRamp extends ShadeRamp {
+  readonly streak?: string;
+}
 
-const DESK_MUG_X = 200;
-const DESK_MUG_Y = 81;
+interface SkinRamp extends ShadeRamp {
+  readonly blush: string;
+}
 
-const LEFT_WOOFER_X = 115;
-const LEFT_WOOFER_Y = 68;
-const RIGHT_WOOFER_X = 203;
-const RIGHT_WOOFER_Y = 68;
+interface EyeRamp {
+  readonly hi: string;
+  readonly mid: string;
+  readonly dark: string;
+}
 
-const DEFAULT_SEAT_ANCHOR: SeatAnchor = {
-  seatCenterX: 173,
-  seatTopY: 96,
-};
+type HairStyle =
+  | 'parted'
+  | 'tousled'
+  | 'scholarly'
+  | 'wavy'
+  | 'cropped'
+  | 'swept_silver'
+  | 'spiky'
+  | 'dual_tone'
+  | 'long_layered';
 
-const WAKING_WIDTH = 24;
-const WAKING_HEIGHT = 30;
+type TailStyle = 'bun' | 'low_bun' | 'ponytail' | 'wavy_long' | 'ahoge' | null;
+type HatStyle = 'hood_down' | 'beret' | 'visor_cap' | 'backwards_cap' | 'cyber_goggles' | null;
+type GlassesStyle = 'rect' | 'round' | 'monocle' | 'visor' | 'long_rect' | null;
+type AccessoryStyle =
+  | 'coordinator'
+  | 'headphones'
+  | 'satchel'
+  | 'scarf'
+  | 'clipboard'
+  | 'tablet'
+  | 'antenna'
+  | 'cyber_core'
+  | 'long_hoodie';
 
-const SEATED_WIDTH = 58;
-const SEATED_HEIGHT = 23;
+interface CharacterPalette {
+  skin: SkinRamp;
+  eye: EyeRamp;
+  hair: HairRamp;
+  hairStyle: HairStyle;
+  hairFlip: boolean;
+  tail: TailStyle;
+  top: ShadeRamp;
+  inner: ShadeRamp;
+  accent: ShadeRamp;
+  tee?: ShadeRamp;
+  tie?: string;
+  alertLed?: string;
+  pants: ShadeRamp;
+  shoes: ShadeRamp;
+  hat: HatStyle;
+  glasses: GlassesStyle;
+  accessory: AccessoryStyle;
+  headphonesWorn?: boolean;
+}
 
-const SLEEP_WIDTH = 24;
-const SLEEP_HEIGHT = 19;
-const SLEEP_DRAW_X = 29;
-const SLEEP_DRAW_Y = 89;
+interface HeadExpr {
+  blink: boolean;
+  surprised: boolean;
+  sleep: boolean;
+  glanceUp: boolean;
+  screenGlow: boolean;
+  mouth: 'closed' | 'open' | 'wide';
+}
+
+type PixelGrid = (string | null)[];
+type SpriteMatrix = readonly string[];
+type SpriteColorMap = Record<string, string | undefined>;
+type OffscreenSurface = HTMLCanvasElement | OffscreenCanvas;
+
+const OUTLINE_DARK = '#1c1829';
+const SHADOW_GROUND_CORE = 'rgba(18, 14, 28, 0.32)';
+const SHADOW_GROUND_SOFT = 'rgba(18, 14, 28, 0.14)';
 
 const CAPY_WIDTH = 22;
 const CAPY_HEIGHT = 17;
+
+const MUSIC_FADE_DURATION_SEC = 0.4;
+const DESK1_LEFT_WOOFER_X = 34;
+const DESK1_LEFT_WOOFER_Y = 111;
+const DESK1_RIGHT_WOOFER_X = 78;
+const DESK1_RIGHT_WOOFER_Y = 111;
+const DESK1_MUG_X = 35;
+const DESK1_MUG_Y = 121;
+const TURNTABLE_X = 432;
+const TURNTABLE_Y = 66;
+const TURNTABLE_SPEAKER_X = 452;
+const TURNTABLE_SPEAKER_Y = 64;
+
+const SKIN_RAMPS: readonly SkinRamp[] = [
+  { hi: '#ffe5cf', mid: '#f5c29e', sh: '#cc8f6e', blush: '#ed9487' },
+  { hi: '#f7d1ac', mid: '#e2a77b', sh: '#af724d', blush: '#db7e6b' },
+  { hi: '#dfaa7e', mid: '#c08256', sh: '#8c5332', blush: '#b56050' },
+  { hi: '#b87c58', mid: '#905839', sh: '#613520', blush: '#91463b' },
+];
+
+const HAIR_RAMPS: Record<string, HairRamp> = {
+  espresso: { hi: '#614338', mid: '#402922', sh: '#261714' },
+  chestnut: { hi: '#8c583d', mid: '#643a27', sh: '#3f2116' },
+  auburn: { hi: '#bc5a3d', mid: '#8e3826', sh: '#5c2016' },
+  honey: { hi: '#dba958', mid: '#b07b34', sh: '#7a4f1d' },
+  raven: { hi: '#454e6e', mid: '#292e42', sh: '#181a29' },
+  plum: { hi: '#a35284', mid: '#74315d', sh: '#4a1c3b' },
+  silver: { hi: '#4b526e', mid: '#2d3247', sh: '#1b1d2b', streak: '#dce7f7' },
+  cyber: { hi: '#423b73', mid: '#28234d', sh: '#171330', streak: '#42f2ff' },
+};
+
+const EYE_RAMPS: readonly EyeRamp[] = [
+  { hi: '#3f4f80', mid: '#252c4a', dark: '#181529' },
+  { hi: '#5e4033', mid: '#3b251c', dark: '#1c1214' },
+  { hi: '#34665c', mid: '#1f423d', dark: '#142426' },
+  { hi: '#5b4175', mid: '#39264d', dark: '#1b1429' },
+];
+
+const seloutCache = new Map<string, string>();
+const frameCache = new Map<string, OffscreenSurface>();
+const portraitCache = new Map<string, string>();
+const MAX_CACHE_ENTRIES = 2048;
 
 interface MusicVisualTracker {
   wasActive: boolean;
@@ -76,59 +235,375 @@ const musicTracker: MusicVisualTracker = {
   lastSeenTimeSec: 0,
 };
 
-interface ShadeRamp {
-  readonly hi: string;
-  readonly mid: string;
-  readonly sh: string;
-}
+let lastCapyBounds: { x: number; y: number; w: number; h: number } | null = null;
 
-interface LongColorTheme {
-  readonly selout: string;
-  readonly skin: ShadeRamp & { readonly blush: string };
-  readonly hair: ShadeRamp;
-  readonly eye: { readonly hi: string; readonly mid: string; readonly dark: string };
-  readonly glassesRim: string;
-  readonly glassesLower: string;
-  readonly glassesGlint: string;
-  readonly hoodie: ShadeRamp;
-  readonly sleeve: ShadeRamp;
-  readonly tee: ShadeRamp;
-  readonly pants: ShadeRamp & { readonly cuff: string };
-  readonly shoes: ShadeRamp & { readonly stripe: string };
-  readonly mugBody: ShadeRamp;
-  readonly mugCoffee: string;
-  readonly monitorRim: string;
-  readonly monitorRimSoft: string;
-  readonly lampRimHair: string;
-  readonly lampRimSleeve: string;
-  readonly groundCore: string;
-  readonly groundSoft: string;
-}
-
-interface CapyColorTheme {
-  readonly selout: string;
-  readonly fur: ShadeRamp & { readonly ear: string; readonly snout: string; readonly blush: string };
-  readonly eye: string;
-  readonly eyeGlint: string;
-  readonly yuzu: ShadeRamp;
-  readonly leaf: ShadeRamp;
-  readonly groundCore: string;
-  readonly groundSoft: string;
-}
-
-type PixelGrid = (string | null)[];
-
-const seloutBlendCache = new Map<string, string>();
-
-function seloutFromHex(hex: string, baseOutline: string): string {
-  if (!hex || hex[0] !== '#' || hex.length !== 7) {
-    return baseOutline;
+function hashString(str: string): number {
+  let h = 2166136261 >>> 0;
+  const s = String(str ?? '');
+  for (let i = 0; i < s.length; i += 1) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
   }
-  const cacheKey = `${baseOutline}|${hex}`;
-  const cached = seloutBlendCache.get(cacheKey);
-  if (cached) {
-    return cached;
+  return h >>> 0;
+}
+
+function normalizeSeed(seed: unknown): number {
+  if (typeof seed === 'number' && Number.isFinite(seed)) {
+    return Math.abs(Math.floor(seed)) >>> 0;
   }
+  if (seed === undefined || seed === null) return 0;
+  return hashString(String(seed));
+}
+
+function normalizeDir(dir: string): CharacterDir {
+  const d = String(dir || 'down').toLowerCase();
+  if (d === 'up' || d === 'n' || d === 'north') return 'up';
+  if (d === 'left' || d === 'w' || d === 'west') return 'left';
+  if (d === 'right' || d === 'e' || d === 'east') return 'right';
+  return 'down';
+}
+
+function normalizeState(state: string): CharacterAnimState {
+  const s = String(state || 'idle').toLowerCase();
+  if ((STATES as readonly string[]).includes(s)) return s as CharacterAnimState;
+  if (s === 'working') return 'work';
+  if (s === 'walking') return 'walk';
+  if (s === 'thinking') return 'think';
+  if (s === 'coffee') return 'rest_coffee';
+  if (s === 'sit' || s === 'sitting') return 'rest_sit';
+  if (s === 'sleep' || s === 'sleeping' || s === 'nap') return 'rest_sleep';
+  if (s === 'talking' || s === 'chat') return 'talk';
+  return 'idle';
+}
+
+export function pickArchetype(agent: unknown): CharacterArchetype {
+  if (!agent) return 'engineer';
+  if (typeof agent === 'string') {
+    return pickArchetype({ name: agent });
+  }
+  const rec = agent as {
+    archetype?: string;
+    isLead?: boolean;
+    role?: string;
+    typeName?: string;
+    name?: string;
+    id?: string;
+    conversationId?: string;
+  };
+  if (rec.archetype && (ARCHETYPES as readonly string[]).includes(rec.archetype)) {
+    return rec.archetype as CharacterArchetype;
+  }
+  if (rec.isLead) return 'coordinator';
+
+  const haystack = [rec.role, rec.typeName, rec.name]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  const tokens = haystack.split(/[^a-z0-9]+/).filter(Boolean);
+  const has = (...words: string[]) =>
+    words.some((w) => tokens.includes(w) || haystack.includes(w));
+
+  if (has('coordinator', 'lead', 'orchestrator', 'manager')) return 'coordinator';
+  if (has('monitor', 'watcher', 'telemetry')) return 'monitor';
+  if (has('verifier', 'verify', 'qa', 'test', 'tester', 'audit', 'inspector')) return 'verifier';
+  if (has('research', 'researcher', 'analyst', 'explorer')) return 'researcher';
+  if (has('design', 'designer', 'art', 'artist', 'ui', 'ux', 'sprite', 'illustrator')) return 'designer';
+  if (has('architect', 'planner')) return 'architect';
+
+  const pool: readonly CharacterArchetype[] = [
+    'engineer',
+    'specialist',
+    'researcher',
+    'designer',
+    'verifier',
+    'architect',
+    'monitor',
+  ];
+  const key = String(rec.name || rec.id || rec.conversationId || rec.role || 'worker');
+  return pool[hashString(key) % pool.length];
+}
+
+export function pickSeed(agent: unknown): number {
+  if (!agent) return 0;
+  const rec = agent as {
+    seed?: number;
+    id?: string;
+    conversationId?: string;
+    name?: string;
+    role?: string;
+  };
+  if (typeof rec.seed === 'number') return normalizeSeed(rec.seed);
+  const key = String(rec.id || rec.conversationId || rec.name || rec.role || '0');
+  return hashString(key);
+}
+
+function getLongPalette(): CharacterPalette {
+  return {
+    skin: SKIN_RAMPS[0],
+    eye: { hi: '#4a5d8f', mid: '#2a3352', dark: '#19172b' },
+    hair: HAIR_RAMPS.chestnut,
+    hairStyle: 'long_layered',
+    hairFlip: false,
+    tail: null,
+    top: { hi: '#425675', mid: '#2d3c54', sh: '#1c2638' },
+    inner: { hi: '#617694', mid: '#475973', sh: '#2d3a4f' },
+    tee: { hi: '#fffbf2', mid: '#eae2d3', sh: '#c2b7a5' },
+    accent: { hi: '#fffdf7', mid: '#dce3ee', sh: '#9ba8be' },
+    pants: { hi: '#46618c', mid: '#2f4366', sh: '#1e2c45' },
+    shoes: { hi: '#edf2fa', mid: '#9aa8bd', sh: '#4e596e' },
+    hat: 'hood_down',
+    glasses: 'long_rect',
+    accessory: 'long_hoodie',
+  };
+}
+
+function getArchetypePalette(
+  archetype: CharacterArchetype,
+  seed: number,
+  isLong = false
+): CharacterPalette {
+  if (isLong) {
+    return getLongPalette();
+  }
+
+  const s = normalizeSeed(seed);
+  const variant = s % 16;
+  const skinShift = variant % 4;
+  const hairAlt = (variant >> 2) % 2;
+  const accentAlt = (variant >> 3) % 2;
+  const styleAlt = ((variant >> 1) ^ (variant >> 3)) & 1;
+  const eye = EYE_RAMPS[(variant + archetype.length) % EYE_RAMPS.length];
+
+  switch (archetype) {
+    case 'coordinator': {
+      const defaultSkin = variant === 0 ? 1 : (1 + skinShift) % 4;
+      const blazerNavy = accentAlt === 0;
+      return {
+        skin: SKIN_RAMPS[defaultSkin],
+        eye,
+        hair: hairAlt ? HAIR_RAMPS.raven : HAIR_RAMPS.espresso,
+        hairStyle: 'parted',
+        hairFlip: styleAlt === 1,
+        tail: styleAlt === 1 ? 'bun' : null,
+        top: blazerNavy
+          ? { hi: '#3f5c9e', mid: '#293e70', sh: '#19274a' }
+          : { hi: '#4b5369', mid: '#32384a', sh: '#1e2230' },
+        inner: { hi: '#ffffff', mid: '#edf2fa', sh: '#c5cfe0' },
+        accent: { hi: '#ffe375', mid: '#ebb42d', sh: '#9e6e0d' },
+        tie: blazerNavy ? '#d13d53' : '#3594b8',
+        pants: { hi: '#3a4159', mid: '#252a3b', sh: '#161926' },
+        shoes: { hi: '#543b30', mid: '#36231c', sh: '#1f130f' },
+        hat: null,
+        glasses: null,
+        accessory: 'coordinator',
+      };
+    }
+
+    case 'engineer': {
+      const defaultSkin = variant === 0 ? 0 : skinShift;
+      return {
+        skin: SKIN_RAMPS[defaultSkin],
+        eye,
+        hair: hairAlt ? HAIR_RAMPS.chestnut : HAIR_RAMPS.espresso,
+        hairStyle: 'tousled',
+        hairFlip: styleAlt === 1,
+        tail: styleAlt === 1 ? 'ahoge' : null,
+        top: accentAlt
+          ? { hi: '#40adc4', mid: '#267f99', sh: '#165266' }
+          : { hi: '#38baae', mid: '#218b86', sh: '#135a59' },
+        inner: { hi: '#52657d', mid: '#354357', sh: '#202938' },
+        accent: { hi: '#f8fafc', mid: '#dce3ee', sh: '#9ba8be' },
+        pants: { hi: '#405a82', mid: '#2b3e5e', sh: '#1b2840' },
+        shoes: { hi: '#e8eef7', mid: '#9aa8bd', sh: '#4c576b' },
+        hat: 'hood_down',
+        glasses: 'rect',
+        accessory: 'headphones',
+        headphonesWorn: styleAlt === 1,
+      };
+    }
+
+    case 'researcher': {
+      const defaultSkin = variant === 0 ? 2 : (2 + skinShift) % 4;
+      return {
+        skin: SKIN_RAMPS[defaultSkin],
+        eye,
+        hair: hairAlt ? HAIR_RAMPS.espresso : HAIR_RAMPS.auburn,
+        hairStyle: 'scholarly',
+        hairFlip: styleAlt === 1,
+        tail: 'low_bun',
+        top: accentAlt
+          ? { hi: '#82a86d', mid: '#5a7d4a', sh: '#39542f' }
+          : { hi: '#8dab62', mid: '#648243', sh: '#3f5729' },
+        inner: { hi: '#fffaf0', mid: '#f2e6cd', sh: '#cbb99e' },
+        accent: { hi: '#b57344', mid: '#854e29', sh: '#542e15' },
+        pants: { hi: '#735949', mid: '#523e32', sh: '#36271e' },
+        shoes: { hi: '#593c2e', mid: '#3b261c', sh: '#24150f' },
+        hat: null,
+        glasses: 'round',
+        accessory: 'satchel',
+      };
+    }
+
+    case 'designer': {
+      const defaultSkin = variant === 0 ? 1 : (1 + skinShift) % 4;
+      return {
+        skin: SKIN_RAMPS[defaultSkin],
+        eye,
+        hair: hairAlt ? HAIR_RAMPS.auburn : HAIR_RAMPS.plum,
+        hairStyle: 'wavy',
+        hairFlip: styleAlt === 1,
+        tail: 'wavy_long',
+        top: accentAlt
+          ? { hi: '#f58b6e', mid: '#d66047', sh: '#993b29' }
+          : { hi: '#ff816e', mid: '#e05546', sh: '#a3332a' },
+        inner: { hi: '#ffd966', mid: '#f0b32e', sh: '#b37a0e' },
+        accent: accentAlt
+          ? { hi: '#3ac9bf', mid: '#22968e', sh: '#14635d' }
+          : { hi: '#d9486f', mid: '#a62b4d', sh: '#6e1732' },
+        pants: { hi: '#464359', mid: '#2d2b3d', sh: '#1c1a26' },
+        shoes: { hi: '#694646', mid: '#472d2d', sh: '#2e1b1b' },
+        hat: 'beret',
+        glasses: null,
+        accessory: 'scarf',
+      };
+    }
+
+    case 'verifier': {
+      const defaultSkin = variant === 0 ? 3 : (3 + skinShift) % 4;
+      return {
+        skin: SKIN_RAMPS[defaultSkin],
+        eye,
+        hair: hairAlt ? HAIR_RAMPS.espresso : HAIR_RAMPS.raven,
+        hairStyle: 'cropped',
+        hairFlip: styleAlt === 1,
+        tail: null,
+        top: accentAlt
+          ? { hi: '#3ec78a', mid: '#239664', sh: '#13613f' }
+          : { hi: '#37bd7e', mid: '#1f8c5a', sh: '#125938' },
+        inner: { hi: '#4e5669', mid: '#353b4a', sh: '#20242e' },
+        accent: { hi: '#ffe36e', mid: '#dbad2c', sh: '#8f670f' },
+        pants: { hi: '#3a4152', mid: '#272c38', sh: '#181b26' },
+        shoes: { hi: '#3b404f', mid: '#252933', sh: '#151821' },
+        hat: 'visor_cap',
+        glasses: 'monocle',
+        accessory: 'clipboard',
+      };
+    }
+
+    case 'architect': {
+      const defaultSkin = variant === 0 ? 0 : skinShift;
+      return {
+        skin: SKIN_RAMPS[defaultSkin],
+        eye,
+        hair: HAIR_RAMPS.silver,
+        hairStyle: 'swept_silver',
+        hairFlip: styleAlt === 1,
+        tail: styleAlt === 1 ? 'ponytail' : null,
+        top: accentAlt
+          ? { hi: '#454d69', mid: '#2c3145', sh: '#191d2b' }
+          : { hi: '#3b4157', mid: '#252838', sh: '#161824' },
+        inner: { hi: '#5e6882', mid: '#40475e', sh: '#282d3d' },
+        accent: { hi: '#a3ebff', mid: '#45c3f7', sh: '#1b73a3' },
+        pants: { hi: '#565d75', mid: '#3c4257', sh: '#252938' },
+        shoes: { hi: '#393c4a', mid: '#232530', sh: '#14151e' },
+        hat: null,
+        glasses: null,
+        accessory: 'tablet',
+      };
+    }
+
+    case 'monitor': {
+      const defaultSkin = variant === 0 ? 2 : (2 + skinShift) % 4;
+      return {
+        skin: SKIN_RAMPS[defaultSkin],
+        eye,
+        hair: hairAlt ? HAIR_RAMPS.honey : HAIR_RAMPS.chestnut,
+        hairStyle: 'spiky',
+        hairFlip: styleAlt === 1,
+        tail: null,
+        top: accentAlt
+          ? { hi: '#5062ba', mid: '#354387', sh: '#202859' }
+          : { hi: '#4959ad', mid: '#303b7a', sh: '#1d2452' },
+        inner: { hi: '#ffcb57', mid: '#f09f22', sh: '#ad650c' },
+        accent: { hi: '#9cf8ff', mid: '#2ad9f0', sh: '#11819c' },
+        alertLed: '#ff5252',
+        pants: { hi: '#3a3f57', mid: '#272b3d', sh: '#171926' },
+        shoes: { hi: '#4b536e', mid: '#2d3245', sh: '#1a1d2b' },
+        hat: 'backwards_cap',
+        glasses: 'visor',
+        accessory: 'antenna',
+      };
+    }
+
+    case 'specialist':
+    default: {
+      const defaultSkin = variant === 0 ? 3 : (3 + skinShift) % 4;
+      return {
+        skin: SKIN_RAMPS[defaultSkin],
+        eye,
+        hair: HAIR_RAMPS.cyber,
+        hairStyle: 'dual_tone',
+        hairFlip: styleAlt === 1,
+        tail: styleAlt === 1 ? 'ponytail' : null,
+        top: accentAlt
+          ? { hi: '#8a4ad1', mid: '#602e9c', sh: '#3c1a69' }
+          : { hi: '#7c43bf', mid: '#54288c', sh: '#35165e' },
+        inner: { hi: '#8cf9ff', mid: '#2ce0ed', sh: '#118d9e' },
+        accent: { hi: '#9efcff', mid: '#3cf2ff', sh: '#14a0b5' },
+        pants: { hi: '#32304d', mid: '#211f36', sh: '#131224' },
+        shoes: { hi: '#393657', mid: '#232138', sh: '#141324' },
+        hat: 'cyber_goggles',
+        glasses: null,
+        accessory: 'cyber_core',
+      };
+    }
+  }
+}
+
+function createGrid(w = SPRITE_W, h = SPRITE_H): PixelGrid {
+  return new Array<string | null>(w * h).fill(null);
+}
+
+function px(grid: PixelGrid, x: number, y: number, color: string | null, w = SPRITE_W, h = SPRITE_H): void {
+  const ix = Math.round(x);
+  const iy = Math.round(y);
+  if (ix < 0 || ix >= w || iy < 0 || iy >= h || !color) return;
+  grid[iy * w + ix] = color;
+}
+
+function getPx(grid: PixelGrid, x: number, y: number, w = SPRITE_W, h = SPRITE_H): string | null {
+  if (x < 0 || x >= w || y < 0 || y >= h) return null;
+  return grid[y * w + x];
+}
+
+function span(grid: PixelGrid, x1: number, x2: number, y: number, color: string, w = SPRITE_W, h = SPRITE_H): void {
+  for (let x = x1; x <= x2; x += 1) {
+    px(grid, x, y, color, w, h);
+  }
+}
+
+function rect(
+  grid: PixelGrid,
+  x: number,
+  y: number,
+  rw: number,
+  rh: number,
+  color: string,
+  w = SPRITE_W,
+  h = SPRITE_H
+): void {
+  for (let yy = y; yy < y + rh; yy += 1) {
+    for (let xx = x; xx < x + rw; xx += 1) {
+      px(grid, xx, yy, color, w, h);
+    }
+  }
+}
+
+function seloutFromHex(hex: string, baseOutline = OUTLINE_DARK): string {
+  if (!hex || hex[0] !== '#' || hex.length !== 7) return baseOutline;
+  const key = `${baseOutline}|${hex}`;
+  const cached = seloutCache.get(key);
+  if (cached) return cached;
 
   const br = baseOutline[0] === '#' && baseOutline.length === 7 ? parseInt(baseOutline.slice(1, 3), 16) : 28;
   const bg = baseOutline[0] === '#' && baseOutline.length === 7 ? parseInt(baseOutline.slice(3, 5), 16) : 24;
@@ -144,99 +619,1391 @@ function seloutFromHex(hex: string, baseOutline: string): string {
   const og = Math.max(16, Math.min(76, Math.round(bg + (g - bg) * weight)));
   const ob = Math.max(24, Math.min(92, Math.round(bb + (b - bb) * weight)));
 
-  const result = `#${or.toString(16).padStart(2, '0')}${og.toString(16).padStart(2, '0')}${ob.toString(16).padStart(2, '0')}`;
-  seloutBlendCache.set(cacheKey, result);
-  return result;
+  const res = `#${or.toString(16).padStart(2, '0')}${og.toString(16).padStart(2, '0')}${ob.toString(16).padStart(2, '0')}`;
+  seloutCache.set(key, res);
+  return res;
 }
 
-function createPixelGrid(width: number, height: number): PixelGrid {
-  return new Array<string | null>(width * height).fill(null);
-}
-
-function setPx(grid: PixelGrid, w: number, h: number, x: number, y: number, color: string | null): void {
-  const ix = Math.round(x);
-  const iy = Math.round(y);
-  if (ix < 0 || ix >= w || iy < 0 || iy >= h || !color) return;
-  grid[iy * w + ix] = color;
-}
-
-function getPx(grid: PixelGrid, w: number, h: number, x: number, y: number): string | null {
-  if (x < 0 || x >= w || y < 0 || y >= h) return null;
-  return grid[y * w + x];
-}
-
-function setSpan(grid: PixelGrid, w: number, h: number, x1: number, x2: number, y: number, color: string): void {
-  for (let x = x1; x <= x2; x += 1) {
-    setPx(grid, w, h, x, y, color);
-  }
-}
-
-function setRect(
-  grid: PixelGrid,
-  w: number,
-  h: number,
-  x: number,
-  y: number,
-  rw: number,
-  rh: number,
-  color: string
+function applySeloutOutline(
+  bodyGrid: PixelGrid,
+  outGrid: PixelGrid,
+  w = SPRITE_W,
+  h = SPRITE_H,
+  baseOutline = OUTLINE_DARK,
+  bottomDarkY = 25
 ): void {
-  for (let yy = y; yy < y + rh; yy += 1) {
-    for (let xx = x; xx < x + rw; xx += 1) {
-      setPx(grid, w, h, xx, yy, color);
-    }
-  }
-}
-
-function applySeloutLayer(
-  body: PixelGrid,
-  detail: PixelGrid,
-  w: number,
-  h: number,
-  baseOutline: string,
-  bottomDarkY: number
-): PixelGrid {
-  const out = createPixelGrid(w, h);
   for (let y = 0; y < h; y += 1) {
     for (let x = 0; x < w; x += 1) {
-      const c = getPx(body, w, h, x, y);
+      const c = getPx(bodyGrid, x, y, w, h);
       if (c) {
-        out[y * w + x] = c;
+        px(outGrid, x, y, c, w, h);
         continue;
       }
-      const below = getPx(body, w, h, x, y + 1);
-      const right = getPx(body, w, h, x + 1, y);
-      const left = getPx(body, w, h, x - 1, y);
-      const above = getPx(body, w, h, x, y - 1);
+      const below = getPx(bodyGrid, x, y + 1, w, h);
+      const right = getPx(bodyGrid, x + 1, y, w, h);
+      const left = getPx(bodyGrid, x - 1, y, w, h);
+      const above = getPx(bodyGrid, x, y - 1, w, h);
       if (!below && !right && !left && !above) continue;
 
-      if (((above || left) && !(below || right)) || y >= bottomDarkY) {
-        out[y * w + x] = baseOutline;
+      if ((above || left) && !(below || right)) {
+        px(outGrid, x, y, baseOutline, w, h);
+      } else if (y >= bottomDarkY) {
+        px(outGrid, x, y, baseOutline, w, h);
       } else {
         const src = below || right || left || above;
-        out[y * w + x] = src ? seloutFromHex(src, baseOutline) : baseOutline;
+        px(outGrid, x, y, src ? seloutFromHex(src, baseOutline) : baseOutline, w, h);
       }
     }
   }
-  for (let i = 0; i < detail.length; i += 1) {
-    if (detail[i]) {
-      out[i] = detail[i];
+}
+
+function mirrorHorizontal(grid: PixelGrid, w = SPRITE_W, h = SPRITE_H): PixelGrid {
+  const out = createGrid(w, h);
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const c = getPx(grid, x, y, w, h);
+      if (c) px(out, w - 1 - x, y, c, w, h);
     }
   }
   return out;
 }
 
-function mirrorPixelGrid(grid: PixelGrid, w: number, h: number): PixelGrid {
-  const out = createPixelGrid(w, h);
-  for (let y = 0; y < h; y += 1) {
-    for (let x = 0; x < w; x += 1) {
-      const c = grid[y * w + x];
-      if (c) {
-        out[y * w + (w - 1 - x)] = c;
+function drawFrontHairAndHat(
+  body: PixelGrid,
+  detail: PixelGrid,
+  pal: CharacterPalette,
+  hy: number,
+  expr: HeadExpr
+): void {
+  const h = pal.hair;
+  const flip = pal.hairFlip;
+  const screenGlow = expr.screenGlow;
+
+  span(body, 8, 15, hy - 1, h.hi);
+  span(body, 7, 16, hy + 0, h.hi);
+  span(body, 6, 17, hy + 1, h.mid);
+  span(body, 6, 17, hy + 2, h.mid);
+
+  span(body, 9, 13, hy + 0, h.hi);
+  px(body, 8, hy + 1, h.hi);
+  px(body, 14, hy + 1, h.hi);
+
+  rect(body, 6, hy + 2, 1, 5, h.mid);
+  px(body, 6, hy + 6, h.sh);
+  rect(body, 17, hy + 2, 1, 5, h.mid);
+  px(body, 17, hy + 6, h.sh);
+
+  span(detail, 8, 15, hy + 3, pal.skin.sh);
+
+  switch (pal.hairStyle) {
+    case 'long_layered':
+      span(body, 7, 10, hy + 3, h.mid);
+      px(body, 8, hy + 3, h.hi);
+      px(body, 10, hy + 4, h.sh);
+      span(body, 13, 16, hy + 3, h.mid);
+      px(body, 14, hy + 3, h.hi);
+      px(body, 15, hy + 4, h.sh);
+      px(body, 7, hy + 4, h.mid);
+      px(body, 16, hy + 4, h.mid);
+      px(body, 11, hy - 2, h.hi);
+      px(body, 12, hy - 2, h.mid);
+      break;
+    case 'parted': {
+      const sideX = flip ? 12 : 8;
+      span(body, sideX, sideX + 3, hy + 3, h.mid);
+      px(body, flip ? 11 : 12, hy + 2, h.sh);
+      px(body, flip ? 15 : 8, hy + 3, h.sh);
+      px(body, flip ? 7 : 16, hy + 3, h.mid);
+      if (pal.tail === 'bun') {
+        span(body, 10, 13, hy - 2, h.mid);
+        span(body, 11, 12, hy - 2, h.hi);
+      }
+      break;
+    }
+    case 'tousled':
+      px(body, 7, hy + 3, h.mid);
+      px(body, 9, hy + 3, h.hi);
+      px(body, 11, hy + 3, h.mid);
+      px(body, 13, hy + 3, h.hi);
+      px(body, 16, hy + 3, h.sh);
+      if (pal.tail === 'ahoge') {
+        px(body, 11, hy - 2, h.hi);
+        px(body, 12, hy - 3, h.mid);
+      } else {
+        px(body, 9, hy - 2, h.hi);
+        px(body, 14, hy - 2, h.mid);
+      }
+      break;
+    case 'scholarly':
+      rect(body, 6, hy + 3, 2, 5, h.mid);
+      rect(body, 16, hy + 3, 2, 5, h.mid);
+      px(body, 6, hy + 7, h.sh);
+      px(body, 17, hy + 7, h.sh);
+      px(body, 9, hy + 3, h.hi);
+      px(body, 14, hy + 3, h.hi);
+      break;
+    case 'wavy':
+      rect(body, 5, hy + 3, 2, 8, h.mid);
+      rect(body, 17, hy + 3, 2, 8, h.mid);
+      px(body, 5, hy + 5, h.hi);
+      px(body, 18, hy + 6, h.hi);
+      px(body, 5, hy + 10, h.sh);
+      px(body, 18, hy + 10, h.sh);
+      span(body, 7, 10, hy + 3, h.mid);
+      px(body, 14, hy + 3, h.hi);
+      px(body, 15, hy + 3, h.mid);
+      break;
+    case 'cropped':
+      span(body, 8, 15, hy + 2, h.sh);
+      px(body, 10, hy + 3, h.mid);
+      px(body, 13, hy + 3, h.mid);
+      break;
+    case 'swept_silver':
+      px(body, 10, hy - 2, h.hi);
+      px(body, 12, hy - 2, h.streak ?? h.hi);
+      px(body, 13, hy - 1, h.streak ?? h.hi);
+      span(body, flip ? 11 : 8, flip ? 15 : 12, hy + 2, h.streak ?? h.hi);
+      px(body, flip ? 13 : 10, hy + 3, h.streak ?? h.hi);
+      px(body, flip ? 14 : 9, hy + 3, h.mid);
+      break;
+    case 'spiky':
+      px(body, 8, hy - 2, h.hi);
+      px(body, 11, hy - 2, h.mid);
+      px(body, 14, hy - 2, h.hi);
+      px(body, 7, hy + 3, h.mid);
+      px(body, 11, hy + 3, h.hi);
+      px(body, 16, hy + 3, h.mid);
+      break;
+    case 'dual_tone':
+      if (flip) {
+        rect(body, 15, hy + 1, 2, 5, h.streak ?? h.hi);
+        px(body, 14, hy + 0, h.streak ?? h.hi);
+        px(body, 8, hy + 3, h.mid);
+      } else {
+        rect(body, 7, hy + 1, 2, 5, h.streak ?? h.hi);
+        px(body, 8, hy + 0, h.streak ?? h.hi);
+        px(body, 15, hy + 3, h.mid);
+      }
+      break;
+  }
+
+  if (pal.hat === 'beret') {
+    const b = pal.accent;
+    const tilt = flip ? -1 : 0;
+    span(body, 7 + tilt, 14 + tilt, hy - 3, b.hi);
+    span(body, 6 + tilt, 16 + tilt, hy - 2, b.hi);
+    span(body, 5 + tilt, 16 + tilt, hy - 1, b.mid);
+    span(body, 6 + tilt, 15 + tilt, hy + 0, b.sh);
+    px(body, 10 + tilt, hy - 4, b.sh);
+  } else if (pal.hat === 'visor_cap') {
+    const c = pal.top;
+    span(body, 8, 15, hy - 2, c.hi);
+    span(body, 7, 16, hy - 1, c.mid);
+    span(body, 7, 16, hy + 0, c.mid);
+    span(body, 6, 17, hy + 1, c.sh);
+    span(body, 7, 16, hy + 1, c.mid);
+    px(body, 11, hy - 1, pal.accent.hi);
+    px(body, 12, hy - 1, pal.accent.mid);
+  } else if (pal.hat === 'backwards_cap') {
+    const c = pal.top;
+    const trim = pal.inner;
+    span(body, 8, 15, hy - 2, c.hi);
+    span(body, 7, 16, hy - 1, c.mid);
+    span(body, 7, 16, hy + 0, c.mid);
+    span(body, 9, 14, hy + 1, trim.hi);
+    span(body, 10, 13, hy + 1, pal.skin.mid);
+  } else if (pal.hat === 'cyber_goggles') {
+    const g = pal.accent;
+    span(body, 6, 17, hy + 0, '#27243d');
+    span(body, 6, 17, hy + 1, '#1d1a2e');
+    rect(body, 7, hy + 0, 4, 2, g.mid);
+    px(body, 8, hy + 0, g.hi);
+    px(body, 7, hy + 1, g.sh);
+    rect(body, 13, hy + 0, 4, 2, g.mid);
+    px(body, 14, hy + 0, g.hi);
+    px(body, 13, hy + 1, g.sh);
+  }
+
+  if (pal.accessory === 'coordinator') {
+    rect(body, 5, hy + 5, 2, 3, '#272c3b');
+    px(detail, 5, hy + 6, pal.accent.hi);
+    px(detail, 6, hy + 8, '#414a5e');
+    px(detail, 7, hy + 8, '#54ebff');
+  } else if (pal.accessory === 'headphones' && pal.headphonesWorn) {
+    span(body, 7, 16, hy - 1, '#2d3447');
+    px(body, 6, hy + 0, '#3e475e');
+    px(body, 17, hy + 0, '#3e475e');
+    rect(body, 5, hy + 4, 2, 4, '#293042');
+    rect(body, 17, hy + 4, 2, 4, '#293042');
+    px(detail, 5, hy + 5, pal.top.hi);
+    px(detail, 18, hy + 5, pal.top.hi);
+  } else if (pal.accessory === 'antenna') {
+    px(body, 17, hy + 3, '#2d3347');
+    px(body, 17, hy + 2, '#a7b4cf');
+    px(body, 17, hy + 1, '#a7b4cf');
+    px(body, 17, hy + 0, expr.blink ? pal.accent.hi : pal.alertLed ?? '#ff5252');
+  }
+
+  if (screenGlow) {
+    px(detail, 9, hy + 1, '#9ef3ff');
+    px(detail, 14, hy + 1, '#9ef3ff');
+  }
+}
+
+function drawBackHairAndHat(
+  body: PixelGrid,
+  detail: PixelGrid,
+  pal: CharacterPalette,
+  hy: number,
+  expr: HeadExpr
+): void {
+  const h = pal.hair;
+  span(body, 8, 15, hy - 1, h.hi);
+  span(body, 7, 16, hy + 0, h.hi);
+  span(body, 6, 17, hy + 1, h.mid);
+  rect(body, 6, hy + 2, 12, 7, h.mid);
+  span(body, 7, 16, hy + 9, h.sh);
+  px(body, 9, hy + 3, h.hi);
+  px(body, 14, hy + 3, h.hi);
+  px(body, 11, hy + 4, h.hi);
+  px(body, 8, hy + 7, h.sh);
+  px(body, 15, hy + 7, h.sh);
+  span(body, 8, 15, hy + 8, h.sh);
+
+  if (pal.hairStyle === 'long_layered') {
+    px(body, 11, hy - 2, h.hi);
+    px(body, 12, hy - 2, h.mid);
+    px(body, 7, hy + 5, h.hi);
+    px(body, 16, hy + 5, h.sh);
+    span(body, 8, 15, hy + 9, h.sh);
+  } else if (pal.hairStyle === 'tousled') {
+    px(body, 9, hy - 2, h.hi);
+    px(body, 14, hy - 2, h.mid);
+  } else if (pal.tail === 'low_bun' || pal.tail === 'bun') {
+    span(body, 10, 13, hy + 9, h.sh);
+    span(body, 10, 13, hy + 10, h.mid);
+    span(body, 11, 12, hy + 9, h.hi);
+  } else if (pal.tail === 'ponytail') {
+    rect(body, 10, hy + 6, 4, 6, h.mid);
+    span(body, 11, 12, hy + 6, pal.accent ? pal.accent.mid : h.hi);
+    span(body, 11, 12, hy + 11, h.sh);
+  } else if (pal.hairStyle === 'wavy') {
+    rect(body, 5, hy + 4, 2, 8, h.mid);
+    rect(body, 17, hy + 4, 2, 8, h.mid);
+    span(body, 6, 17, hy + 10, h.sh);
+  } else if (pal.hairStyle === 'swept_silver') {
+    px(body, 10, hy - 2, h.hi);
+    px(body, 12, hy - 2, h.streak ?? h.hi);
+    px(body, 11, hy + 2, h.streak ?? h.hi);
+    px(body, 12, hy + 3, h.streak ?? h.hi);
+    px(body, 13, hy + 4, h.streak ?? h.hi);
+  } else if (pal.hairStyle === 'spiky') {
+    px(body, 8, hy - 2, h.hi);
+    px(body, 11, hy - 2, h.mid);
+    px(body, 14, hy - 2, h.hi);
+  } else if (pal.hairStyle === 'dual_tone') {
+    rect(body, 8, hy + 1, 2, 7, h.streak ?? h.hi);
+    px(body, 9, hy + 0, h.streak ?? h.hi);
+  }
+
+  if (pal.hat === 'beret') {
+    const b = pal.accent;
+    span(body, 7, 15, hy - 3, b.hi);
+    span(body, 6, 16, hy - 2, b.mid);
+    span(body, 6, 16, hy - 1, b.mid);
+    span(body, 7, 15, hy + 0, b.sh);
+    px(body, 11, hy - 4, b.sh);
+  } else if (pal.hat === 'visor_cap') {
+    const c = pal.top;
+    span(body, 8, 15, hy - 2, c.hi);
+    span(body, 7, 16, hy - 1, c.mid);
+    span(body, 7, 16, hy + 0, c.mid);
+    span(body, 9, 14, hy + 1, c.sh);
+  } else if (pal.hat === 'backwards_cap') {
+    const c = pal.top;
+    const trim = pal.inner;
+    span(body, 8, 15, hy - 2, c.hi);
+    span(body, 7, 16, hy - 1, c.mid);
+    span(body, 7, 16, hy + 0, c.mid);
+    span(body, 8, 15, hy + 1, trim.hi);
+    span(body, 7, 16, hy + 2, trim.mid);
+  } else if (pal.hat === 'cyber_goggles') {
+    span(body, 6, 17, hy + 0, '#27243d');
+    span(body, 6, 17, hy + 1, '#1d1a2e');
+  }
+
+  if (pal.accessory === 'coordinator') {
+    rect(body, 5, hy + 5, 2, 3, '#272c3b');
+    px(detail, 5, hy + 6, pal.accent.hi);
+  } else if (pal.accessory === 'headphones' && pal.headphonesWorn) {
+    span(body, 7, 16, hy - 1, '#2d3447');
+    rect(body, 5, hy + 4, 2, 4, '#293042');
+    rect(body, 17, hy + 4, 2, 4, '#293042');
+    px(detail, 5, hy + 5, pal.top.hi);
+    px(detail, 18, hy + 5, pal.top.hi);
+  } else if (pal.accessory === 'antenna') {
+    px(body, 17, hy + 3, '#2d3347');
+    px(body, 17, hy + 2, '#a7b4cf');
+    px(body, 17, hy + 1, '#a7b4cf');
+    px(body, 17, hy + 0, expr.blink ? pal.accent.hi : pal.alertLed ?? '#ff5252');
+  }
+
+  if (expr.screenGlow) {
+    span(detail, 8, 15, hy - 1, '#9cf3ff');
+    px(detail, 7, hy + 0, '#72dcf2');
+    px(detail, 16, hy + 0, '#72dcf2');
+  }
+}
+
+function drawFrontFaceDetails(
+  detail: PixelGrid,
+  pal: CharacterPalette,
+  hy: number,
+  expr: HeadExpr
+): void {
+  const eyeY = hy + 5;
+  const browY = hy + 4;
+  const browCol = pal.hair.sh;
+  const eye = pal.eye;
+
+  px(detail, 7, hy + 7, pal.skin.blush);
+  px(detail, 16, hy + 7, pal.skin.blush);
+
+  if (expr.surprised) {
+    span(detail, 8, 9, browY - 1, browCol);
+    span(detail, 14, 15, browY - 1, browCol);
+  } else if (expr.glanceUp) {
+    span(detail, 8, 9, browY, browCol);
+    span(detail, 14, 15, browY - 1, browCol);
+  } else if (expr.sleep) {
+    span(detail, 8, 9, browY + 1, browCol);
+    span(detail, 14, 15, browY + 1, browCol);
+  } else {
+    span(detail, 8, 9, browY, browCol);
+    span(detail, 14, 15, browY, browCol);
+  }
+
+  if (expr.sleep) {
+    span(detail, 8, 9, eyeY + 1, '#2b2230');
+    span(detail, 14, 15, eyeY + 1, '#2b2230');
+  } else if (expr.blink) {
+    span(detail, 8, 9, eyeY + 1, '#261e2e');
+    span(detail, 14, 15, eyeY + 1, '#261e2e');
+  } else if (expr.surprised) {
+    rect(detail, 8, eyeY, 2, 2, '#fffdf7');
+    rect(detail, 14, eyeY, 2, 2, '#fffdf7');
+    px(detail, 9, eyeY + 1, eye.dark);
+    px(detail, 14, eyeY + 1, eye.dark);
+  } else if (expr.glanceUp) {
+    px(detail, 8, eyeY, '#fff9eb');
+    px(detail, 9, eyeY, eye.hi);
+    px(detail, 8, eyeY + 1, '#dce5f5');
+    px(detail, 9, eyeY + 1, eye.mid);
+
+    px(detail, 14, eyeY, '#fff9eb');
+    px(detail, 15, eyeY, eye.hi);
+    px(detail, 14, eyeY + 1, '#dce5f5');
+    px(detail, 15, eyeY + 1, eye.mid);
+  } else {
+    px(detail, 8, eyeY, '#fff9eb');
+    px(detail, 9, eyeY, eye.hi);
+    px(detail, 8, eyeY + 1, eye.mid);
+    px(detail, 9, eyeY + 1, eye.dark);
+
+    px(detail, 14, eyeY, '#fff9eb');
+    px(detail, 15, eyeY, eye.hi);
+    px(detail, 14, eyeY + 1, eye.mid);
+    px(detail, 15, eyeY + 1, eye.dark);
+  }
+
+  const mouthY = hy + 8;
+  if (expr.surprised) {
+    span(detail, 11, 12, mouthY, '#5e2729');
+    span(detail, 11, 12, mouthY + 1, '#3b1518');
+  } else if (expr.mouth === 'wide') {
+    span(detail, 10, 13, mouthY, '#662b2d');
+    span(detail, 11, 12, mouthY + 1, '#f7d8d0');
+  } else if (expr.mouth === 'open') {
+    span(detail, 11, 12, mouthY, '#662b2d');
+    px(detail, 11, mouthY + 1, '#d97e73');
+  } else if (expr.sleep) {
+    px(detail, 11, mouthY, pal.skin.sh);
+  } else if (pal.accessory === 'coordinator' || pal.accessory === 'long_hoodie') {
+    px(detail, 10, mouthY, pal.skin.sh);
+    span(detail, 11, 12, mouthY, '#9c4e44');
+    px(detail, 13, mouthY, pal.skin.sh);
+  } else {
+    span(detail, 11, 12, mouthY, pal.skin.sh);
+  }
+
+  if (pal.glasses === 'long_rect') {
+    const f = '#262e42';
+    const low = '#4c5a78';
+    span(detail, 7, 10, eyeY - 1, f);
+    span(detail, 7, 10, eyeY + 2, low);
+    px(detail, 7, eyeY, f);
+    px(detail, 7, eyeY + 1, f);
+    px(detail, 10, eyeY, f);
+    px(detail, 10, eyeY + 1, f);
+    span(detail, 11, 12, eyeY, f);
+    span(detail, 13, 16, eyeY - 1, f);
+    span(detail, 13, 16, eyeY + 2, low);
+    px(detail, 13, eyeY, f);
+    px(detail, 13, eyeY + 1, f);
+    px(detail, 16, eyeY, f);
+    px(detail, 16, eyeY + 1, f);
+    px(detail, 8, eyeY, '#bceeff');
+    px(detail, 14, eyeY, '#bceeff');
+  } else if (pal.glasses === 'rect') {
+    const f = '#232a3b';
+    span(detail, 7, 10, eyeY - 1, f);
+    span(detail, 7, 10, eyeY + 2, f);
+    px(detail, 7, eyeY, f);
+    px(detail, 7, eyeY + 1, f);
+    px(detail, 10, eyeY, f);
+    px(detail, 10, eyeY + 1, f);
+    span(detail, 11, 12, eyeY, f);
+    span(detail, 13, 16, eyeY - 1, f);
+    span(detail, 13, 16, eyeY + 2, f);
+    px(detail, 13, eyeY, f);
+    px(detail, 13, eyeY + 1, f);
+    px(detail, 16, eyeY, f);
+    px(detail, 16, eyeY + 1, f);
+    px(detail, 8, eyeY, '#b5f3ff');
+    px(detail, 14, eyeY, '#b5f3ff');
+  } else if (pal.glasses === 'round') {
+    const f = '#b58436';
+    span(detail, 8, 9, eyeY - 1, f);
+    span(detail, 8, 9, eyeY + 2, f);
+    px(detail, 7, eyeY, f);
+    px(detail, 7, eyeY + 1, f);
+    px(detail, 10, eyeY, f);
+    px(detail, 10, eyeY + 1, f);
+    span(detail, 11, 12, eyeY, f);
+    span(detail, 14, 15, eyeY - 1, f);
+    span(detail, 14, 15, eyeY + 2, f);
+    px(detail, 13, eyeY, f);
+    px(detail, 13, eyeY + 1, f);
+    px(detail, 16, eyeY, f);
+    px(detail, 16, eyeY + 1, f);
+    px(detail, 8, eyeY, '#fff5d1');
+    px(detail, 14, eyeY, '#fff5d1');
+  } else if (pal.glasses === 'monocle') {
+    const f = pal.accent.mid;
+    span(detail, 14, 15, eyeY - 1, f);
+    span(detail, 14, 15, eyeY + 2, f);
+    px(detail, 13, eyeY, f);
+    px(detail, 13, eyeY + 1, f);
+    px(detail, 16, eyeY, f);
+    px(detail, 16, eyeY + 1, f);
+    px(detail, 15, eyeY, '#9cf8ff');
+    px(detail, 16, eyeY + 3, pal.accent.sh);
+  } else if (pal.glasses === 'visor') {
+    const v = pal.accent;
+    span(detail, 7, 16, eyeY, v.hi);
+    span(detail, 7, 16, eyeY + 1, v.mid);
+    px(detail, 8, eyeY, '#ebffff');
+    px(detail, 9, eyeY, '#ebffff');
+    px(detail, 14, eyeY, '#ebffff');
+    px(detail, 16, eyeY + 1, v.sh);
+  }
+}
+
+function drawSculptedHeadFrontBack(
+  body: PixelGrid,
+  detail: PixelGrid,
+  pal: CharacterPalette,
+  dir: CharacterDir,
+  hy: number,
+  expr: HeadExpr
+): void {
+  const s = pal.skin;
+  const isUp = dir === 'up';
+
+  span(body, 8, 15, hy + 0, s.hi);
+  span(body, 7, 16, hy + 1, s.hi);
+  span(body, 6, 17, hy + 2, s.mid);
+  span(body, 6, 17, hy + 3, s.mid);
+  span(body, 6, 17, hy + 4, s.mid);
+  span(body, 6, 17, hy + 5, s.mid);
+  span(body, 6, 17, hy + 6, s.mid);
+  span(body, 7, 16, hy + 7, s.mid);
+  span(body, 8, 15, hy + 8, s.mid);
+  span(body, 9, 14, hy + 9, s.sh);
+
+  if (!isUp) {
+    px(body, 6, hy + 5, s.sh);
+    px(body, 6, hy + 6, s.sh);
+    px(body, 17, hy + 5, s.sh);
+    px(body, 17, hy + 6, s.sh);
+    px(body, 7, hy + 7, s.sh);
+    px(body, 16, hy + 7, s.sh);
+    px(body, 8, hy + 8, s.sh);
+    px(body, 15, hy + 8, s.sh);
+    span(body, 10, 13, hy + 9, s.mid);
+    span(body, 9, 14, hy + 2, s.hi);
+  }
+
+  px(body, 5, hy + 5, s.mid);
+  px(body, 5, hy + 6, s.sh);
+  px(body, 18, hy + 5, s.mid);
+  px(body, 18, hy + 6, s.sh);
+
+  if (isUp) {
+    drawBackHairAndHat(body, detail, pal, hy, expr);
+    return;
+  }
+
+  drawFrontHairAndHat(body, detail, pal, hy, expr);
+  drawFrontFaceDetails(detail, pal, hy, expr);
+}
+
+function drawTorsoFrontBack(
+  body: PixelGrid,
+  detail: PixelGrid,
+  pal: CharacterPalette,
+  archetype: CharacterArchetype,
+  dir: CharacterDir,
+  ty: number,
+  screenGlow: boolean
+): void {
+  const isUp = dir === 'up';
+  const t = pal.top;
+  const inner = pal.inner;
+  const acc = pal.accent;
+
+  span(body, 10, 13, ty - 1, pal.skin.sh);
+
+  span(body, 8, 15, ty + 0, t.hi);
+  span(body, 7, 16, ty + 1, t.mid);
+  span(body, 7, 16, ty + 2, t.mid);
+  span(body, 7, 16, ty + 3, t.mid);
+  span(body, 7, 16, ty + 4, t.mid);
+  span(body, 8, 15, ty + 5, t.mid);
+  span(body, 8, 15, ty + 6, t.sh);
+  span(body, 7, 16, ty + 7, t.sh);
+
+  for (let row = 1; row <= 4; row += 1) {
+    px(body, 7, ty + row, t.hi);
+    px(body, 16, ty + row, t.sh);
+  }
+  px(body, 8, ty + 5, t.hi);
+  px(body, 15, ty + 5, t.sh);
+
+  if (isUp) {
+    if (pal.accessory === 'long_hoodie') {
+      const tee = pal.tee ?? pal.accent;
+      span(detail, 9, 14, ty + 0, inner.hi);
+      span(detail, 8, 15, ty + 1, inner.mid);
+      span(detail, 9, 14, ty + 2, inner.sh);
+      span(detail, 8, 15, ty + 7, tee.mid);
+      span(detail, 9, 14, ty + 7, tee.hi);
+    } else if (archetype === 'engineer') {
+      span(detail, 9, 14, ty + 0, inner.hi);
+      span(detail, 8, 15, ty + 1, inner.mid);
+      span(detail, 9, 14, ty + 2, inner.sh);
+      if (!pal.headphonesWorn) {
+        rect(body, 6, ty + 0, 2, 2, '#293042');
+        rect(body, 16, ty + 0, 2, 2, '#293042');
+      }
+    } else if (archetype === 'researcher') {
+      px(detail, 8, ty + 1, acc.mid);
+      px(detail, 9, ty + 2, acc.mid);
+      px(detail, 10, ty + 3, acc.mid);
+      px(detail, 11, ty + 4, acc.mid);
+      rect(body, 13, ty + 4, 4, 4, acc.mid);
+      span(detail, 13, 16, ty + 4, acc.hi);
+      px(detail, 15, ty + 5, '#fff8e0');
+      px(detail, 14, ty + 6, '#e8c468');
+    } else if (archetype === 'designer') {
+      span(detail, 8, 15, ty + 0, inner.hi);
+      span(detail, 9, 14, ty + 1, inner.mid);
+      rect(detail, 13, ty + 2, 2, 3, inner.sh);
+      px(detail, 14, ty + 5, inner.hi);
+    } else if (archetype === 'monitor') {
+      span(detail, 9, 14, ty + 0, inner.hi);
+      span(detail, 7, 16, ty + 7, inner.mid);
+    } else if (archetype === 'specialist') {
+      rect(detail, 11, ty + 1, 2, 5, inner.sh);
+      px(detail, 11, ty + 2, inner.hi);
+      px(detail, 12, ty + 2, inner.hi);
+    }
+    if (screenGlow) {
+      px(detail, 8, ty + 0, '#9cf3ff');
+      px(detail, 15, ty + 0, '#9cf3ff');
+    }
+    return;
+  }
+
+  if (pal.accessory === 'long_hoodie') {
+    const tee = pal.tee ?? pal.accent;
+    span(detail, 9, 14, ty + 0, inner.mid);
+    span(detail, 10, 13, ty + 0, tee.hi);
+    span(detail, 10, 13, ty + 1, tee.mid);
+    span(detail, 11, 12, ty + 2, tee.sh);
+    px(detail, 11, ty + 3, '#cbd5e1');
+    px(detail, 12, ty + 3, '#94a3b8');
+    px(detail, 11, ty + 4, '#94a3b8');
+    px(detail, 12, ty + 4, '#64748b');
+    rect(detail, 9, ty + 5, 6, 2, inner.mid);
+    span(detail, 10, 13, ty + 5, inner.hi);
+    span(detail, 8, 15, ty + 7, tee.mid);
+    span(detail, 9, 14, ty + 7, tee.hi);
+    return;
+  }
+
+  switch (archetype) {
+    case 'coordinator':
+      span(detail, 10, 13, ty + 0, inner.hi);
+      span(detail, 11, 12, ty + 1, inner.mid);
+      span(detail, 11, 12, ty + 2, inner.sh);
+      px(detail, 11, ty + 0, pal.tie ?? '#d13d53');
+      px(detail, 11, ty + 1, pal.tie ?? '#d13d53');
+      px(detail, 12, ty + 2, pal.tie ?? '#d13d53');
+      px(detail, 11, ty + 3, pal.tie ?? '#d13d53');
+      px(detail, 9, ty + 1, t.hi);
+      px(detail, 14, ty + 1, t.sh);
+      px(detail, 14, ty + 2, acc.hi);
+      px(detail, 14, ty + 3, acc.mid);
+      span(detail, 8, 15, ty + 6, t.sh);
+      break;
+
+    case 'engineer':
+      span(detail, 9, 14, ty + 0, inner.mid);
+      rect(detail, 9, ty + 5, 6, 2, inner.mid);
+      span(detail, 10, 13, ty + 5, inner.hi);
+      px(detail, 10, ty + 1, acc.hi);
+      px(detail, 10, ty + 2, acc.mid);
+      px(detail, 13, ty + 1, acc.hi);
+      px(detail, 13, ty + 2, acc.mid);
+      if (!pal.headphonesWorn) {
+        rect(body, 6, ty - 1, 2, 3, '#293042');
+        rect(body, 16, ty - 1, 2, 3, '#293042');
+        px(detail, 6, ty + 0, t.hi);
+        px(detail, 17, ty + 0, t.hi);
+      }
+      break;
+
+    case 'researcher':
+      span(detail, 10, 13, ty + 0, inner.hi);
+      span(detail, 11, 12, ty + 1, inner.mid);
+      px(detail, 11, ty + 3, t.sh);
+      px(detail, 11, ty + 5, t.sh);
+      px(detail, 15, ty + 1, acc.mid);
+      px(detail, 14, ty + 2, acc.mid);
+      px(detail, 13, ty + 3, acc.mid);
+      px(detail, 12, ty + 4, acc.mid);
+      px(detail, 11, ty + 5, acc.mid);
+      rect(body, 6, ty + 4, 3, 4, acc.mid);
+      span(detail, 6, 8, ty + 4, acc.hi);
+      px(detail, 7, ty + 5, '#fff7de');
+      break;
+
+    case 'designer':
+      span(detail, 8, 15, ty + 0, inner.hi);
+      span(detail, 8, 15, ty + 1, inner.mid);
+      rect(detail, 8, ty + 2, 2, 4, inner.mid);
+      px(detail, 8, ty + 5, inner.hi);
+      px(detail, 9, ty + 6, inner.sh);
+      px(detail, 12, ty + 3, t.hi);
+      px(detail, 14, ty + 4, t.hi);
+      span(detail, 8, 15, ty + 7, t.sh);
+      break;
+
+    case 'verifier':
+      rect(detail, 10, ty + 0, 4, 6, inner.mid);
+      px(detail, 11, ty + 1, inner.hi);
+      rect(detail, 8, ty + 4, 2, 2, t.sh);
+      rect(detail, 14, ty + 4, 2, 2, t.sh);
+      rect(detail, 13, ty + 2, 3, 3, '#f0f5fc');
+      px(detail, 14, ty + 1, acc.hi);
+      px(detail, 14, ty + 3, '#22c55e');
+      break;
+
+    case 'architect':
+      span(detail, 9, 14, ty - 1, t.mid);
+      span(detail, 10, 13, ty - 1, t.hi);
+      rect(detail, 11, ty + 1, 2, 6, inner.sh);
+      rect(body, 15, ty + 2, 3, 4, '#242938');
+      rect(detail, 15, ty + 3, 2, 2, acc.mid);
+      px(detail, 15, ty + 3, acc.hi);
+      px(detail, 16, ty + 2, '#e8fbff');
+      break;
+
+    case 'monitor':
+      span(detail, 9, 14, ty + 0, inner.hi);
+      span(detail, 7, 16, ty + 3, inner.mid);
+      span(detail, 8, 11, ty + 3, inner.hi);
+      span(detail, 7, 16, ty + 7, inner.sh);
+      rect(detail, 11, ty + 1, 2, 6, '#dce3f0');
+      break;
+
+    case 'specialist':
+      rect(detail, 8, ty + 0, 2, 2, inner.mid);
+      rect(detail, 14, ty + 0, 2, 2, inner.mid);
+      px(detail, 8, ty + 0, inner.hi);
+      px(detail, 15, ty + 0, inner.hi);
+      rect(detail, 11, ty + 2, 2, 2, inner.hi);
+      px(detail, 11, ty + 4, inner.mid);
+      px(detail, 8, ty + 6, inner.mid);
+      px(detail, 15, ty + 6, inner.mid);
+      break;
+  }
+}
+
+function drawLegsFrontBack(
+  body: PixelGrid,
+  detail: PixelGrid,
+  pal: CharacterPalette,
+  dir: CharacterDir,
+  state: CharacterAnimState,
+  frame: number,
+  by: number,
+  archetype: CharacterArchetype
+): void {
+  const p = pal.pants;
+  const s = pal.shoes;
+  const hipY = 24 + by;
+  const hasSneakerStripe = archetype === 'engineer' || pal.accessory === 'long_hoodie';
+
+  if (state === 'work' || state === 'rest_sit' || state === 'rest_sleep') {
+    const sy = state === 'rest_sleep' ? 24 + Math.min(1, by) : 25;
+    span(body, 8, 15, sy, p.mid);
+    span(body, 8, 10, sy, p.hi);
+    px(detail, 11, sy, p.sh);
+    px(detail, 12, sy, p.sh);
+    rect(body, 7, sy + 1, 4, 2, p.mid);
+    rect(body, 13, sy + 1, 4, 2, p.mid);
+    rect(body, 7, sy + 2, 4, 2, s.mid);
+    rect(body, 13, sy + 2, 4, 2, s.mid);
+    px(detail, 8, sy + 2, s.hi);
+    px(detail, 14, sy + 2, s.hi);
+    span(detail, 7, 10, sy + 3, s.sh);
+    span(detail, 13, 16, sy + 3, s.sh);
+    return;
+  }
+
+  span(body, 8, 15, hipY, p.mid);
+  px(detail, 11, hipY, p.sh);
+  px(detail, 12, hipY, p.sh);
+
+  let lOff = 0;
+  let rOff = 0;
+  if (state === 'walk') {
+    if (frame === 0) {
+      lOff = 0;
+      rOff = -1;
+    } else if (frame === 2) {
+      lOff = -1;
+      rOff = 0;
+    }
+  }
+
+  rect(body, 8, hipY + 1, 3, 2 + lOff, p.mid);
+  px(detail, 8, hipY + 1, p.hi);
+  px(detail, 10, hipY + 1, p.sh);
+  rect(body, 7, hipY + 3 + lOff, 4, 2, s.mid);
+  px(detail, 8, hipY + 3 + lOff, s.hi);
+  if (hasSneakerStripe) px(detail, 7, hipY + 4 + lOff, pal.accent.hi);
+  span(detail, 7, 10, hipY + 4 + lOff, dir === 'up' && lOff < 0 ? '#181426' : s.sh);
+
+  rect(body, 13, hipY + 1, 3, 2 + rOff, p.mid);
+  px(detail, 13, hipY + 1, p.sh);
+  px(detail, 15, hipY + 1, p.hi);
+  rect(body, 13, hipY + 3 + rOff, 4, 2, s.mid);
+  px(detail, 14, hipY + 3 + rOff, s.hi);
+  if (hasSneakerStripe) px(detail, 16, hipY + 4 + rOff, pal.accent.hi);
+  span(detail, 13, 16, hipY + 4 + rOff, dir === 'up' && rOff < 0 ? '#181426' : s.sh);
+}
+
+function drawArmsFrontBack(
+  body: PixelGrid,
+  detail: PixelGrid,
+  pal: CharacterPalette,
+  archetype: CharacterArchetype,
+  dir: CharacterDir,
+  state: CharacterAnimState,
+  frame: number,
+  ty: number
+): void {
+  const sleeve = archetype === 'engineer' || pal.accessory === 'long_hoodie' ? pal.inner : pal.top;
+  const skin = pal.skin;
+  const cuff = archetype === 'monitor' ? pal.inner.mid : sleeve.sh;
+
+  if (state === 'error') {
+    const hitch = frame % 2 === 0 ? -1 : 0;
+    rect(body, 4, ty - 1 + hitch, 2, 4, sleeve.mid);
+    px(detail, 4, ty - 1 + hitch, sleeve.hi);
+    rect(body, 4, ty - 2 + hitch, 2, 1, skin.mid);
+    rect(body, 18, ty - 1 + hitch, 2, 4, sleeve.mid);
+    px(detail, 19, ty - 1 + hitch, sleeve.sh);
+    rect(body, 18, ty - 2 + hitch, 2, 1, skin.mid);
+    return;
+  }
+
+  if (state === 'think' && dir === 'down') {
+    rect(body, 5, ty + 1, 2, 4, sleeve.mid);
+    span(body, 6, 8, ty + 4, sleeve.sh);
+    px(body, 9, ty + 4, skin.mid);
+    rect(body, 17, ty + 1, 2, 3, sleeve.mid);
+    rect(body, 14, ty - 1, 3, 2, sleeve.hi);
+    rect(body, 13, ty - 2, 2, 2, skin.mid);
+    return;
+  }
+
+  if (state === 'rest_coffee' && dir === 'down') {
+    rect(body, 5, ty + 1, 2, 4, sleeve.mid);
+    px(detail, 5, ty + 1, sleeve.hi);
+    px(detail, 5, ty + 4, cuff);
+    rect(body, 5, ty + 5, 2, 1, skin.mid);
+    const sip = frame === 2 ? -1 : 0;
+    rect(body, 17, ty + 1, 2, 3, sleeve.mid);
+    rect(body, 15, ty + 3 + sip, 2, 2, skin.mid);
+    rect(body, 14, ty + 2 + sip, 3, 3, '#fbf6ed');
+    span(detail, 14, 16, ty + 2 + sip, '#613c27');
+    px(body, 17, ty + 3 + sip, '#e3dacb');
+    px(detail, 14, ty + 4 + sip, '#cfc3b2');
+    return;
+  }
+
+  if (state === 'talk' && dir === 'down') {
+    rect(body, 5, ty + 1, 2, 4, sleeve.mid);
+    px(detail, 5, ty + 4, cuff);
+    rect(body, 5, ty + 5, 2, 1, skin.mid);
+    const gest = frame === 1 || frame === 2 ? -1 : 0;
+    rect(body, 17, ty + 1, 2, 3, sleeve.mid);
+    rect(body, 18, ty - 1 + gest, 2, 3, sleeve.hi);
+    rect(body, 18, ty - 2 + gest, 2, 1, skin.mid);
+    return;
+  }
+
+  if (state === 'work') {
+    const lTap = frame === 0 || frame === 1 ? -1 : 0;
+    const rTap = frame === 2 || frame === 3 ? -1 : 0;
+    if (dir === 'up') {
+      rect(body, 5, ty + 1, 2, 3, sleeve.mid);
+      rect(body, 5, ty + 0 + lTap, 2, 1, skin.mid);
+      rect(body, 17, ty + 1, 2, 3, sleeve.mid);
+      rect(body, 17, ty + 0 + rTap, 2, 1, skin.mid);
+      px(detail, 5, ty + 0 + lTap, '#c2f7ff');
+      px(detail, 18, ty + 0 + rTap, '#c2f7ff');
+    } else {
+      rect(body, 5, ty + 1, 2, 4, sleeve.mid);
+      rect(body, 7, ty + 4 + lTap, 3, 2, sleeve.hi);
+      rect(body, 9, ty + 4 + lTap, 2, 2, skin.mid);
+
+      rect(body, 17, ty + 1, 2, 4, sleeve.mid);
+      rect(body, 14, ty + 4 + rTap, 3, 2, sleeve.hi);
+      rect(body, 13, ty + 4 + rTap, 2, 2, skin.mid);
+    }
+    return;
+  }
+
+  let lOff = 0;
+  let rOff = 0;
+  if (state === 'walk') {
+    if (frame === 0) {
+      lOff = 1;
+      rOff = -1;
+    } else if (frame === 2) {
+      lOff = -1;
+      rOff = 1;
+    }
+  }
+  rect(body, 5, ty + 1 + lOff, 2, 4, sleeve.mid);
+  px(detail, 5, ty + 1 + lOff, sleeve.hi);
+  px(detail, 6, ty + 2 + lOff, sleeve.sh);
+  px(detail, 5, ty + 4 + lOff, cuff);
+  rect(body, 5, ty + 5 + lOff, 2, 1, skin.mid);
+
+  rect(body, 17, ty + 1 + rOff, 2, 4, sleeve.mid);
+  px(detail, 18, ty + 1 + rOff, sleeve.sh);
+  px(detail, 17, ty + 2 + rOff, sleeve.sh);
+  px(detail, 18, ty + 4 + rOff, cuff);
+  rect(body, 17, ty + 5 + rOff, 2, 1, skin.mid);
+}
+
+function buildSideProfile(
+  pal: CharacterPalette,
+  archetype: CharacterArchetype,
+  state: CharacterAnimState,
+  frame: number,
+  blink: boolean
+): PixelGrid {
+  const body = createGrid();
+  const detail = createGrid();
+
+  const walkBob = state === 'walk' && (frame === 1 || frame === 3) ? -1 : 0;
+  const sitShift = state === 'work' || state === 'rest_sit' ? 1 : 0;
+  const sleepShift = state === 'rest_sleep' ? (frame >= 2 ? 2 : 1) : 0;
+  const workBob = state === 'work' && frame === 2 ? 1 : 0;
+  const breath = (state === 'idle' || state === 'rest_sit') && frame === 2 ? 1 : 0;
+  const by = walkBob + sitShift + sleepShift + workBob;
+  const upperBy = by + (state === 'rest_sleep' || state === 'walk' ? 0 : breath);
+
+  const hy = 5 + upperBy;
+  const ty = 16 + upperBy;
+  const screenGlow = state === 'work';
+
+  const p = pal.pants;
+  const s = pal.shoes;
+  const hasSneakerStripe = archetype === 'engineer' || pal.accessory === 'long_hoodie';
+
+  if (state === 'work' || state === 'rest_sit' || state === 'rest_sleep') {
+    const sy = 25 + Math.min(1, sleepShift);
+    span(body, 8, 14, sy, p.mid);
+    span(body, 8, 11, sy, p.hi);
+    rect(body, 7, sy + 1, 3, 2, p.sh);
+    rect(body, 6, sy + 2, 4, 2, s.mid);
+    px(detail, 6, sy + 2, s.hi);
+    span(detail, 6, 9, sy + 3, s.sh);
+  } else if (state === 'walk') {
+    const hipY = 24 + walkBob;
+    if (frame === 0) {
+      span(body, 8, 14, hipY, p.mid);
+      rect(body, 7, hipY + 1, 3, 3, p.sh);
+      rect(body, 6, hipY + 4, 4, 1, s.sh);
+      rect(body, 12, hipY + 1, 3, 3, p.mid);
+      px(detail, 12, hipY + 1, p.hi);
+      rect(body, 12, hipY + 4, 4, 1, s.mid);
+      px(detail, 12, hipY + 4, s.hi);
+      if (hasSneakerStripe) px(detail, 15, hipY + 4, pal.accent.hi);
+    } else if (frame === 2) {
+      span(body, 8, 14, hipY, p.mid);
+      rect(body, 12, hipY + 1, 3, 3, p.sh);
+      rect(body, 12, hipY + 4, 4, 1, s.sh);
+      rect(body, 7, hipY + 1, 3, 3, p.hi);
+      rect(body, 6, hipY + 4, 4, 1, s.mid);
+      px(detail, 6, hipY + 4, s.hi);
+      if (hasSneakerStripe) px(detail, 9, hipY + 4, pal.accent.hi);
+    } else {
+      rect(body, 10, hipY, 4, 3, p.mid);
+      px(detail, 10, hipY + 1, p.hi);
+      rect(body, 8, hipY + 3, 6, 2, s.mid);
+      px(detail, 9, hipY + 3, s.hi);
+      if (hasSneakerStripe) px(detail, 8, hipY + 4, pal.accent.hi);
+      span(detail, 8, 13, hipY + 4, s.sh);
+    }
+  } else {
+    const hipY = 24 + by;
+    rect(body, 10, hipY, 4, 3, p.mid);
+    px(detail, 10, hipY + 1, p.hi);
+    px(detail, 13, hipY + 1, p.sh);
+    rect(body, 8, hipY + 3, 6, 2, s.mid);
+    px(detail, 9, hipY + 3, s.hi);
+    if (hasSneakerStripe) px(detail, 8, hipY + 4, pal.accent.hi);
+    span(detail, 8, 13, hipY + 4, s.sh);
+  }
+
+  const t = pal.top;
+  span(body, 10, 12, ty - 1, pal.skin.sh);
+  span(body, 9, 14, ty + 0, t.hi);
+  rect(body, 8, ty + 1, 7, 5, t.mid);
+  span(body, 9, 14, ty + 6, t.sh);
+  span(body, 8, 15, ty + 7, t.sh);
+  for (let row = 1; row <= 5; row += 1) {
+    px(body, 8, ty + row, t.hi);
+    px(body, 14, ty + row, t.sh);
+  }
+
+  if (pal.accessory === 'long_hoodie') {
+    const tee = pal.tee ?? pal.accent;
+    span(detail, 9, 14, ty + 0, pal.inner.mid);
+    px(detail, 8, ty + 1, tee.hi);
+    span(detail, 8, 15, ty + 7, tee.mid);
+    span(detail, 9, 14, ty + 7, tee.hi);
+  } else if (archetype === 'designer') {
+    span(detail, 8, 14, ty + 0, pal.inner.hi);
+    span(detail, 8, 14, ty + 1, pal.inner.mid);
+    rect(detail, 13, ty + 2, 2, 3, pal.inner.sh);
+  } else if (archetype === 'monitor') {
+    span(detail, 9, 14, ty + 0, pal.inner.hi);
+    span(detail, 8, 14, ty + 3, pal.inner.mid);
+    span(detail, 8, 15, ty + 7, pal.inner.sh);
+  } else if (archetype === 'researcher') {
+    rect(body, 11, ty + 4, 4, 4, pal.accent.mid);
+    span(detail, 11, 14, ty + 4, pal.accent.hi);
+    px(detail, 12, ty + 5, '#fff7de');
+  } else if (archetype === 'coordinator') {
+    px(detail, 9, ty + 2, pal.accent.hi);
+    px(detail, 8, ty + 1, pal.inner.hi);
+    span(detail, 8, 15, ty + 7, t.sh);
+  } else if (archetype === 'specialist') {
+    rect(detail, 8, ty + 2, 2, 2, pal.inner.hi);
+    rect(detail, 13, ty + 0, 2, 2, pal.inner.mid);
+  } else if (archetype === 'architect') {
+    span(detail, 9, 13, ty - 1, t.hi);
+    rect(body, 10, ty + 3, 4, 4, '#242938');
+    rect(detail, 10, ty + 4, 3, 2, pal.accent.mid);
+    px(detail, 10, ty + 4, pal.accent.hi);
+  } else if (archetype === 'verifier') {
+    rect(detail, 8, ty + 2, 3, 3, '#f0f5fc');
+    px(detail, 9, ty + 3, '#22c55e');
+  }
+
+  const sk = pal.skin;
+  span(body, 9, 14, hy + 0, sk.hi);
+  span(body, 8, 15, hy + 1, sk.hi);
+  rect(body, 7, hy + 2, 9, 6, sk.mid);
+  span(body, 8, 15, hy + 8, sk.mid);
+  span(body, 9, 13, hy + 9, sk.sh);
+  px(body, 6, hy + 6, sk.mid);
+  px(detail, 10, hy + 7, sk.blush);
+  px(detail, 12, hy + 5, sk.sh);
+
+  const h = pal.hair;
+  span(body, 9, 14, hy - 1, h.hi);
+  span(body, 8, 15, hy + 0, h.hi);
+  span(body, 7, 15, hy + 1, h.mid);
+  span(body, 7, 10, hy + 2, h.mid);
+  rect(body, 12, hy + 1, 4, 8, h.mid);
+  rect(body, 14, hy + 2, 2, 7, h.sh);
+  if (pal.hairStyle === 'long_layered') {
+    px(body, 12, hy - 2, h.hi);
+    px(body, 13, hy - 2, h.mid);
+    px(body, 7, hy + 3, h.mid);
+    px(body, 13, hy + 4, h.hi);
+  } else if (pal.hairStyle === 'dual_tone' || pal.hairStyle === 'swept_silver') {
+    rect(body, 10, hy + 1, 2, 3, h.streak ?? h.hi);
+  }
+  if (pal.tail === 'ponytail' || pal.tail === 'wavy_long') {
+    rect(body, 16, hy + 5, 2, 5, h.mid);
+    px(body, 17, hy + 9, h.sh);
+  } else if (pal.tail === 'low_bun' || pal.tail === 'bun') {
+    rect(body, 16, hy + 5, 2, 3, h.sh);
+    px(body, 16, hy + 5, h.mid);
+  } else if (pal.tail === 'ahoge') {
+    px(body, 12, hy - 2, h.hi);
+    px(body, 13, hy - 3, h.mid);
+  }
+
+  if (pal.hat === 'beret') {
+    span(body, 8, 15, hy - 3, pal.accent.hi);
+    span(body, 7, 16, hy - 2, pal.accent.mid);
+    span(body, 7, 16, hy - 1, pal.accent.mid);
+    span(body, 8, 15, hy + 0, pal.accent.sh);
+    px(body, 12, hy - 4, pal.accent.sh);
+  } else if (pal.hat === 'visor_cap') {
+    span(body, 8, 15, hy - 2, pal.top.hi);
+    span(body, 7, 16, hy - 1, pal.top.mid);
+    span(body, 7, 16, hy + 0, pal.top.mid);
+    span(body, 4, 9, hy + 1, pal.top.sh);
+  } else if (pal.hat === 'backwards_cap') {
+    span(body, 8, 15, hy - 2, pal.top.hi);
+    span(body, 7, 16, hy - 1, pal.top.mid);
+    span(body, 7, 16, hy + 0, pal.top.mid);
+    span(body, 14, 18, hy + 1, pal.inner.hi);
+    span(body, 14, 17, hy + 2, pal.inner.mid);
+  } else if (pal.hat === 'cyber_goggles') {
+    span(body, 7, 15, hy + 0, '#27243d');
+    span(body, 7, 15, hy + 1, '#1d1a2e');
+    rect(body, 7, hy + 0, 3, 2, pal.accent.mid);
+    px(detail, 7, hy + 0, pal.accent.hi);
+  }
+
+  if (pal.accessory === 'antenna') {
+    px(body, 14, hy + 3, '#2d3347');
+    px(body, 14, hy + 1, '#a7b4cf');
+    px(body, 14, hy + 2, '#a7b4cf');
+    px(body, 14, hy + 0, blink ? pal.accent.hi : pal.alertLed ?? '#ff5252');
+  } else if (pal.accessory === 'headphones') {
+    if (pal.headphonesWorn) {
+      rect(body, 11, hy + 3, 3, 4, '#293042');
+      px(detail, 12, hy + 4, pal.top.hi);
+    } else {
+      rect(body, 11, hy + 9, 3, 3, '#293042');
+      px(detail, 12, hy + 10, pal.top.hi);
+    }
+  } else if (pal.accessory === 'coordinator') {
+    rect(body, 11, hy + 4, 2, 3, '#272c3b');
+    px(detail, 8, hy + 7, '#54ebff');
+  }
+
+  const eyeY = hy + 5;
+  span(detail, 8, 9, hy + 4, pal.hair.sh);
+  if (state === 'rest_sleep' || blink) {
+    span(detail, 8, 9, eyeY + 1, '#261e2e');
+  } else if (state === 'error') {
+    rect(detail, 8, eyeY, 2, 2, '#fffdf7');
+    px(detail, 8, eyeY + 1, pal.eye.dark);
+  } else {
+    px(detail, 8, eyeY, '#fff9eb');
+    px(detail, 9, eyeY, pal.eye.hi);
+    px(detail, 8, eyeY + 1, pal.eye.mid);
+    px(detail, 9, eyeY + 1, pal.eye.dark);
+  }
+
+  if (pal.glasses === 'long_rect') {
+    const fc = '#262e42';
+    span(detail, 7, 10, eyeY - 1, fc);
+    span(detail, 8, 9, eyeY + 2, '#4c5a78');
+    px(detail, 7, eyeY, fc);
+    px(detail, 7, eyeY + 1, fc);
+    px(detail, 10, eyeY, fc);
+    px(detail, 10, eyeY + 1, fc);
+    px(detail, 8, eyeY, '#bceeff');
+  } else if (pal.glasses === 'rect' || pal.glasses === 'round') {
+    const fc = pal.glasses === 'round' ? '#b58436' : '#232a3b';
+    span(detail, 7, 10, eyeY - 1, fc);
+    span(detail, 7, 10, eyeY + 2, fc);
+    px(detail, 7, eyeY, fc);
+    px(detail, 7, eyeY + 1, fc);
+    px(detail, 10, eyeY, fc);
+    px(detail, 10, eyeY + 1, fc);
+  } else if (pal.glasses === 'visor') {
+    span(detail, 7, 10, eyeY, pal.accent.hi);
+    span(detail, 7, 10, eyeY + 1, pal.accent.mid);
+    px(detail, 8, eyeY, '#ebffff');
+  }
+
+  if (screenGlow) {
+    px(detail, 7, hy + 2, '#9cf3ff');
+    px(detail, 6, hy + 6, '#b8f7ff');
+  }
+
+  const sleeve = archetype === 'engineer' || pal.accessory === 'long_hoodie' ? pal.inner : t;
+  if (state === 'work') {
+    const tap = frame % 2 === 0 ? -1 : 0;
+    rect(body, 10, ty + 1, 3, 3, sleeve.hi);
+    rect(body, 6, ty + 3 + tap, 5, 2, sleeve.mid);
+    rect(body, 4, ty + 3 + tap, 2, 2, sk.mid);
+    px(detail, 4, ty + 3 + tap, '#c2f7ff');
+  } else if (state === 'rest_coffee') {
+    const sip = frame === 2 ? -1 : 0;
+    rect(body, 10, ty + 1, 2, 4, sleeve.hi);
+    rect(body, 7, ty + 3 + sip, 3, 2, sk.mid);
+    rect(body, 4, ty + 2 + sip, 3, 3, '#fbf6ed');
+    span(detail, 4, 6, ty + 2 + sip, '#613c27');
+  } else if (state === 'think') {
+    rect(body, 10, ty + 1, 2, 3, sleeve.hi);
+    rect(body, 7, ty - 1, 3, 2, sk.mid);
+  } else if (state === 'error') {
+    rect(body, 8, ty - 2, 3, 4, sleeve.hi);
+    rect(body, 7, ty - 3, 2, 2, sk.mid);
+  } else if (state === 'talk') {
+    const gest = frame === 1 || frame === 2 ? -1 : 0;
+    rect(body, 9, ty + 1, 3, 3, sleeve.hi);
+    rect(body, 6, ty + 2 + gest, 3, 2, sk.mid);
+  } else {
+    let swing = 0;
+    if (state === 'walk') {
+      if (frame === 0) swing = -2;
+      else if (frame === 2) swing = 2;
+    }
+    rect(body, 10 + swing, ty + 1, 3, 4, sleeve.hi);
+    px(detail, 12 + swing, ty + 2, sleeve.sh);
+    rect(body, 10 + swing, ty + 5, 2, 1, sk.mid);
+  }
+
+  const finalGrid = createGrid();
+  applySeloutOutline(body, finalGrid);
+  for (let i = 0; i < detail.length; i += 1) {
+    if (detail[i]) finalGrid[i] = detail[i];
+  }
+  return finalGrid;
+}
+
+function drawParticles(grid: PixelGrid, state: CharacterAnimState, frame: number): void {
+  if (state === 'rest_coffee') {
+    const s1 = 'rgba(255, 255, 255, 0.90)';
+    const s2 = 'rgba(210, 232, 250, 0.72)';
+    const step = frame % 4;
+    px(grid, 15 + (step % 2), 17 - step, s1);
+    px(grid, 16 - (step % 2), 15 - step, s2);
+    px(grid, 15 + ((step + 1) % 2), 13 - Math.floor(step / 2), s2);
+  } else if (state === 'rest_sleep') {
+    const rise = frame % 4;
+    const zCol = '#ecf3ff';
+    const zSh = '#3b4878';
+    const zx = 16 + Math.floor(rise / 2);
+    const zy = 6 - rise;
+    if (zy >= 1) {
+      px(grid, zx, zy, zCol);
+      px(grid, zx + 1, zy, zCol);
+      px(grid, zx + 1, zy + 1, zCol);
+      px(grid, zx, zy + 2, zCol);
+      px(grid, zx + 1, zy + 2, zCol);
+      px(grid, zx + 2, zy + 2, zSh);
+    }
+    const Zx = 19;
+    const Zy = 4 - ((rise + 2) % 4);
+    span(grid, Zx, Zx + 2, Zy, zCol);
+    px(grid, Zx + 1, Zy + 1, zCol);
+    span(grid, Zx, Zx + 2, Zy + 2, zCol);
+    px(grid, Zx + 3, Zy + 2, zSh);
+  } else if (state === 'think') {
+    const angle = frame % 4;
+    const ox = [18, 20, 19, 17][angle];
+    const oy = [2, 1, 0, 1][angle];
+    const sparkCore = angle % 2 === 0 ? '#ffe566' : '#70f5ff';
+    const sparkRim = angle % 2 === 0 ? '#ffab2e' : '#2bc8e8';
+    px(grid, ox, oy, '#ffffff');
+    px(grid, ox - 1, oy, sparkCore);
+    px(grid, ox + 1, oy, sparkCore);
+    px(grid, ox, oy - 1, sparkRim);
+    px(grid, ox, oy + 1, sparkRim);
+  } else if (state === 'error') {
+    const flash = frame % 2 === 0;
+    const fg = flash ? '#ff3b4e' : '#ffaa2b';
+    const hi = flash ? '#ffd6db' : '#fff2ba';
+    const dy = flash ? 0 : 1;
+    rect(grid, 10, dy, 4, 4, OUTLINE_DARK);
+    rect(grid, 10, dy + 4, 4, 2, OUTLINE_DARK);
+    rect(grid, 11, dy, 2, 3, fg);
+    px(grid, 11, dy, hi);
+    rect(grid, 11, dy + 4, 2, 1, fg);
+    const sy = 9 + (frame % 2);
+    px(grid, 18, sy, '#3b7dd8');
+    px(grid, 18, sy + 1, '#9ce8ff');
+  } else if (state === 'talk') {
+    if (frame === 1 || frame === 2) {
+      px(grid, 20, 10, '#ffffff');
+      px(grid, 21, 9, '#9ceeff');
+      px(grid, 21, 11, '#9ceeff');
+    }
+  }
+}
+
+function buildSpriteGrid(
+  archetype: CharacterArchetype,
+  seed: number,
+  state: CharacterAnimState,
+  dir: CharacterDir,
+  frame: number,
+  isLong = false
+): PixelGrid {
+  const pal = getArchetypePalette(archetype, seed, isLong);
+  const f = ((Math.floor(frame || 0) % 4) + 4) % 4;
+  const st = normalizeState(state);
+  const d = normalizeDir(dir);
+
+  const blink =
+    (st === 'idle' || st === 'rest_sit' || st === 'rest_coffee' || st === 'think') && f === 2;
+
+  let finalGrid: PixelGrid;
+  if (d === 'left' || d === 'right') {
+    finalGrid = buildSideProfile(pal, archetype, st, f, blink);
+    if (d === 'right') {
+      finalGrid = mirrorHorizontal(finalGrid);
+    }
+  } else {
+    const body = createGrid();
+    const detail = createGrid();
+
+    const walkBob = st === 'walk' && (f === 1 || f === 3) ? -1 : 0;
+    const sitShift = st === 'work' || st === 'rest_sit' ? 1 : 0;
+    const sleepShift = st === 'rest_sleep' ? (f >= 2 ? 2 : 1) : 0;
+    const workBob = st === 'work' && f === 2 ? 1 : 0;
+    const breath = (st === 'idle' || st === 'rest_sit') && f === 2 ? 1 : 0;
+
+    const by = walkBob + sitShift + sleepShift + workBob;
+    const upperBy = by + (st === 'rest_sleep' || st === 'walk' ? 0 : breath);
+
+    drawLegsFrontBack(body, detail, pal, d, st, f, by, archetype);
+
+    const ty = 16 + upperBy;
+    drawTorsoFrontBack(body, detail, pal, archetype, d, ty, st === 'work');
+
+    drawArmsFrontBack(body, detail, pal, archetype, d, st, f, ty);
+
+    const hy = 5 + upperBy;
+    const mouth: HeadExpr['mouth'] =
+      st === 'talk'
+        ? f === 2
+          ? 'wide'
+          : f === 1 || f === 3
+            ? 'open'
+            : 'closed'
+        : 'closed';
+    drawSculptedHeadFrontBack(body, detail, pal, d, hy, {
+      blink,
+      surprised: st === 'error',
+      sleep: st === 'rest_sleep',
+      glanceUp: st === 'think' && !blink,
+      screenGlow: st === 'work',
+      mouth,
+    });
+
+    finalGrid = createGrid();
+    applySeloutOutline(body, finalGrid);
+    for (let i = 0; i < detail.length; i += 1) {
+      if (detail[i]) finalGrid[i] = detail[i];
+    }
+  }
+
+  for (let sx = 7; sx <= 16; sx += 1) {
+    if (!getPx(finalGrid, sx, 30)) px(finalGrid, sx, 30, SHADOW_GROUND_CORE);
+  }
+  for (let sx = 9; sx <= 14; sx += 1) {
+    if (!getPx(finalGrid, sx, 31)) px(finalGrid, sx, 31, SHADOW_GROUND_SOFT);
+  }
+
+  drawParticles(finalGrid, st, f);
+
+  return finalGrid;
+}
+
+function makeOffscreenCanvas(w: number, h: number): OffscreenSurface | null {
+  if (typeof document !== 'undefined' && typeof document.createElement === 'function') {
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    return c;
+  }
+  if (typeof OffscreenCanvas !== 'undefined') {
+    return new OffscreenCanvas(w, h);
+  }
+  return null;
+}
+
+function renderGridToCanvas(grid: PixelGrid): OffscreenSurface | null {
+  const canvas = makeOffscreenCanvas(SPRITE_W, SPRITE_H);
+  if (!canvas) return null;
+  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
+  if (!ctx) return null;
+  ctx.imageSmoothingEnabled = false;
+  for (let y = 0; y < SPRITE_H; y += 1) {
+    for (let x = 0; x < SPRITE_W; x += 1) {
+      const color = grid[y * SPRITE_W + x];
+      if (color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, 1, 1);
       }
     }
   }
-  return out;
+  return canvas;
+}
+
+function getCachedSpriteCanvas(
+  archetype: CharacterArchetype,
+  seed: number,
+  state: CharacterAnimState,
+  dir: CharacterDir,
+  frame: number,
+  isLong = false
+): OffscreenSurface | null {
+  const arch: CharacterArchetype = (ARCHETYPES as readonly string[]).includes(archetype)
+    ? archetype
+    : 'engineer';
+  const seedBucket = normalizeSeed(seed) % 16;
+  const st = normalizeState(state);
+  const d = normalizeDir(dir);
+  const f = ((Math.floor(frame || 0) % 4) + 4) % 4;
+  const key = `${isLong ? 'long' : 'std'}|${arch}|${seedBucket}|${st}|${d}|${f}`;
+
+  const cached = frameCache.get(key);
+  if (cached) return cached;
+
+  if (frameCache.size >= MAX_CACHE_ENTRIES) {
+    frameCache.clear();
+  }
+
+  const grid = buildSpriteGrid(arch, seedBucket, st, d, f, isLong);
+  const surface = renderGridToCanvas(grid);
+  if (surface) {
+    frameCache.set(key, surface);
+  }
+  return surface;
 }
 
 function drawPixelGrid(
@@ -267,31 +2034,244 @@ function drawPixelGrid(
   }
 }
 
-export function assertUniformMatrixWidth(
-  matrix: SpriteMatrix,
-  expectedWidth?: number
-): SpriteMatrix {
-  if (matrix.length === 0) {
-    throw new Error('SpriteMatrix cannot be empty');
+export function drawCharacter(ctx: CanvasRenderingContext2D, opts: DrawCharacterOptions): void {
+  if (!ctx) return;
+  const {
+    archetype = 'engineer',
+    seed = 0,
+    state = 'idle',
+    dir = 'down',
+    frame = 0,
+    x = 0,
+    y = 0,
+    scale = 1,
+    isLong = false,
+    variant,
+  } = opts;
+
+  const useLong = Boolean(isLong || variant === 'long');
+  const s = Number.isFinite(scale) && scale > 0 ? scale : 1;
+  const drawW = SPRITE_W * s;
+  const drawH = SPRITE_H * s;
+  const dx = Math.round(x - drawW / 2);
+  const dy = Math.round(y - drawH);
+
+  const sprite = getCachedSpriteCanvas(archetype, seed, state, dir, frame, useLong);
+  if (sprite) {
+    const prevSmooth = ctx.imageSmoothingEnabled;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(sprite as CanvasImageSource, dx, dy, drawW, drawH);
+    ctx.imageSmoothingEnabled = prevSmooth;
+    return;
   }
-  const targetWidth = expectedWidth ?? matrix[0].length;
-  for (let i = 0; i < matrix.length; i += 1) {
-    if (matrix[i].length !== targetWidth) {
-      throw new Error(
-        `SpriteMatrix row ${i} length ${matrix[i].length} does not match expected width ${targetWidth}`
-      );
-    }
-  }
-  return matrix;
+
+  const fallbackGrid = buildSpriteGrid(
+    archetype,
+    normalizeSeed(seed) % 16,
+    normalizeState(state),
+    normalizeDir(dir),
+    frame,
+    useLong
+  );
+  drawPixelGrid(ctx, fallbackGrid, SPRITE_W, SPRITE_H, dx, dy);
 }
 
-export function drawSpriteMatrix(
+export function renderPortraitDataUrl(
+  archetype: CharacterArchetype,
+  seed = 0,
+  isLong = false
+): string {
+  const arch: CharacterArchetype = (ARCHETYPES as readonly string[]).includes(archetype)
+    ? archetype
+    : 'engineer';
+  const seedBucket = normalizeSeed(seed) % 16;
+  const key = `${isLong ? 'long' : 'std'}|${arch}|${seedBucket}`;
+
+  const cached = portraitCache.get(key);
+  if (cached) return cached;
+
+  const sprite = getCachedSpriteCanvas(arch, seedBucket, 'idle', 'down', 0, isLong);
+  if (!sprite || !('toDataURL' in sprite) || typeof sprite.toDataURL !== 'function') {
+    return '';
+  }
+  const url = sprite.toDataURL('image/png');
+  portraitCache.set(key, url);
+  return url;
+}
+
+type CapyPoseKind =
+  | 'sit'
+  | 'blink'
+  | 'ear'
+  | 'walk_0'
+  | 'walk_1'
+  | 'walk_2'
+  | 'walk_3'
+  | 'dance_0'
+  | 'dance_1'
+  | 'drowsy'
+  | 'sleep';
+
+interface CapyColorTheme {
+  readonly selout: string;
+  readonly fur: ShadeRamp & { readonly ear: string; readonly snout: string; readonly blush: string };
+  readonly eye: string;
+  readonly eyeGlint: string;
+  readonly yuzu: ShadeRamp;
+  readonly leaf: ShadeRamp;
+  readonly groundCore: string;
+  readonly groundSoft: string;
+}
+
+function getCapyTheme(timeState: RoomTimeState, lampOn: boolean, palette: RoomPalette): CapyColorTheme {
+  const dim = timeState === 'sleeping' && !lampOn;
+  const late = timeState === 'late_night';
+  return {
+    selout: palette.capySelout || OUTLINE_DARK,
+    fur: dim
+      ? { hi: '#9e7358', mid: '#7d5841', sh: '#5a3c2c', ear: '#472e22', snout: '#4e3325', blush: '#a86764' }
+      : late
+        ? { hi: '#c98e63', mid: '#a36b46', sh: '#75492e', ear: '#593622', snout: '#663e28', blush: '#d47b73' }
+        : { hi: '#e0a16e', mid: '#bd7b4c', sh: '#8c5432', ear: '#693d24', snout: '#73452a', blush: '#eb8f85' },
+    eye: '#241612',
+    eyeGlint: '#fff8eb',
+    yuzu: dim
+      ? { hi: '#cc9a1e', mid: '#a87312', sh: '#7a4d0a' }
+      : { hi: '#fde047', mid: '#f59e0b', sh: '#c26408' },
+    leaf: dim
+      ? { hi: '#3c8c4e', mid: '#276638', sh: '#184224' }
+      : { hi: '#68d975', mid: '#34a853', sh: '#1e7037' },
+    groundCore: 'rgba(28, 24, 41, 0.30)',
+    groundSoft: 'rgba(28, 24, 41, 0.14)',
+  };
+}
+
+function buildCapyGrid(theme: CapyColorTheme, pose: CapyPoseKind): PixelGrid {
+  const w = CAPY_WIDTH;
+  const h = CAPY_HEIGHT;
+  const body = createGrid(w, h);
+  const detail = createGrid(w, h);
+
+  const isDrowsy = pose === 'drowsy' || pose === 'sleep';
+  const yuzuBob = pose === 'walk_1' || pose === 'walk_3' || pose === 'dance_1' ? -1 : 0;
+  const headDrop = isDrowsy ? 1 : pose === 'dance_1' ? -1 : 0;
+  const bodyDrop = isDrowsy ? 1 : pose === 'dance_1' ? -1 : 0;
+
+  const yy = 1 + yuzuBob + headDrop;
+  span(body, 5, 7, yy, theme.yuzu.hi, w, h);
+  span(body, 4, 8, yy + 1, theme.yuzu.mid, w, h);
+  span(body, 5, 7, yy + 2, theme.yuzu.sh, w, h);
+  px(detail, 5, yy + 1, theme.yuzu.hi, w, h);
+  px(body, 6, yy - 1, theme.leaf.mid, w, h);
+  px(body, 7, yy - 1, theme.leaf.hi, w, h);
+  px(body, 8, yy, theme.leaf.sh, w, h);
+
+  const hy = 4 + headDrop;
+  const earLift = pose === 'ear' || pose === 'dance_1' ? -1 : 0;
+  rect(body, 9, hy - 1 + earLift, 2, 2, theme.fur.ear, w, h);
+  px(detail, 9, hy - 1 + earLift, theme.fur.mid, w, h);
+
+  span(body, 4, 9, hy, theme.fur.hi, w, h);
+  span(body, 2, 10, hy + 1, theme.fur.mid, w, h);
+  span(body, 1, 10, hy + 2, theme.fur.mid, w, h);
+  span(body, 1, 10, hy + 3, theme.fur.mid, w, h);
+  span(body, 2, 9, hy + 4, theme.fur.sh, w, h);
+
+  span(detail, 4, 8, hy, theme.fur.hi, w, h);
+  rect(detail, 1, hy + 2, 2, 2, theme.fur.snout, w, h);
+  px(detail, 1, hy + 2, theme.fur.sh, w, h);
+  px(detail, 8, hy + 3, theme.fur.blush, w, h);
+
+  if (pose === 'dance_0' || pose === 'dance_1') {
+    px(detail, 4, hy + 2, theme.eye, w, h);
+    px(detail, 5, hy + 1, theme.eye, w, h);
+    px(detail, 6, hy + 2, theme.eye, w, h);
+  } else if (pose === 'blink' || isDrowsy) {
+    span(detail, 4, 6, hy + 2, theme.eye, w, h);
+  } else {
+    rect(detail, 4, hy + 1, 2, 2, theme.eye, w, h);
+    px(detail, 4, hy + 1, theme.eyeGlint, w, h);
+  }
+
+  const by = 7 + bodyDrop;
+  span(body, 10, 17, by, theme.fur.hi, w, h);
+  span(body, 8, 18, by + 1, theme.fur.hi, w, h);
+  span(body, 6, 19, by + 2, theme.fur.mid, w, h);
+  span(body, 5, 19, by + 3, theme.fur.mid, w, h);
+  span(body, 5, 18, by + 4, theme.fur.mid, w, h);
+  span(body, 6, 17, by + 5, theme.fur.sh, w, h);
+  if (pose === 'sleep') {
+    px(body, 19, by + 2, theme.fur.hi, w, h);
+    px(body, 19, by + 3, theme.fur.mid, w, h);
+  }
+  span(detail, 11, 16, by + 1, theme.fur.hi, w, h);
+  span(detail, 10, 15, by + 4, theme.fur.mid, w, h);
+
+  if (!isDrowsy) {
+    const legY = by + 5;
+    if (pose === 'walk_0') {
+      rect(body, 5, legY, 3, 3, theme.fur.sh, w, h);
+      rect(body, 10, legY, 3, 2, theme.fur.mid, w, h);
+      rect(body, 14, legY, 3, 3, theme.fur.sh, w, h);
+    } else if (pose === 'walk_1' || pose === 'walk_3') {
+      rect(body, 6, legY, 3, 2, theme.fur.sh, w, h);
+      rect(body, 11, legY, 2, 2, theme.fur.mid, w, h);
+      rect(body, 14, legY, 3, 2, theme.fur.sh, w, h);
+    } else if (pose === 'walk_2') {
+      rect(body, 7, legY, 3, 2, theme.fur.mid, w, h);
+      rect(body, 11, legY, 3, 3, theme.fur.sh, w, h);
+      rect(body, 15, legY, 3, 3, theme.fur.sh, w, h);
+    } else if (pose === 'dance_1') {
+      rect(body, 5, legY, 3, 2, theme.fur.sh, w, h);
+      rect(body, 10, legY, 3, 2, theme.fur.mid, w, h);
+      rect(body, 15, legY, 3, 2, theme.fur.sh, w, h);
+    } else {
+      rect(body, 6, legY, 3, 2, theme.fur.sh, w, h);
+      rect(body, 10, legY, 3, 2, theme.fur.mid, w, h);
+      rect(body, 14, legY, 3, 2, theme.fur.sh, w, h);
+    }
+  }
+
+  const out = createGrid(w, h);
+  applySeloutOutline(body, out, w, h, theme.selout, isDrowsy ? 12 : 14);
+  for (let i = 0; i < detail.length; i += 1) {
+    if (detail[i]) out[i] = detail[i];
+  }
+
+  const shadowY = isDrowsy ? 14 : 15;
+  for (let sx = 4; sx <= 18; sx += 1) {
+    if (!getPx(out, sx, shadowY, w, h)) px(out, sx, shadowY, theme.groundCore, w, h);
+  }
+  for (let sx = 6; sx <= 16; sx += 1) {
+    if (!getPx(out, sx, shadowY + 1, w, h)) px(out, sx, shadowY + 1, theme.groundSoft, w, h);
+  }
+  return out;
+}
+
+const Z_SMALL: SpriteMatrix = [
+  'OOOOO.',
+  'OZZZOO',
+  '.OOZO.',
+  'OZZOO.',
+  'OZZZO.',
+  'OOOOO.',
+];
+
+const Z_LARGE: SpriteMatrix = [
+  'OOOOOO',
+  'OZZZZO',
+  '.OOZOO',
+  'OOZOO.',
+  'OZZZZO',
+  'OOOOOO',
+];
+
+function drawSpriteMatrix(
   ctx: CanvasRenderingContext2D,
   matrix: SpriteMatrix,
   colorMap: SpriteColorMap,
   x: number,
-  y: number,
-  flipX = false
+  y: number
 ): void {
   const baseX = Math.round(x);
   const baseY = Math.round(y);
@@ -299,26 +2279,161 @@ export function drawSpriteMatrix(
 
   for (let rowIdx = 0; rowIdx < matrix.length; rowIdx += 1) {
     const row = matrix[rowIdx];
-    const width = row.length;
     const drawY = baseY + rowIdx;
-
-    for (let colIdx = 0; colIdx < width; colIdx += 1) {
+    for (let colIdx = 0; colIdx < row.length; colIdx += 1) {
       const ch = row[colIdx];
-      if (ch === '.' || ch === ' ') {
-        continue;
-      }
+      if (ch === '.' || ch === ' ') continue;
       const color = colorMap[ch];
-      if (!color) {
-        continue;
-      }
-      const drawX = flipX ? baseX + (width - 1 - colIdx) : baseX + colIdx;
+      if (!color) continue;
       if (color !== lastColor) {
         ctx.fillStyle = color;
         lastColor = color;
       }
-      ctx.fillRect(drawX, drawY, 1, 1);
+      ctx.fillRect(baseX + colIdx, drawY, 1, 1);
     }
   }
+}
+
+function drawZzzDrift(
+  ctx: CanvasRenderingContext2D,
+  originX: number,
+  originY: number,
+  timeSec: number,
+  reducedMotion: boolean,
+  outlineColor: string,
+  riseSpan = 6
+): void {
+  const zColors: SpriteColorMap = { O: outlineColor, Z: '#e2e8f0' };
+  if (reducedMotion) {
+    drawSpriteMatrix(ctx, Z_SMALL, zColors, originX, originY - 2);
+    drawSpriteMatrix(ctx, Z_LARGE, zColors, originX + 6, originY - riseSpan);
+    return;
+  }
+
+  const slots = [0, 0.33, 0.66];
+  for (let i = 0; i < slots.length; i += 1) {
+    const phase = (timeSec * 0.42 + slots[i]) % 1;
+    const drawX = originX + i * 3 + Math.round(Math.sin(phase * Math.PI * 2) * 1.4);
+    const drawY = originY - Math.round(phase * riseSpan);
+    const alpha =
+      phase < 0.2 ? phase / 0.2 : phase > 0.72 ? Math.max(0, (1 - phase) / 0.28) : 0.92;
+    const mat = i === 1 ? Z_LARGE : Z_SMALL;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    drawSpriteMatrix(ctx, mat, zColors, drawX, drawY);
+    ctx.restore();
+  }
+}
+
+export function drawCapybaraPet(
+  ctx: CanvasRenderingContext2D,
+  opts: DrawCapybaraPetOptions
+): { x: number; y: number } {
+  const {
+    timeState,
+    isMusicActive,
+    elapsedSec,
+    bounds,
+    lampOn = false,
+    reducedMotion = false,
+  } = opts;
+
+  const minX = Math.round(bounds.x);
+  const maxX = Math.max(minX, Math.round(bounds.x + bounds.w - CAPY_WIDTH));
+  const minY = Math.round(bounds.y);
+  const maxY = Math.max(minY, Math.round(bounds.y + bounds.h - CAPY_HEIGHT));
+
+  const clampPos = (rawX: number, rawY: number): { x: number; y: number } => ({
+    x: Math.max(minX, Math.min(maxX, Math.round(rawX))),
+    y: Math.max(minY, Math.min(maxY, Math.round(rawY))),
+  });
+
+  const spanX = maxX - minX;
+  const restX = Math.round(minX + spanX * 0.78);
+  const leftX = Math.round(minX + spanX * 0.14);
+  const baseY = Math.round(minY + (maxY - minY) * 0.55);
+
+  const timeSec = reducedMotion ? 0 : elapsedSec;
+  let pos = clampPos(restX, baseY);
+  let flipX = false;
+  let pose: CapyPoseKind = 'sit';
+
+  if (timeState === 'sleeping') {
+    const breathUp = !reducedMotion && Math.sin(timeSec * 1.8) > 0.35;
+    pos = clampPos(restX, baseY);
+    pose = breathUp ? 'sleep' : 'drowsy';
+  } else if (timeState === 'late_night') {
+    const sleepyNod = isMusicActive && !reducedMotion && Math.sin(timeSec * Math.PI * 2.2) > 0.4;
+    pos = clampPos(restX, baseY + (sleepyNod ? -1 : 0));
+    pose = 'drowsy';
+  } else if (reducedMotion) {
+    pos = clampPos(restX, baseY);
+    pose = 'sit';
+  } else {
+    const loop = timeSec % 20;
+    let cx = restX;
+    let cy = baseY;
+    let isWalking = false;
+
+    if (loop < 3.5) {
+      cx = restX;
+      cy = baseY;
+      flipX = false;
+    } else if (loop < 8.2) {
+      const p = (loop - 3.5) / 4.7;
+      cx = Math.round(restX - p * (restX - leftX));
+      cy = Math.round(baseY + Math.sin(p * Math.PI) * 2);
+      flipX = false;
+      isWalking = true;
+    } else if (loop < 12.2) {
+      cx = leftX;
+      cy = baseY + 1;
+      flipX = loop >= 10.6;
+    } else if (loop < 17.0) {
+      const p = (loop - 12.2) / 4.8;
+      cx = Math.round(leftX + p * (restX - leftX));
+      cy = Math.round(baseY + 1 - Math.sin(p * Math.PI) * 1);
+      flipX = true;
+      isWalking = true;
+    } else {
+      cx = restX;
+      cy = baseY;
+      flipX = loop < 18.4;
+    }
+
+    if (isMusicActive) {
+      const danceFrame = Math.floor(timeSec * 4.4) % 2;
+      const hopY = danceFrame === 1 ? -1 : 0;
+      pos = clampPos(cx, cy + hopY);
+      pose = danceFrame === 1 ? 'dance_1' : 'dance_0';
+    } else if (isWalking) {
+      const walkPoses: readonly CapyPoseKind[] = ['walk_0', 'walk_1', 'walk_2', 'walk_3'];
+      const step = Math.floor(timeSec * 5.6) % walkPoses.length;
+      pos = clampPos(cx, cy);
+      pose = walkPoses[step];
+    } else {
+      const blinkNow = timeSec % 4.1 >= 3.88;
+      const earTwitch = timeSec % 3.2 >= 2.96;
+      pose = blinkNow ? 'blink' : earTwitch ? 'ear' : 'sit';
+      pos = clampPos(cx, cy);
+    }
+  }
+
+  const theme = getCapyTheme(timeState, lampOn, opts.palette);
+  const capyGrid = buildCapyGrid(theme, pose);
+  drawPixelGrid(ctx, capyGrid, CAPY_WIDTH, CAPY_HEIGHT, pos.x, pos.y, flipX);
+
+  if (timeState === 'sleeping') {
+    const zX = Math.max(minX, pos.x - 4);
+    const zY = Math.max(12, pos.y - 2);
+    drawZzzDrift(ctx, zX, zY, timeSec + 1.2, reducedMotion, theme.selout, 4);
+  }
+
+  lastCapyBounds = { x: pos.x, y: pos.y, w: CAPY_WIDTH, h: CAPY_HEIGHT };
+  return {
+    x: Math.round(pos.x + CAPY_WIDTH / 2),
+    y: Math.round(pos.y + CAPY_HEIGHT / 2),
+  };
 }
 
 function fillPixelRect(
@@ -334,1018 +2449,27 @@ function fillPixelRect(
   ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
 }
 
-function pingPong(val: number, span: number): number {
-  if (span <= 0) return 0;
-  const period = span * 2;
-  const mod = ((val % period) + period) % period;
-  return mod <= span ? mod : period - mod;
-}
-
-function resolveTimeSec(options: DrawCharacterAndEffectsOptions): number {
-  const reduced = Boolean(options.reducedMotion);
-  return reduced ? 0 : (options.elapsedSec ?? options.tick / 15);
-}
-
-function getLongTheme(
-  timeState: RoomTimeState,
-  lampOn: boolean,
-  palette: RoomPalette
-): LongColorTheme {
-  const isSleep = timeState === 'sleeping';
-  const isLate = timeState === 'late_night';
-  const dim = isSleep && !lampOn;
-
-  return {
-    selout: palette.charSelout || '#1C1829',
-    skin: dim
-      ? { hi: '#D4AC9B', mid: '#BA8F7E', sh: '#8F685B', blush: '#A86B68' }
-      : isLate
-        ? { hi: '#FAD5BA', mid: '#E8B899', sh: '#BD866A', blush: '#DC8578' }
-        : { hi: '#FFE5CF', mid: '#F5C29E', sh: '#CC8F6E', blush: '#ED9487' },
-    hair: dim
-      ? { hi: '#593F39', mid: '#402B29', sh: '#281B1D' }
-      : isLate
-        ? { hi: '#734A38', mid: '#523225', sh: '#331D16' }
-        : { hi: '#82543E', mid: '#5D3928', sh: '#3B2118' },
-    eye: { hi: '#4A5D8F', mid: '#2A3352', dark: '#19172B' },
-    glassesRim: dim ? '#1D2230' : '#262E42',
-    glassesLower: dim ? '#353D52' : '#4C5A78',
-    glassesGlint: isLate ? '#8CEAF8' : '#BCEEFF',
-    hoodie: dim
-      ? { hi: '#2E3A4F', mid: '#20293A', sh: '#141B29' }
-      : isLate
-        ? { hi: '#3C4D69', mid: '#29364C', sh: '#192233' }
-        : { hi: '#425675', mid: '#2D3C54', sh: '#1C2638' },
-    sleeve: dim
-      ? { hi: '#435169', mid: '#2F3B4F', sh: '#1E2738' }
-      : isLate
-        ? { hi: '#576B87', mid: '#3F4F66', sh: '#273345' }
-        : { hi: '#617694', mid: '#475973', sh: '#2D3A4F' },
-    tee: dim
-      ? { hi: '#BDB8C4', mid: '#9B96A6', sh: '#747080' }
-      : isLate
-        ? { hi: '#EFE8DC', mid: '#D4CCC0', sh: '#A89F94' }
-        : { hi: '#FFFBF2', mid: '#EAE2D3', sh: '#C2B7A5' },
-    pants: dim
-      ? { hi: '#2F405C', mid: '#212E45', sh: '#141D2E', cuff: '#496187' }
-      : { hi: '#46618C', mid: '#2F4366', sh: '#1E2C45', cuff: '#6988B8' },
-    shoes: dim
-      ? { hi: '#B4BCC9', mid: '#788294', sh: '#3F4759', stripe: '#D8DFE8' }
-      : { hi: '#EDF2FA', mid: '#9AA8BD', sh: '#4E596E', stripe: '#FFFDF7' },
-    mugBody: dim
-      ? { hi: '#B0ABB5', mid: '#88838F', sh: '#615D69' }
-      : { hi: '#FFFDF8', mid: '#EBE3D5', sh: '#C2B6A5' },
-    mugCoffee: dim ? '#3B231A' : '#5C3422',
-    monitorRim: '#9CF3FF',
-    monitorRimSoft: '#6ADBF0',
-    lampRimHair: '#FCD34D',
-    lampRimSleeve: '#E9B872',
-    groundCore: 'rgba(20, 15, 29, 0.30)',
-    groundSoft: 'rgba(20, 15, 29, 0.14)',
-  };
-}
-
-function getCapyTheme(
-  timeState: RoomTimeState,
-  lampOn: boolean,
-  palette: RoomPalette
-): CapyColorTheme {
-  const dim = timeState === 'sleeping' && !lampOn;
-  const late = timeState === 'late_night';
-  return {
-    selout: palette.capySelout || '#241922',
-    fur: dim
-      ? { hi: '#9E7358', mid: '#7D5841', sh: '#5A3C2C', ear: '#472E22', snout: '#4E3325', blush: '#A86764' }
-      : late
-        ? { hi: '#C98E63', mid: '#A36B46', sh: '#75492E', ear: '#593622', snout: '#663E28', blush: '#D47B73' }
-        : { hi: '#E0A16E', mid: '#BD7B4C', sh: '#8C5432', ear: '#693D24', snout: '#73452A', blush: '#EB8F85' },
-    eye: '#241612',
-    eyeGlint: '#FFF8EB',
-    yuzu: dim
-      ? { hi: '#CC9A1E', mid: '#A87312', sh: '#7A4D0A' }
-      : { hi: '#FDE047', mid: '#F59E0B', sh: '#C26408' },
-    leaf: dim
-      ? { hi: '#3C8C4E', mid: '#276638', sh: '#184224' }
-      : { hi: '#68D975', mid: '#34A853', sh: '#1E7037' },
-    groundCore: 'rgba(26, 16, 22, 0.30)',
-    groundSoft: 'rgba(26, 16, 22, 0.14)',
-  };
-}
-
-const HOTSPOT_POINTER_ANCHORS: Record<RoomHotspotId, { pointerX: number; pointerY: number }> = {
-  window: { pointerX: 108, pointerY: 5 },
-  shelf: { pointerX: 266, pointerY: 7 },
-  bed: { pointerX: 40, pointerY: 66 },
-  monitor: { pointerX: 173, pointerY: 42 },
-  speakers: { pointerX: 119, pointerY: 53 },
-  lamp: { pointerX: 226, pointerY: 48 },
-  capybara: { pointerX: 173, pointerY: 112 },
-};
-
-const CODE_TOKENS: readonly string[] = [
-  'KKKBFWDDDDDDDDDDDDDDDD',
-  'DDBFFOSSSSSSSSSSSDDDDD',
-  'DDDDKKKKBFWODDDDDDDDDD',
-  'DDDDDDBFFWONNNWDDDDDDD',
-  'DDBKDFFWDDDDDDDDDDDDDD',
-  'DDDDFFFOSSSSSSSSSSDDDD',
-  'DDDDDDBFWWONNNDDDDDDDD',
-  'DDWDDDDDDDDDDDDDDDDDDD',
-  'KKKBFWWCDDDDDDDDDDDDDD',
-  'DDBFFSSSSSSSSSDDDDDDDD',
-];
-
-const UI_MOCK_SCROLL: readonly string[] = [
-  'PPPPPPPPPPPPPP',
-  'PAAAAAAAAAAAAp',
-  'PAFFAAYYAAUUAp',
-  'PAAAAAAAAAAAAp',
-  'PAWWWWWWWWWWAp',
-  'PAWWWWAAAAWWAp',
-  'PGGGGGGGGGGGPP',
-  'PPPPPPPPPPPPPP',
-  'PAAAAAAAAAAAAp',
-  'PAKKKKAWWAAFFp',
-  'PAAAAWWWWAASSAp',
-  'PAASSSAAFFAAAp',
-  'PPPPPPPPPPPPPP',
-];
-
-const MONITOR_CODE_COLORS: Record<string, string> = {
-  B: '#1A233A',
-  T: '#25314F',
-  A: '#334166',
-  U: '#60A5FA',
-  R: '#EA4335',
-  Y: '#FBBC04',
-  G: '#34A853',
-  D: '#111726',
-  V: '#232D47',
-  N: '#4E5D80',
-  K: '#C084FC',
-  F: '#60A5FA',
-  S: '#4ADE80',
-  O: '#F472B6',
-  W: '#E2E8F0',
-  C: '#67E8F9',
-  P: '#171F34',
-  p: '#1E2942',
-};
-
-const MONITOR_CODE_COLORS_NIGHT: Record<string, string> = {
-  ...MONITOR_CODE_COLORS,
-  B: '#121829',
-  D: '#0C111E',
-  U: '#38BDF8',
-  C: '#22D3EE',
-  P: '#11192B',
-  p: '#162038',
-};
-
-const GEMINI_STAR_SPRITE: SpriteMatrix = [
-  '..B..',
-  '.BPC.',
-  'BPWYG',
-  '.GYG.',
-  '..G..',
-];
-
-const GEMINI_STAR_COLORS: SpriteColorMap = {
-  B: '#4285F4',
-  P: '#9B72CB',
-  C: '#D96570',
-  Y: '#FBBC04',
-  G: '#34A853',
-  W: '#FFFFFF',
-};
-
-const WAKING_MUG_ICON: SpriteMatrix = [
-  '.OOOOO..',
-  'OMMMMOOO',
-  'OMCCCMMO',
-  'OMMMMMOO',
-  '.OOOOO..',
-];
-
-const WAKING_MUG_COLORS: SpriteColorMap = {
-  O: '#2A1C16',
-  M: '#F5EFE6',
-  C: '#5C3420',
-};
-
-function drawMainMonitorScreen(
-  ctx: CanvasRenderingContext2D,
-  timeState: RoomTimeState,
-  timeSec: number,
-  reducedMotion: boolean
-): void {
-  const sx = MAIN_SCREEN_X;
-  const sy = MAIN_SCREEN_Y;
-  const sw = MAIN_SCREEN_W;
-  const sh = MAIN_SCREEN_H;
-
-  if (timeState === 'sleeping') {
-    fillPixelRect(ctx, sx, sy, sw, sh, '#0E121D');
-    fillPixelRect(ctx, sx + 1, sy + 1, sw - 2, sh - 2, '#121726');
-
-    const starW = 5;
-    const starH = 5;
-    const bounceSpanX = sw - starW - 2;
-    const bounceSpanY = sh - starH - 2;
-    const starX = reducedMotion
-      ? sx + 7
-      : Math.round(sx + 1 + pingPong(timeSec * 9.5 + 3, bounceSpanX));
-    const starY = reducedMotion
-      ? sy + 5
-      : Math.round(sy + 1 + pingPong(timeSec * 6.2 + 2, bounceSpanY));
-
-    if (!reducedMotion) {
-      const prevX = Math.round(
-        sx + 1 + pingPong(Math.max(0, timeSec - 0.12) * 9.5 + 3, bounceSpanX)
-      );
-      const prevY = Math.round(
-        sy + 1 + pingPong(Math.max(0, timeSec - 0.12) * 6.2 + 2, bounceSpanY)
-      );
-      ctx.save();
-      ctx.globalAlpha = 0.45;
-      fillPixelRect(ctx, prevX + 2, prevY + 2, 1, 1, '#9B72CB');
-      ctx.restore();
-    }
-
-    drawSpriteMatrix(ctx, GEMINI_STAR_SPRITE, GEMINI_STAR_COLORS, starX, starY);
-
-    const ledOn = reducedMotion || Math.floor(timeSec * 1.4) % 2 === 0;
-    fillPixelRect(ctx, sx + sw - 3, sy + sh - 2, 2, 1, ledOn ? '#34D399' : '#1B3A32');
-    return;
-  }
-
-  if (timeState === 'waking') {
-    fillPixelRect(ctx, sx, sy, sw, sh, '#3A271E');
-    fillPixelRect(ctx, sx, sy, sw, 2, '#271A14');
-    fillPixelRect(ctx, sx + 1, sy, 1, 1, '#EA4335');
-    fillPixelRect(ctx, sx + 3, sy, 1, 1, '#FBBC04');
-    fillPixelRect(ctx, sx + 5, sy, 1, 1, '#34A853');
-    fillPixelRect(ctx, sx + 8, sy, 14, 1, '#5A3E30');
-
-    drawSpriteMatrix(ctx, WAKING_MUG_ICON, WAKING_MUG_COLORS, sx + 4, sy + 7);
-    const steamTick = reducedMotion ? 0 : Math.floor(timeSec * 3.5) % 3;
-    fillPixelRect(ctx, sx + 6 + (steamTick % 2), sy + 5 - (steamTick === 2 ? 1 : 0), 1, 1, '#FDE68A');
-    fillPixelRect(ctx, sx + 8 - (steamTick % 2), sy + 4, 1, 1, '#FBBF24');
-
-    const checkStep = reducedMotion ? 2 : Math.floor(timeSec * 1.2) % 3;
-    for (let i = 0; i < 3; i += 1) {
-      const rowY = sy + 5 + i * 4;
-      fillPixelRect(ctx, sx + 17, rowY, 2, 2, i <= checkStep ? '#34A853' : '#6E4C3A');
-      fillPixelRect(ctx, sx + 20, rowY, i === 1 ? 15 : 13, 1, '#F5EFE6');
-      fillPixelRect(ctx, sx + 20, rowY + 1, 10, 1, '#B89B82');
-    }
-    fillPixelRect(ctx, sx + 2, sy + sh - 2, 18, 1, '#F59E0B');
-    return;
-  }
-
-  const palette = timeState === 'late_night' ? MONITOR_CODE_COLORS_NIGHT : MONITOR_CODE_COLORS;
-  fillPixelRect(ctx, sx, sy, sw, sh, palette.D);
-  fillPixelRect(ctx, sx, sy, sw, 2, palette.T);
-  fillPixelRect(ctx, sx + 1, sy, 1, 1, palette.R);
-  fillPixelRect(ctx, sx + 3, sy, 1, 1, palette.Y);
-  fillPixelRect(ctx, sx + 5, sy, 1, 1, palette.G);
-  fillPixelRect(ctx, sx + 8, sy, 9, 1, palette.U);
-  fillPixelRect(ctx, sx + 18, sy, 6, 1, palette.A);
-  fillPixelRect(ctx, sx + 25, sy, sw - 25, 2, palette.P);
-
-  const codeRows = sh - 3;
-  const scrollRow = reducedMotion ? 0 : Math.floor(timeSec * 2.2) % CODE_TOKENS.length;
-  const cursorVisible = reducedMotion || Math.floor(timeSec * 2.5) % 2 === 0;
-
-  for (let r = 0; r < codeRows; r += 1) {
-    const lineIdx = (r + scrollRow) % CODE_TOKENS.length;
-    const tokenLine = CODE_TOKENS[lineIdx];
-    const py = sy + 2 + r;
-    fillPixelRect(ctx, sx + 1, py, 1, 1, r % 2 === 0 ? palette.N : palette.B);
-    fillPixelRect(ctx, sx + 2, py, 1, 1, palette.V);
-
-    for (let c = 0; c < 21; c += 1) {
-      const ch = tokenLine[c];
-      if (!ch || ch === 'D') continue;
-      fillPixelRect(ctx, sx + 3 + c, py, 1, 1, palette[ch] ?? palette.W);
-    }
-    if (cursorVisible && r === 4) {
-      fillPixelRect(ctx, sx + 15, py, 1, 1, palette.C);
-    }
-  }
-
-  fillPixelRect(ctx, sx + 24, sy + 2, 1, codeRows, palette.V);
-
-  const uiScroll = reducedMotion ? 0 : Math.floor(timeSec * 1.4) % UI_MOCK_SCROLL.length;
-  const previewCols = sw - 26;
-  for (let r = 0; r < codeRows; r += 1) {
-    const uiRow = UI_MOCK_SCROLL[(r + uiScroll) % UI_MOCK_SCROLL.length];
-    const py = sy + 2 + r;
-    for (let c = 0; c < previewCols; c += 1) {
-      const ch = uiRow[c] ?? 'P';
-      fillPixelRect(ctx, sx + 25 + c, py, 1, 1, palette[ch] ?? palette.P);
-    }
-  }
-
-  fillPixelRect(ctx, sx, sy + sh - 1, sw, 1, palette.B);
-  fillPixelRect(ctx, sx + 1, sy + sh - 1, 5, 1, palette.U);
-  fillPixelRect(ctx, sx + 8, sy + sh - 1, 4, 1, palette.C);
-  fillPixelRect(ctx, sx + sw - 5, sy + sh - 1, 3, 1, palette.G);
-}
-
-function drawSideLaptopScreen(
-  ctx: CanvasRenderingContext2D,
-  timeState: RoomTimeState,
-  timeSec: number,
-  reducedMotion: boolean
-): void {
-  const lx = SIDE_LAPTOP_X;
-  const ly = SIDE_LAPTOP_Y;
-  const lw = SIDE_LAPTOP_W;
-  const lh = SIDE_LAPTOP_H;
-
-  if (timeState === 'sleeping') {
-    fillPixelRect(ctx, lx, ly, lw, lh, '#101421');
-    fillPixelRect(ctx, lx + lw - 2, ly + lh - 1, 1, 1, '#D97706');
-    return;
-  }
-
-  fillPixelRect(ctx, lx, ly, lw, lh, '#131A2C');
-  fillPixelRect(ctx, lx, ly, lw, 1, '#26314D');
-
-  const logScroll = reducedMotion ? 0 : Math.floor(timeSec * 2.0) % 4;
-  const colors = ['#60A5FA', '#4ADE80', '#FBBC04', '#94A3B8'];
-  for (let r = 0; r < lh - 2; r += 1) {
-    const idx = (r + logScroll) % 4;
-    const barW = 4 + ((idx * 3) % Math.max(2, lw - 5));
-    fillPixelRect(ctx, lx + 1, ly + 1 + r, barW, 1, colors[idx]);
-  }
-
-  const dotStep = reducedMotion ? 1 : Math.floor(timeSec * 3.0) % 4;
-  for (let d = 0; d < 3; d += 1) {
-    fillPixelRect(ctx, lx + 1 + d * 2, ly + lh - 1, 1, 1, d < dotStep ? '#67E8F9' : '#334155');
-  }
-}
-
-function buildWakingLongGrid(
-  theme: LongColorTheme,
-  dir: 'down' | 'left' | 'right',
-  state: 'walk' | 'coffee' | 'sip' | 'stretch' | 'idle',
-  frame: number,
-  blink: boolean,
-  breatheDown: boolean
-): PixelGrid {
-  const w = WAKING_WIDTH;
-  const h = WAKING_HEIGHT;
-  const body = createPixelGrid(w, h);
-  const detail = createPixelGrid(w, h);
-
-  const walkBob = state === 'walk' && (frame === 1 || frame === 3) ? -1 : 0;
-  const breath = state === 'idle' || state === 'coffee' ? (breatheDown ? 1 : 0) : 0;
-  const by = walkBob;
-  const upperBy = by + breath;
-  const hy = 3 + upperBy;
-  const ty = 14 + upperBy;
-
-  if (dir === 'left' || dir === 'right') {
-    const hipY = 22 + by;
-    if (state === 'walk') {
-      if (frame === 0) {
-        setSpan(body, w, h, 8, 14, hipY, theme.pants.mid);
-        setRect(body, w, h, 7, hipY + 1, 3, 3, theme.pants.sh);
-        setRect(body, w, h, 6, hipY + 4, 4, 1, theme.shoes.sh);
-        setRect(body, w, h, 12, hipY + 1, 3, 2, theme.pants.mid);
-        setPx(detail, w, h, 12, hipY + 1, theme.pants.hi);
-        setSpan(detail, w, h, 12, 14, hipY + 3, theme.pants.cuff);
-        setRect(body, w, h, 12, hipY + 4, 4, 1, theme.shoes.mid);
-        setPx(detail, w, h, 12, hipY + 4, theme.shoes.hi);
-      } else if (frame === 2) {
-        setSpan(body, w, h, 8, 14, hipY, theme.pants.mid);
-        setRect(body, w, h, 12, hipY + 1, 3, 3, theme.pants.sh);
-        setRect(body, w, h, 12, hipY + 4, 4, 1, theme.shoes.sh);
-        setRect(body, w, h, 7, hipY + 1, 3, 2, theme.pants.hi);
-        setSpan(detail, w, h, 7, 9, hipY + 3, theme.pants.cuff);
-        setRect(body, w, h, 6, hipY + 4, 4, 1, theme.shoes.mid);
-        setPx(detail, w, h, 6, hipY + 4, theme.shoes.hi);
-      } else {
-        setRect(body, w, h, 10, hipY, 4, 3, theme.pants.mid);
-        setPx(detail, w, h, 10, hipY + 1, theme.pants.hi);
-        setSpan(detail, w, h, 10, 13, hipY + 2, theme.pants.cuff);
-        setRect(body, w, h, 8, hipY + 3, 6, 2, theme.shoes.mid);
-        setPx(detail, w, h, 9, hipY + 3, theme.shoes.hi);
-        setSpan(detail, w, h, 8, 13, hipY + 4, theme.shoes.sh);
-      }
-    } else {
-      setRect(body, w, h, 10, hipY, 4, 3, theme.pants.mid);
-      setSpan(detail, w, h, 10, 13, hipY + 2, theme.pants.cuff);
-      setRect(body, w, h, 8, hipY + 3, 6, 2, theme.shoes.mid);
-      setPx(detail, w, h, 9, hipY + 3, theme.shoes.hi);
-      setSpan(detail, w, h, 8, 13, hipY + 4, theme.shoes.sh);
-    }
-
-    setSpan(body, w, h, 10, 12, ty - 1, theme.skin.sh);
-    setSpan(body, w, h, 9, 14, ty, theme.hoodie.hi);
-    setRect(body, w, h, 8, ty + 1, 7, 5, theme.hoodie.mid);
-    setSpan(body, w, h, 9, 14, ty + 6, theme.hoodie.sh);
-    setSpan(body, w, h, 8, 15, ty + 7, theme.tee.mid);
-    for (let row = 1; row <= 5; row += 1) {
-      setPx(body, w, h, 8, ty + row, theme.hoodie.hi);
-      setPx(body, w, h, 14, ty + row, theme.hoodie.sh);
-    }
-    setSpan(detail, w, h, 9, 14, ty, theme.sleeve.mid);
-    setSpan(detail, w, h, 9, 14, ty + 7, theme.tee.hi);
-
-    setSpan(body, w, h, 9, 14, hy, theme.skin.hi);
-    setSpan(body, w, h, 8, 15, hy + 1, theme.skin.hi);
-    setRect(body, w, h, 7, hy + 2, 9, 6, theme.skin.mid);
-    setSpan(body, w, h, 8, 15, hy + 8, theme.skin.mid);
-    setSpan(body, w, h, 9, 13, hy + 9, theme.skin.sh);
-    setPx(body, w, h, 6, hy + 6, theme.skin.mid);
-    setPx(detail, w, h, 10, hy + 7, theme.skin.blush);
-    setPx(detail, w, h, 12, hy + 5, theme.skin.sh);
-
-    setSpan(body, w, h, 9, 14, hy - 1, theme.hair.hi);
-    setSpan(body, w, h, 8, 15, hy, theme.hair.hi);
-    setSpan(body, w, h, 7, 15, hy + 1, theme.hair.mid);
-    setSpan(body, w, h, 7, 10, hy + 2, theme.hair.mid);
-    setRect(body, w, h, 12, hy + 1, 4, 8, theme.hair.mid);
-    setRect(body, w, h, 14, hy + 2, 2, 7, theme.hair.sh);
-    setPx(body, w, h, 12, hy - 2, theme.hair.hi);
-    setPx(body, w, h, 13, hy - 3, theme.hair.mid);
-
-    const eyeY = hy + 5;
-    setSpan(detail, w, h, 8, 9, hy + 4, theme.hair.sh);
-    if (blink) {
-      setSpan(detail, w, h, 8, 9, eyeY + 1, theme.eye.dark);
-    } else {
-      setPx(detail, w, h, 8, eyeY, '#FFF9EB');
-      setPx(detail, w, h, 9, eyeY, theme.eye.hi);
-      setPx(detail, w, h, 8, eyeY + 1, theme.eye.mid);
-      setPx(detail, w, h, 9, eyeY + 1, theme.eye.dark);
-    }
-    setSpan(detail, w, h, 7, 10, eyeY - 1, theme.glassesRim);
-    setPx(detail, w, h, 7, eyeY, theme.glassesRim);
-    setPx(detail, w, h, 7, eyeY + 1, theme.glassesRim);
-    setPx(detail, w, h, 10, eyeY, theme.glassesRim);
-    setPx(detail, w, h, 10, eyeY + 1, theme.glassesRim);
-    setSpan(detail, w, h, 8, 9, eyeY + 2, theme.glassesLower);
-
-    if (state === 'coffee' || state === 'sip') {
-      const sip = state === 'sip' ? -1 : 0;
-      setRect(body, w, h, 10, ty + 1, 2, 4, theme.sleeve.hi);
-      setRect(body, w, h, 7, ty + 3 + sip, 3, 2, theme.skin.mid);
-      setRect(body, w, h, 4, ty + 2 + sip, 3, 3, theme.mugBody.mid);
-      setPx(detail, w, h, 4, ty + 2 + sip, theme.mugBody.hi);
-      setSpan(detail, w, h, 4, 6, ty + 2 + sip, theme.mugCoffee);
-    } else {
-      let swing = 0;
-      if (state === 'walk') {
-        if (frame === 0) swing = -2;
-        else if (frame === 2) swing = 2;
-      }
-      setRect(body, w, h, 10 + swing, ty + 1, 3, 4, theme.sleeve.hi);
-      setPx(detail, w, h, 12 + swing, ty + 2, theme.sleeve.sh);
-      setRect(body, w, h, 10 + swing, ty + 5, 2, 1, theme.skin.mid);
-    }
-
-    const baseGrid = applySeloutLayer(body, detail, w, h, theme.selout, 24);
-    const oriented = dir === 'right' ? mirrorPixelGrid(baseGrid, w, h) : baseGrid;
-    for (let sx = 7; sx <= 16; sx += 1) {
-      if (!getPx(oriented, w, h, sx, 28)) setPx(oriented, w, h, sx, 28, theme.groundCore);
-    }
-    for (let sx = 9; sx <= 14; sx += 1) {
-      if (!getPx(oriented, w, h, sx, 29)) setPx(oriented, w, h, sx, 29, theme.groundSoft);
-    }
-    return oriented;
-  }
-
-  const hipY = 22 + by;
-  setSpan(body, w, h, 8, 15, hipY, theme.pants.mid);
-  setPx(detail, w, h, 11, hipY, theme.pants.sh);
-  setPx(detail, w, h, 12, hipY, theme.pants.sh);
-
-  let lLegOff = 0;
-  let rLegOff = 0;
-  if (state === 'walk') {
-    if (frame === 0) { lLegOff = 0; rLegOff = -1; }
-    else if (frame === 2) { lLegOff = -1; rLegOff = 0; }
-  }
-
-  setRect(body, w, h, 8, hipY + 1, 3, 2 + lLegOff, theme.pants.mid);
-  setPx(detail, w, h, 8, hipY + 1, theme.pants.hi);
-  setPx(detail, w, h, 10, hipY + 1, theme.pants.sh);
-  setSpan(detail, w, h, 8, 10, hipY + 2 + lLegOff, theme.pants.cuff);
-  setRect(body, w, h, 7, hipY + 3 + lLegOff, 4, 2, theme.shoes.mid);
-  setPx(detail, w, h, 8, hipY + 3 + lLegOff, theme.shoes.hi);
-  setPx(detail, w, h, 7, hipY + 4 + lLegOff, theme.shoes.stripe);
-  setSpan(detail, w, h, 8, 10, hipY + 4 + lLegOff, theme.shoes.sh);
-
-  setRect(body, w, h, 13, hipY + 1, 3, 2 + rLegOff, theme.pants.mid);
-  setPx(detail, w, h, 13, hipY + 1, theme.pants.sh);
-  setPx(detail, w, h, 15, hipY + 1, theme.pants.hi);
-  setSpan(detail, w, h, 13, 15, hipY + 2 + rLegOff, theme.pants.cuff);
-  setRect(body, w, h, 13, hipY + 3 + rLegOff, 4, 2, theme.shoes.mid);
-  setPx(detail, w, h, 14, hipY + 3 + rLegOff, theme.shoes.hi);
-  setPx(detail, w, h, 16, hipY + 4 + rLegOff, theme.shoes.stripe);
-  setSpan(detail, w, h, 13, 15, hipY + 4 + rLegOff, theme.shoes.sh);
-
-  setSpan(body, w, h, 10, 13, ty - 1, theme.skin.sh);
-  setSpan(body, w, h, 8, 15, ty, theme.hoodie.hi);
-  setSpan(body, w, h, 7, 16, ty + 1, theme.hoodie.mid);
-  setSpan(body, w, h, 7, 16, ty + 2, theme.hoodie.mid);
-  setSpan(body, w, h, 7, 16, ty + 3, theme.hoodie.mid);
-  setSpan(body, w, h, 7, 16, ty + 4, theme.hoodie.mid);
-  setSpan(body, w, h, 8, 15, ty + 5, theme.hoodie.mid);
-  setSpan(body, w, h, 8, 15, ty + 6, theme.hoodie.sh);
-  setSpan(body, w, h, 7, 16, ty + 7, theme.tee.mid);
-
-  for (let row = 1; row <= 4; row += 1) {
-    setPx(body, w, h, 7, ty + row, theme.hoodie.hi);
-    setPx(body, w, h, 16, ty + row, theme.hoodie.sh);
-  }
-  setSpan(detail, w, h, 9, 14, ty, theme.sleeve.mid);
-  setSpan(detail, w, h, 10, 13, ty, theme.tee.hi);
-  setRect(detail, w, h, 9, ty + 5, 6, 2, theme.sleeve.mid);
-  setSpan(detail, w, h, 10, 13, ty + 5, theme.sleeve.hi);
-  setPx(detail, w, h, 10, ty + 1, theme.tee.hi);
-  setPx(detail, w, h, 10, ty + 2, theme.tee.mid);
-  setPx(detail, w, h, 13, ty + 1, theme.tee.hi);
-  setPx(detail, w, h, 13, ty + 2, theme.tee.mid);
-  setSpan(detail, w, h, 8, 15, ty + 7, theme.tee.hi);
-
-  if (state === 'stretch') {
-    setRect(body, w, h, 4, ty - 3, 2, 5, theme.sleeve.mid);
-    setPx(detail, w, h, 4, ty - 2, theme.sleeve.hi);
-    setRect(body, w, h, 4, ty - 4, 2, 1, theme.skin.mid);
-    setRect(body, w, h, 18, ty - 3, 2, 5, theme.sleeve.mid);
-    setPx(detail, w, h, 19, ty - 2, theme.sleeve.sh);
-    setRect(body, w, h, 18, ty - 4, 2, 1, theme.skin.mid);
-  } else if (state === 'coffee' || state === 'sip') {
-    const sipLift = state === 'sip' ? -2 : 0;
-    setRect(body, w, h, 5, ty + 1, 2, 4, theme.sleeve.mid);
-    setPx(detail, w, h, 5, ty + 1, theme.sleeve.hi);
-    setPx(detail, w, h, 6, ty + 2, theme.sleeve.sh);
-    setRect(body, w, h, 5, ty + 5, 2, 1, theme.skin.mid);
-
-    setRect(body, w, h, 17, ty + 1, 2, 3, theme.sleeve.mid);
-    setRect(body, w, h, 16, ty + 3 + sipLift, 2, 2, theme.skin.mid);
-    setRect(body, w, h, 16, ty + 2 + sipLift, 3, 3, theme.mugBody.mid);
-    setPx(detail, w, h, 16, ty + 2 + sipLift, theme.mugBody.hi);
-    setSpan(detail, w, h, 16, 18, ty + 2 + sipLift, theme.mugCoffee);
-    setPx(body, w, h, 19, ty + 3 + sipLift, theme.mugBody.sh);
-    setPx(detail, w, h, 16, ty + 4 + sipLift, theme.mugBody.sh);
-  } else {
-    let lArmOff = 0;
-    let rArmOff = 0;
-    if (state === 'walk') {
-      if (frame === 0) { lArmOff = 1; rArmOff = -1; }
-      else if (frame === 2) { lArmOff = -1; rArmOff = 1; }
-    }
-    setRect(body, w, h, 5, ty + 1 + lArmOff, 2, 4, theme.sleeve.mid);
-    setPx(detail, w, h, 5, ty + 1 + lArmOff, theme.sleeve.hi);
-    setPx(detail, w, h, 6, ty + 2 + lArmOff, theme.sleeve.sh);
-    setRect(body, w, h, 5, ty + 5 + lArmOff, 2, 1, theme.skin.mid);
-
-    setRect(body, w, h, 17, ty + 1 + rArmOff, 2, 4, theme.sleeve.mid);
-    setPx(detail, w, h, 18, ty + 1 + rArmOff, theme.sleeve.sh);
-    setPx(detail, w, h, 17, ty + 2 + rArmOff, theme.sleeve.sh);
-    setRect(body, w, h, 17, ty + 5 + rArmOff, 2, 1, theme.skin.mid);
-  }
-
-  setSpan(body, w, h, 8, 15, hy, theme.skin.hi);
-  setSpan(body, w, h, 7, 16, hy + 1, theme.skin.hi);
-  setSpan(body, w, h, 6, 17, hy + 2, theme.skin.mid);
-  setSpan(body, w, h, 6, 17, hy + 3, theme.skin.mid);
-  setSpan(body, w, h, 6, 17, hy + 4, theme.skin.mid);
-  setSpan(body, w, h, 6, 17, hy + 5, theme.skin.mid);
-  setSpan(body, w, h, 6, 17, hy + 6, theme.skin.mid);
-  setSpan(body, w, h, 7, 16, hy + 7, theme.skin.mid);
-  setSpan(body, w, h, 8, 15, hy + 8, theme.skin.mid);
-  setSpan(body, w, h, 9, 14, hy + 9, theme.skin.sh);
-
-  setPx(body, w, h, 6, hy + 5, theme.skin.sh);
-  setPx(body, w, h, 6, hy + 6, theme.skin.sh);
-  setPx(body, w, h, 17, hy + 5, theme.skin.sh);
-  setPx(body, w, h, 17, hy + 6, theme.skin.sh);
-  setPx(body, w, h, 7, hy + 7, theme.skin.sh);
-  setPx(body, w, h, 16, hy + 7, theme.skin.sh);
-  setPx(body, w, h, 8, hy + 8, theme.skin.sh);
-  setPx(body, w, h, 15, hy + 8, theme.skin.sh);
-  setSpan(body, w, h, 10, 13, hy + 9, theme.skin.mid);
-  setSpan(body, w, h, 9, 14, hy + 2, theme.skin.hi);
-
-  setPx(body, w, h, 5, hy + 5, theme.skin.mid);
-  setPx(body, w, h, 5, hy + 6, theme.skin.sh);
-  setPx(body, w, h, 18, hy + 5, theme.skin.mid);
-  setPx(body, w, h, 18, hy + 6, theme.skin.sh);
-
-  setSpan(body, w, h, 8, 15, hy + 3, theme.skin.sh);
-
-  setSpan(body, w, h, 8, 15, hy - 1, theme.hair.hi);
-  setSpan(body, w, h, 7, 16, hy, theme.hair.hi);
-  setSpan(body, w, h, 6, 17, hy + 1, theme.hair.mid);
-  setSpan(body, w, h, 6, 17, hy + 2, theme.hair.mid);
-  setSpan(body, w, h, 9, 13, hy, theme.hair.hi);
-  setPx(body, w, h, 8, hy + 1, theme.hair.hi);
-  setPx(body, w, h, 14, hy + 1, theme.hair.hi);
-  setRect(body, w, h, 6, hy + 2, 1, 5, theme.hair.mid);
-  setPx(body, w, h, 6, hy + 6, theme.hair.sh);
-  setRect(body, w, h, 17, hy + 2, 1, 5, theme.hair.mid);
-  setPx(body, w, h, 17, hy + 6, theme.hair.sh);
-  setPx(body, w, h, 7, hy + 3, theme.hair.mid);
-  setPx(body, w, h, 9, hy + 3, theme.hair.hi);
-  setPx(body, w, h, 11, hy + 3, theme.hair.mid);
-  setPx(body, w, h, 13, hy + 3, theme.hair.hi);
-  setPx(body, w, h, 16, hy + 3, theme.hair.sh);
-  setPx(body, w, h, 11, hy - 2, theme.hair.hi);
-  setPx(body, w, h, 12, hy - 3, theme.hair.mid);
-
-  const eyeY = hy + 5;
-  setPx(detail, w, h, 7, hy + 7, theme.skin.blush);
-  setPx(detail, w, h, 16, hy + 7, theme.skin.blush);
-  setSpan(detail, w, h, 8, 9, hy + 4, theme.hair.sh);
-  setSpan(detail, w, h, 14, 15, hy + 4, theme.hair.sh);
-
-  if (blink || state === 'sip' || state === 'stretch') {
-    setSpan(detail, w, h, 8, 9, eyeY + 1, theme.eye.dark);
-    setSpan(detail, w, h, 14, 15, eyeY + 1, theme.eye.dark);
-  } else {
-    setPx(detail, w, h, 8, eyeY, '#FFF9EB');
-    setPx(detail, w, h, 9, eyeY, theme.eye.hi);
-    setPx(detail, w, h, 8, eyeY + 1, theme.eye.mid);
-    setPx(detail, w, h, 9, eyeY + 1, theme.eye.dark);
-
-    setPx(detail, w, h, 14, eyeY, '#FFF9EB');
-    setPx(detail, w, h, 15, eyeY, theme.eye.hi);
-    setPx(detail, w, h, 14, eyeY + 1, theme.eye.mid);
-    setPx(detail, w, h, 15, eyeY + 1, theme.eye.dark);
-  }
-
-  setSpan(detail, w, h, 11, 12, hy + 8, state === 'stretch' || state === 'sip' ? '#9C4E44' : theme.skin.sh);
-
-  setSpan(detail, w, h, 7, 10, eyeY - 1, theme.glassesRim);
-  setSpan(detail, w, h, 13, 16, eyeY - 1, theme.glassesRim);
-  setPx(detail, w, h, 7, eyeY, theme.glassesRim);
-  setPx(detail, w, h, 7, eyeY + 1, theme.glassesRim);
-  setPx(detail, w, h, 10, eyeY, theme.glassesRim);
-  setPx(detail, w, h, 10, eyeY + 1, theme.glassesRim);
-  setSpan(detail, w, h, 11, 12, eyeY, theme.glassesRim);
-  setPx(detail, w, h, 13, eyeY, theme.glassesRim);
-  setPx(detail, w, h, 13, eyeY + 1, theme.glassesRim);
-  setPx(detail, w, h, 16, eyeY, theme.glassesRim);
-  setPx(detail, w, h, 16, eyeY + 1, theme.glassesRim);
-  setSpan(detail, w, h, 8, 9, eyeY + 2, theme.glassesLower);
-  setSpan(detail, w, h, 14, 15, eyeY + 2, theme.glassesLower);
-  setPx(detail, w, h, 10, eyeY, theme.glassesGlint);
-  setPx(detail, w, h, 16, eyeY, theme.glassesGlint);
-
-  const out = applySeloutLayer(body, detail, w, h, theme.selout, 24);
-  for (let sx = 7; sx <= 16; sx += 1) {
-    if (!getPx(out, w, h, sx, 28)) setPx(out, w, h, sx, 28, theme.groundCore);
-  }
-  for (let sx = 9; sx <= 14; sx += 1) {
-    if (!getPx(out, w, h, sx, 29)) setPx(out, w, h, sx, 29, theme.groundSoft);
-  }
-  return out;
-}
-
-type SeatedHeadPose = 'center' | 'glance_left' | 'glance_right';
-type SeatedArmPose = 'home' | 'type_l' | 'type_r' | 'mouse_a' | 'mouse_b' | 'reach_mug' | 'sip_mug' | 'stretch';
-
-function buildSeatedLongGrid(
-  theme: LongColorTheme,
-  headPose: SeatedHeadPose,
-  armPose: SeatedArmPose,
-  headDropPx: number,
-  bodyDropPx: number,
-  lampRim: boolean
-): PixelGrid {
-  const w = SEATED_WIDTH;
-  const h = SEATED_HEIGHT;
-  const body = createPixelGrid(w, h);
-  const detail = createPixelGrid(w, h);
-
-  const ty = 12 + (bodyDropPx > 0 ? 1 : 0);
-  const hy = 2 + (headDropPx > 0 ? 1 : 0);
-  const cx = 25;
-
-  setSpan(body, w, h, cx - 2, cx + 1, ty - 1, theme.skin.sh);
-  setSpan(body, w, h, cx - 5, cx + 4, ty, theme.hoodie.hi);
-  setSpan(body, w, h, cx - 6, cx + 5, ty + 1, theme.hoodie.mid);
-  setSpan(body, w, h, cx - 6, cx + 5, ty + 2, theme.hoodie.mid);
-  setSpan(body, w, h, cx - 6, cx + 5, ty + 3, theme.hoodie.mid);
-  setSpan(body, w, h, cx - 6, cx + 5, ty + 4, theme.hoodie.mid);
-  setSpan(body, w, h, cx - 5, cx + 4, ty + 5, theme.hoodie.sh);
-  setSpan(body, w, h, cx - 5, cx + 4, ty + 6, theme.hoodie.sh);
-  setSpan(body, w, h, cx - 6, cx + 5, ty + 7, theme.tee.mid);
-
-  for (let row = 1; row <= 4; row += 1) {
-    setPx(body, w, h, cx - 6, ty + row, theme.hoodie.hi);
-    setPx(body, w, h, cx + 5, ty + row, theme.hoodie.sh);
-  }
-  setSpan(detail, w, h, cx - 3, cx + 2, ty, theme.sleeve.hi);
-  setSpan(detail, w, h, cx - 4, cx + 3, ty + 1, theme.sleeve.mid);
-  setSpan(detail, w, h, cx - 3, cx + 2, ty + 2, theme.sleeve.sh);
-  setPx(detail, w, h, cx - 5, ty, theme.monitorRimSoft);
-  setPx(detail, w, h, cx + 4, ty, theme.monitorRimSoft);
-
-  const lShX = cx - 7;
-  const rShX = cx + 6;
-  const armDrop = bodyDropPx > 0 ? 1 : 0;
-
-  if (armPose === 'home') {
-    setRect(body, w, h, lShX, ty + 1, 2, 4, theme.sleeve.mid);
-    setRect(body, w, h, lShX - 2, ty - 2, 2, 4, theme.sleeve.hi);
-    setRect(body, w, h, lShX - 2, ty - 4, 2, 2, theme.skin.mid);
-    setRect(body, w, h, rShX - 1, ty + 1, 2, 4, theme.sleeve.mid);
-    setRect(body, w, h, rShX, ty - 2, 2, 4, theme.sleeve.hi);
-    setRect(body, w, h, rShX, ty - 4, 2, 2, theme.skin.mid);
-  } else if (armPose === 'type_l' || armPose === 'type_r') {
-    const lTap = armPose === 'type_l' ? -1 : 0;
-    const rTap = armPose === 'type_r' ? -1 : 0;
-    setRect(body, w, h, lShX, ty + 1, 2, 4, theme.sleeve.mid);
-    setRect(body, w, h, lShX - 2, ty - 3 + lTap, 2, 4, theme.sleeve.hi);
-    setRect(body, w, h, lShX - 2, ty - 5 + lTap, 2, 2, theme.skin.mid);
-    setPx(detail, w, h, lShX - 2, ty - 5 + lTap, theme.monitorRim);
-
-    setRect(body, w, h, rShX - 1, ty + 1, 2, 4, theme.sleeve.mid);
-    setRect(body, w, h, rShX, ty - 3 + rTap, 2, 4, theme.sleeve.hi);
-    setRect(body, w, h, rShX, ty - 5 + rTap, 2, 2, theme.skin.mid);
-    setPx(detail, w, h, rShX + 1, ty - 5 + rTap, theme.monitorRim);
-  } else if (armPose === 'mouse_a' || armPose === 'mouse_b') {
-    const mx = armPose === 'mouse_b' ? 40 : 39;
-    setRect(body, w, h, lShX, ty + 1, 2, 4, theme.sleeve.mid);
-    setRect(body, w, h, lShX - 2, ty - 2, 2, 4, theme.sleeve.hi);
-    setRect(body, w, h, lShX - 2, ty - 4, 2, 2, theme.skin.mid);
-
-    setRect(body, w, h, rShX - 1, ty + 1, 3, 2, theme.sleeve.mid);
-    setRect(body, w, h, rShX + 2, ty - 1, 3, 2, theme.sleeve.hi);
-    setRect(body, w, h, mx - 3, ty - 3, 4, 2, theme.sleeve.mid);
-    setRect(body, w, h, mx, ty - 5, 3, 2, theme.skin.mid);
-    setPx(detail, w, h, mx, ty - 5, theme.monitorRim);
-  } else if (armPose === 'reach_mug') {
-    setRect(body, w, h, lShX, ty + 1, 2, 4, theme.sleeve.mid);
-    setRect(body, w, h, lShX - 2, ty - 2, 2, 4, theme.sleeve.hi);
-    setRect(body, w, h, lShX - 2, ty - 4, 2, 2, theme.skin.mid);
-
-    setRect(body, w, h, rShX - 1, ty + 1, 3, 2, theme.sleeve.mid);
-    setRect(body, w, h, rShX + 2, ty - 1, 5, 2, theme.sleeve.hi);
-    setRect(body, w, h, rShX + 7, ty - 3, 6, 2, theme.sleeve.mid);
-    setRect(body, w, h, rShX + 13, ty - 5, 5, 2, theme.sleeve.hi);
-    setRect(body, w, h, rShX + 17, ty - 7, 3, 2, theme.skin.mid);
-  } else if (armPose === 'sip_mug') {
-    setRect(body, w, h, lShX, ty + 1, 2, 4, theme.sleeve.mid);
-    setRect(body, w, h, lShX - 2, ty - 2, 2, 4, theme.sleeve.hi);
-    setRect(body, w, h, lShX - 2, ty - 4, 2, 2, theme.skin.mid);
-
-    setRect(body, w, h, rShX, ty - 2, 3, 4, theme.sleeve.mid);
-    setRect(body, w, h, rShX + 1, ty - 5, 2, 3, theme.sleeve.hi);
-    setRect(body, w, h, rShX, ty - 7, 2, 2, theme.skin.mid);
-    setRect(body, w, h, rShX - 1, ty - 9, 4, 4, theme.mugBody.mid);
-    setPx(detail, w, h, rShX - 1, ty - 9, theme.mugBody.hi);
-    setSpan(detail, w, h, rShX - 1, rShX + 1, ty - 9, theme.mugCoffee);
-    setPx(body, w, h, rShX + 3, ty - 8, theme.mugBody.sh);
-  } else if (armPose === 'stretch') {
-    setRect(body, w, h, lShX - 2, ty - 3, 3, 5, theme.sleeve.mid);
-    setRect(body, w, h, lShX - 5, ty - 7, 3, 4, theme.sleeve.hi);
-    setRect(body, w, h, lShX - 6, ty - 9, 2, 2, theme.skin.mid);
-
-    setRect(body, w, h, rShX, ty - 3, 3, 5, theme.sleeve.mid);
-    setRect(body, w, h, rShX + 3, ty - 7, 3, 4, theme.sleeve.hi);
-    setRect(body, w, h, rShX + 5, ty - 9, 2, 2, theme.skin.mid);
-  }
-
-  const headX = cx - 6;
-  setSpan(body, w, h, headX + 2, headX + 9, hy, theme.hair.hi);
-  setSpan(body, w, h, headX + 1, headX + 10, hy + 1, theme.hair.hi);
-  setSpan(body, w, h, headX, headX + 11, hy + 2, theme.hair.mid);
-  setRect(body, w, h, headX, hy + 3, 12, 6, theme.hair.mid);
-  setSpan(body, w, h, headX + 1, headX + 10, hy + 9, theme.hair.sh);
-  setSpan(body, w, h, headX + 2, headX + 9, hy + 8, theme.hair.sh);
-
-  setPx(body, w, h, headX + 3, hy + 3, theme.hair.hi);
-  setPx(body, w, h, headX + 8, hy + 3, theme.hair.hi);
-  setPx(body, w, h, headX + 5, hy + 4, theme.hair.hi);
-  setPx(body, w, h, headX + 2, hy + 7, theme.hair.sh);
-  setPx(body, w, h, headX + 9, hy + 7, theme.hair.sh);
-  setPx(body, w, h, headX + 5, hy - 1, theme.hair.hi);
-  setPx(body, w, h, headX + 6, hy - 2, theme.hair.mid);
-
-  setPx(body, w, h, headX - 1, hy + 5, theme.skin.mid);
-  setPx(body, w, h, headX - 1, hy + 6, theme.skin.sh);
-  setPx(body, w, h, headX + 12, hy + 5, theme.skin.mid);
-  setPx(body, w, h, headX + 12, hy + 6, theme.skin.sh);
-
-  if (headPose === 'glance_left') {
-    setRect(body, w, h, headX, hy + 5, 2, 3, theme.skin.mid);
-    setPx(detail, w, h, headX, hy + 6, theme.glassesRim);
-    setPx(detail, w, h, headX + 1, hy + 7, theme.skin.blush);
-  } else if (headPose === 'glance_right') {
-    setRect(body, w, h, headX + 10, hy + 5, 2, 3, theme.skin.mid);
-    setPx(detail, w, h, headX + 11, hy + 6, theme.glassesRim);
-    setPx(detail, w, h, headX + 10, hy + 7, theme.skin.blush);
-  }
-
-  setSpan(detail, w, h, headX + 2, headX + 9, hy, theme.monitorRim);
-  setPx(detail, w, h, headX + 1, hy + 1, theme.monitorRimSoft);
-  setPx(detail, w, h, headX + 10, hy + 1, theme.monitorRimSoft);
-
-  if (lampRim) {
-    setPx(detail, w, h, headX + 10, hy + 2, theme.lampRimHair);
-    setPx(detail, w, h, headX + 11, hy + 3, theme.lampRimHair);
-    setPx(detail, w, h, rShX + 1, ty + 1 + armDrop, theme.lampRimSleeve);
-    setPx(detail, w, h, rShX + 1, ty + 2 + armDrop, theme.lampRimSleeve);
-  }
-
-  return applySeloutLayer(body, detail, w, h, theme.selout, h);
-}
-
-function buildSleepingLongGrid(theme: LongColorTheme, breathOffset: number): PixelGrid {
-  const w = SLEEP_WIDTH;
-  const h = SLEEP_HEIGHT;
-  const body = createPixelGrid(w, h);
-  const detail = createPixelGrid(w, h);
-
-  const hx = 5;
-  const hy = 1;
-  const torsoOffset = breathOffset < 0 ? -1 : 0;
-  const ty = 11 + torsoOffset;
-
-  setSpan(body, w, h, hx + 2, hx + 9, hy, theme.skin.hi);
-  setSpan(body, w, h, hx + 1, hx + 10, hy + 1, theme.skin.hi);
-  setRect(body, w, h, hx, hy + 2, 12, 5, theme.skin.mid);
-  setSpan(body, w, h, hx + 1, hx + 10, hy + 7, theme.skin.mid);
-  setSpan(body, w, h, hx + 2, hx + 9, hy + 8, theme.skin.mid);
-  setSpan(body, w, h, hx + 3, hx + 8, hy + 9, theme.skin.sh);
-
-  setPx(body, w, h, hx - 1, hy + 5, theme.skin.mid);
-  setPx(body, w, h, hx - 1, hy + 6, theme.skin.sh);
-  setPx(body, w, h, hx + 12, hy + 5, theme.skin.mid);
-  setPx(body, w, h, hx + 12, hy + 6, theme.skin.sh);
-
-  setSpan(body, w, h, hx + 2, hx + 9, hy - 1, theme.hair.hi);
-  setSpan(body, w, h, hx + 1, hx + 10, hy, theme.hair.hi);
-  setSpan(body, w, h, hx, hx + 11, hy + 1, theme.hair.mid);
-  setSpan(body, w, h, hx, hx + 11, hy + 2, theme.hair.mid);
-  setRect(body, w, h, hx, hy + 2, 1, 5, theme.hair.mid);
-  setRect(body, w, h, hx + 11, hy + 2, 1, 5, theme.hair.mid);
-  setPx(body, w, h, hx + 1, hy + 3, theme.hair.mid);
-  setPx(body, w, h, hx + 3, hy + 3, theme.hair.hi);
-  setPx(body, w, h, hx + 5, hy + 3, theme.hair.mid);
-  setPx(body, w, h, hx + 7, hy + 3, theme.hair.hi);
-  setPx(body, w, h, hx + 10, hy + 3, theme.hair.sh);
-
-  setSpan(detail, w, h, hx + 2, hx + 3, hy + 4, theme.hair.sh);
-  setSpan(detail, w, h, hx + 8, hx + 9, hy + 4, theme.hair.sh);
-  setSpan(detail, w, h, hx + 2, hx + 3, hy + 6, theme.eye.dark);
-  setSpan(detail, w, h, hx + 8, hx + 9, hy + 6, theme.eye.dark);
-  setPx(detail, w, h, hx + 1, hy + 7, theme.skin.blush);
-  setPx(detail, w, h, hx + 10, hy + 7, theme.skin.blush);
-  setPx(detail, w, h, hx + 5, hy + 8, theme.skin.sh);
-
-  setSpan(body, w, h, hx + 4, hx + 7, ty - 1, theme.skin.sh);
-  setSpan(body, w, h, 5, 16, ty, theme.hoodie.hi);
-  setSpan(body, w, h, 4, 17, ty + 1, theme.hoodie.mid);
-  setSpan(body, w, h, 4, 17, ty + 2, theme.hoodie.mid);
-  setSpan(body, w, h, 4, 17, ty + 3, theme.hoodie.mid);
-  setSpan(body, w, h, 5, 16, ty + 4, theme.hoodie.sh);
-  setSpan(detail, w, h, 7, 14, ty, theme.sleeve.mid);
-  setSpan(detail, w, h, 8, 13, ty, theme.tee.hi);
-
-  setRect(body, w, h, 18, ty + 1, 3, 2, theme.skin.mid);
-  setPx(detail, w, h, 19, ty + 2, theme.skin.sh);
-
-  return applySeloutLayer(body, detail, w, h, theme.selout, 16);
-}
-
-type CapyPoseKind = 'sit' | 'blink' | 'ear' | 'walk_0' | 'walk_1' | 'walk_2' | 'walk_3' | 'dance_0' | 'dance_1' | 'drowsy' | 'sleep';
-
-function buildCapyGrid(theme: CapyColorTheme, pose: CapyPoseKind): PixelGrid {
-  const w = CAPY_WIDTH;
-  const h = CAPY_HEIGHT;
-  const body = createPixelGrid(w, h);
-  const detail = createPixelGrid(w, h);
-
-  const isDrowsy = pose === 'drowsy' || pose === 'sleep';
-  const yuzuBob = pose === 'walk_1' || pose === 'walk_3' || pose === 'dance_1' ? -1 : 0;
-  const headDrop = isDrowsy ? 1 : pose === 'dance_1' ? -1 : 0;
-  const bodyDrop = isDrowsy ? 1 : pose === 'dance_1' ? -1 : 0;
-
-  const yy = 1 + yuzuBob + headDrop;
-  setSpan(body, w, h, 5, 7, yy, theme.yuzu.hi);
-  setSpan(body, w, h, 4, 8, yy + 1, theme.yuzu.mid);
-  setSpan(body, w, h, 5, 7, yy + 2, theme.yuzu.sh);
-  setPx(detail, w, h, 5, yy + 1, theme.yuzu.hi);
-  setPx(body, w, h, 6, yy - 1, theme.leaf.mid);
-  setPx(body, w, h, 7, yy - 1, theme.leaf.hi);
-  setPx(body, w, h, 8, yy, theme.leaf.sh);
-
-  const hy = 4 + headDrop;
-  const earLift = pose === 'ear' || pose === 'dance_1' ? -1 : 0;
-  setRect(body, w, h, 9, hy - 1 + earLift, 2, 2, theme.fur.ear);
-  setPx(detail, w, h, 9, hy - 1 + earLift, theme.fur.mid);
-
-  setSpan(body, w, h, 4, 9, hy, theme.fur.hi);
-  setSpan(body, w, h, 2, 10, hy + 1, theme.fur.mid);
-  setSpan(body, w, h, 1, 10, hy + 2, theme.fur.mid);
-  setSpan(body, w, h, 1, 10, hy + 3, theme.fur.mid);
-  setSpan(body, w, h, 2, 9, hy + 4, theme.fur.sh);
-
-  setSpan(detail, w, h, 4, 8, hy, theme.fur.hi);
-  setRect(detail, w, h, 1, hy + 2, 2, 2, theme.fur.snout);
-  setPx(detail, w, h, 1, hy + 2, theme.fur.sh);
-  setPx(detail, w, h, 8, hy + 3, theme.fur.blush);
-
-  if (pose === 'dance_0' || pose === 'dance_1') {
-    setPx(detail, w, h, 4, hy + 2, theme.eye);
-    setPx(detail, w, h, 5, hy + 1, theme.eye);
-    setPx(detail, w, h, 6, hy + 2, theme.eye);
-  } else if (pose === 'blink' || isDrowsy) {
-    setSpan(detail, w, h, 4, 6, hy + 2, theme.eye);
-  } else {
-    setRect(detail, w, h, 4, hy + 1, 2, 2, theme.eye);
-    setPx(detail, w, h, 4, hy + 1, theme.eyeGlint);
-  }
-
-  const by = 7 + bodyDrop;
-  setSpan(body, w, h, 10, 17, by, theme.fur.hi);
-  setSpan(body, w, h, 8, 18, by + 1, theme.fur.hi);
-  setSpan(body, w, h, 6, 19, by + 2, theme.fur.mid);
-  setSpan(body, w, h, 5, 19, by + 3, theme.fur.mid);
-  setSpan(body, w, h, 5, 18, by + 4, theme.fur.mid);
-  setSpan(body, w, h, 6, 17, by + 5, theme.fur.sh);
-  if (pose === 'sleep') {
-    setPx(body, w, h, 19, by + 2, theme.fur.hi);
-    setPx(body, w, h, 19, by + 3, theme.fur.mid);
-  }
-  setSpan(detail, w, h, 11, 16, by + 1, theme.fur.hi);
-  setSpan(detail, w, h, 10, 15, by + 4, theme.fur.mid);
-
-  if (!isDrowsy) {
-    const legY = by + 5;
-    if (pose === 'walk_0') {
-      setRect(body, w, h, 5, legY, 3, 3, theme.fur.sh);
-      setRect(body, w, h, 10, legY, 3, 2, theme.fur.mid);
-      setRect(body, w, h, 14, legY, 3, 3, theme.fur.sh);
-    } else if (pose === 'walk_1' || pose === 'walk_3') {
-      setRect(body, w, h, 6, legY, 3, 2, theme.fur.sh);
-      setRect(body, w, h, 11, legY, 2, 2, theme.fur.mid);
-      setRect(body, w, h, 14, legY, 3, 2, theme.fur.sh);
-    } else if (pose === 'walk_2') {
-      setRect(body, w, h, 7, legY, 3, 2, theme.fur.mid);
-      setRect(body, w, h, 11, legY, 3, 3, theme.fur.sh);
-      setRect(body, w, h, 15, legY, 3, 3, theme.fur.sh);
-    } else if (pose === 'dance_1') {
-      setRect(body, w, h, 5, legY, 3, 2, theme.fur.sh);
-      setRect(body, w, h, 10, legY, 3, 2, theme.fur.mid);
-      setRect(body, w, h, 15, legY, 3, 2, theme.fur.sh);
-    } else {
-      setRect(body, w, h, 6, legY, 3, 2, theme.fur.sh);
-      setRect(body, w, h, 10, legY, 3, 2, theme.fur.mid);
-      setRect(body, w, h, 14, legY, 3, 2, theme.fur.sh);
-    }
-  }
-
-  const out = applySeloutLayer(body, detail, w, h, theme.selout, isDrowsy ? 12 : 14);
-  const shadowY = isDrowsy ? 14 : 15;
-  for (let sx = 4; sx <= 18; sx += 1) {
-    if (!getPx(out, w, h, sx, shadowY)) setPx(out, w, h, sx, shadowY, theme.groundCore);
-  }
-  for (let sx = 6; sx <= 16; sx += 1) {
-    if (!getPx(out, w, h, sx, shadowY + 1)) setPx(out, w, h, sx, shadowY + 1, theme.groundSoft);
-  }
-  return out;
-}
-
 const WOOFER_FRAME_0: SpriteMatrix = [
-  'SSSSSSSS',
-  'SMDDDDMS',
-  'SDCCCCDS',
-  'SDCCCCDS',
-  'SDCCCCDS',
-  'SDCCCCDS',
-  'SMDDDDMS',
-  'SSSSSSSS',
+  'SDDS',
+  'DCCD',
+  'DCCD',
+  'SDDS',
 ];
 
 const WOOFER_FRAME_1: SpriteMatrix = [
-  'GGGGGGGG',
-  'GMCCCCMG',
-  'GCAACCCG',
-  'GCAAAACG',
-  'GCAAAACG',
-  'GCAACCCG',
-  'GMCCCCMG',
-  'GGGGGGGG',
+  'GCCG',
+  'CAAC',
+  'CAAC',
+  'GCCG',
 ];
 
 const WOOFER_COLORS: SpriteColorMap = {
-  S: '#1E2434',
-  M: '#64748B',
+  S: '#1e2434',
+  M: '#64748b',
   D: '#334155',
-  C: '#CBD5E1',
-  G: '#34A853',
-  A: '#86EFAC',
+  C: '#cbd5e1',
+  G: '#34a853',
+  A: '#86efac',
 };
 
 const NOTE_SINGLE: SpriteMatrix = [
@@ -1373,80 +2497,24 @@ const NOTE_DOUBLE: SpriteMatrix = [
 ];
 
 const NOTE_COLORS_GREEN: SpriteColorMap = {
-  O: '#16212C',
-  B: '#34A853',
+  O: '#16212c',
+  B: '#34a853',
 };
 
 const NOTE_COLORS_GOLD: SpriteColorMap = {
-  O: '#2A1C16',
-  B: '#FBBC04',
+  O: '#2a1c16',
+  B: '#fbbc04',
 };
 
 const NOTE_COLORS_BLUE: SpriteColorMap = {
-  O: '#16212C',
-  B: '#60A5FA',
+  O: '#16212c',
+  B: '#60a5fa',
 };
 
 const NOTE_COLORS_CORAL: SpriteColorMap = {
-  O: '#2A181F',
-  B: '#F472B6',
+  O: '#2a181f',
+  B: '#f472b6',
 };
-
-const Z_SMALL: SpriteMatrix = [
-  'OOOOO.',
-  'OZZZOO',
-  '.OOZO.',
-  'OZZOO.',
-  'OZZZO.',
-  'OOOOO.',
-];
-
-const Z_LARGE: SpriteMatrix = [
-  'OOOOOO',
-  'OZZZZO',
-  '.OOZOO',
-  'OOZOO.',
-  'OZZZZO',
-  'OOOOOO',
-];
-
-const STAR_TINY: SpriteMatrix = [
-  '...',
-  '.M.',
-  '...',
-];
-
-const STAR_CROSS: SpriteMatrix = [
-  '.M.',
-  'MHM',
-  '.M.',
-];
-
-const STAR_SPARKLE: SpriteMatrix = [
-  '..M..',
-  '.MHM.',
-  'MHHHM',
-  '.MHM.',
-  '..M..',
-];
-
-const STAR_COLORS_CREAM: SpriteColorMap = {
-  H: '#FFFBEB',
-  M: '#FDE68A',
-};
-
-const STAR_COLORS_BLUE: SpriteColorMap = {
-  H: '#FFFFFF',
-  M: '#BAE6FD',
-};
-
-const STAR_NODES: readonly { x: number; y: number; phase: number; blue: boolean }[] = [
-  { x: 82, y: 12, phase: 0, blue: false },
-  { x: 89, y: 18, phase: 1, blue: true },
-  { x: 102, y: 12, phase: 2, blue: false },
-  { x: 111, y: 18, phase: 3, blue: true },
-  { x: 122, y: 19, phase: 1, blue: false },
-];
 
 const GBA_POINTER_ARROW: SpriteMatrix = [
   'OOOOOOOOO',
@@ -1458,42 +2526,11 @@ const GBA_POINTER_ARROW: SpriteMatrix = [
 ];
 
 const GBA_POINTER_COLORS: SpriteColorMap = {
-  O: '#2A1C16',
-  H: '#FFF3B0',
-  Y: '#FBBC04',
-  A: '#F59E0B',
+  O: '#2a1c16',
+  H: '#fff3b0',
+  Y: '#fbbc04',
+  A: '#f59e0b',
 };
-
-function drawZzzDrift(
-  ctx: CanvasRenderingContext2D,
-  originX: number,
-  originY: number,
-  timeSec: number,
-  reducedMotion: boolean,
-  outlineColor: string,
-  riseSpan = 7
-): void {
-  const zColors: SpriteColorMap = { O: outlineColor, Z: '#E2E8F0' };
-  if (reducedMotion) {
-    drawSpriteMatrix(ctx, Z_SMALL, zColors, originX, originY - 2);
-    drawSpriteMatrix(ctx, Z_LARGE, zColors, originX + 6, originY - riseSpan);
-    return;
-  }
-
-  const slots = [0, 0.33, 0.66];
-  for (let i = 0; i < slots.length; i += 1) {
-    const phase = (timeSec * 0.42 + slots[i]) % 1;
-    const drawX = originX + i * 3 + Math.round(Math.sin(phase * Math.PI * 2) * 1.4);
-    const drawY = originY - Math.round(phase * riseSpan);
-    const alpha =
-      phase < 0.2 ? phase / 0.2 : phase > 0.72 ? Math.max(0, (1 - phase) / 0.28) : 0.92;
-    const mat = i === 1 ? Z_LARGE : Z_SMALL;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    drawSpriteMatrix(ctx, mat, zColors, drawX, drawY);
-    ctx.restore();
-  }
-}
 
 function drawSmoothSteam(
   ctx: CanvasRenderingContext2D,
@@ -1506,473 +2543,29 @@ function drawSmoothSteam(
   if (reducedMotion) {
     ctx.save();
     ctx.globalAlpha = 0.62;
-    fillPixelRect(ctx, originX, originY - 2, 1, 2, '#FFF9F0');
-    fillPixelRect(ctx, originX + 2, originY - 5, 1, 2, '#E2E8F0');
+    fillPixelRect(ctx, originX, originY - 2, 1, 2, '#fff9f0');
+    fillPixelRect(ctx, originX + 2, originY - 5, 1, 2, '#e2e8f0');
     ctx.restore();
     return;
   }
 
   const wisps = [
-    { offset: 0, dxBias: 0, color: '#FFF9F0' },
-    { offset: 0.35, dxBias: 2, color: '#E2E8F0' },
-    { offset: 0.7, dxBias: 1, color: '#CBD5E1' },
+    { offset: 0, dxBias: 0, color: '#fff9f0' },
+    { offset: 0.35, dxBias: 2, color: '#e2e8f0' },
+    { offset: 0.7, dxBias: 1, color: '#cbd5e1' },
   ];
 
   for (let i = 0; i < wisps.length; i += 1) {
     const wisp = wisps[i];
     const phase = (timeSec * 0.58 + wisp.offset) % 1;
     const py = Math.round(originY - phase * maxRise);
-    const px = Math.round(originX + wisp.dxBias + Math.sin(phase * Math.PI * 2 + i) * 1.1);
+    const pxx = Math.round(originX + wisp.dxBias + Math.sin(phase * Math.PI * 2 + i) * 1.1);
     const alpha = Math.sin(phase * Math.PI) * 0.72;
     if (alpha <= 0.05) continue;
     ctx.save();
     ctx.globalAlpha = alpha;
-    fillPixelRect(ctx, px, py, 1, 2, wisp.color);
+    fillPixelRect(ctx, pxx, py, 1, 2, wisp.color);
     ctx.restore();
-  }
-}
-
-function maskStaticDeskMug(ctx: CanvasRenderingContext2D, palette: RoomPalette): void {
-  fillPixelRect(ctx, 197, 79, 1, 9, palette.inkIndigo);
-  fillPixelRect(ctx, 198, 79, 9, 9, palette.woodMid);
-}
-
-function drawDeskCoffeeSteam(
-  ctx: CanvasRenderingContext2D,
-  timeState: RoomTimeState,
-  timeSec: number,
-  reducedMotion: boolean
-): void {
-  if (timeState !== 'working') {
-    return;
-  }
-  if (!reducedMotion) {
-    const cycle = timeSec % 18;
-    if (cycle >= 5.5 && cycle < 7.1) {
-      return;
-    }
-  }
-  drawSmoothSteam(ctx, DESK_MUG_X - 1, DESK_MUG_Y - 3, timeSec, reducedMotion);
-}
-
-function drawWindowStars(
-  ctx: CanvasRenderingContext2D,
-  timeState: RoomTimeState,
-  timeSec: number
-): void {
-  if (timeState !== 'late_night' && timeState !== 'sleeping') {
-    return;
-  }
-
-  for (let i = 0; i < STAR_NODES.length; i += 1) {
-    const star = STAR_NODES[i];
-    const frame = (Math.floor(timeSec * 3.0) + star.phase) % 4;
-    const colors = star.blue ? STAR_COLORS_BLUE : STAR_COLORS_CREAM;
-    if (frame === 0) {
-      drawSpriteMatrix(ctx, STAR_TINY, colors, star.x + 1, star.y + 1);
-    } else if (frame === 2) {
-      drawSpriteMatrix(ctx, STAR_SPARKLE, colors, star.x, star.y);
-    } else {
-      drawSpriteMatrix(ctx, STAR_CROSS, colors, star.x + 1, star.y + 1);
-    }
-  }
-}
-
-export function getSleepingBreathOffset(timeSec: number, reducedMotion: boolean): number {
-  if (reducedMotion) {
-    return 0;
-  }
-  const breathWave = Math.sin(timeSec * ((Math.PI * 2) / 3.6));
-  return breathWave > 0.28 ? -1 : 0;
-}
-
-export function drawSleepingCharacter(
-  ctx: CanvasRenderingContext2D,
-  options: DrawCharacterAndEffectsOptions
-): void {
-  const { timeState, lampOn, palette, reducedMotion = false } = options;
-  const timeSec = resolveTimeSec(options);
-  const theme = getLongTheme(timeState, lampOn, palette);
-  const breathOffset = getSleepingBreathOffset(timeSec, reducedMotion);
-  const grid = buildSleepingLongGrid(theme, breathOffset);
-
-  drawPixelGrid(ctx, grid, SLEEP_WIDTH, SLEEP_HEIGHT, SLEEP_DRAW_X, SLEEP_DRAW_Y);
-  drawZzzDrift(ctx, 44, 82, timeSec, reducedMotion, theme.selout, 6);
-}
-
-export function drawRoomScreensAndSteam(
-  ctx: CanvasRenderingContext2D,
-  options: DrawCharacterAndEffectsOptions
-): void {
-  const { timeState, reducedMotion = false } = options;
-  const timeSec = resolveTimeSec(options);
-
-  drawWindowStars(ctx, timeState, timeSec);
-  drawMainMonitorScreen(ctx, timeState, timeSec, reducedMotion);
-  drawSideLaptopScreen(ctx, timeState, timeSec, reducedMotion);
-  drawDeskCoffeeSteam(ctx, timeState, timeSec, reducedMotion);
-}
-
-export function drawSeatedCharacter(
-  ctx: CanvasRenderingContext2D,
-  options: DrawCharacterAndEffectsOptions
-): void {
-  const { timeState, lampOn, isMusicActive, palette, reducedMotion = false } = options;
-  if (timeState !== 'working' && timeState !== 'late_night') {
-    return;
-  }
-
-  const seatAnchor = options.seatAnchor ?? DEFAULT_SEAT_ANCHOR;
-  const drawX = Math.round(seatAnchor.seatCenterX - 25);
-  const drawY = Math.round(seatAnchor.seatTopY - 14);
-  const timeSec = resolveTimeSec(options);
-  const theme = getLongTheme(timeState, lampOn, palette);
-  const lampRim = lampOn && timeState === 'late_night';
-
-  if (reducedMotion) {
-    const grid = buildSeatedLongGrid(theme, 'center', 'home', 0, 0, lampRim);
-    drawPixelGrid(ctx, grid, SEATED_WIDTH, SEATED_HEIGHT, drawX, drawY);
-    return;
-  }
-
-  const cycle = timeState === 'late_night' ? timeSec % 16 : timeSec % 18;
-  const focusSway = Math.sin(timeSec * Math.PI * 0.7) > 0.86 ? 1 : 0;
-  const musicBobDown = isMusicActive && Math.sin(timeSec * Math.PI * 3.1) > 0.32 ? 1 : 0;
-
-  let headPose: SeatedHeadPose = 'center';
-  let armPose: SeatedArmPose = 'home';
-  let headDrop = musicBobDown || focusSway;
-  let shoulderDrop = musicBobDown;
-
-  if (timeState === 'working') {
-    if (cycle >= 3.2 && cycle < 5.0) {
-      headPose = 'glance_left';
-    } else if (cycle >= 5.2 && cycle < 5.7) {
-      armPose = 'reach_mug';
-      shoulderDrop = 0;
-    } else if (cycle >= 5.7 && cycle < 6.9) {
-      maskStaticDeskMug(ctx, palette);
-      headPose = 'glance_right';
-      armPose = 'sip_mug';
-      headDrop = 0;
-      shoulderDrop = 0;
-      drawSmoothSteam(ctx, drawX + 33, drawY + 2, timeSec, false, 5);
-    } else if (cycle >= 6.9 && cycle < 7.4) {
-      armPose = 'reach_mug';
-      shoulderDrop = 0;
-    } else if (cycle >= 10.8 && cycle < 13.4) {
-      headPose = cycle < 12.1 ? 'glance_left' : 'glance_right';
-      armPose = 'stretch';
-      headDrop = 0;
-      shoulderDrop = 0;
-    } else if (cycle >= 14.8 && cycle < 16.4) {
-      headPose = 'glance_left';
-      armPose = Math.floor(timeSec * 5) % 2 === 0 ? 'type_l' : 'type_r';
-    } else if (cycle >= 8.2 && cycle < 10.2) {
-      armPose = Math.floor(timeSec * 2.5) % 2 === 0 ? 'mouse_a' : 'mouse_b';
-    } else {
-      const step = Math.floor(timeSec * 5.2) % 3;
-      armPose = step === 0 ? 'type_l' : step === 1 ? 'type_r' : 'home';
-    }
-  } else {
-    if (cycle >= 3.5 && cycle < 4.9) {
-      headPose = 'glance_left';
-    } else if (cycle >= 6.0 && cycle < 8.6) {
-      armPose = 'stretch';
-      headDrop = 0;
-      shoulderDrop = 0;
-      headPose = cycle < 7.3 ? 'glance_left' : 'glance_right';
-    } else if (cycle >= 10.4 && cycle < 12.2) {
-      armPose = Math.floor(timeSec * 2.4) % 2 === 0 ? 'mouse_a' : 'mouse_b';
-    } else {
-      const step = Math.floor(timeSec * 4.8) % 3;
-      armPose = step === 0 ? 'type_l' : step === 1 ? 'type_r' : 'home';
-    }
-  }
-
-  const grid = buildSeatedLongGrid(theme, headPose, armPose, headDrop, shoulderDrop, lampRim);
-  drawPixelGrid(ctx, grid, SEATED_WIDTH, SEATED_HEIGHT, drawX, drawY);
-}
-
-interface WakingLongPose {
-  x: number;
-  y: number;
-  footY: number;
-  grid: PixelGrid;
-  steamX: number;
-  steamY: number;
-}
-
-function getWakingLongPose(
-  theme: LongColorTheme,
-  timeSec: number,
-  reducedMotion: boolean
-): WakingLongPose {
-  const minX = WALKABLE_RECT.x + 1;
-  const maxX = Math.min(82, WALKABLE_RECT.x + WALKABLE_RECT.w - WAKING_WIDTH);
-  const clampX = (x: number): number => Math.max(minX, Math.min(maxX, Math.round(x)));
-  const clampY = (y: number): number =>
-    Math.max(WALKABLE_RECT.y, Math.min(WALKABLE_RECT.y + WALKABLE_RECT.h - WAKING_HEIGHT, Math.round(y)));
-
-  if (reducedMotion) {
-    const x = clampX(80);
-    const y = clampY(108);
-    return {
-      x,
-      y,
-      footY: y + WAKING_HEIGHT - 2,
-      grid: buildWakingLongGrid(theme, 'down', 'coffee', 0, false, false),
-      steamX: x + 17,
-      steamY: y + 14,
-    };
-  }
-
-  const cycle = timeSec % 16;
-  const blinkNow = timeSec % 3.8 >= 3.64;
-  const breatheNow = Math.sin(timeSec * ((Math.PI * 2) / 3.2)) > 0.35;
-
-  if (cycle < 3.4) {
-    const p = cycle / 3.4;
-    const x = clampX(75 + p * 6);
-    const y = clampY(111 - Math.round(Math.sin(p * Math.PI) * 2));
-    const walkFrame = Math.floor(timeSec * 6.0) % 4;
-    return {
-      x,
-      y,
-      footY: y + WAKING_HEIGHT - 2,
-      grid: buildWakingLongGrid(theme, 'right', 'walk', walkFrame, blinkNow, false),
-      steamX: -10,
-      steamY: -10,
-    };
-  }
-
-  if (cycle < 7.2) {
-    const isPeakSip = cycle >= 4.4 && cycle < 6.4;
-    const x = clampX(81);
-    const y = clampY(110);
-    return {
-      x,
-      y,
-      footY: y + WAKING_HEIGHT - 2,
-      grid: buildWakingLongGrid(theme, 'down', isPeakSip ? 'sip' : 'coffee', 0, blinkNow, breatheNow),
-      steamX: x + 17,
-      steamY: y + (isPeakSip ? 12 : 14),
-    };
-  }
-
-  if (cycle < 10.6) {
-    const x = clampX(80 + Math.round(Math.sin(timeSec * 1.1) * 1));
-    const y = clampY(110);
-    return {
-      x,
-      y,
-      footY: y + WAKING_HEIGHT - 2,
-      grid: buildWakingLongGrid(theme, 'down', 'stretch', 0, true, false),
-      steamX: -10,
-      steamY: -10,
-    };
-  }
-
-  if (cycle < 13.8) {
-    const p = (cycle - 10.6) / 3.2;
-    const x = clampX(81 - p * 6);
-    const y = clampY(110 + Math.round(Math.sin(p * Math.PI) * 1));
-    const walkFrame = Math.floor(timeSec * 6.0) % 4;
-    return {
-      x,
-      y,
-      footY: y + WAKING_HEIGHT - 2,
-      grid: buildWakingLongGrid(theme, 'left', 'walk', walkFrame, blinkNow, false),
-      steamX: -10,
-      steamY: -10,
-    };
-  }
-
-  const x = clampX(75);
-  const y = clampY(111);
-  return {
-    x,
-    y,
-    footY: y + WAKING_HEIGHT - 2,
-    grid: buildWakingLongGrid(theme, 'down', 'coffee', 0, blinkNow, breatheNow),
-    steamX: x + 17,
-    steamY: y + 14,
-  };
-}
-
-interface CapyPoseState {
-  x: number;
-  y: number;
-  footY: number;
-  flipX: boolean;
-  pose: CapyPoseKind;
-}
-
-function clampCapyPos(rawX: number, rawY: number): { x: number; y: number } {
-  const minX = RUG_WALK_RECT.x;
-  const maxX = RUG_WALK_RECT.x + RUG_WALK_RECT.w - CAPY_WIDTH;
-  const minY = RUG_WALK_RECT.y;
-  const maxY = RUG_WALK_RECT.y + RUG_WALK_RECT.h - CAPY_HEIGHT;
-  return {
-    x: Math.max(minX, Math.min(maxX, Math.round(rawX))),
-    y: Math.max(minY, Math.min(maxY, Math.round(rawY))),
-  };
-}
-
-function getCapybaraState(
-  timeState: RoomTimeState,
-  isMusicActive: boolean,
-  timeSec: number,
-  reducedMotion: boolean
-): CapyPoseState {
-  if (timeState === 'sleeping') {
-    const breathUp = !reducedMotion && Math.sin(timeSec * 1.8) > 0.35;
-    const pos = clampCapyPos(188, 132);
-    return {
-      x: pos.x,
-      y: pos.y,
-      footY: pos.y + 14,
-      flipX: false,
-      pose: breathUp ? 'sleep' : 'drowsy',
-    };
-  }
-
-  if (timeState === 'late_night') {
-    const sleepyNod = isMusicActive && !reducedMotion && Math.sin(timeSec * Math.PI * 2.2) > 0.4;
-    const pos = clampCapyPos(188, sleepyNod ? 131 : 132);
-    return {
-      x: pos.x,
-      y: pos.y,
-      footY: pos.y + 14,
-      flipX: false,
-      pose: 'drowsy',
-    };
-  }
-
-  if (reducedMotion) {
-    const pos = clampCapyPos(188, 131);
-    return {
-      x: pos.x,
-      y: pos.y,
-      footY: pos.y + 14,
-      flipX: false,
-      pose: 'sit',
-    };
-  }
-
-  const loop = timeSec % 20;
-  let cx = 188;
-  let cy = 131;
-  let flipX = false;
-  let isWalking = false;
-
-  if (loop < 3.5) {
-    cx = 188;
-    cy = 131;
-    flipX = false;
-  } else if (loop < 8.2) {
-    const p = (loop - 3.5) / 4.7;
-    cx = Math.round(188 - p * 54);
-    cy = Math.round(131 + Math.sin(p * Math.PI) * 2);
-    flipX = false;
-    isWalking = true;
-  } else if (loop < 12.2) {
-    cx = 134;
-    cy = 132;
-    flipX = loop >= 10.6;
-  } else if (loop < 17.0) {
-    const p = (loop - 12.2) / 4.8;
-    cx = Math.round(134 + p * 54);
-    cy = Math.round(132 - Math.sin(p * Math.PI) * 1);
-    flipX = true;
-    isWalking = true;
-  } else {
-    cx = 188;
-    cy = 131;
-    flipX = loop < 18.4;
-  }
-
-  if (isMusicActive) {
-    const danceFrame = Math.floor(timeSec * 4.4) % 2;
-    const hopY = danceFrame === 1 ? -1 : 0;
-    const pos = clampCapyPos(cx, cy + hopY);
-    return {
-      x: pos.x,
-      y: pos.y,
-      footY: pos.y + 14,
-      flipX,
-      pose: danceFrame === 1 ? 'dance_1' : 'dance_0',
-    };
-  }
-
-  if (isWalking) {
-    const walkPoses: readonly CapyPoseKind[] = ['walk_0', 'walk_1', 'walk_2', 'walk_3'];
-    const step = Math.floor(timeSec * 5.6) % walkPoses.length;
-    const pos = clampCapyPos(cx, cy);
-    return {
-      x: pos.x,
-      y: pos.y,
-      footY: pos.y + 14,
-      flipX,
-      pose: walkPoses[step],
-    };
-  }
-
-  const blinkNow = timeSec % 4.1 >= 3.88;
-  const earTwitch = timeSec % 3.2 >= 2.96;
-  const sitPose: CapyPoseKind = blinkNow ? 'blink' : earTwitch ? 'ear' : 'sit';
-  const pos = clampCapyPos(cx, cy);
-
-  return {
-    x: pos.x,
-    y: pos.y,
-    footY: pos.y + 14,
-    flipX,
-    pose: sitPose,
-  };
-}
-
-export function drawWakingAndCapybaraLayer(
-  ctx: CanvasRenderingContext2D,
-  options: DrawCharacterAndEffectsOptions
-): void {
-  const { timeState, lampOn, isMusicActive, palette, reducedMotion = false } = options;
-  const timeSec = resolveTimeSec(options);
-
-  const capyState = getCapybaraState(timeState, isMusicActive, timeSec, reducedMotion);
-  const capyTheme = getCapyTheme(timeState, lampOn, palette);
-  const capyGrid = buildCapyGrid(capyTheme, capyState.pose);
-
-  const renderCapy = () => {
-    drawPixelGrid(ctx, capyGrid, CAPY_WIDTH, CAPY_HEIGHT, capyState.x, capyState.y, capyState.flipX);
-    if (timeState === 'sleeping') {
-      const zX = Math.max(RUG_WALK_RECT.x, capyState.x - 4);
-      const zY = Math.max(RUG_WALK_RECT.y + 5, capyState.y - 1);
-      drawZzzDrift(ctx, zX, zY, timeSec + 1.2, reducedMotion, capyTheme.selout, 3);
-    }
-  };
-
-  if (timeState !== 'waking') {
-    renderCapy();
-    return;
-  }
-
-  const longTheme = getLongTheme(timeState, lampOn, palette);
-  const longPose = getWakingLongPose(longTheme, timeSec, reducedMotion);
-
-  const renderLong = () => {
-    drawPixelGrid(ctx, longPose.grid, WAKING_WIDTH, WAKING_HEIGHT, longPose.x, longPose.y);
-    if (longPose.steamX >= 0) {
-      drawSmoothSteam(ctx, longPose.steamX, longPose.steamY, timeSec, reducedMotion, 7);
-    }
-  };
-
-  if (longPose.footY <= capyState.footY) {
-    renderLong();
-    renderCapy();
-  } else {
-    renderCapy();
-    renderLong();
   }
 }
 
@@ -1983,14 +2576,14 @@ function drawEqualizerBars(
   timeSec: number,
   phaseOffset: number
 ): void {
-  const barColors = ['#34A853', '#FBBC04', '#60A5FA'];
+  const barColors = ['#34a853', '#fbbc04', '#60a5fa'];
   for (let b = 0; b < 3; b += 1) {
     const wave = (Math.sin(timeSec * 8.5 + phaseOffset + b * 1.9) + 1) * 0.5;
     const h = 2 + Math.round(wave * 5);
     const bx = baseX + b * 2;
     const by = baseY - h;
     fillPixelRect(ctx, bx, by, 1, h, barColors[b]);
-    fillPixelRect(ctx, bx, by, 1, 1, '#FFFFFF');
+    fillPixelRect(ctx, bx, by, 1, 1, '#ffffff');
   }
 }
 
@@ -2005,16 +2598,15 @@ function drawMusicEffects(
     musicTracker.fadeStartAtSec = null;
     musicTracker.lastSeenTimeSec = 0;
 
-    if (!isMusicActive) {
-      return;
-    }
+    if (!isMusicActive) return;
 
-    drawSpriteMatrix(ctx, WOOFER_FRAME_0, WOOFER_COLORS, LEFT_WOOFER_X, LEFT_WOOFER_Y);
-    drawSpriteMatrix(ctx, WOOFER_FRAME_0, WOOFER_COLORS, RIGHT_WOOFER_X, RIGHT_WOOFER_Y);
+    drawSpriteMatrix(ctx, WOOFER_FRAME_0, WOOFER_COLORS, DESK1_LEFT_WOOFER_X, DESK1_LEFT_WOOFER_Y);
+    drawSpriteMatrix(ctx, WOOFER_FRAME_0, WOOFER_COLORS, DESK1_RIGHT_WOOFER_X, DESK1_RIGHT_WOOFER_Y);
     ctx.save();
     ctx.globalAlpha = 0.9;
-    drawSpriteMatrix(ctx, NOTE_SINGLE, NOTE_COLORS_GREEN, 118, 46);
-    drawSpriteMatrix(ctx, NOTE_DOUBLE, NOTE_COLORS_GOLD, 204, 45);
+    drawSpriteMatrix(ctx, NOTE_SINGLE, NOTE_COLORS_GREEN, DESK1_LEFT_WOOFER_X, DESK1_LEFT_WOOFER_Y - 15);
+    drawSpriteMatrix(ctx, NOTE_DOUBLE, NOTE_COLORS_GOLD, DESK1_RIGHT_WOOFER_X - 1, DESK1_RIGHT_WOOFER_Y - 16);
+    drawSpriteMatrix(ctx, NOTE_SINGLE, NOTE_COLORS_GOLD, TURNTABLE_X - 2, TURNTABLE_Y - 12);
     ctx.restore();
     return;
   }
@@ -2053,16 +2645,15 @@ function drawMusicEffects(
   if (isMusicActive) {
     const wooferPulse = Math.sin(timeSec * Math.PI * 5.2) > 0;
     const wooferMatrix = wooferPulse ? WOOFER_FRAME_1 : WOOFER_FRAME_0;
-    drawSpriteMatrix(ctx, wooferMatrix, WOOFER_COLORS, LEFT_WOOFER_X, LEFT_WOOFER_Y);
-    drawSpriteMatrix(ctx, wooferMatrix, WOOFER_COLORS, RIGHT_WOOFER_X, RIGHT_WOOFER_Y);
+    drawSpriteMatrix(ctx, wooferMatrix, WOOFER_COLORS, DESK1_LEFT_WOOFER_X, DESK1_LEFT_WOOFER_Y);
+    drawSpriteMatrix(ctx, wooferMatrix, WOOFER_COLORS, DESK1_RIGHT_WOOFER_X, DESK1_RIGHT_WOOFER_Y);
 
-    drawEqualizerBars(ctx, 116, 56, timeSec, 0);
-    drawEqualizerBars(ctx, 204, 56, timeSec, 1.4);
+    drawEqualizerBars(ctx, DESK1_LEFT_WOOFER_X - 1, DESK1_LEFT_WOOFER_Y - 6, timeSec, 0);
+    drawEqualizerBars(ctx, DESK1_RIGHT_WOOFER_X - 1, DESK1_RIGHT_WOOFER_Y - 6, timeSec, 1.4);
+    drawEqualizerBars(ctx, TURNTABLE_SPEAKER_X, TURNTABLE_SPEAKER_Y, timeSec, 0.7);
   }
 
-  if (noteFadeMultiplier <= 0) {
-    return;
-  }
+  if (noteFadeMultiplier <= 0) return;
 
   const cycleSec = 2.4;
   const notes: readonly {
@@ -2073,11 +2664,11 @@ function drawMusicEffects(
     colors: SpriteColorMap;
     arcAmp: number;
   }[] = [
-    { baseX: 119, baseY: 53, offsetSec: 0, doubleNote: false, colors: NOTE_COLORS_GREEN, arcAmp: 2.6 },
-    { baseX: 119, baseY: 53, offsetSec: 1.2, doubleNote: true, colors: NOTE_COLORS_BLUE, arcAmp: -2.4 },
-    { baseX: 207, baseY: 53, offsetSec: 0.6, doubleNote: true, colors: NOTE_COLORS_GOLD, arcAmp: 2.6 },
-    { baseX: 207, baseY: 53, offsetSec: 1.8, doubleNote: false, colors: NOTE_COLORS_CORAL, arcAmp: -2.6 },
-    { baseX: 256, baseY: 43, offsetSec: 0.9, doubleNote: false, colors: NOTE_COLORS_GOLD, arcAmp: 1.8 },
+    { baseX: DESK1_LEFT_WOOFER_X + 2, baseY: DESK1_LEFT_WOOFER_Y - 7, offsetSec: 0, doubleNote: false, colors: NOTE_COLORS_GREEN, arcAmp: 2.6 },
+    { baseX: DESK1_LEFT_WOOFER_X + 2, baseY: DESK1_LEFT_WOOFER_Y - 7, offsetSec: 1.2, doubleNote: true, colors: NOTE_COLORS_BLUE, arcAmp: -2.4 },
+    { baseX: DESK1_RIGHT_WOOFER_X + 2, baseY: DESK1_RIGHT_WOOFER_Y - 7, offsetSec: 0.6, doubleNote: true, colors: NOTE_COLORS_GOLD, arcAmp: 2.6 },
+    { baseX: DESK1_RIGHT_WOOFER_X + 2, baseY: DESK1_RIGHT_WOOFER_Y - 7, offsetSec: 1.8, doubleNote: false, colors: NOTE_COLORS_CORAL, arcAmp: -2.6 },
+    { baseX: TURNTABLE_X, baseY: TURNTABLE_Y - 4, offsetSec: 0.9, doubleNote: false, colors: NOTE_COLORS_GOLD, arcAmp: 1.8 },
   ];
 
   for (let i = 0; i < notes.length; i += 1) {
@@ -2092,13 +2683,11 @@ function drawMusicEffects(
 
     const phase = ((timeSec + item.offsetSec) % cycleSec) / cycleSec;
     const drawX = item.baseX - 3 + Math.round(Math.sin(phase * Math.PI * 2) * item.arcAmp);
-    const drawY = item.baseY - Math.round(phase * 22);
+    const drawY = item.baseY - Math.round(phase * 20);
     const baseAlpha =
       phase < 0.16 ? phase / 0.16 : phase > 0.65 ? Math.max(0, (1 - phase) / 0.35) : 0.95;
     const finalAlpha = Math.max(0, Math.min(1, baseAlpha * noteFadeMultiplier));
-    if (finalAlpha <= 0.02) {
-      continue;
-    }
+    if (finalAlpha <= 0.02) continue;
     const mat = item.doubleNote ? NOTE_DOUBLE : NOTE_SINGLE;
     ctx.save();
     ctx.globalAlpha = finalAlpha;
@@ -2119,12 +2708,12 @@ function drawHotspotBrackets(
 ): void {
   const x0 = Math.max(1, Math.round(bx));
   const y0 = Math.max(1, Math.round(by));
-  const x1 = Math.min(318, Math.round(bx + bw - 1));
-  const y1 = Math.min(178, Math.round(by + bh - 1));
+  const x1 = Math.min(ROOM_WIDTH - 2, Math.round(bx + bw - 1));
+  const y1 = Math.min(ROOM_HEIGHT - 2, Math.round(by + bh - 1));
   const pulse = reducedMotion || isHovered ? 0.92 : 0.58 + 0.22 * Math.sin(timeSec * 3.4);
-  const arm = 3;
-  const col = isHovered ? '#FFF3B0' : '#FBBC04';
-  const shadow = '#2A1C16';
+  const arm = 4;
+  const col = isHovered ? '#fff3b0' : '#fbbc04';
+  const shadow = '#2a1c16';
 
   ctx.save();
   ctx.globalAlpha = pulse;
@@ -2148,23 +2737,54 @@ function drawHotspotBrackets(
   ctx.restore();
 }
 
+function resolveHotspotAnchor(id: RoomHotspotId): { pointerX: number; pointerY: number } | null {
+  for (let i = 0; i < ROOM_HOTSPOTS.length; i += 1) {
+    if (ROOM_HOTSPOTS[i].id === id) {
+      return {
+        pointerX: ROOM_HOTSPOTS[i].pointerX,
+        pointerY: ROOM_HOTSPOTS[i].pointerY,
+      };
+    }
+  }
+  return null;
+}
+
+function resolveCapyBox(capyAnchor?: { x: number; y: number } | null): {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+} | null {
+  if (capyAnchor) {
+    return {
+      x: Math.round(capyAnchor.x - CAPY_WIDTH / 2),
+      y: Math.round(capyAnchor.y - CAPY_HEIGHT / 2),
+      w: CAPY_WIDTH,
+      h: CAPY_HEIGHT,
+    };
+  }
+  return lastCapyBounds;
+}
+
 function drawHotspotPointer(
   ctx: CanvasRenderingContext2D,
   hoveredHotspot: RoomHotspotId | null,
   selectedHotspot: RoomHotspotId | null,
   hoveredRegion: RoomHotspotRegion | null | undefined,
-  capyState: CapyPoseState,
+  capyAnchor: { x: number; y: number } | null | undefined,
   timeSec: number,
   reducedMotion: boolean
 ): void {
+  const capyBox = resolveCapyBox(capyAnchor);
+
   if (selectedHotspot && selectedHotspot !== hoveredHotspot) {
-    if (selectedHotspot === 'capybara') {
+    if (selectedHotspot === 'capybara' && capyBox) {
       drawHotspotBrackets(
         ctx,
-        capyState.x - 1,
-        capyState.y - 1,
-        CAPY_WIDTH + 2,
-        CAPY_HEIGHT + 1,
+        capyBox.x - 1,
+        capyBox.y - 1,
+        capyBox.w + 2,
+        capyBox.h + 1,
         false,
         timeSec,
         reducedMotion
@@ -2184,13 +2804,13 @@ function drawHotspotPointer(
   const activeId = hoveredRegion ? hoveredRegion.id : hoveredHotspot ?? selectedHotspot;
 
   if (hoveredRegion) {
-    if (hoveredRegion.id === 'capybara') {
+    if (hoveredRegion.id === 'capybara' && capyBox) {
       drawHotspotBrackets(
         ctx,
-        capyState.x - 1,
-        capyState.y - 1,
-        CAPY_WIDTH + 2,
-        CAPY_HEIGHT + 1,
+        capyBox.x - 1,
+        capyBox.y - 1,
+        capyBox.w + 2,
+        capyBox.h + 1,
         true,
         timeSec,
         reducedMotion
@@ -2209,43 +2829,50 @@ function drawHotspotPointer(
     }
   }
 
-  if (activeId === 'capybara') {
-    pointerX = capyState.x + 10;
-    pointerY = capyState.y - 4;
+  if (activeId === 'capybara' && capyBox) {
+    pointerX = capyBox.x + Math.round(capyBox.w / 2);
+    pointerY = capyBox.y - 3;
   } else if (hoveredRegion) {
     pointerX = hoveredRegion.pointerX;
     pointerY = hoveredRegion.pointerY;
   } else if (activeId) {
-    const anchor = HOTSPOT_POINTER_ANCHORS[activeId];
-    pointerX = anchor.pointerX;
-    pointerY = anchor.pointerY;
+    const anchor = resolveHotspotAnchor(activeId);
+    if (anchor) {
+      pointerX = anchor.pointerX;
+      pointerY = anchor.pointerY;
+    }
   }
 
-  if (pointerX === null || pointerY === null) {
-    return;
-  }
+  if (pointerX === null || pointerY === null) return;
 
   const bounceSteps = [0, 1, 2, 1];
   const bounce = reducedMotion ? 0 : bounceSteps[Math.floor(timeSec * 5) % bounceSteps.length];
-  const drawX = Math.max(0, Math.min(311, Math.round(pointerX - 4)));
+  const drawX = Math.max(0, Math.min(ROOM_WIDTH - 9, Math.round(pointerX - 4)));
   const drawY = Math.max(0, Math.round(pointerY - 5 + bounce));
   drawSpriteMatrix(ctx, GBA_POINTER_ARROW, GBA_POINTER_COLORS, drawX, drawY);
 }
 
-export function drawMusicEffectsOverlay(
+export function drawDeskAndMusicEffects(
   ctx: CanvasRenderingContext2D,
-  options: DrawCharacterAndEffectsOptions
+  opts: DrawDeskAndMusicEffectsOptions
 ): void {
   const {
     timeState,
     isMusicActive,
+    tick,
+    elapsedSec,
     hoveredHotspot,
     selectedHotspot,
     hoveredRegion,
     reducedMotion = false,
-  } = options;
-  const timeSec = resolveTimeSec(options);
-  const capyState = getCapybaraState(timeState, isMusicActive, timeSec, reducedMotion);
+    capyAnchor,
+  } = opts;
+
+  const timeSec = reducedMotion ? 0 : elapsedSec ?? tick / 15;
+
+  if (timeState !== 'sleeping') {
+    drawSmoothSteam(ctx, DESK1_MUG_X, DESK1_MUG_Y - 2, timeSec, reducedMotion, 8);
+  }
 
   drawMusicEffects(ctx, isMusicActive, timeSec, reducedMotion);
   drawHotspotPointer(
@@ -2253,22 +2880,8 @@ export function drawMusicEffectsOverlay(
     hoveredHotspot,
     selectedHotspot,
     hoveredRegion,
-    capyState,
+    capyAnchor,
     timeSec,
     reducedMotion
   );
-}
-
-export function drawCharacterAndEffects(
-  ctx: CanvasRenderingContext2D,
-  options: DrawCharacterAndEffectsOptions
-): void {
-  drawRoomScreensAndSteam(ctx, options);
-  if (options.timeState === 'sleeping') {
-    drawSleepingCharacter(ctx, options);
-  } else if (options.timeState === 'working' || options.timeState === 'late_night') {
-    drawSeatedCharacter(ctx, options);
-  }
-  drawWakingAndCapybaraLayer(ctx, options);
-  drawMusicEffectsOverlay(ctx, options);
 }

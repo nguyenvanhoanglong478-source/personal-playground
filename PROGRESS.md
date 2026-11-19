@@ -481,4 +481,14 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_COMMENTS=0`, `impeccable detect --json` trả về `[]` và `cmd /c "npm run verify"` thoát `0` (`1607` modules, `WorkspacePage-*.js 137.15 kB`).
   - Playwright `vite preview` trên `1440×900` (Dark/Light, `VI` & `EN`), `820×1180` (Light) và `375×812` (Dark): `0` lỗi console/page, `0` tràn ngang, `8` tựa game hiển thị đầy đủ (`clippedCount: 0`) trên cả 3 kích thước màn hình.
 
+## 33. Bổ Sung Bộ Logo Chính Thức Cho 8 Game Trong Khung "Game Hay Chơi" (`public/games/`, `FavoriteGamesCard.tsx`)
+
+- **Bộ logo tự host (`public/games/`)**: Lưu 8 biểu tượng/logo game cục bộ không phụ thuộc CDN ngoài (`lol.svg`, `tft.png`, `valorant.svg`, `wild-rift.png`, `gta6.svg`, `gta5.svg`, `cs2.svg`, `minecraft.svg`), nạp qua đường dẫn tương đối `./games/...` tương thích đồng thời Cloudflare Pages và GitHub Pages (`base: './'`).
+- **Tích hợp & Tương phản hai chế độ (`src/data/workspace.ts`, `src/components/workspace/FavoriteGamesCard.tsx`)**:
+  - Mở rộng `FavoriteGameItem` thêm `logoUrl` và `logoSurface` (`'cover' | 'dark' | 'neutral'`), đặt nền tối `#16171C` cho `gta5.svg` / `gta6.svg` để giữ rõ chữ trắng trên cả Light Mode lẫn Dark Mode, kèm fallback về `game.code` nếu `onError`.
+  - Hiển thị đồng bộ khung logo `28×28px` (`rounded-[6px] border border-folio-border`) cạnh tên game trong `FavoriteGamesCard.tsx`.
+- **Kiểm chứng sau chỉnh sửa**:
+  - `TS_COMMENTS=0`, `impeccable detect --json` trả về `[]` và `cmd /c "npm run verify"` thoát `0` (`dist/games/` chứa đủ `8` tệp logo).
+  - Playwright `vite preview` kiểm chứng cả `8` thẻ `<img>` đều tải thành công (`complete: true`, `naturalWidth > 0`), `clippedCount: 0`, `0` lỗi console/page và `0` tràn ngang trên `1440×900`, `820×1180` và `375×812`.
+
 

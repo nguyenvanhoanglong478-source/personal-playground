@@ -39,6 +39,8 @@ export interface SpotifyTrackInfo {
 export interface FavoriteGameItem {
   id: string;
   code: string;
+  logoUrl: string;
+  logoSurface: 'cover' | 'dark' | 'neutral';
   name: { vi: string; en: string };
   genre: string;
 }
@@ -78,48 +80,64 @@ export const FAVORITE_GAMES: FavoriteGameItem[] = [
   {
     id: 'lol',
     code: 'LoL',
+    logoUrl: './games/lol.svg',
+    logoSurface: 'cover',
     name: { vi: 'Liên Minh Huyền Thoại', en: 'League of Legends' },
     genre: 'PC · MOBA',
   },
   {
     id: 'tft',
     code: 'TFT',
+    logoUrl: './games/tft.png',
+    logoSurface: 'cover',
     name: { vi: 'TFT', en: 'TFT' },
     genre: 'Auto Battler',
   },
   {
     id: 'valorant',
     code: 'VAL',
+    logoUrl: './games/valorant.svg',
+    logoSurface: 'cover',
     name: { vi: 'Valorant', en: 'Valorant' },
     genre: 'PC · FPS',
   },
   {
     id: 'wild-rift',
     code: 'WR',
+    logoUrl: './games/wild-rift.png',
+    logoSurface: 'cover',
     name: { vi: 'Tốc Chiến', en: 'Wild Rift' },
     genre: 'Mobile · MOBA',
   },
   {
     id: 'gta6',
     code: 'GTA6',
+    logoUrl: './games/gta6.svg',
+    logoSurface: 'dark',
     name: { vi: 'GTA 6', en: 'GTA 6' },
     genre: 'Open World',
   },
   {
     id: 'gta5',
     code: 'GTA5',
+    logoUrl: './games/gta5.svg',
+    logoSurface: 'dark',
     name: { vi: 'GTA 5', en: 'GTA 5' },
     genre: 'PC · Open World',
   },
   {
     id: 'cs2',
     code: 'CS2',
+    logoUrl: './games/cs2.svg',
+    logoSurface: 'cover',
     name: { vi: 'CS2', en: 'CS2' },
     genre: 'PC · FPS',
   },
   {
     id: 'minecraft',
     code: 'MC',
+    logoUrl: './games/minecraft.svg',
+    logoSurface: 'neutral',
     name: { vi: 'Minecraft', en: 'Minecraft' },
     genre: 'Sandbox',
   },

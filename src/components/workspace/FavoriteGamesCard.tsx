@@ -1,16 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Gamepad2 } from 'lucide-react';
 import { Locale } from '../../data/profile';
-import { FAVORITE_GAMES, WORKSPACE_UI_LABELS } from '../../data/workspace';
+import {
+  FAVORITE_GAMES,
+  FavoriteGameItem,
+  WORKSPACE_UI_LABELS,
+} from '../../data/workspace';
 
 export interface FavoriteGamesCardProps {
   locale: Locale;
 }
 
+const LOGO_CONTAINER_CLASS: Record<FavoriteGameItem['logoSurface'], string> = {
+  cover:
+    'h-7 w-7 shrink-0 overflow-hidden rounded-[6px] border border-folio-border',
+  dark:
+    'flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-[6px] border border-folio-border bg-[#16171C] p-0.5',
+  neutral:
+    'flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-[6px] border border-folio-border bg-folio-surface p-0.5',
+};
+
 export const FavoriteGamesCard: React.FC<FavoriteGamesCardProps> = ({
   locale,
 }) => {
   const t = WORKSPACE_UI_LABELS[locale];
+  const [failedLogos, setFailedLogos] = useState<Record<string, boolean>>({});
+
+  const markLogoFailed = (id: string) => {
+    setFailedLogos((prev) => (prev[id] ? prev : { ...prev, [id]: true }));
+  };
 
   return (
     <div className="folio-card flex flex-col gap-3 !p-4 sm:!p-5">
@@ -31,28 +49,53 @@ export const FavoriteGamesCard: React.FC<FavoriteGamesCardProps> = ({
       </div>
 
       <ul aria-label={t.gamesListAriaLabel} className="flex flex-col gap-1.5">
-        {FAVORITE_GAMES.map((game) => (
-          <li
-            key={game.id}
-            className="flex items-center justify-between gap-2 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/60 px-2.5 py-1.5 transition-colors duration-150 hover:border-folio-strong"
-          >
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="w-9 shrink-0 rounded-[5px] border border-folio-border bg-folio-surface py-0.5 text-center font-mono text-[10px] font-semibold tracking-tight text-folio-muted">
-                {game.code}
-              </span>
-              <span
-                title={game.name[locale]}
-                className="truncate font-sans text-xs font-medium text-folio-ink sm:text-[12.5px]"
-              >
-                {game.name[locale]}
-              </span>
-            </div>
+        {FAVORITE_GAMES.map((game) => {
+          const isFailed = Boolean(failedLogos[game.id]);
+          const isCover = game.logoSurface === 'cover';
 
-            <span className="shrink-0 font-mono text-[10px] text-folio-faint">
-              {game.genre}
-            </span>
-          </li>
-        ))}
+          return (
+            <li
+              key={game.id}
+              className="flex items-center justify-between gap-2 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/60 px-2.5 py-1.5 transition-colors duration-150 hover:border-folio-strong"
+            >
+              <div className="flex min-w-0 items-center gap-2.5">
+                {isFailed ? (
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] border border-folio-border bg-folio-surface font-mono text-[9.5px] font-semibold tracking-tight text-folio-muted">
+                    {game.code}
+                  </span>
+                ) : (
+                  <span className={LOGO_CONTAINER_CLASS[game.logoSurface]}>
+                    <img
+                      src={game.logoUrl}
+                      alt=""
+                      width={28}
+                      height={28}
+                      loading="lazy"
+                      decoding="async"
+                      onError={() => markLogoFailed(game.id)}
+                      className={
+                        isCover
+                          ? 'h-full w-full object-cover'
+                          : 'h-full w-full object-contain'
+                      }
+                    />
+                  </span>
+                )}
+
+                <span
+                  title={game.name[locale]}
+                  className="truncate font-sans text-xs font-medium text-folio-ink sm:text-[12.5px]"
+                >
+                  {game.name[locale]}
+                </span>
+              </div>
+
+              <span className="shrink-0 font-mono text-[10px] text-folio-faint">
+                {game.genre}
+              </span>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowDown, Check, Clock, Copy, Mail, Send, Sparkles } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 
@@ -8,7 +7,6 @@ interface ContactProps {
 }
 
 export const Contact: React.FC<ContactProps> = ({ locale }) => {
-  const shouldReduceMotion = useReducedMotion();
   const t = UI_LABELS[locale].contact;
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
@@ -74,13 +72,13 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
   return (
     <section
       id="contact"
-      className="folio-section !pb-28 sm:!pb-28"
+      className="folio-section !pb-20 sm:!pb-20"
       aria-labelledby="contact-heading"
     >
       <div className="folio-container">
-        <div className="folio-section-header grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-end">
+        <div className="folio-section-header grid grid-cols-1 gap-3 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
-            <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
+            <div className="flex items-center gap-2 font-mono text-[11.5px] font-semibold text-folio-muted">
               <Sparkles className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
               <span className="folio-index-label">{t.sectionIndex}</span>
             </div>
@@ -88,35 +86,28 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
               {t.heading}
             </h2>
           </div>
-          <p className="text-base leading-relaxed text-folio-muted lg:col-span-5">
+          <p className="text-sm leading-relaxed text-folio-muted sm:text-[0.95rem] lg:col-span-5">
             {t.subheading}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12">
-          <motion.div
-            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col gap-5 lg:col-span-6"
-          >
-            <div className="folio-card google-gradient-hover-border flex min-w-0 flex-col justify-center !p-5 sm:!p-6">
-              <div className="flex items-center gap-2 font-mono text-xs text-folio-muted">
-                <Mail className="h-4 w-4 shrink-0 text-folio-ink" aria-hidden="true" />
+        <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-12">
+          <div className="flex flex-col gap-4 lg:col-span-6">
+            <div className="folio-card google-gradient-hover-border flex min-w-0 flex-col justify-center !p-4 sm:!p-5">
+              <div className="flex items-center gap-2 font-mono text-[11.5px] text-folio-muted">
+                <Mail className="h-3.5 w-3.5 shrink-0 text-folio-ink" aria-hidden="true" />
                 <span>{t.emailLabel}</span>
               </div>
-              <div className="mt-3.5 flex min-w-0 flex-wrap items-center gap-2.5">
+              <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
                 <a
                   href={`mailto:${PROFILE_DATA.contacts.email}`}
-                  className="google-btn-github group/btn min-h-[44px] w-fit max-w-full min-w-0 sm:min-h-[40px]"
+                  className="google-btn-github group/btn w-fit max-w-full min-w-0"
                 >
-                  <span className="google-pill-aura" aria-hidden="true" />
                   <span className="google-btn-github-label min-w-0 truncate">
                     {PROFILE_DATA.contacts.email}
                   </span>
                   <Mail
-                    className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5"
+                    className="h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5"
                     aria-hidden="true"
                   />
                 </a>
@@ -124,9 +115,8 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                   type="button"
                   onClick={handleCopyEmail}
                   aria-label={t.copyAriaLabel}
-                  className="folio-btn-compact min-h-[44px] min-w-[44px] shrink-0 sm:min-h-[40px]"
+                  className="folio-btn-compact shrink-0"
                 >
-                  <span className="google-pill-aura" aria-hidden="true" />
                   {copied ? (
                     <Check className="h-3.5 w-3.5 shrink-0 text-folio-ink" aria-hidden="true" />
                   ) : (
@@ -140,27 +130,22 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
               </span>
             </div>
 
-            <div className="folio-card google-gradient-hover-border flex min-w-0 flex-1 flex-col justify-between !p-5 sm:!p-7">
+            <div className="folio-card google-gradient-hover-border flex min-w-0 flex-1 flex-col justify-between !p-4 sm:!p-5">
               <div>
-                <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-folio-border bg-folio-elevated px-3 py-1.5 font-mono text-[11px] font-semibold text-folio-ink">
-                  <span className="relative flex h-2 w-2 shrink-0">
-                    {!shouldReduceMotion && (
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-folio-ggreen opacity-75" />
-                    )}
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-folio-ggreen" />
-                  </span>
+                <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-folio-border bg-folio-elevated px-2.5 py-1 font-mono text-[10.5px] font-semibold text-folio-ink">
+                  <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-folio-ggreen" aria-hidden="true" />
                   <span className="leading-snug">{t.availabilityBadge}</span>
                 </div>
 
-                <h3 className="mt-4 font-serif text-xl font-bold text-folio-ink sm:text-2xl">
+                <h3 className="mt-3 font-serif text-lg font-bold text-folio-ink sm:text-xl">
                   {t.availabilityTitle}
                 </h3>
 
-                <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-folio-muted">
+                <ul className="mt-3 space-y-2 text-xs leading-relaxed text-folio-muted sm:text-[13.5px]">
                   {t.availabilityScope.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5">
+                    <li key={idx} className="flex items-start gap-2">
                       <span
-                        className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-folio-ink/50"
+                        className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-folio-ink/50"
                         aria-hidden="true"
                       />
                       <span>{item}</span>
@@ -169,7 +154,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                 </ul>
               </div>
 
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-folio-border pt-4 text-xs">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-folio-border pt-3 text-[11.5px]">
                 <div className="inline-flex items-center gap-1.5 font-mono text-folio-muted">
                   <Clock className="h-3.5 w-3.5 shrink-0 text-folio-ink" aria-hidden="true" />
                   <span>{t.responseTime}</span>
@@ -180,25 +165,19 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="folio-card google-gradient-hover-border flex flex-col justify-between lg:col-span-6"
-          >
+          <div className="folio-card google-gradient-hover-border flex flex-col justify-between !p-4 sm:!p-5 lg:col-span-6">
             <div>
-              <h3 className="font-serif text-2xl font-bold text-folio-ink">
+              <h3 className="font-serif text-lg font-bold text-folio-ink sm:text-xl">
                 {t.composeLabel}
               </h3>
 
-              <div className="mt-5 space-y-4">
+              <div className="mt-4 space-y-3">
                 <div>
                   <label
                     htmlFor="mailto-subject-input"
-                    className="mb-1.5 block font-mono text-xs font-medium text-folio-muted"
+                    className="mb-1 block font-mono text-[11.5px] font-medium text-folio-muted"
                   >
                     {t.subjectLabel}
                   </label>
@@ -208,37 +187,36 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder={t.subjectPlaceholder}
-                    className="w-full rounded-[var(--radius-control)] border border-folio-strong bg-folio-elevated px-4 py-2.5 text-sm text-folio-ink placeholder:text-folio-faint"
+                    className="w-full rounded-[var(--radius-control)] border border-folio-strong bg-folio-elevated px-3.5 py-2 text-sm text-folio-ink placeholder:text-folio-faint"
                   />
                 </div>
 
                 <div>
                   <label
                     htmlFor="mailto-body-input"
-                    className="mb-1.5 block font-mono text-xs font-medium text-folio-muted"
+                    className="mb-1 block font-mono text-[11.5px] font-medium text-folio-muted"
                   >
                     {t.bodyLabel}
                   </label>
                   <textarea
                     id="mailto-body-input"
-                    rows={5}
+                    rows={4}
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                     placeholder={t.bodyPlaceholder}
-                    className="w-full rounded-[var(--radius-control)] border border-folio-strong bg-folio-elevated px-4 py-2.5 text-sm text-folio-ink placeholder:text-folio-faint"
+                    className="w-full rounded-[var(--radius-control)] border border-folio-strong bg-folio-elevated px-3.5 py-2 text-sm text-folio-ink placeholder:text-folio-faint"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-4">
               <a href={mailtoHref} className="folio-btn-primary">
-                <span className="google-pill-aura" aria-hidden="true" />
-                <Send className="h-4 w-4" aria-hidden="true" />
+                <Send className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>{t.mailtoButton}</span>
               </a>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

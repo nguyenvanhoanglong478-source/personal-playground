@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, CheckCircle2, GitBranch, Sparkles } from 'lucide-react';
 import { Locale, UI_LABELS } from '../data/profile';
 import { LIVE_SITE_STACK } from '../data/siteStack';
@@ -11,7 +10,6 @@ interface BuiltWithDiagramProps {
 export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
   locale,
 }) => {
-  const shouldReduceMotion = useReducedMotion();
   const t = UI_LABELS[locale].builtWith;
 
   const findVersion = (name: string) =>
@@ -37,10 +35,10 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
       sub: ':root Design Tokens',
     },
     {
-      step: '04. MOTION',
-      title: 'Framer Motion + Lucide',
-      version: findVersion('framer-motion'),
-      sub: 'Transform Reveals',
+      step: '04. MOTION & ICONS',
+      title: 'CSS Motion + Lucide',
+      version: findVersion('lucide-react'),
+      sub: 'GPU CSS + Reduced Motion',
     },
     {
       step: '05. DEPLOY',
@@ -57,9 +55,9 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
       aria-labelledby="stack-heading"
     >
       <div className="folio-container">
-        <div className="folio-section-header grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-end">
+        <div className="folio-section-header grid grid-cols-1 gap-3 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
-            <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
+            <div className="flex items-center gap-2 font-mono text-[11.5px] font-semibold text-folio-muted">
               <Sparkles className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
               <span className="folio-index-label">{t.sectionIndex}</span>
             </div>
@@ -67,26 +65,26 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
               {t.heading}
             </h2>
           </div>
-          <p className="text-base leading-relaxed text-folio-muted lg:col-span-5">
+          <p className="text-sm leading-relaxed text-folio-muted sm:text-[0.95rem] lg:col-span-5">
             {t.subheading}
           </p>
         </div>
 
-        <div className="folio-card google-gradient-hover-border mb-8">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-ink">
+        <div className="folio-card google-gradient-hover-border mb-5">
+          <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 font-mono text-[11.5px] font-semibold text-folio-ink">
               <GitBranch
-                className="h-4 w-4 shrink-0 text-folio-ink"
+                className="h-3.5 w-3.5 shrink-0 text-folio-ink"
                 aria-hidden="true"
               />
               <span>{t.pipelineTitle}</span>
             </div>
-            <span className="font-mono text-xs text-folio-muted">
+            <span className="font-mono text-[11.5px] text-folio-muted">
               package.json · {LIVE_SITE_STACK.packages.length}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-1 items-stretch gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             {pipelineSteps.map((node, idx) => (
               <div key={node.step} className="flex items-stretch">
                 <div className="folio-card-inner flex w-full flex-col justify-between">
@@ -94,21 +92,21 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
                     <span className="font-mono text-[10px] font-bold text-folio-ink">
                       {node.step}
                     </span>
-                    <h3 className="mt-1 font-serif text-lg font-bold text-folio-ink">
+                    <h3 className="mt-1 font-serif text-base font-bold text-folio-ink">
                       {node.title}
                     </h3>
-                    <p className="mt-1 text-xs text-folio-muted">{node.sub}</p>
+                    <p className="mt-0.5 text-xs text-folio-muted">{node.sub}</p>
                   </div>
-                  <div className="mt-3 border-t border-folio-border pt-2 font-mono text-[11px] text-folio-muted">
+                  <div className="mt-2.5 border-t border-folio-border pt-1.5 font-mono text-[10.5px] text-folio-muted">
                     {node.version}
                   </div>
                 </div>
                 {idx < pipelineSteps.length - 1 && (
                   <div
-                    className="hidden items-center justify-center pl-2 text-folio-muted lg:flex"
+                    className="hidden items-center justify-center pl-1.5 text-folio-muted lg:flex"
                     aria-hidden="true"
                   >
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </div>
                 )}
               </div>
@@ -116,36 +114,32 @@ export const BuiltWithDiagram: React.FC<BuiltWithDiagramProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {LIVE_SITE_STACK.packages.map((pkg, idx) => (
-            <motion.div
+        <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {LIVE_SITE_STACK.packages.map((pkg) => (
+            <div
               key={pkg.pkgName}
-              initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-30px' }}
-              transition={{ duration: 0.4, delay: idx * 0.04, ease: [0.22, 1, 0.36, 1] }}
-              className="folio-card google-gradient-hover-border flex h-full flex-col justify-between !p-5 hover:-translate-y-1"
+              className="folio-card google-gradient-hover-border flex h-full flex-col justify-between !p-4 hover:-translate-y-0.5"
             >
               <div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <CheckCircle2
-                      className="h-4 w-4 shrink-0 text-folio-ink"
+                      className="h-3.5 w-3.5 shrink-0 text-folio-ink"
                       aria-hidden="true"
                     />
-                    <span className="font-mono text-sm font-bold text-folio-ink">
+                    <span className="font-mono text-xs font-bold text-folio-ink sm:text-[13px]">
                       {pkg.displayName}
                     </span>
                   </div>
-                  <span className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated px-2 py-0.5 font-mono text-xs font-semibold text-folio-ink">
+                  <span className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated px-2 py-0.5 font-mono text-[11px] font-semibold text-folio-ink">
                     {pkg.version}
                   </span>
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-folio-muted">
+                <p className="mt-2.5 text-xs leading-relaxed text-folio-muted sm:text-[13.5px]">
                   {pkg.reason[locale]}
                 </p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

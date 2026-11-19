@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useReducedMotion } from 'framer-motion';
 import { RefreshCw, Repeat2 } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import {
   FoilEdition,
   PASS_HEIGHT,
@@ -718,7 +718,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
   locale,
   theme,
 }) => {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion = usePrefersReducedMotion();
   const stageRef = useRef<HTMLDivElement | null>(null);
   const slotRef = useRef<HTMLDivElement | null>(null);
   const bodyHitRef = useRef<HTMLDivElement | null>(null);
@@ -1699,7 +1699,7 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
       data-edition={edition}
       data-interacting={isInteracting ? 'true' : 'false'}
       data-drag-bent={isDragBent ? 'true' : 'false'}
-      className="about-foil-stage relative mx-auto flex w-full max-w-[360px] flex-col items-center gap-3.5 lg:mx-0"
+      className="about-foil-stage relative mx-auto flex w-full max-w-[300px] flex-col items-center gap-3 lg:mx-0"
     >
       <div
         ref={slotRef}
@@ -1749,19 +1749,18 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         />
       </div>
 
-      <p className="relative z-20 text-center font-mono text-[11px] text-folio-faint">
+      <p className="relative z-20 text-center font-mono text-[10.5px] text-folio-faint">
         {locale === 'vi'
           ? 'Kéo trên vé để uốn nếp · Nắm cuống dưới để xé'
           : 'Drag pass to bend foil · Pull bottom stub to tear'}
       </p>
 
-      <div className="relative z-20 flex w-full flex-wrap items-center justify-center gap-2.5">
+      <div className="relative z-20 flex w-full flex-wrap items-center justify-center gap-2">
         <button
           type="button"
           onClick={handleFlip}
-          className="folio-btn-compact min-h-[44px] min-w-[44px]"
+          className="folio-btn-compact"
         >
-          <span className="google-pill-aura" aria-hidden="true" />
           <Repeat2 className="h-3.5 w-3.5" aria-hidden="true" />
           <span>{locale === 'vi' ? 'Lật mặt vé' : 'Flip Pass'}</span>
         </button>
@@ -1769,9 +1768,8 @@ export const AboutFoilPass: React.FC<AboutFoilPassProps> = ({
         <button
           type="button"
           onClick={handleRestore}
-          className="folio-btn-compact min-h-[44px] min-w-[44px]"
+          className="folio-btn-compact"
         >
-          <span className="google-pill-aura" aria-hidden="true" />
           <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
           <span>{locale === 'vi' ? 'Khôi phục vé' : 'Restore Pass'}</span>
         </button>

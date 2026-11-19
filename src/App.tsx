@@ -240,9 +240,9 @@ export function App() {
         ) : (
           <Suspense
             fallback={
-              <section className="folio-section !pt-10 lg:!pt-14 !pb-28 sm:!pb-28">
+              <section className="folio-section !pt-6 lg:!pt-8 !pb-16">
                 <div className="folio-container">
-                  <div className="folio-card flex min-h-[420px] items-center justify-center font-mono text-sm text-folio-muted">
+                  <div className="folio-card flex min-h-[340px] items-center justify-center font-mono text-xs text-folio-muted">
                     {locale === 'vi'
                       ? 'Đang mở không gian làm việc...'
                       : 'Loading workspace...'}

@@ -35,29 +35,28 @@ export const Footer: React.FC<FooterProps> = ({ locale, theme }) => {
   return (
     <footer
       ref={footerRef}
-      className="relative z-20 border-t border-folio-border bg-folio-surface/80 py-10 text-folio-muted backdrop-blur-md transition-colors duration-300"
+      className="relative z-20 border-t border-folio-border bg-folio-surface py-7 text-folio-muted transition-colors duration-200"
     >
       <FooterPet locale={locale} theme={theme} active={isInView} />
-      <div className="folio-container flex flex-col items-start justify-between gap-5 md:flex-row md:items-center">
+      <div className="folio-container flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <a
           href="#hero"
-          className="group inline-flex min-h-[44px] cursor-pointer items-center gap-3 text-folio-ink"
+          className="group inline-flex min-h-[40px] cursor-pointer items-center gap-2.5 text-folio-ink"
           aria-label="Long Hoàng Logo"
         >
-          <BrandLogo size={36} showAura className="text-folio-ink" />
-          <div className="font-serif text-base font-semibold text-folio-ink">
+          <BrandLogo size={30} showAura={false} className="text-folio-ink" />
+          <div className="font-serif text-sm font-semibold text-folio-ink sm:text-[0.95rem]">
             {t.colophon}
           </div>
         </a>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <a
             href={`mailto:${PROFILE_DATA.contacts.email}`}
             aria-label="Email"
             className="folio-btn-icon"
           >
-            <span className="google-pill-aura" aria-hidden="true" />
-            <Mail className="h-4 w-4 text-folio-ink" aria-hidden="true" />
+            <Mail className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
           </a>
 
           {PROFILE_DATA.contacts.socials.map((social) => (
@@ -69,13 +68,11 @@ export const Footer: React.FC<FooterProps> = ({ locale, theme }) => {
               aria-label={social.label}
               className="folio-btn-icon"
             >
-              <span className="google-pill-aura" aria-hidden="true" />
-              <SocialIcon platform={social.id} className="h-4 w-4 text-folio-ink" />
+              <SocialIcon platform={social.id} className="h-3.5 w-3.5 text-folio-ink" />
             </a>
           ))}
 
           <a href="#hero" className="folio-btn-compact">
-            <span className="google-pill-aura" aria-hidden="true" />
             <span>{t.backToTop}</span>
             <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
           </a>

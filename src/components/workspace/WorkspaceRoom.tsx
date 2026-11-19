@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import { useReducedMotion } from 'framer-motion';
 import { Locale } from '../../data/profile';
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 import {
   ROOM_HEIGHT,
   ROOM_WIDTH,
@@ -666,8 +666,9 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
   onSelectHotspot,
   locale = 'vi',
 }) => {
-  const shouldReduceMotion = Boolean(useReducedMotion());
+  const shouldReduceMotion = usePrefersReducedMotion();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const inViewRef = useRef<boolean>(true);
   const sceneCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const elapsedSecRef = useRef<number>(0);
   const rngStateRef = useRef<number>(1337);
@@ -1500,26 +1501,32 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
     }
 
     let rafId = 0;
-    let lastMs = performance.now();
+    let lastStepMs = performance.now();
+    let lastDrawMs = lastStepMs;
+    const frameIntervalMs = 1000 / 30;
 
     const loop = (now: number) => {
-      if (document.visibilityState !== 'visible') {
+      if (document.visibilityState !== 'visible' || !inViewRef.current) {
         rafId = 0;
         return;
       }
 
-      const dtSec = Math.min(0.05, Math.max(0, (now - lastMs) / 1000));
-      lastMs = now;
-      elapsedSecRef.current += dtSec;
-      stepSimulation(dtSec);
-      drawFrame();
+      if (now - lastDrawMs >= frameIntervalMs) {
+        const dtSec = Math.min(0.08, Math.max(0, (now - lastStepMs) / 1000));
+        lastStepMs = now;
+        lastDrawMs = now - ((now - lastDrawMs) % frameIntervalMs);
+        elapsedSecRef.current += dtSec;
+        stepSimulation(dtSec);
+        drawFrame();
+      }
 
       rafId = window.requestAnimationFrame(loop);
     };
 
     const startLoop = () => {
-      if (rafId !== 0 || document.visibilityState !== 'visible') return;
-      lastMs = performance.now();
+      if (rafId !== 0 || document.visibilityState !== 'visible' || !inViewRef.current) return;
+      lastStepMs = performance.now();
+      lastDrawMs = lastStepMs;
       rafId = window.requestAnimationFrame(loop);
     };
 
@@ -1530,8 +1537,8 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        lastMs = performance.now();
+      if (document.visibilityState === 'visible' && inViewRef.current) {
+        lastStepMs = performance.now();
         drawFrame();
         startLoop();
       } else {
@@ -1550,6 +1557,26 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
       resizeObserver.observe(canvas);
     }
 
+    const intersectionObserver =
+      canvas && typeof IntersectionObserver !== 'undefined'
+        ? new IntersectionObserver(
+            (entries) => {
+              const visible = entries.some((entry) => entry.isIntersecting);
+              inViewRef.current = visible;
+              if (visible) {
+                drawFrame();
+                startLoop();
+              } else {
+                stopLoop();
+              }
+            },
+            { rootMargin: '80px' }
+          )
+        : null;
+    if (canvas && intersectionObserver) {
+      intersectionObserver.observe(canvas);
+    }
+
     drawFrame();
     startLoop();
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -1557,6 +1584,7 @@ export const WorkspaceRoom: React.FC<WorkspaceRoomProps> = ({
     return () => {
       stopLoop();
       resizeObserver?.disconnect();
+      intersectionObserver?.disconnect();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [shouldReduceMotion, stepSimulation, drawFrame, applyTimeStateChoreography]);

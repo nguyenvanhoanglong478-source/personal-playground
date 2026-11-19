@@ -18,6 +18,7 @@ interface PackageMeta {
 
 const INTERNAL_GLUE_PACKAGES = new Set([
   'react-dom',
+  'framer-motion',
   '@vitejs/plugin-react',
   'postcss',
   'autoprefixer',
@@ -54,14 +55,6 @@ const KNOWN_PACKAGE_REASONS: Record<string, PackageMeta> = {
     reason: {
       vi: 'Xây dựng lưới bố cục đáp ứng kết hợp bộ biến màu và khoảng cách dùng chung.',
       en: 'Builds the responsive grid system anchored to shared CSS design tokens.',
-    },
-  },
-  'framer-motion': {
-    displayName: 'Framer Motion',
-    role: 'motion',
-    reason: {
-      vi: 'Tạo hiệu ứng chữ và chuyển cảnh nhẹ dựa trên transform, tôn trọng giảm chuyển động.',
-      en: 'Handles lightweight transform-based reveals while honoring reduced motion.',
     },
   },
   'lucide-react': {

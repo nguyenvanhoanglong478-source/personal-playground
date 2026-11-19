@@ -7,26 +7,15 @@ interface BrandLogoProps {
 }
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({
-  size = 36,
+  size = 30,
   className = '',
-  showAura = true,
+  showAura = false,
 }) => {
   return (
     <span
       className={`relative inline-flex shrink-0 items-center justify-center ${className}`}
       style={{ width: size, height: size }}
     >
-      {showAura && (
-        <span
-          aria-hidden="true"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(249, 115, 22, 0.24) 0%, rgba(208, 149, 96, 0.16) 52%, transparent 76%)',
-          }}
-          className="pointer-events-none absolute -inset-1 rounded-full opacity-0 blur-sm transition-all duration-300 ease-out group-hover:scale-110 group-hover:opacity-100 motion-reduce:transition-none motion-reduce:group-hover:transform-none motion-reduce:group-hover:opacity-0"
-        />
-      )}
-
       <svg
         width={size}
         height={size}
@@ -38,7 +27,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         aria-label="Long Hoàng — Capybara Pixel Logo"
         className={`relative z-10 block select-none overflow-visible ${
           showAura
-            ? 'transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:transform-none'
+            ? 'transition-transform duration-200 ease-out group-hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:group-hover:transform-none'
             : ''
         }`}
       >

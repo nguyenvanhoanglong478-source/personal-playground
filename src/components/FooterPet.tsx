@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { useReducedMotion } from 'framer-motion';
 import { Locale } from '../data/profile';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 
 interface FooterPetProps {
   locale: Locale;
@@ -41,7 +41,7 @@ const PET_ARIA_LABEL: Record<Locale, string> = {
 };
 
 export const FooterPet: React.FC<FooterPetProps> = ({ locale, theme, active }) => {
-  const shouldReduceMotion = Boolean(useReducedMotion());
+  const shouldReduceMotion = usePrefersReducedMotion();
   const rawSparkId = useId().replace(/:/g, '');
   const sparkGradId = `capy-spark-grad-${rawSparkId}`;
 

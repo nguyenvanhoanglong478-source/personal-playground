@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import React, { useState } from 'react';
 import { Layers, Monitor, Palette, Server, Sparkles, Workflow } from 'lucide-react';
 import { Locale, UI_LABELS } from '../data/profile';
 import { SKILL_GROUPS, SkillGroupId } from '../data/skills';
@@ -9,28 +8,7 @@ interface SkillsMatrixProps {
 }
 
 export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
-  const shouldReduceMotion = useReducedMotion();
   const t = UI_LABELS[locale].skills;
-  const marqueeBoxRef = useRef<HTMLDivElement | null>(null);
-  const [isMarqueeInView, setIsMarqueeInView] = useState(true);
-
-  useEffect(() => {
-    const el = marqueeBoxRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry) {
-          setIsMarqueeInView(entry.isIntersecting);
-        }
-      },
-      { rootMargin: '80px 0px', threshold: 0.01 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   const [selectedByGroup, setSelectedByGroup] = useState<Record<SkillGroupId, string>>({
     platforms: SKILL_GROUPS[0].items[0].id,
@@ -55,9 +33,6 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
     }
   };
 
-  const allSkills = SKILL_GROUPS.flatMap((group) => group.items);
-  const marqueeList = [...allSkills, ...allSkills];
-
   return (
     <section
       id="skills"
@@ -65,9 +40,9 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
       aria-labelledby="skills-heading"
     >
       <div className="folio-container">
-        <div className="folio-section-header grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-end">
+        <div className="folio-section-header grid grid-cols-1 gap-3 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
-            <div className="flex items-center gap-2 font-mono text-xs font-semibold text-folio-muted">
+            <div className="flex items-center gap-2 font-mono text-[11.5px] font-semibold text-folio-muted">
               <Sparkles className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
               <span className="folio-index-label">{t.sectionIndex}</span>
             </div>
@@ -75,58 +50,36 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
               {t.heading}
             </h2>
           </div>
-          <p className="text-base leading-relaxed text-folio-muted lg:col-span-5">
+          <p className="text-sm leading-relaxed text-folio-muted sm:text-[0.95rem] lg:col-span-5">
             {t.subheading}
           </p>
         </div>
 
-        <div
-          ref={marqueeBoxRef}
-          className="mb-8 overflow-hidden rounded-[var(--radius-inner)] border border-folio-border bg-folio-surface py-3 shadow-[var(--shadow-soft)] backdrop-blur-md transition-colors duration-300"
-          aria-label="Technology Marquee"
-        >
-          <div
-            className="animate-folio-marquee gap-3 px-4"
-            style={isMarqueeInView ? undefined : { animationPlayState: 'paused' }}
-          >
-            {marqueeList.map((skill, idx) => (
-              <div key={`${skill.id}-${idx}`} className="folio-chip shrink-0 gap-2">
-                <span className="h-2 w-2 rounded-full bg-folio-ink/70" aria-hidden="true" />
-                <span className="font-semibold">{skill.label[locale]}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {SKILL_GROUPS.map((group, idx) => {
+        <div className="space-y-3">
+          {SKILL_GROUPS.map((group) => {
             const activeItem =
               group.items.find((item) => item.id === selectedByGroup[group.id]) ||
               group.items[0];
 
             return (
-              <motion.div
+              <div
                 key={group.id}
-                initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.45, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] }}
-                className="folio-card google-gradient-hover-border grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-start"
+                className="folio-card google-gradient-hover-border grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start"
               >
-                <div className="flex items-center justify-between border-b border-folio-border pb-3 lg:col-span-3 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
-                  <div className="flex items-center gap-2.5">
+                <div className="flex items-center justify-between border-b border-folio-border pb-2.5 lg:col-span-3 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
+                  <div className="flex items-center gap-2">
                     {getCategoryIcon(group.id)}
-                    <h3 className="font-serif text-xl font-bold text-folio-ink">
+                    <h3 className="font-serif text-lg font-bold text-folio-ink">
                       {t.categories[group.id]}
                     </h3>
                   </div>
-                  <span className="font-mono text-xs text-folio-faint">
+                  <span className="font-mono text-[11px] text-folio-faint">
                     {group.items.length}
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-4 lg:col-span-9">
-                  <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col gap-3 lg:col-span-9">
+                  <div className="flex flex-wrap gap-1.5">
                     {group.items.map((item) => {
                       const isSelected = activeItem.id === item.id;
                       return (
@@ -140,9 +93,9 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
                               [group.id]: item.id,
                             }))
                           }
-                          className={`folio-chip min-h-[44px] cursor-pointer px-3.5 py-2 transition-all sm:min-h-[34px] sm:px-3 sm:py-1.5 ${
+                          className={`folio-chip min-h-[36px] cursor-pointer px-3 py-1.5 sm:min-h-[30px] sm:px-2.5 sm:py-1 ${
                             isSelected
-                              ? '!border-folio-ink !bg-folio-surface font-semibold shadow-sm'
+                              ? '!border-folio-strong !bg-folio-surface font-semibold'
                               : ''
                           }`}
                         >
@@ -152,12 +105,12 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
                     })}
                   </div>
 
-                  <div className="folio-card-inner flex flex-col justify-between gap-2.5 sm:flex-row sm:items-center">
+                  <div className="folio-card-inner flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
                     <div className="min-w-0">
                       <div className="font-mono text-xs font-bold text-folio-ink">
                         {activeItem.label[locale]}
                       </div>
-                      <p className="mt-0.5 text-xs leading-relaxed text-folio-muted sm:text-sm">
+                      <p className="mt-0.5 text-xs leading-relaxed text-folio-muted sm:text-[13px]">
                         {activeItem.evidence[locale]}
                       </p>
                     </div>
@@ -177,7 +130,7 @@ export const SkillsMatrix: React.FC<SkillsMatrixProps> = ({ locale }) => {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>

@@ -23,6 +23,7 @@ import {
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import { useSpotifyStatus } from '../hooks/useSpotifyStatus';
 import { WorkspaceRoom } from './workspace/WorkspaceRoom';
+import { FavoriteGamesCard } from './workspace/FavoriteGamesCard';
 
 export interface WorkspacePageProps {
   locale: Locale;
@@ -335,7 +336,7 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
             </div>
           </div>
 
-          <aside className="flex flex-col lg:col-span-4">
+          <aside className="flex flex-col gap-4 lg:col-span-4">
             <div className="folio-card google-gradient-hover-border flex flex-col gap-3.5 !p-4 sm:!p-5">
               <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-2.5">
                 <div className="flex min-w-0 items-center gap-2 font-mono text-[11.5px] font-semibold text-folio-ink">
@@ -481,6 +482,8 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ locale }) => {
                 </button>
               )}
             </div>
+
+            <FavoriteGamesCard locale={locale} />
           </aside>
         </div>
       </div>

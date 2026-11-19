@@ -36,6 +36,13 @@ export interface SpotifyTrackInfo {
   durationMs?: number;
 }
 
+export interface FavoriteGameItem {
+  id: string;
+  code: string;
+  name: { vi: string; en: string };
+  genre: string;
+}
+
 export interface WorkspaceConfig {
   timezone: string;
   lanyardUserId: string;
@@ -52,6 +59,8 @@ export interface WorkspaceUiLabels {
   spotifyDemoBtn: string;
   spotifyDemoStopBtn: string;
   spotifyIdleText: string;
+  gamesHeader: string;
+  gamesListAriaLabel: string;
   lampToggleBtn: string;
   lampOnLabel: string;
   lampOffLabel: string;
@@ -64,6 +73,57 @@ export interface WorkspaceUiLabels {
 
 export const ROOM_WIDTH = 480;
 export const ROOM_HEIGHT = 320;
+
+export const FAVORITE_GAMES: FavoriteGameItem[] = [
+  {
+    id: 'lol',
+    code: 'LoL',
+    name: { vi: 'Liên Minh Huyền Thoại', en: 'League of Legends' },
+    genre: 'PC · MOBA',
+  },
+  {
+    id: 'tft',
+    code: 'TFT',
+    name: { vi: 'TFT', en: 'TFT' },
+    genre: 'Auto Battler',
+  },
+  {
+    id: 'valorant',
+    code: 'VAL',
+    name: { vi: 'Valorant', en: 'Valorant' },
+    genre: 'PC · FPS',
+  },
+  {
+    id: 'wild-rift',
+    code: 'WR',
+    name: { vi: 'Tốc Chiến', en: 'Wild Rift' },
+    genre: 'Mobile · MOBA',
+  },
+  {
+    id: 'gta6',
+    code: 'GTA6',
+    name: { vi: 'GTA 6', en: 'GTA 6' },
+    genre: 'Open World',
+  },
+  {
+    id: 'gta5',
+    code: 'GTA5',
+    name: { vi: 'GTA 5', en: 'GTA 5' },
+    genre: 'PC · Open World',
+  },
+  {
+    id: 'cs2',
+    code: 'CS2',
+    name: { vi: 'CS2', en: 'CS2' },
+    genre: 'PC · FPS',
+  },
+  {
+    id: 'minecraft',
+    code: 'MC',
+    name: { vi: 'Minecraft', en: 'Minecraft' },
+    genre: 'Sandbox',
+  },
+];
 
 export const WORKSPACE_CONFIG: WorkspaceConfig = {
   timezone: 'Asia/Ho_Chi_Minh',
@@ -232,6 +292,8 @@ export const WORKSPACE_UI_LABELS: Record<Locale, WorkspaceUiLabels> = {
     spotifyDemoBtn: 'Nghe thử Lofi',
     spotifyDemoStopBtn: 'Tắt Demo',
     spotifyIdleText: 'Hiện chưa phát bài nào',
+    gamesHeader: 'Game hay chơi',
+    gamesListAriaLabel: 'Danh sách game hay chơi của Long',
     lampToggleBtn: 'Đèn bàn',
     lampOnLabel: 'Đang bật',
     lampOffLabel: 'Đang tắt',
@@ -258,6 +320,8 @@ export const WORKSPACE_UI_LABELS: Record<Locale, WorkspaceUiLabels> = {
     spotifyDemoBtn: 'Play Lo-fi Demo',
     spotifyDemoStopBtn: 'Stop Demo',
     spotifyIdleText: 'Nothing playing right now',
+    gamesHeader: 'Games I Play',
+    gamesListAriaLabel: "Long's favorite games list",
     lampToggleBtn: 'Desk lamp',
     lampOnLabel: 'On',
     lampOffLabel: 'Off',

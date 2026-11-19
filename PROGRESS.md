@@ -471,3 +471,14 @@ Cập nhật lần cuối: 2026-11-14
   - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`): thoát `0`, giảm số module từ `1962` xuống `1606`, chunk `motion-*.js` từ `127.4 kB` xuống `0.92 kB`, CSS `index-*.css` từ `61.3 kB` xuống `50.02 kB`.
   - Playwright `vite preview` trên `1440×900` (Light/Dark), `820×1180` (Light) và `375×812` (Dark): chiều cao Navbar đạt `53px` (PC/Tablet) và `44.5px` (Mobile), `0` lỗi console/page, `0` tràn ngang trên cả 3 kích thước màn hình, kiểm chứng tương tác nghiêng `PokemonProfileCard` (`4.64deg / 6.64deg` -> reset `0.00deg`), dải ribbon `HT: VI/EN` hiển thị đầy đủ trên Tablet, nút menu mobile tự ẩn gọn ở Workspace và `WorkspaceRoom` giữ đúng tỉ lệ `3:2` (`1.505`).
 
+## 32. Thêm Khung Danh Sách "Game Hay Chơi" Trong Tab Không Gian (`FavoriteGamesCard.tsx`, `src/data/workspace.ts`, `WorkspacePage.tsx`)
+
+- **Dữ liệu & Nhãn song ngữ (`src/data/workspace.ts`)**:
+  - Khai báo type `FavoriteGameItem` và mảng 8 tựa game `FAVORITE_GAMES` (`Liên Minh Huyền Thoại` / `League of Legends`, `TFT`, `Valorant`, `Tốc Chiến` / `Wild Rift`, `GTA 6`, `GTA 5`, `CS2`, `Minecraft`), đồng bộ nhãn `gamesHeader` / `gamesListAriaLabel` trong `WORKSPACE_UI_LABELS` cho cả `vi` và `en`.
+- **Thành phần giao diện (`src/components/workspace/FavoriteGamesCard.tsx`, `src/components/WorkspacePage.tsx`)**:
+  - Tạo card `FavoriteGamesCard` dùng `.folio-card` bề mặt đặc đồng bộ với thẻ Spotify phía trên (icon `Gamepad2`, huy hiệu số lượng `8`, mã viết tắt đơn sắc và nhãn nền tảng/thể loại), gắn ngay dưới thẻ **Long đang nghe** trong cột phải (`lg:col-span-4`) để cân bằng chiều cao hai cột trên Desktop.
+- **Kiểm chứng sau chỉnh sửa**:
+  - `TS_COMMENTS=0`, `impeccable detect --json` trả về `[]` và `cmd /c "npm run verify"` thoát `0` (`1607` modules, `WorkspacePage-*.js 137.15 kB`).
+  - Playwright `vite preview` trên `1440×900` (Dark/Light, `VI` & `EN`), `820×1180` (Light) và `375×812` (Dark): `0` lỗi console/page, `0` tràn ngang, `8` tựa game hiển thị đầy đủ (`clippedCount: 0`) trên cả 3 kích thước màn hình.
+
+

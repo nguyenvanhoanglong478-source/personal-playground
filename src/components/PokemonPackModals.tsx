@@ -1,15 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Sparkles, Trash2, X } from 'lucide-react';
+import { RotateCcw, Search, Sparkles, Trash2, X } from 'lucide-react';
 import { Locale } from '../data/profile';
 import {
+  BinderSortMode,
   POKEMON_CARD_BACK_URL,
   POKEMON_UNBOXER_LABELS,
+  PokemonCardTier,
   PokemonCatalogCard,
   PokemonCatalogData,
   TIER_LABELS,
+  TIER_LIST,
   TIER_ORDER,
+  formatCardPrice,
   getCardImageUrl,
+  getCardPower,
   isHitTier,
 } from '../data/pokemonPack';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
@@ -28,6 +33,8 @@ interface HoloTiltState {
 const INSPECT_LERP = 0.26;
 const INSPECT_EPS = 0.05;
 const BINDER_PAGE_SIZE = 24;
+const VALUE_THRESHOLDS = [0, 1, 5, 20, 50];
+const POWER_THRESHOLDS = [0, 150, 300, 450];
 
 interface CardInspectorModalProps {
   card: PokemonCatalogCard | null;
@@ -192,6 +199,7 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
         : '';
 
   const setName = setsMap[card.set] ?? card.set.toUpperCase();
+  const powerVal = getCardPower(card);
 
   return createPortal(
     <div
@@ -203,7 +211,7 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="folio-card relative flex max-h-[92vh] w-full max-w-[660px] flex-col gap-4 overflow-y-auto !p-4 sm:flex-row sm:items-center sm:!p-6"
+        className="folio-card relative flex max-h-[92vh] w-full max-w-[680px] flex-col gap-4 overflow-y-auto !p-4 sm:flex-row sm:items-center sm:!p-6"
       >
         <button
           type="button"
@@ -303,9 +311,29 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
           <dl className="grid grid-cols-2 gap-2 border-t border-folio-border pt-3 font-mono text-xs">
             <div className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/70 p-2">
               <dt className="text-[10px] uppercase text-folio-faint">
+                {t.valueLabel}
+              </dt>
+              <dd className="mt-0.5 font-semibold tabular-nums text-folio-ink">
+                {formatCardPrice(card.price)}
+              </dd>
+            </div>
+
+            <div className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/70 p-2">
+              <dt className="text-[10px] uppercase text-folio-faint">
+                {t.powerLabel}
+              </dt>
+              <dd className="mt-0.5 font-semibold tabular-nums text-folio-ink">
+                {powerVal > 0
+                  ? `${powerVal} (${card.hp ?? 0}/${card.atk ?? 0})`
+                  : '—'}
+              </dd>
+            </div>
+
+            <div className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/70 p-2">
+              <dt className="text-[10px] uppercase text-folio-faint">
                 {t.rarityLabel}
               </dt>
-              <dd className="mt-0.5 font-semibold text-folio-ink">
+              <dd className="mt-0.5 truncate font-semibold text-folio-ink">
                 {card.rarity}
               </dd>
             </div>
@@ -321,23 +349,21 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
 
             <div className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/70 p-2">
               <dt className="text-[10px] uppercase text-folio-faint">
-                {t.setLabel}
+                {t.hpLabel}
               </dt>
-              <dd className="mt-0.5 truncate font-semibold text-folio-ink">
-                {setName}
+              <dd className="mt-0.5 font-semibold tabular-nums text-folio-ink">
+                {card.hp ? card.hp : '—'}
               </dd>
             </div>
 
-            {card.hp && (
-              <div className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/70 p-2">
-                <dt className="text-[10px] uppercase text-folio-faint">
-                  {t.hpLabel}
-                </dt>
-                <dd className="mt-0.5 font-semibold tabular-nums text-folio-ink">
-                  {card.hp}
-                </dd>
-              </div>
-            )}
+            <div className="rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/70 p-2">
+              <dt className="text-[10px] uppercase text-folio-faint">
+                {t.atkLabel}
+              </dt>
+              <dd className="mt-0.5 font-semibold tabular-nums text-folio-ink">
+                {card.atk ? card.atk : '—'}
+              </dd>
+            </div>
           </dl>
         </div>
       </div>
@@ -368,7 +394,12 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
   onClose,
 }) => {
   const t = POKEMON_UNBOXER_LABELS[locale];
-  const [filterMode, setFilterMode] = useState<'all' | 'hits'>('all');
+  const [rarityFilter, setRarityFilter] = useState<'all' | PokemonCardTier>(
+    'all'
+  );
+  const [minPrice, setMinPrice] = useState<number>(0);
+  const [minPower, setMinPower] = useState<number>(0);
+  const [sortBy, setSortBy] = useState<BinderSortMode>('rarity_desc');
   const [query, setQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(BINDER_PAGE_SIZE);
 
@@ -406,23 +437,43 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
         items.push({ card: found, count });
       }
     }
-    items.sort((a, b) => {
-      const tierDiff = TIER_ORDER[b.card.tier] - TIER_ORDER[a.card.tier];
-      if (tierDiff !== 0) return tierDiff;
-      return a.card.name.localeCompare(b.card.name);
-    });
     return items;
   }, [cardById, collection]);
+
+  const tierCounts = useMemo(() => {
+    const counts: Record<PokemonCardTier, number> = {
+      common: 0,
+      uncommon: 0,
+      rare: 0,
+      ultra: 0,
+      secret: 0,
+    };
+    for (const { card } of ownedEntries) {
+      counts[card.tier] += 1;
+    }
+    return counts;
+  }, [ownedEntries]);
 
   const totalCardCount = useMemo(
     () => ownedEntries.reduce((sum, item) => sum + item.count, 0),
     [ownedEntries]
   );
 
+  const totalBinderValue = useMemo(
+    () =>
+      ownedEntries.reduce(
+        (sum, item) => sum + (item.card.price ?? 0) * item.count,
+        0
+      ),
+    [ownedEntries]
+  );
+
   const filteredEntries = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return ownedEntries.filter(({ card }) => {
-      if (filterMode === 'hits' && !isHitTier(card.tier)) return false;
+    const list = ownedEntries.filter(({ card }) => {
+      if (rarityFilter !== 'all' && card.tier !== rarityFilter) return false;
+      if (minPrice > 0 && (card.price ?? 0) < minPrice) return false;
+      if (minPower > 0 && getCardPower(card) < minPower) return false;
       if (!q) return true;
       const setName = (catalog?.sets[card.set] ?? card.set).toLowerCase();
       return (
@@ -431,7 +482,54 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
         card.rarity.toLowerCase().includes(q)
       );
     });
-  }, [catalog?.sets, filterMode, ownedEntries, query]);
+
+    list.sort((a, b) => {
+      if (sortBy === 'price_desc') {
+        const diff = (b.card.price ?? 0) - (a.card.price ?? 0);
+        if (diff !== 0) return diff;
+      } else if (sortBy === 'price_asc') {
+        const diff = (a.card.price ?? 0) - (b.card.price ?? 0);
+        if (diff !== 0) return diff;
+      } else if (sortBy === 'power_desc') {
+        const diff = getCardPower(b.card) - getCardPower(a.card);
+        if (diff !== 0) return diff;
+      } else if (sortBy === 'hp_desc') {
+        const diff = (b.card.hp ?? 0) - (a.card.hp ?? 0);
+        if (diff !== 0) return diff;
+      } else if (sortBy === 'name_asc') {
+        return a.card.name.localeCompare(b.card.name);
+      }
+      const tierDiff = TIER_ORDER[b.card.tier] - TIER_ORDER[a.card.tier];
+      if (tierDiff !== 0) return tierDiff;
+      const priceDiff = (b.card.price ?? 0) - (a.card.price ?? 0);
+      if (priceDiff !== 0) return priceDiff;
+      return a.card.name.localeCompare(b.card.name);
+    });
+
+    return list;
+  }, [
+    catalog?.sets,
+    minPower,
+    minPrice,
+    ownedEntries,
+    query,
+    rarityFilter,
+    sortBy,
+  ]);
+
+  const hasActiveFilters =
+    rarityFilter !== 'all' ||
+    minPrice > 0 ||
+    minPower > 0 ||
+    query.trim().length > 0;
+
+  const resetFilters = () => {
+    setRarityFilter('all');
+    setMinPrice(0);
+    setMinPower(0);
+    setQuery('');
+    setVisibleCount(BINDER_PAGE_SIZE);
+  };
 
   if (!isOpen || typeof document === 'undefined') return null;
 
@@ -448,15 +546,20 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="folio-card flex max-h-[88vh] w-full max-w-[880px] flex-col gap-3.5 overflow-hidden !p-4 sm:!p-5"
+        className="folio-card flex max-h-[90vh] w-full max-w-[940px] flex-col gap-3 overflow-hidden !p-4 sm:!p-5"
       >
         <div className="flex items-start justify-between gap-3 border-b border-folio-border pb-3">
           <div className="min-w-0">
             <h3 className="font-serif text-xl font-bold text-folio-ink">
               {t.binderTitle}
             </h3>
-            <p className="mt-0.5 font-mono text-[11px] text-folio-muted">
-              {t.binderSub(ownedEntries.length, totalCardCount, totalPacksOpened)}
+            <p className="mt-0.5 font-mono text-[11px] tabular-nums text-folio-muted">
+              {t.binderSub(
+                ownedEntries.length,
+                totalCardCount,
+                totalPacksOpened,
+                totalBinderValue > 0 ? formatCardPrice(totalBinderValue) : '$0.00'
+              )}
             </p>
           </div>
 
@@ -482,44 +585,133 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-full border border-folio-border bg-folio-elevated p-0.5">
-            {(['all', 'hits'] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => {
-                  setFilterMode(mode);
-                  setVisibleCount(BINDER_PAGE_SIZE);
-                }}
-                aria-pressed={filterMode === mode}
-                className={`rounded-full px-3 py-1 font-mono text-[11px] transition-colors duration-150 ${
-                  filterMode === mode
-                    ? 'bg-folio-surface font-semibold text-folio-ink shadow-sm'
-                    : 'text-folio-muted hover:text-folio-ink'
-                }`}
-              >
-                {mode === 'all' ? t.filterAll : t.filterHits}
-              </button>
-            ))}
-          </div>
-
-          <label className="relative min-w-[180px] flex-1">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-folio-faint"
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
+        <div className="flex flex-col gap-2">
+          <div
+            role="group"
+            aria-label={t.rarityFilterAria}
+            className="flex flex-wrap items-center gap-1"
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setRarityFilter('all');
                 setVisibleCount(BINDER_PAGE_SIZE);
               }}
-              placeholder={t.searchPlaceholder}
-              className="w-full rounded-full border border-folio-border bg-folio-elevated py-1.5 pl-8 pr-3 font-mono text-xs text-folio-ink placeholder:text-folio-faint focus:border-folio-strong focus:outline-none"
-            />
-          </label>
+              aria-pressed={rarityFilter === 'all'}
+              className={`rounded-full border px-2.5 py-1 font-mono text-[10.5px] transition-colors duration-150 ${
+                rarityFilter === 'all'
+                  ? 'border-folio-strong bg-folio-surface font-semibold text-folio-ink shadow-sm'
+                  : 'border-folio-border bg-folio-elevated text-folio-muted hover:text-folio-ink'
+              }`}
+            >
+              {t.filterAll} ({ownedEntries.length})
+            </button>
+
+            {TIER_LIST.map((tier) => {
+              const isSelected = rarityFilter === tier;
+              return (
+                <button
+                  key={tier}
+                  type="button"
+                  onClick={() => {
+                    setRarityFilter(tier);
+                    setVisibleCount(BINDER_PAGE_SIZE);
+                  }}
+                  aria-pressed={isSelected}
+                  data-tier={tier}
+                  className={`rounded-full border px-2.5 py-1 font-mono text-[10.5px] transition-colors duration-150 ${
+                    isSelected
+                      ? 'border-folio-strong bg-folio-surface font-semibold text-folio-ink shadow-sm'
+                      : 'border-folio-border bg-folio-elevated text-folio-muted hover:text-folio-ink'
+                  }`}
+                >
+                  {TIER_LABELS[locale][tier]} ({tierCounts[tier]})
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-12">
+            <label className="relative sm:col-span-4">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-folio-faint"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setVisibleCount(BINDER_PAGE_SIZE);
+                }}
+                placeholder={t.searchPlaceholder}
+                className="min-h-[34px] w-full rounded-[var(--radius-control)] border border-folio-border bg-folio-elevated py-1 pl-8 pr-3 font-mono text-[11px] text-folio-ink placeholder:text-folio-faint focus:border-folio-strong focus:outline-none"
+              />
+            </label>
+
+            <select
+              aria-label={t.valueFilterAria}
+              value={minPrice}
+              onChange={(event) => {
+                setMinPrice(Number(event.target.value));
+                setVisibleCount(BINDER_PAGE_SIZE);
+              }}
+              className="min-h-[34px] cursor-pointer rounded-[var(--radius-control)] border border-folio-border bg-folio-elevated px-2.5 font-mono text-[11px] text-folio-ink focus:border-folio-strong focus:outline-none sm:col-span-2"
+            >
+              {VALUE_THRESHOLDS.map((val) => (
+                <option key={val} value={val}>
+                  {val === 0 ? t.valueAny : t.valueMin(val)}
+                </option>
+              ))}
+            </select>
+
+            <select
+              aria-label={t.powerFilterAria}
+              value={minPower}
+              onChange={(event) => {
+                setMinPower(Number(event.target.value));
+                setVisibleCount(BINDER_PAGE_SIZE);
+              }}
+              className="min-h-[34px] cursor-pointer rounded-[var(--radius-control)] border border-folio-border bg-folio-elevated px-2.5 font-mono text-[11px] text-folio-ink focus:border-folio-strong focus:outline-none sm:col-span-3"
+            >
+              {POWER_THRESHOLDS.map((val) => (
+                <option key={val} value={val}>
+                  {val === 0 ? t.powerAny : t.powerMin(val)}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex items-center gap-1.5 sm:col-span-3">
+              <select
+                aria-label={t.sortAria}
+                value={sortBy}
+                onChange={(event) => {
+                  setSortBy(event.target.value as BinderSortMode);
+                  setVisibleCount(BINDER_PAGE_SIZE);
+                }}
+                className="min-h-[34px] min-w-0 flex-1 cursor-pointer rounded-[var(--radius-control)] border border-folio-border bg-folio-elevated px-2.5 font-mono text-[11px] text-folio-ink focus:border-folio-strong focus:outline-none"
+              >
+                <option value="rarity_desc">{t.sortRarityDesc}</option>
+                <option value="price_desc">{t.sortPriceDesc}</option>
+                <option value="price_asc">{t.sortPriceAsc}</option>
+                <option value="power_desc">{t.sortPowerDesc}</option>
+                <option value="hp_desc">{t.sortHpDesc}</option>
+                <option value="name_asc">{t.sortNameAsc}</option>
+              </select>
+
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  title={t.resetFilters}
+                  aria-label={t.resetFilters}
+                  className="folio-btn-icon !h-[34px] !w-[34px] shrink-0"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto pr-1">
@@ -528,38 +720,58 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
               {t.emptyBinder}
             </div>
           ) : shownEntries.length === 0 ? (
-            <div className="flex min-h-[200px] items-center justify-center rounded-[var(--radius-card)] border border-dashed border-folio-border p-6 text-center font-mono text-xs text-folio-muted">
-              {t.emptySearch}
+            <div className="flex min-h-[200px] flex-col items-center justify-center gap-2.5 rounded-[var(--radius-card)] border border-dashed border-folio-border p-6 text-center">
+              <span className="font-mono text-xs text-folio-muted">
+                {t.emptySearch}
+              </span>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="folio-btn-compact !min-h-[32px]"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{t.resetFilters}</span>
+                </button>
+              )}
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-6">
-              {shownEntries.map(({ card, count }) => (
-                <button
-                  key={card.id}
-                  type="button"
-                  onClick={() => onSelectCard(card)}
-                  data-tier={card.tier}
-                  className="pk-mini-card group relative flex flex-col gap-1 rounded-[8px] border border-folio-border bg-folio-elevated/60 p-1 text-left transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong"
-                >
-                  <div className="relative aspect-[63/88] w-full overflow-hidden rounded-[5px] bg-folio-bg">
-                    <img
-                      src={getCardImageUrl(card, false)}
-                      alt={card.name}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-cover"
-                    />
-                    {count > 1 && (
-                      <span className="absolute right-1 top-1 rounded bg-black/80 px-1 py-0.5 font-mono text-[9.5px] font-bold leading-none text-white">
-                        ×{count}
-                      </span>
-                    )}
-                  </div>
-                  <span className="truncate font-sans text-[11px] font-medium text-folio-ink">
-                    {card.name}
-                  </span>
-                </button>
-              ))}
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 md:grid-cols-6">
+              {shownEntries.map(({ card, count }) => {
+                const powerVal = getCardPower(card);
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => onSelectCard(card)}
+                    data-tier={card.tier}
+                    data-card-id={card.id}
+                    className="pk-mini-card group relative flex flex-col gap-1 rounded-[8px] border border-folio-border bg-folio-elevated/60 p-1.5 text-left transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong"
+                  >
+                    <div className="relative aspect-[63/88] w-full overflow-hidden rounded-[5px] bg-folio-bg">
+                      <img
+                        src={getCardImageUrl(card, false)}
+                        alt={card.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover"
+                      />
+                      {count > 1 && (
+                        <span className="absolute right-1 top-1 rounded bg-black/80 px-1 py-0.5 font-mono text-[9.5px] font-bold leading-none text-white">
+                          ×{count}
+                        </span>
+                      )}
+                    </div>
+                    <span className="truncate font-sans text-[11px] font-semibold text-folio-ink">
+                      {card.name}
+                    </span>
+                    <div className="flex items-center justify-between gap-1 font-mono text-[9.5px] tabular-nums text-folio-muted">
+                      <span>{formatCardPrice(card.price)}</span>
+                      <span>{powerVal > 0 ? `PWR ${powerVal}` : '—'}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
 

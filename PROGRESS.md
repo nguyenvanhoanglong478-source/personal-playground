@@ -502,4 +502,20 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_COMMENTS=0`, `impeccable detect --json` trả về `[]` và `cmd /c "npm run verify"` thoát `0` (`1608` modules, `PokemonPackUnboxer-*.js 33.56 kB | gzip: 9.47 kB` nhẹ hơn vé WebGL cũ `41.35 kB`).
   - Playwright `vite preview` trên `1440×900` (Dark/Light, `VI` & `EN`), `820×1180` (Light) và `375×812` (Dark): nạp đủ `1.288` thẻ, xé Pack #1 giảm còn `11/12 pack`, hiển thị đủ `10/10` ảnh thẻ thật (`naturalWidth > 0`, `unique: 10`), mở/đóng hộp thoại phóng to 3D và Bộ sưu tập `10` thẻ, `0` lỗi console/page và `0` tràn ngang.
 
+## 35. Nâng Cấp Hiệu Ứng Xé Pack, Rút Thẻ, Lật Từng Lá, Âm Thanh Web Audio & Bộ Lọc Độ Hiếm / Giá Trị / Sức Mạnh
+
+- **Làm giàu kho `1.288` thẻ với dữ liệu thị trường & sức mạnh thật (`public/data/pokemon-cards.json`)**:
+  - Bổ sung giá thị trường TCGPlayer USD thực tế qua TCGCSV (`1.278/1.288` thẻ có giá thật) cùng chỉ số `hp`, sát thương chiêu mạnh nhất `atk` và tổng sức mạnh `power = hp + atk` từ `PokemonTCG/pokemon-tcg-data` (`203 KB` JSON tải trễ).
+- **Âm thanh tổng hợp Web Audio API (`src/utils/pokemonAudio.ts`)**:
+  - Tạo 4 hiệu ứng âm thanh không cần tệp mp3: tiếng xé mép giấy bạc (`playPackRipSound`), tiếng trượt rút/gạt thẻ (`playCardSlideSound`), tiếng lật thẻ (`playCardFlipSound`) và chuông sáng theo độ hiếm `rare`/`ultra`/`secret` (`playRarityPullSound`), kèm nút bật/tắt âm thanh lưu `localStorage`.
+- **Chuỗi hoạt ảnh mở pack 4 chặng (`PokemonPackUnboxer.tsx`, `src/index.css`)**:
+  - Chặng `ripping` (`460ms`): tách mép trên kèm tia sáng quét ngang `.pk-tear-spark` và kéo mép theo cử chỉ vuốt.
+  - Chặng `drawing` (`640ms`): hoạt ảnh rút xấp 10 thẻ trượt lên từ miệng túi pack (`.pk-draw-deck`) trong khi vỏ túi trượt rơi xuống (`.pk-draw-pouch`).
+  - Chặng `revealing`: chồng thẻ thu nhỏ theo số lá còn lại, mỗi lá bắt đầu úp mặt sau để người dùng tự lật 3D (`rotateY`) kèm vòng sáng hit (`.pk-reveal-burst`), hiển thị giá USD & sức mạnh ngay dưới thẻ, rồi gạt mượt sang trái (`.pk-card-slide-out`) khi chuyển sang lá kế tiếp.
+- **Bộ lọc & Sắp xếp Bộ sưu tập (`PokemonPackModals.tsx`)**:
+  - Nâng cấp `CollectionBinderModal` với dải lọc **Độ hiếm** 6 mức (`Tất cả`, `Thường`, `Ít gặp`, `Hiếm`, `Cực hiếm`, `Bí mật`), lọc ngưỡng **Giá trị USD** (`≥ $1 / $5 / $20 / $50`), lọc ngưỡng **Sức mạnh** (`≥ 150 / 300 / 450`), 6 chế độ sắp xếp (độ hiếm, giá cao/thấp, sức mạnh, HP, tên A–Z) và hiển thị tổng giá trị bộ sưu tập + giá/sức mạnh trực tiếp trên từng thẻ.
+- **Kiểm chứng sau chỉnh sửa**:
+  - `TS_COMMENTS=0`, `impeccable detect --json` trả về `[]` và `cmd /c "npm run verify"` thoát `0`.
+  - Playwright `vite preview` kiểm chứng đầy đủ luồng xé pack → rút 10 thẻ → lật từng lá (#1, #2) → lật nhanh 10 thẻ → nút bật/tắt âm thanh → lọc Bộ sưu tập theo Độ hiếm / Giá trị / Sức mạnh & sắp xếp trên `1440×900`, `820×1180` và `375×812`, `0` lỗi console/page và `0` tràn ngang.
+
 

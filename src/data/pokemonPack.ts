@@ -21,6 +21,14 @@ export type BoxThemeId =
   | 'sv4pt5'
   | 'base1';
 
+export type BinderSortMode =
+  | 'rarity_desc'
+  | 'price_desc'
+  | 'price_asc'
+  | 'power_desc'
+  | 'hp_desc'
+  | 'name_asc';
+
 export interface PokemonCatalogCard {
   id: string;
   name: string;
@@ -29,7 +37,10 @@ export interface PokemonCatalogCard {
   rarity: string;
   tier: PokemonCardTier;
   type: string;
-  hp?: string;
+  hp?: number;
+  atk?: number;
+  power?: number;
+  price?: number;
   img?: string;
 }
 
@@ -51,6 +62,7 @@ export interface SavedBoxState {
   packsRemaining: number;
   totalPacksOpened: number;
   collection: Record<string, number>;
+  soundEnabled: boolean;
 }
 
 export const BOOSTER_BOX_OPTIONS: BoosterBoxOption[] = [
@@ -105,6 +117,14 @@ export const BOOSTER_BOX_OPTIONS: BoosterBoxOption[] = [
   },
 ];
 
+export const TIER_LIST: PokemonCardTier[] = [
+  'common',
+  'uncommon',
+  'rare',
+  'ultra',
+  'secret',
+];
+
 export const TIER_ORDER: Record<PokemonCardTier, number> = {
   common: 0,
   uncommon: 1,
@@ -132,16 +152,20 @@ export const TIER_LABELS: Record<Locale, Record<PokemonCardTier, string>> = {
 
 export const POKEMON_UNBOXER_LABELS = {
   vi: {
-    kicker: 'POKÉMON · BOOSTER BOX',
+    kicker: 'POKÉMON BOX',
     boxSelectAria: 'Chọn hộp bài Pokémon',
+    soundOnAria: 'Tắt âm thanh mở pack',
+    soundOffAria: 'Bật âm thanh mở pack',
     packsLeft: (left: number) => `${left}/${PACKS_PER_BOX} pack`,
     packBadge: (packNum: number) => `PACK #${packNum} / ${PACKS_PER_BOX}`,
     cardsPerPack: `${CARDS_PER_PACK} thẻ ngẫu nhiên`,
     tearHint: 'Kéo ngang hoặc bấm để xé pack',
     ripButton: 'Xé pack ngay',
-    rippingLabel: 'Đang xé pack...',
+    rippingLabel: 'Đang xé mép pack...',
+    drawingLabel: 'Đang rút 10 thẻ ra khỏi pack...',
     cardCounter: (idx: number) => `Thẻ ${idx} / ${CARDS_PER_PACK}`,
-    tapCardHint: 'Bấm thẻ để lật & xem tiếp',
+    tapToFlip: 'Bấm thẻ để lật',
+    flipCardBtn: (idx: number) => `Lật thẻ #${idx}`,
     nextCard: 'Thẻ tiếp',
     finishPack: 'Xem 10 thẻ',
     revealAll: 'Lật nhanh',
@@ -158,13 +182,27 @@ export const POKEMON_UNBOXER_LABELS = {
     loadError: 'Không tải được dữ liệu thẻ. Bấm để thử lại.',
     retryBtn: 'Thử lại',
     binderTitle: 'Bộ sưu tập đã mở',
-    binderSub: (unique: number, total: number, packs: number) =>
-      `${unique} mẫu riêng · ${total} thẻ · ${packs} pack đã xé`,
+    binderSub: (unique: number, total: number, packs: number, valStr: string) =>
+      `${unique} mẫu · ${total} thẻ · ${packs} pack · Giá trị ${valStr}`,
     filterAll: 'Tất cả',
-    filterHits: 'Thẻ hiếm',
+    rarityFilterAria: 'Lọc theo độ hiếm',
+    valueFilterAria: 'Lọc theo giá trị',
+    powerFilterAria: 'Lọc theo sức mạnh',
+    sortAria: 'Sắp xếp thẻ',
+    valueAny: 'Mọi giá trị',
+    valueMin: (v: number) => `Giá ≥ $${v}`,
+    powerAny: 'Mọi sức mạnh',
+    powerMin: (v: number) => `Sức mạnh ≥ ${v}`,
+    sortRarityDesc: 'Độ hiếm cao nhất',
+    sortPriceDesc: 'Giá trị cao nhất',
+    sortPriceAsc: 'Giá trị thấp nhất',
+    sortPowerDesc: 'Sức mạnh cao nhất',
+    sortHpDesc: 'HP cao nhất',
+    sortNameAsc: 'Tên A → Z',
+    resetFilters: 'Xóa lọc',
     searchPlaceholder: 'Tìm tên Pokémon hoặc bộ thẻ...',
     emptyBinder: 'Chưa có thẻ nào. Hãy xé pack đầu tiên để bắt đầu sưu tập.',
-    emptySearch: 'Không tìm thấy thẻ khớp từ khóa.',
+    emptySearch: 'Không có thẻ nào khớp bộ lọc hiện tại.',
     loadMore: (rem: number) => `Xem thêm (${rem})`,
     resetCollection: 'Xóa bộ sưu tập',
     closeModal: 'Đóng',
@@ -173,19 +211,26 @@ export const POKEMON_UNBOXER_LABELS = {
     rarityLabel: 'Độ hiếm',
     typeLabel: 'Hệ',
     hpLabel: 'HP',
+    atkLabel: 'Sát thương',
+    powerLabel: 'Sức mạnh',
+    valueLabel: 'Giá thị trường',
     tiltHint: 'Rê chuột hoặc chạm kéo để soi ánh foil 3D',
   },
   en: {
-    kicker: 'POKÉMON · BOOSTER BOX',
+    kicker: 'POKÉMON BOX',
     boxSelectAria: 'Choose Pokémon Booster Box',
+    soundOnAria: 'Mute pack sound effects',
+    soundOffAria: 'Unmute pack sound effects',
     packsLeft: (left: number) => `${left}/${PACKS_PER_BOX} packs`,
     packBadge: (packNum: number) => `PACK #${packNum} / ${PACKS_PER_BOX}`,
     cardsPerPack: `${CARDS_PER_PACK} random cards`,
     tearHint: 'Swipe across or click to rip pack',
     ripButton: 'Rip pack',
-    rippingLabel: 'Ripping foil...',
+    rippingLabel: 'Ripping foil top...',
+    drawingLabel: 'Sliding 10 cards from pack...',
     cardCounter: (idx: number) => `Card ${idx} / ${CARDS_PER_PACK}`,
-    tapCardHint: 'Tap card to flip & continue',
+    tapToFlip: 'Tap card to flip',
+    flipCardBtn: (idx: number) => `Flip card #${idx}`,
     nextCard: 'Next card',
     finishPack: 'View all 10',
     revealAll: 'Reveal all',
@@ -202,13 +247,27 @@ export const POKEMON_UNBOXER_LABELS = {
     loadError: 'Could not load card data. Click to retry.',
     retryBtn: 'Retry',
     binderTitle: 'Opened Card Binder',
-    binderSub: (unique: number, total: number, packs: number) =>
-      `${unique} unique · ${total} total · ${packs} packs opened`,
+    binderSub: (unique: number, total: number, packs: number, valStr: string) =>
+      `${unique} unique · ${total} cards · ${packs} packs · Value ${valStr}`,
     filterAll: 'All',
-    filterHits: 'Hits only',
+    rarityFilterAria: 'Filter by rarity',
+    valueFilterAria: 'Filter by market value',
+    powerFilterAria: 'Filter by combat power',
+    sortAria: 'Sort cards',
+    valueAny: 'Any value',
+    valueMin: (v: number) => `Value ≥ $${v}`,
+    powerAny: 'Any power',
+    powerMin: (v: number) => `Power ≥ ${v}`,
+    sortRarityDesc: 'Highest rarity',
+    sortPriceDesc: 'Highest value',
+    sortPriceAsc: 'Lowest value',
+    sortPowerDesc: 'Highest power',
+    sortHpDesc: 'Highest HP',
+    sortNameAsc: 'Name A → Z',
+    resetFilters: 'Reset',
     searchPlaceholder: 'Search Pokémon or set...',
     emptyBinder: 'No cards yet. Rip your first booster pack to start your binder.',
-    emptySearch: 'No cards matched your search.',
+    emptySearch: 'No cards match your active filters.',
     loadMore: (rem: number) => `Load more (${rem})`,
     resetCollection: 'Clear binder',
     closeModal: 'Close',
@@ -217,9 +276,33 @@ export const POKEMON_UNBOXER_LABELS = {
     rarityLabel: 'Rarity',
     typeLabel: 'Type',
     hpLabel: 'HP',
+    atkLabel: 'Max ATK',
+    powerLabel: 'Power',
+    valueLabel: 'Market value',
     tiltHint: 'Hover or drag to inspect 3D holo foil',
   },
 } as const;
+
+const usdFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+export function formatCardPrice(price?: number): string {
+  if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) {
+    return '—';
+  }
+  return usdFormatter.format(price);
+}
+
+export function getCardPower(card: PokemonCatalogCard): number {
+  if (typeof card.power === 'number' && Number.isFinite(card.power)) {
+    return card.power;
+  }
+  return (card.hp ?? 0) + (card.atk ?? 0);
+}
 
 let catalogCachePromise: Promise<PokemonCatalogData> | null = null;
 
@@ -378,6 +461,7 @@ export function loadSavedBoxState(): SavedBoxState {
     packsRemaining: PACKS_PER_BOX,
     totalPacksOpened: 0,
     collection: {},
+    soundEnabled: true,
   };
 
   try {
@@ -400,6 +484,8 @@ export function loadSavedBoxState(): SavedBoxState {
       parsed.totalPacksOpened >= 0
         ? parsed.totalPacksOpened
         : 0;
+    const soundEnabled =
+      typeof parsed.soundEnabled === 'boolean' ? parsed.soundEnabled : true;
     const collection: Record<string, number> = {};
     if (parsed.collection && typeof parsed.collection === 'object') {
       for (const [k, v] of Object.entries(parsed.collection)) {
@@ -413,6 +499,7 @@ export function loadSavedBoxState(): SavedBoxState {
       packsRemaining,
       totalPacksOpened,
       collection,
+      soundEnabled,
     };
   } catch {
     return fallback;

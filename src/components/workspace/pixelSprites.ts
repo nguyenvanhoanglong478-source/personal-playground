@@ -34,7 +34,7 @@ export type CharacterAnimState =
 
 export type CharacterDir = 'down' | 'up' | 'left' | 'right';
 
-export const ARCHETYPES: readonly CharacterArchetype[] = [
+const ARCHETYPES: readonly CharacterArchetype[] = [
   'coordinator',
   'engineer',
   'researcher',
@@ -45,7 +45,7 @@ export const ARCHETYPES: readonly CharacterArchetype[] = [
   'specialist',
 ];
 
-export const STATES: readonly CharacterAnimState[] = [
+const STATES: readonly CharacterAnimState[] = [
   'idle',
   'walk',
   'work',
@@ -220,7 +220,6 @@ const EYE_RAMPS: readonly EyeRamp[] = [
 
 const seloutCache = new Map<string, string>();
 const frameCache = new Map<string, OffscreenSurface>();
-const portraitCache = new Map<string, string>();
 const MAX_CACHE_ENTRIES = 2048;
 
 interface MusicVisualTracker {
@@ -274,67 +273,6 @@ function normalizeState(state: string): CharacterAnimState {
   if (s === 'sleep' || s === 'sleeping' || s === 'nap') return 'rest_sleep';
   if (s === 'talking' || s === 'chat') return 'talk';
   return 'idle';
-}
-
-export function pickArchetype(agent: unknown): CharacterArchetype {
-  if (!agent) return 'engineer';
-  if (typeof agent === 'string') {
-    return pickArchetype({ name: agent });
-  }
-  const rec = agent as {
-    archetype?: string;
-    isLead?: boolean;
-    role?: string;
-    typeName?: string;
-    name?: string;
-    id?: string;
-    conversationId?: string;
-  };
-  if (rec.archetype && (ARCHETYPES as readonly string[]).includes(rec.archetype)) {
-    return rec.archetype as CharacterArchetype;
-  }
-  if (rec.isLead) return 'coordinator';
-
-  const haystack = [rec.role, rec.typeName, rec.name]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
-  const tokens = haystack.split(/[^a-z0-9]+/).filter(Boolean);
-  const has = (...words: string[]) =>
-    words.some((w) => tokens.includes(w) || haystack.includes(w));
-
-  if (has('coordinator', 'lead', 'orchestrator', 'manager')) return 'coordinator';
-  if (has('monitor', 'watcher', 'telemetry')) return 'monitor';
-  if (has('verifier', 'verify', 'qa', 'test', 'tester', 'audit', 'inspector')) return 'verifier';
-  if (has('research', 'researcher', 'analyst', 'explorer')) return 'researcher';
-  if (has('design', 'designer', 'art', 'artist', 'ui', 'ux', 'sprite', 'illustrator')) return 'designer';
-  if (has('architect', 'planner')) return 'architect';
-
-  const pool: readonly CharacterArchetype[] = [
-    'engineer',
-    'specialist',
-    'researcher',
-    'designer',
-    'verifier',
-    'architect',
-    'monitor',
-  ];
-  const key = String(rec.name || rec.id || rec.conversationId || rec.role || 'worker');
-  return pool[hashString(key) % pool.length];
-}
-
-export function pickSeed(agent: unknown): number {
-  if (!agent) return 0;
-  const rec = agent as {
-    seed?: number;
-    id?: string;
-    conversationId?: string;
-    name?: string;
-    role?: string;
-  };
-  if (typeof rec.seed === 'number') return normalizeSeed(rec.seed);
-  const key = String(rec.id || rec.conversationId || rec.name || rec.role || '0');
-  return hashString(key);
 }
 
 function getLongPalette(): CharacterPalette {
@@ -2074,29 +2012,6 @@ export function drawCharacter(ctx: CanvasRenderingContext2D, opts: DrawCharacter
     useLong
   );
   drawPixelGrid(ctx, fallbackGrid, SPRITE_W, SPRITE_H, dx, dy);
-}
-
-export function renderPortraitDataUrl(
-  archetype: CharacterArchetype,
-  seed = 0,
-  isLong = false
-): string {
-  const arch: CharacterArchetype = (ARCHETYPES as readonly string[]).includes(archetype)
-    ? archetype
-    : 'engineer';
-  const seedBucket = normalizeSeed(seed) % 16;
-  const key = `${isLong ? 'long' : 'std'}|${arch}|${seedBucket}`;
-
-  const cached = portraitCache.get(key);
-  if (cached) return cached;
-
-  const sprite = getCachedSpriteCanvas(arch, seedBucket, 'idle', 'down', 0, isLong);
-  if (!sprite || !('toDataURL' in sprite) || typeof sprite.toDataURL !== 'function') {
-    return '';
-  }
-  const url = sprite.toDataURL('image/png');
-  portraitCache.set(key, url);
-  return url;
 }
 
 type CapyPoseKind =

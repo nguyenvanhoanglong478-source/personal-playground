@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { Locale } from './data/profile';
 import { AppTab, Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -230,7 +230,7 @@ export function App() {
         {activeTab === 'profile' ? (
           <>
             <Hero locale={locale} />
-            <About locale={locale} theme={theme} />
+            <About locale={locale} />
             <Experience locale={locale} />
             <ProjectsBento locale={locale} />
             <SkillsMatrix locale={locale} />
@@ -251,7 +251,7 @@ export function App() {
               </section>
             }
           >
-            <LazyWorkspacePage locale={locale} theme={theme} />
+            <LazyWorkspacePage locale={locale} />
           </Suspense>
         )}
       </main>

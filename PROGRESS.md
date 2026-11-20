@@ -530,4 +530,23 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_COMMENTS=0`, `impeccable detect --json` trả về `[]` và `cmd /c "npm run verify"` thoát `0`.
   - Playwright kiểm chứng hồi quy chống chớp lộ thẻ (`frontImgPresentBeforeFlip: false`, `frontVisibilityBeforeFlip: "hidden"` xuyên suốt lúc chuyển sang thẻ #2), xác nhận thẻ Common mang `data-foil="none"` còn thẻ hit mang đúng `data-foil` thực tế và kiểm tra ảnh chụp soi foil 3D ở Dark/Light Mode, `0` lỗi console/page và `0` tràn ngang.
 
+## 37. Tối Ưu Mã Nguồn, Xóa Code Thừa, Gỡ Dependency Không Dùng & Nén Tối Đa Tài Nguyên Tĩnh
+
+- **Gỡ gói & chunk thừa (`package.json`, `package-lock.json`, `vite.config.ts`, `tsconfig.json`, `index.html`, `src/data/siteStack.ts`)**:
+  - Gỡ hoàn toàn `framer-motion` khỏi `package.json` / `node_modules` (gỡ 4 gói thừa không còn dùng) và xóa entry `motion` khỏi `vite.config.ts`, loại bỏ hẳn chunk rỗng `motion-*.js` khỏi `dist/assets/`.
+  - Bật `"noUnusedLocals": true` và `"noUnusedParameters": true` trong `tsconfig.json` để khóa chặt biến/tham số thừa ở mọi lần build về sau.
+  - Chuẩn hóa meta OG/Twitter trong `index.html` (`og:image` tuyệt đối `https://longhoang.pages.dev/avatar.jpg`, `og:url`, `twitter:card`) và làm sạch mô tả `siteStack.ts`.
+- **Xóa code chết, CSS thừa & hợp nhất logic lặp (`src/hooks/useCardTilt.ts`, `PokemonPackUnboxer.tsx`, `PokemonPackModals.tsx`, `pixelSprites.ts`, `App.tsx`, `About.tsx`, `WorkspacePage.tsx`, `src/index.css`)**:
+  - Tách hook dùng chung `src/hooks/useCardTilt.ts`, thay thế hai bộ vòng lặp nghiêng 3D `rAF` bị nhân đôi ở `PokemonPackUnboxer.tsx` và `CardInspectorModal` (`PokemonPackModals.tsx`) — cắt giảm hơn 200 dòng mã trùng lặp và đưa `PokemonPackUnboxer-*.js` xuống `50.10 kB` (`gzip: 13.61 kB`).
+  - Xóa mã chết `portraitCache`, `pickArchetype`, `pickSeed`, `renderPortraitDataUrl` khỏi `src/components/workspace/pixelSprites.ts` (giảm `WorkspacePage-*.js` xuống `138.23 kB | gzip: 48.04 kB`), gỡ prop `theme` không dùng dọc chuỗi `App.tsx` → `About.tsx` → `PokemonPackUnboxer.tsx` và `WorkspacePage.tsx`, cùng import `React` thừa trong `App.tsx`.
+  - Dọn bỏ 6 biến CSS và 2 lớp CSS chết (`.font-editorial`, `.pixelated-canvas`, `--google-gradient*`, `--accent-glow`, `--btn-text`, `--overlay-scrim`) trong `src/index.css` (đạt `0` lớp CSS thừa trên toàn bộ stylesheet).
+- **Tối ưu mạnh tài nguyên tĩnh trong `public/` (`957.4 KB → 233.5 KB`, giảm `75.6%` / tiết kiệm `723.9 KB`)**:
+  - Nén `public/data/pokemon-cards.json` sang cấu trúc tuple `v: 2` (`203,485 B → 70,484 B`, **-65.4%**) kèm hàm giải nén `unpackCatalog()` trong `src/data/pokemonPack.ts`, giữ trọn `1.288` thẻ, `27` bộ, giá USD thật, `hp`, `atk` và `power`.
+  - Chuyển đổi 4 logo game nặng sang WebP sắc nét (`gta5.svg 411,049 B → gta5.webp 6,818 B` **-98.3%**, `gta6.svg 42,172 B → gta6.webp 4,192 B` **-90.1%**, `tft.png 37,700 B → tft.webp 7,054 B` **-81.3%**, `wild-rift.png 32,657 B → wild-rift.webp 5,176 B` **-84.2%**) và xóa 4 tệp cũ, cập nhật đường dẫn trong `src/data/workspace.ts`.
+  - Nén progressive JPEG tối ưu kích thước cho `public/avatar.jpg` (`158,494 B → 75,189 B`, **-52.6%**) và `public/pokemon/card-back.jpg` (`62,675 B → 55,410 B`, **-11.6%**).
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` (kèm `noUnusedLocals` & `noUnusedParameters`) thoát `0` (`dist/assets/` không còn `motion-*.js`, toàn bộ thư mục `dist/` chỉ còn `775.8 KB`).
+  - Playwright `verify_pokemon_unboxer.py` & `verify_workspace_games.py` thoát `0` trên `1440×900`, `820×1180` và `375×812`: `1.288` thẻ giải nén chuẩn, chống chớp lộ thẻ (`frontImgPresent: false`, `frontVisibility: "hidden"`), `8/8` logo game `.webp`/`.svg` hiển thị sắc nét không tràn (`clippedCount: 0`), `0` lỗi console/page và `0` tràn ngang.
+
+
 

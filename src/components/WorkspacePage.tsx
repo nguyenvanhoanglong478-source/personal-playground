@@ -27,7 +27,6 @@ import { FavoriteGamesCard } from './workspace/FavoriteGamesCard';
 
 export interface WorkspacePageProps {
   locale: Locale;
-  theme: 'light' | 'dark';
 }
 
 type TimeOverrideMode = RoomTimeState | 'auto';

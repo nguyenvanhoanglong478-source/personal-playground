@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { RotateCcw, Search, Sparkles, Trash2, X } from 'lucide-react';
 import { Locale } from '../data/profile';
@@ -19,21 +19,9 @@ import {
   getCardPower,
   isHitTier,
 } from '../data/pokemonPack';
+import { useCardTilt } from '../hooks/useCardTilt';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 
-interface HoloTiltState {
-  rx: number;
-  ry: number;
-  px: number;
-  py: number;
-  trx: number;
-  tryVal: number;
-  tpx: number;
-  tpy: number;
-}
-
-const INSPECT_LERP = 0.26;
-const INSPECT_EPS = 0.05;
 const BINDER_PAGE_SIZE = 24;
 const VALUE_THRESHOLDS = [0, 1, 5, 20, 50];
 const POWER_THRESHOLDS = [0, 150, 300, 450];
@@ -58,36 +46,24 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
   const [imgStage, setImgStage] = useState<'hires' | 'small' | 'fallback'>(
     'hires'
   );
-  const [isActive, setIsActive] = useState(false);
 
-  const stageRef = useRef<HTMLDivElement | null>(null);
-  const cardRef = useRef<HTMLDivElement | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const motionRef = useRef<HoloTiltState>({
-    rx: 0,
-    ry: 0,
-    px: 50,
-    py: 50,
-    trx: 0,
-    tryVal: 0,
-    tpx: 50,
-    tpy: 50,
+  const {
+    stageRef,
+    cardRef,
+    isTiltActive: isActive,
+    updateTiltFromPointer: updatePointer,
+    resetTilt: resetPointer,
+    resetTiltImmediately,
+  } = useCardTilt({
+    maxDeg: 24,
+    lerp: 0.26,
+    disabled: shouldReduceMotion,
   });
 
   useEffect(() => {
     setImgStage('hires');
-    setIsActive(false);
-    motionRef.current = {
-      rx: 0,
-      ry: 0,
-      px: 50,
-      py: 50,
-      trx: 0,
-      tryVal: 0,
-      tpx: 50,
-      tpy: 50,
-    };
-  }, [card?.id]);
+    resetTiltImmediately();
+  }, [card?.id, resetTiltImmediately]);
 
   useEffect(() => {
     if (!card) return;
@@ -104,98 +80,6 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
       document.removeEventListener('keydown', handleKey);
     };
   }, [card, onClose]);
-
-  const applyVars = useCallback((s: HoloTiltState) => {
-    const el = cardRef.current;
-    if (!el) return;
-    const bgx = 37 + (s.px / 100) * 26;
-    const bgy = 37 + (s.py / 100) * 26;
-    const hyp = Math.min(1, Math.hypot((s.px - 50) / 50, (s.py - 50) / 50));
-    el.style.setProperty('--pk-rx', `${s.rx.toFixed(2)}deg`);
-    el.style.setProperty('--pk-ry', `${s.ry.toFixed(2)}deg`);
-    el.style.setProperty('--pk-px', `${s.px.toFixed(2)}%`);
-    el.style.setProperty('--pk-py', `${s.py.toFixed(2)}%`);
-    el.style.setProperty('--pk-bgx', `${bgx.toFixed(2)}%`);
-    el.style.setProperty('--pk-bgy', `${bgy.toFixed(2)}%`);
-    el.style.setProperty('--pk-hyp', hyp.toFixed(3));
-  }, []);
-
-  const stepTilt = useCallback(() => {
-    const s = motionRef.current;
-    s.rx += (s.trx - s.rx) * INSPECT_LERP;
-    s.ry += (s.tryVal - s.ry) * INSPECT_LERP;
-    s.px += (s.tpx - s.px) * INSPECT_LERP;
-    s.py += (s.tpy - s.py) * INSPECT_LERP;
-
-    const settled =
-      Math.abs(s.trx - s.rx) < INSPECT_EPS &&
-      Math.abs(s.tryVal - s.ry) < INSPECT_EPS &&
-      Math.abs(s.tpx - s.px) < INSPECT_EPS &&
-      Math.abs(s.tpy - s.py) < INSPECT_EPS;
-
-    if (settled) {
-      s.rx = s.trx;
-      s.ry = s.tryVal;
-      s.px = s.tpx;
-      s.py = s.tpy;
-      applyVars(s);
-      rafRef.current = null;
-      return;
-    }
-
-    applyVars(s);
-    rafRef.current = window.requestAnimationFrame(stepTilt);
-  }, [applyVars]);
-
-  useEffect(() => {
-    return () => {
-      if (rafRef.current !== null) {
-        window.cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-    };
-  }, []);
-
-  const scheduleTilt = useCallback(() => {
-    if (shouldReduceMotion) {
-      const s = motionRef.current;
-      s.rx = 0;
-      s.ry = 0;
-      s.px = s.tpx;
-      s.py = s.tpy;
-      applyVars(s);
-      return;
-    }
-    if (rafRef.current === null) {
-      rafRef.current = window.requestAnimationFrame(stepTilt);
-    }
-  }, [applyVars, shouldReduceMotion, stepTilt]);
-
-  const updatePointer = (clientX: number, clientY: number) => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const rect = stage.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-    const nx = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
-    const ny = Math.min(Math.max((clientY - rect.top) / rect.height, 0), 1);
-    const s = motionRef.current;
-    s.tpx = nx * 100;
-    s.tpy = ny * 100;
-    s.trx = -(ny - 0.5) * 24;
-    s.tryVal = (nx - 0.5) * 24;
-    setIsActive(true);
-    scheduleTilt();
-  };
-
-  const resetPointer = () => {
-    const s = motionRef.current;
-    s.trx = 0;
-    s.tryVal = 0;
-    s.tpx = 50;
-    s.tpy = 50;
-    setIsActive(false);
-    scheduleTilt();
-  };
 
   if (!card || typeof document === 'undefined') return null;
 

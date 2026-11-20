@@ -18,7 +18,6 @@ interface PackageMeta {
 
 const INTERNAL_GLUE_PACKAGES = new Set([
   'react-dom',
-  'framer-motion',
   '@vitejs/plugin-react',
   'postcss',
   'autoprefixer',
@@ -29,8 +28,8 @@ const KNOWN_PACKAGE_REASONS: Record<string, PackageMeta> = {
     displayName: 'Vite',
     role: 'build',
     reason: {
-      vi: 'Khởi chạy máy chủ phát triển nhanh, tách vendor/icon và tải trễ phần đồ họa WebGL tương tác.',
-      en: 'Provides fast local builds, splits vendor chunks, and lazy-loads the interactive WebGL pass.',
+      vi: 'Khởi chạy máy chủ phát triển nhanh, tách vendor/icon và tải trễ các phân khu tương tác.',
+      en: 'Provides fast local builds, splits vendor chunks, and lazy-loads interactive sections.',
     },
   },
   react: {
@@ -67,7 +66,7 @@ const KNOWN_PACKAGE_REASONS: Record<string, PackageMeta> = {
   },
 };
 
-export function getLiveSiteStack(): {
+function getLiveSiteStack(): {
   projectName: string;
   projectVersion: string;
   packages: SiteStackNode[];

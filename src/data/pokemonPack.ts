@@ -389,6 +389,65 @@ export function getCardPower(card: PokemonCatalogCard): number {
   return (card.hp ?? 0) + (card.atk ?? 0);
 }
 
+interface CompactCatalogPayload {
+  v: 2;
+  setIds: string[];
+  setNames: string[];
+  rarities: string[];
+  types: string[];
+  cards: Array<
+    [
+      string,
+      string,
+      number,
+      string,
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      string?,
+    ]
+  >;
+}
+
+function unpackCatalog(
+  raw: CompactCatalogPayload | PokemonCatalogData
+): PokemonCatalogData {
+  if (!('v' in raw) || raw.v !== 2) {
+    return raw as PokemonCatalogData;
+  }
+  const sets: Record<string, string> = {};
+  raw.setIds.forEach((sid, idx) => {
+    sets[sid] = raw.setNames[idx] ?? sid.toUpperCase();
+  });
+
+  const cards: PokemonCatalogCard[] = raw.cards.map((row) => {
+    const hp = row[7] > 0 ? row[7] : undefined;
+    const atk = row[8] > 0 ? row[8] : undefined;
+    const powerVal = (row[7] ?? 0) + (row[8] ?? 0);
+    const price = row[9] > 0 ? row[9] : undefined;
+    const card: PokemonCatalogCard = {
+      id: row[0],
+      name: row[1],
+      set: raw.setIds[row[2]] ?? 'unknown',
+      num: row[3],
+      rarity: raw.rarities[row[4]] ?? 'Common',
+      tier: TIER_LIST[row[5]] ?? 'common',
+      type: raw.types[row[6]] ?? 'Colorless',
+    };
+    if (hp !== undefined) card.hp = hp;
+    if (atk !== undefined) card.atk = atk;
+    if (powerVal > 0) card.power = powerVal;
+    if (price !== undefined) card.price = price;
+    if (row[10]) card.img = row[10];
+    return card;
+  });
+
+  return { sets, cards };
+}
+
 let catalogCachePromise: Promise<PokemonCatalogData> | null = null;
 
 export function loadPokemonCatalog(): Promise<PokemonCatalogData> {
@@ -398,8 +457,9 @@ export function loadPokemonCatalog(): Promise<PokemonCatalogData> {
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
-        return res.json() as Promise<PokemonCatalogData>;
+        return res.json() as Promise<CompactCatalogPayload | PokemonCatalogData>;
       })
+      .then((payload) => unpackCatalog(payload))
       .catch((err) => {
         catalogCachePromise = null;
         throw err;

@@ -9,9 +9,6 @@
   --google-red: #EA4335;
   --google-yellow: #FBBC04;
   --google-green: #34A853;
-  --google-gradient: linear-gradient(135deg, #4285F4 0%, #9B72CB 34%, #D96570 68%, #FBBC04 88%, #34A853 100%);
-  --google-gradient-btn: linear-gradient(135deg, #1A73E8 0%, #6E3FC4 52%, #B8293D 100%);
-  --google-gradient-aura: linear-gradient(135deg, rgba(66, 133, 244, 0.55) 0%, rgba(155, 114, 203, 0.50) 36%, rgba(217, 101, 112, 0.48) 68%, rgba(251, 188, 4, 0.40) 86%, rgba(52, 168, 83, 0.42) 100%);
 
   --radius-card: 14px;
   --radius-inner: 10px;
@@ -46,15 +43,12 @@ html[data-theme='light'] {
   --accent-primary: #111111;
   --accent-primary-contrast: #FFFFFF;
   --accent-secondary: #4B4E53;
-  --accent-glow: rgba(17, 17, 17, 0.14);
   --border-subtle: rgba(68, 71, 70, 0.14);
   --border-strong: rgba(17, 17, 17, 0.42);
   --shadow-soft: 0 2px 12px -2px rgba(17, 17, 17, 0.06), 0 1px 4px -1px rgba(17, 17, 17, 0.03);
   --shadow-glow: 0 6px 20px -4px rgba(17, 17, 17, 0.10);
-  --btn-text: #1F1F1F;
   --mesh-lobe-blue: rgba(66, 133, 244, 0.10);
   --mesh-lobe-purple: rgba(155, 114, 203, 0.10);
-  --overlay-scrim: rgba(19, 19, 20, 0.80);
   --poke-frame-bg: linear-gradient(
     132deg,
     #F5F7FA 0%,
@@ -133,15 +127,12 @@ html[data-theme='dark'] {
   --accent-primary: #F5F5F7;
   --accent-primary-contrast: #131314;
   --accent-secondary: #C4C7C5;
-  --accent-glow: rgba(255, 255, 255, 0.18);
   --border-subtle: rgba(227, 227, 227, 0.11);
   --border-strong: rgba(255, 255, 255, 0.48);
   --shadow-soft: 0 4px 18px -4px rgba(0, 0, 0, 0.45);
   --shadow-glow: 0 8px 24px -4px rgba(0, 0, 0, 0.62);
-  --btn-text: #E3E3E3;
   --mesh-lobe-blue: rgba(66, 133, 244, 0.12);
   --mesh-lobe-purple: rgba(155, 114, 203, 0.11);
-  --overlay-scrim: rgba(19, 19, 20, 0.85);
   --poke-frame-bg: linear-gradient(
     132deg,
     #484D58 0%,
@@ -237,8 +228,7 @@ body {
 
 h1,
 h2,
-h3,
-.font-editorial {
+h3 {
   font-family: var(--font-serif);
   overflow-wrap: break-word;
   min-width: 0;
@@ -1767,11 +1757,6 @@ html[data-theme='dark'] .editorial-watermark {
   .pk-tilt-card {
     transform: none !important;
   }
-}
-
-.pixelated-canvas {
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
 }
 
 .pokemon-gba-dialog {

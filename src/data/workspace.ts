@@ -88,7 +88,7 @@ export const FAVORITE_GAMES: FavoriteGameItem[] = [
   {
     id: 'tft',
     code: 'TFT',
-    logoUrl: './games/tft.png',
+    logoUrl: './games/tft.webp',
     logoSurface: 'cover',
     name: { vi: 'TFT', en: 'TFT' },
     genre: 'Auto Battler',
@@ -104,7 +104,7 @@ export const FAVORITE_GAMES: FavoriteGameItem[] = [
   {
     id: 'wild-rift',
     code: 'WR',
-    logoUrl: './games/wild-rift.png',
+    logoUrl: './games/wild-rift.webp',
     logoSurface: 'cover',
     name: { vi: 'Tốc Chiến', en: 'Wild Rift' },
     genre: 'Mobile · MOBA',
@@ -112,7 +112,7 @@ export const FAVORITE_GAMES: FavoriteGameItem[] = [
   {
     id: 'gta6',
     code: 'GTA6',
-    logoUrl: './games/gta6.svg',
+    logoUrl: './games/gta6.webp',
     logoSurface: 'dark',
     name: { vi: 'GTA 6', en: 'GTA 6' },
     genre: 'Open World',
@@ -120,7 +120,7 @@ export const FAVORITE_GAMES: FavoriteGameItem[] = [
   {
     id: 'gta5',
     code: 'GTA5',
-    logoUrl: './games/gta5.svg',
+    logoUrl: './games/gta5.webp',
     logoSurface: 'dark',
     name: { vi: 'GTA 5', en: 'GTA 5' },
     genre: 'PC · Open World',

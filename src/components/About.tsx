@@ -10,7 +10,6 @@ const LazyPokemonPackUnboxer = lazy(() =>
 
 interface AboutProps {
   locale: Locale;
-  theme: 'light' | 'dark';
 }
 
 const PokemonPackUnboxerFallback: React.FC = () => (
@@ -32,7 +31,7 @@ const PokemonPackUnboxerFallback: React.FC = () => (
   </div>
 );
 
-export const About: React.FC<AboutProps> = ({ locale, theme }) => {
+export const About: React.FC<AboutProps> = ({ locale }) => {
   const t = UI_LABELS[locale].about;
   const paragraphs = PROFILE_DATA.aboutParagraphs[locale];
 
@@ -61,7 +60,7 @@ export const About: React.FC<AboutProps> = ({ locale, theme }) => {
         <div className="grid grid-cols-1 items-start gap-6 overflow-visible lg:grid-cols-12 lg:gap-8">
           <div className="relative z-20 overflow-visible lg:col-span-4">
             <Suspense fallback={<PokemonPackUnboxerFallback />}>
-              <LazyPokemonPackUnboxer locale={locale} theme={theme} />
+              <LazyPokemonPackUnboxer locale={locale} />
             </Suspense>
           </div>
 

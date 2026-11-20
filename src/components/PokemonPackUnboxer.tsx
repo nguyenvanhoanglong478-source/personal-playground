@@ -37,6 +37,7 @@ import {
   loadSavedBoxState,
   saveBoxState,
 } from '../data/pokemonPack';
+import { useCardTilt } from '../hooks/useCardTilt';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import {
   playCardFlipSound,
@@ -51,25 +52,10 @@ import {
 
 export interface PokemonPackUnboxerProps {
   locale: Locale;
-  theme: 'light' | 'dark';
 }
 
 type UnboxPhase = 'sealed' | 'ripping' | 'drawing' | 'revealing' | 'summary';
 type CardTransition = 'idle' | 'exiting' | 'entering';
-
-interface StageTiltState {
-  rx: number;
-  ry: number;
-  px: number;
-  py: number;
-  trx: number;
-  tryVal: number;
-  tpx: number;
-  tpy: number;
-}
-
-const STAGE_LERP = 0.28;
-const STAGE_EPS = 0.05;
 
 export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   locale,
@@ -95,24 +81,22 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     null
   );
   const [binderOpen, setBinderOpen] = useState(false);
-  const [isTiltActive, setIsTiltActive] = useState(false);
 
   const dragStartXRef = useRef<number | null>(null);
   const dragDidRipRef = useRef(false);
   const timersRef = useRef<number[]>([]);
 
-  const stageRef = useRef<HTMLDivElement | null>(null);
-  const tiltElRef = useRef<HTMLDivElement | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const tiltRef = useRef<StageTiltState>({
-    rx: 0,
-    ry: 0,
-    px: 50,
-    py: 50,
-    trx: 0,
-    tryVal: 0,
-    tpx: 50,
-    tpy: 50,
+  const {
+    stageRef,
+    cardRef: tiltElRef,
+    isTiltActive,
+    updateTiltFromPointer,
+    resetTilt,
+    resetTiltImmediately,
+  } = useCardTilt({
+    maxDeg: 18,
+    lerp: 0.28,
+    disabled: shouldReduceMotion,
   });
 
   const clearScheduledTimers = useCallback(() => {
@@ -152,86 +136,8 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   useEffect(() => {
     return () => {
       clearScheduledTimers();
-      if (rafRef.current !== null) {
-        window.cancelAnimationFrame(rafRef.current);
-      }
     };
   }, [clearScheduledTimers]);
-
-  const applyTiltVars = useCallback((s: StageTiltState) => {
-    const el = tiltElRef.current;
-    if (!el) return;
-    const bgx = 37 + (s.px / 100) * 26;
-    const bgy = 37 + (s.py / 100) * 26;
-    const hyp = Math.min(1, Math.hypot((s.px - 50) / 50, (s.py - 50) / 50));
-    el.style.setProperty('--pk-rx', `${s.rx.toFixed(2)}deg`);
-    el.style.setProperty('--pk-ry', `${s.ry.toFixed(2)}deg`);
-    el.style.setProperty('--pk-px', `${s.px.toFixed(2)}%`);
-    el.style.setProperty('--pk-py', `${s.py.toFixed(2)}%`);
-    el.style.setProperty('--pk-bgx', `${bgx.toFixed(2)}%`);
-    el.style.setProperty('--pk-bgy', `${bgy.toFixed(2)}%`);
-    el.style.setProperty('--pk-hyp', hyp.toFixed(3));
-  }, []);
-
-  const resetTiltImmediately = useCallback(() => {
-    if (rafRef.current !== null) {
-      window.cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-    const s = tiltRef.current;
-    s.rx = 0;
-    s.ry = 0;
-    s.px = 50;
-    s.py = 50;
-    s.trx = 0;
-    s.tryVal = 0;
-    s.tpx = 50;
-    s.tpy = 50;
-    setIsTiltActive(false);
-    applyTiltVars(s);
-  }, [applyTiltVars]);
-
-  const stepTilt = useCallback(() => {
-    const s = tiltRef.current;
-    s.rx += (s.trx - s.rx) * STAGE_LERP;
-    s.ry += (s.tryVal - s.ry) * STAGE_LERP;
-    s.px += (s.tpx - s.px) * STAGE_LERP;
-    s.py += (s.tpy - s.py) * STAGE_LERP;
-
-    const settled =
-      Math.abs(s.trx - s.rx) < STAGE_EPS &&
-      Math.abs(s.tryVal - s.ry) < STAGE_EPS &&
-      Math.abs(s.tpx - s.px) < STAGE_EPS &&
-      Math.abs(s.tpy - s.py) < STAGE_EPS;
-
-    if (settled) {
-      s.rx = s.trx;
-      s.ry = s.tryVal;
-      s.px = s.tpx;
-      s.py = s.tpy;
-      applyTiltVars(s);
-      rafRef.current = null;
-      return;
-    }
-
-    applyTiltVars(s);
-    rafRef.current = window.requestAnimationFrame(stepTilt);
-  }, [applyTiltVars]);
-
-  const scheduleTilt = useCallback(() => {
-    if (shouldReduceMotion) {
-      const s = tiltRef.current;
-      s.rx = 0;
-      s.ry = 0;
-      s.px = s.tpx;
-      s.py = s.tpy;
-      applyTiltVars(s);
-      return;
-    }
-    if (rafRef.current === null) {
-      rafRef.current = window.requestAnimationFrame(stepTilt);
-    }
-  }, [applyTiltVars, shouldReduceMotion, stepTilt]);
 
   const activeBoxOption = useMemo(
     () => getBoxOption(boxState.boxId),
@@ -329,21 +235,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   const handleStagePointerMove = (
     event: React.PointerEvent<HTMLDivElement>
   ) => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const rect = stage.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-
-    const nx = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
-    const ny = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
-
-    const s = tiltRef.current;
-    s.tpx = nx * 100;
-    s.tpy = ny * 100;
-    s.trx = -(ny - 0.5) * 18;
-    s.tryVal = (nx - 0.5) * 18;
-    setIsTiltActive(true);
-    scheduleTilt();
+    updateTiltFromPointer(event.clientX, event.clientY);
 
     if (
       phase === 'sealed' &&
@@ -364,13 +256,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   const resetStageTilt = () => {
     dragStartXRef.current = null;
     setTearDragRatio(0);
-    const s = tiltRef.current;
-    s.trx = 0;
-    s.tryVal = 0;
-    s.tpx = 50;
-    s.tpy = 50;
-    setIsTiltActive(false);
-    scheduleTilt();
+    resetTilt();
   };
 
   const handleCardAction = () => {

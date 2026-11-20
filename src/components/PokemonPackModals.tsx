@@ -301,6 +301,9 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
   const [sortBy, setSortBy] = useState<BinderSortMode>('rarity_desc');
   const [query, setQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(BINDER_PAGE_SIZE);
+  const [imgStages, setImgStages] = useState<
+    Record<string, 'hires' | 'small' | 'fallback'>
+  >({});
 
   useEffect(() => {
     if (!isOpen) return;
@@ -639,6 +642,7 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
               {shownEntries.map(({ card, count }) => {
                 const powerVal = getCardPower(card);
                 const miniFoil = getCardFoilStyle(card);
+                const imgStage = imgStages[card.id] ?? 'hires';
                 return (
                   <button
                     key={card.id}
@@ -650,13 +654,34 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
                     className="pk-mini-card group relative flex flex-col gap-1 rounded-[8px] border border-folio-border bg-folio-elevated/60 p-1.5 text-left transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong"
                   >
                     <div className="relative aspect-[63/88] w-full overflow-hidden rounded-[5px] bg-folio-bg">
-                      <img
-                        src={getCardImageUrl(card, false)}
-                        alt={card.name}
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover"
-                      />
+                      {imgStage === 'fallback' ? (
+                        <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center">
+                          <span className="font-serif text-xs font-bold text-folio-ink">
+                            {card.name}
+                          </span>
+                          <span className="font-mono text-[9px] text-folio-muted">
+                            #{card.num}
+                          </span>
+                        </div>
+                      ) : (
+                        <img
+                          src={getCardImageUrl(card, imgStage === 'hires')}
+                          alt={card.name}
+                          loading="lazy"
+                          decoding="async"
+                          onError={() =>
+                            setImgStages((prev) => {
+                              const current = prev[card.id] ?? 'hires';
+                              return {
+                                ...prev,
+                                [card.id]:
+                                  current === 'hires' ? 'small' : 'fallback',
+                              };
+                            })
+                          }
+                          className="h-full w-full object-cover"
+                        />
+                      )}
                       {miniFoil !== 'none' && (
                         <span className="pk-mini-glint" aria-hidden="true" />
                       )}

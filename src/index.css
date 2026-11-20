@@ -941,8 +941,10 @@ html[data-theme='dark'] .editorial-watermark {
   --pk-bgx: 50%;
   --pk-bgy: 50%;
   --pk-hyp: 0;
+}
+
+.pk-tilt-card[data-tilting='true'] {
   transform: rotateX(var(--pk-rx)) rotateY(var(--pk-ry));
-  transform-style: preserve-3d;
   will-change: transform;
 }
 
@@ -1157,6 +1159,20 @@ html[data-theme='dark'] .editorial-watermark {
   transform: rotateY(0deg);
   visibility: visible;
   opacity: 1;
+}
+
+.pk-flip-card[data-flip-settled='true'] {
+  transform-style: flat;
+}
+
+.pk-flip-card[data-flip-settled='true'] .pk-flip-back {
+  visibility: hidden;
+}
+
+.pk-flip-card[data-flip-settled='true'] .pk-flip-front {
+  transform: none;
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
 }
 
 .pk-holo-foil,

@@ -43,6 +43,12 @@ export function useCardTilt({
   const applyVars = useCallback((s: TiltMotionState) => {
     const el = cardRef.current;
     if (!el) return;
+    const isTilting = Math.abs(s.rx) > 0.01 || Math.abs(s.ry) > 0.01;
+    if (isTilting) {
+      el.setAttribute('data-tilting', 'true');
+    } else {
+      el.removeAttribute('data-tilting');
+    }
     const bgx = 37 + (s.px / 100) * 26;
     const bgy = 37 + (s.py / 100) * 26;
     const hyp = Math.min(1, Math.hypot((s.px - 50) / 50, (s.py - 50) / 50));

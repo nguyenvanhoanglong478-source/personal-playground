@@ -56,6 +56,7 @@ export interface PokemonPackUnboxerProps {
 
 type UnboxPhase = 'sealed' | 'ripping' | 'drawing' | 'revealing' | 'summary';
 type CardTransition = 'idle' | 'exiting' | 'entering';
+type CardImgStage = 'hires' | 'small' | 'fallback';
 
 export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   locale,
@@ -73,10 +74,13 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   const [currentPack, setCurrentPack] = useState<PokemonCatalogCard[]>([]);
   const [revealIndex, setRevealIndex] = useState(0);
   const [isCardFlipped, setIsCardFlipped] = useState(false);
+  const [isFlipSettled, setIsFlipSettled] = useState(false);
   const [cardTransition, setCardTransition] = useState<CardTransition>('idle');
   const [tearDragRatio, setTearDragRatio] = useState(0);
   const [openedPackNumber, setOpenedPackNumber] = useState(1);
-  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+  const [imageStages, setImageStages] = useState<Record<string, CardImgStage>>(
+    {}
+  );
   const [inspectedCard, setInspectedCard] = useState<PokemonCatalogCard | null>(
     null
   );
@@ -85,6 +89,8 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   const dragStartXRef = useRef<number | null>(null);
   const dragDidRipRef = useRef(false);
   const timersRef = useRef<number[]>([]);
+  const recordedCardCountRef = useRef<number>(0);
+  const packCountedRef = useRef<boolean>(false);
 
   const {
     stageRef,
@@ -159,11 +165,48 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     PACKS_PER_BOX - boxState.packsRemaining + 1
   );
 
+  const advanceImageStage = useCallback((cardId: string) => {
+    setImageStages((prev) => {
+      const current = prev[cardId] ?? 'hires';
+      if (current === 'fallback') return prev;
+      return {
+        ...prev,
+        [cardId]: current === 'hires' ? 'small' : 'fallback',
+      };
+    });
+  }, []);
+
+  const commitPackCardsUpTo = useCallback(
+    (exclusiveEndIndex: number) => {
+      const start = recordedCardCountRef.current;
+      const end = Math.min(currentPack.length, exclusiveEndIndex);
+      if (end <= start) return;
+
+      const newlyRevealed = currentPack.slice(start, end);
+      recordedCardCountRef.current = end;
+      const shouldCountPack = !packCountedRef.current;
+      packCountedRef.current = true;
+
+      setBoxState((prev) => {
+        const nextCollection = { ...prev.collection };
+        for (const card of newlyRevealed) {
+          nextCollection[card.id] = (nextCollection[card.id] ?? 0) + 1;
+        }
+        return {
+          ...prev,
+          totalPacksOpened: prev.totalPacksOpened + (shouldCountPack ? 1 : 0),
+          collection: nextCollection,
+        };
+      });
+    },
+    [currentPack]
+  );
+
   const preloadPackImages = (cards: PokemonCatalogCard[]) => {
     for (const card of cards) {
       const img = new Image();
       img.decoding = 'async';
-      img.src = getCardImageUrl(card, false);
+      img.src = getCardImageUrl(card, true);
     }
   };
 
@@ -177,29 +220,24 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     const pulled = generateBoosterPack(catalog.cards, boxState.boxId);
     const currentNum = PACKS_PER_BOX - boxState.packsRemaining + 1;
 
+    recordedCardCountRef.current = 0;
+    packCountedRef.current = false;
     preloadPackImages(pulled);
     setCurrentPack(pulled);
     setOpenedPackNumber(currentNum);
     setRevealIndex(0);
     setIsCardFlipped(false);
+    setIsFlipSettled(false);
     setCardTransition('idle');
 
     if (boxState.soundEnabled) {
       playPackRipSound();
     }
 
-    setBoxState((prev) => {
-      const nextCollection = { ...prev.collection };
-      for (const card of pulled) {
-        nextCollection[card.id] = (nextCollection[card.id] ?? 0) + 1;
-      }
-      return {
-        ...prev,
-        packsRemaining: Math.max(0, prev.packsRemaining - 1),
-        totalPacksOpened: prev.totalPacksOpened + 1,
-        collection: nextCollection,
-      };
-    });
+    setBoxState((prev) => ({
+      ...prev,
+      packsRemaining: Math.max(0, prev.packsRemaining - 1),
+    }));
 
     if (shouldReduceMotion) {
       setPhase('revealing');
@@ -266,6 +304,15 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
 
     if (!isCardFlipped) {
       setIsCardFlipped(true);
+      commitPackCardsUpTo(revealIndex + 1);
+      if (shouldReduceMotion) {
+        setIsFlipSettled(true);
+      } else {
+        clearScheduledTimers();
+        scheduleTimeout(() => {
+          setIsFlipSettled(true);
+        }, 440);
+      }
       if (boxState.soundEnabled) {
         playCardFlipSound();
         playRarityPullSound(card.tier);
@@ -278,6 +325,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     }
 
     if (revealIndex + 1 >= currentPack.length) {
+      setIsFlipSettled(false);
       setPhase('summary');
       return;
     }
@@ -286,6 +334,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
       resetTiltImmediately();
       setRevealIndex((prev) => prev + 1);
       setIsCardFlipped(false);
+      setIsFlipSettled(false);
       return;
     }
 
@@ -295,6 +344,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
       resetTiltImmediately();
       setRevealIndex((prev) => prev + 1);
       setIsCardFlipped(false);
+      setIsFlipSettled(false);
       setCardTransition('entering');
       scheduleTimeout(() => {
         setCardTransition('idle');
@@ -305,9 +355,11 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   const handleRevealAll = () => {
     if (phase !== 'revealing') return;
     clearScheduledTimers();
+    commitPackCardsUpTo(currentPack.length);
     if (boxState.soundEnabled) {
       playCardSlideSound();
     }
+    setIsFlipSettled(false);
     setCardTransition('idle');
     setPhase('summary');
   };
@@ -318,15 +370,20 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
       handleOpenNewBox(boxState.boxId);
       return;
     }
+    recordedCardCountRef.current = 0;
+    packCountedRef.current = false;
     setCurrentPack([]);
     setRevealIndex(0);
     setIsCardFlipped(false);
+    setIsFlipSettled(false);
     setCardTransition('idle');
     setPhase('sealed');
   };
 
   const handleOpenNewBox = (targetBoxId: BoxThemeId = boxState.boxId) => {
     clearScheduledTimers();
+    recordedCardCountRef.current = 0;
+    packCountedRef.current = false;
     setBoxState((prev) => ({
       ...prev,
       boxId: targetBoxId,
@@ -335,6 +392,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     setCurrentPack([]);
     setRevealIndex(0);
     setIsCardFlipped(false);
+    setIsFlipSettled(false);
     setCardTransition('idle');
     setPhase('sealed');
   };
@@ -347,6 +405,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   };
 
   const handleResetCollection = () => {
+    packCountedRef.current = false;
     setBoxState((prev) => ({
       ...prev,
       collection: {},
@@ -768,6 +827,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                   data-tier={activeCard.tier}
                   data-foil={isCardFlipped ? activeFoilStyle : 'none'}
                   data-flipped={isCardFlipped ? 'true' : 'false'}
+                  data-flip-settled={isFlipSettled ? 'true' : 'false'}
                   className="pk-tilt-card pk-flip-card relative h-full w-full"
                 >
                   <div className="pk-flip-face pk-flip-back overflow-hidden rounded-[11px] border border-folio-border bg-folio-elevated shadow-soft">
@@ -782,7 +842,8 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                   <div className="pk-flip-face pk-flip-front overflow-hidden rounded-[11px] border border-folio-border bg-folio-elevated shadow-soft">
                     {isCardFlipped && (
                       <>
-                        {failedImages[activeCard.id] ? (
+                        {(imageStages[activeCard.id] ?? 'hires') ===
+                        'fallback' ? (
                           <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 p-3 text-center">
                             <span className="font-serif text-sm font-bold text-folio-ink">
                               {activeCard.name}
@@ -793,15 +854,15 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                           </div>
                         ) : (
                           <img
-                            src={getCardImageUrl(activeCard, false)}
+                            src={getCardImageUrl(
+                              activeCard,
+                              (imageStages[activeCard.id] ?? 'hires') ===
+                                'hires'
+                            )}
                             alt={activeCard.name}
+                            fetchPriority="high"
                             decoding="async"
-                            onError={() =>
-                              setFailedImages((prev) => ({
-                                ...prev,
-                                [activeCard.id]: true,
-                              }))
-                            }
+                            onError={() => advanceImageStage(activeCard.id)}
                             className="h-full w-full object-cover"
                           />
                         )}
@@ -907,6 +968,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
             >
               {currentPack.map((card) => {
                 const miniFoil = getCardFoilStyle(card);
+                const imgStage = imageStages[card.id] ?? 'hires';
                 return (
                   <button
                     key={card.id}
@@ -918,21 +980,16 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                     data-foil={miniFoil}
                     className="pk-mini-card group relative aspect-[63/88] w-full overflow-hidden rounded-[5px] border border-folio-border bg-folio-elevated transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong"
                   >
-                    {failedImages[card.id] ? (
+                    {imgStage === 'fallback' ? (
                       <span className="flex h-full w-full items-center justify-center p-1 text-center font-mono text-[8px] leading-tight text-folio-ink">
                         {card.name}
                       </span>
                     ) : (
                       <img
-                        src={getCardImageUrl(card, false)}
+                        src={getCardImageUrl(card, imgStage === 'hires')}
                         alt={card.name}
                         decoding="async"
-                        onError={() =>
-                          setFailedImages((prev) => ({
-                            ...prev,
-                            [card.id]: true,
-                          }))
-                        }
+                        onError={() => advanceImageStage(card.id)}
                         className="h-full w-full object-cover"
                       />
                     )}

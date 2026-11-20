@@ -548,5 +548,18 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` (kèm `noUnusedLocals` & `noUnusedParameters`) thoát `0` (`dist/assets/` không còn `motion-*.js`, toàn bộ thư mục `dist/` chỉ còn `775.8 KB`).
   - Playwright `verify_pokemon_unboxer.py` & `verify_workspace_games.py` thoát `0` trên `1440×900`, `820×1180` và `375×812`: `1.288` thẻ giải nén chuẩn, chống chớp lộ thẻ (`frontImgPresent: false`, `frontVisibility: "hidden"`), `8/8` logo game `.webp`/`.svg` hiển thị sắc nét không tràn (`clippedCount: 0`), `0` lỗi console/page và `0` tràn ngang.
 
+## 38. Khắc Phục Mờ Ảnh Thẻ Pokémon (`_hires.png` + Tắt Compositor 3D Lúc Nghỉ) & Chống Spoil Bộ Sưu Tập
+
+- **Khắc phục triệt để hiện tượng mờ ảnh thẻ (`PokemonPackUnboxer.tsx`, `PokemonPackModals.tsx`, `useCardTilt.ts`, `src/index.css`, `public/pokemon/card-back.jpg`)**:
+  - Chuyển toàn bộ ảnh thẻ đang lật, preload lúc xé pack, lưới 5×2 kết quả pack và lưới Bộ sưu tập từ bản thumbnail `245×342` (`.png`) sang bản độ phân giải cao **`_hires.png` (`600×825` – `733×1024`, xác minh `27/27` bộ trả về `HTTP 200`)** kèm cơ chế dự phòng tự động `hires → small → fallback`, và khôi phục mặt sau `public/pokemon/card-back.jpg` ở độ phân giải gốc `660×921`.
+  - Xóa `will-change: transform` và `transform: rotateX(0deg) rotateY(0deg)` cố định lúc thẻ đang đứng yên: `useCardTilt.ts` chỉ bật `data-tilting="true"` khi đang nghiêng/trả về `0°`, và `.pk-flip-card` chuyển sang `data-flip-settled="true"` (`transform-style: flat; transform: none`) ngay sau khi kết thúc `440ms` hoạt ảnh lật để trình duyệt vẽ ảnh thẻ ở đúng mật độ điểm ảnh gốc của màn hình HiDPI/Retina.
+- **Chống spoil thẻ chưa mở trong Bộ sưu tập (`PokemonPackUnboxer.tsx`, `src/data/pokemonPack.ts`)**:
+  - Bỏ việc cộng gộp cả 10 thẻ vào `boxState.collection` ngay lúc bấm xé pack (`handleRipPack`); thay bằng hàm `commitPackCardsUpTo` theo dõi chỉ số thẻ đã thực sự mở (`recordedCardCountRef`, `packCountedRef`).
+  - Mỗi thẻ chỉ xuất hiện trong `Bộ sưu tập` ngay khoảnh khắc người dùng lật lá đó (`0 → 1 → 2 → …`) hoặc bấm **Lật nhanh** (cộng đúng số lá chưa lật còn lại, tuyệt đối không cộng trùng).
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 51.34 kB | gzip: 13.96 kB`).
+  - Playwright `verify_pokemon_unboxer.py` (`device_scale_factor=2`) thoát `0` trên `1440×900`, `820×1180`, `375×812`: xác nhận `binderBeforeFlip: 0`, cập nhật đúng `Bộ sưu tập (0) → (1) → (2) → (10)` (`10 mẫu · 10 thẻ · 1 pack`, không trùng), ảnh thẻ lật và cả 10 ảnh trong lưới & Bộ sưu tập đạt `naturalWidth >= 600` (`_hires.png`), `flipSettled: "true"`, `transform: "none"` khi nghỉ, `0` lỗi console/page và `0` tràn ngang.
+
+
 
 

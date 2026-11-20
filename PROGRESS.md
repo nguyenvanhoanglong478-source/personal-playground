@@ -518,4 +518,16 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_COMMENTS=0`, `impeccable detect --json` trả về `[]` và `cmd /c "npm run verify"` thoát `0`.
   - Playwright `vite preview` kiểm chứng đầy đủ luồng xé pack → rút 10 thẻ → lật từng lá (#1, #2) → lật nhanh 10 thẻ → nút bật/tắt âm thanh → lọc Bộ sưu tập theo Độ hiếm / Giá trị / Sức mạnh & sắp xếp trên `1440×900`, `820×1180` và `375×812`, `0` lỗi console/page và `0` tràn ngang.
 
+## 36. Sửa Triệt Để Lỗi Chớp Lộ Thẻ Khi Chuyển Lá & Bổ Sung 11 Hiệu Ứng Foil Đúng Thực Tế Pokémon TCG
+
+- **Khắc phục triệt để lỗi chớp lộ thẻ kế tiếp (`PokemonPackUnboxer.tsx`, `src/index.css`)**:
+  - Nguyên nhân gốc: nút DOM `.pk-flip-card` bị React tái sử dụng giữa lá cũ và lá mới nên khi `revealIndex` tăng đồng thời `data-flipped` đổi `true → false`, ảnh mặt trước của lá mới đã nạp sẵn bị hiển thị trong nửa đầu chu kỳ transition ngược `380ms` (`0deg → 90deg`).
+  - Cách sửa 3 lớp: gắn `key={`${openedPackNumber}-${revealIndex}-${activeCard.id}`}` để mỗi thẻ mount mới hoàn toàn ở trạng thái úp, chỉ render ảnh mặt trước & lớp foil bên trong `.pk-flip-front` khi `isCardFlipped === true` (ảnh đã được preload sẵn trong bộ nhớ trình duyệt khi xé pack), khóa `visibility: hidden; opacity: 0` cho `.pk-flip-front` lúc úp và reset tức thì góc nghiêng `resetTiltImmediately()` trước khi chuyển lá.
+- **11 chất liệu foil đúng thực tế từng loại thẻ Pokémon TCG (`src/data/pokemonPack.ts`, `PokemonPackUnboxer.tsx`, `PokemonPackModals.tsx`, `src/index.css`)**:
+  - Phân loại chuẩn xác toàn bộ 22 độ hiếm thật trong kho `1.288` thẻ qua `getCardFoilStyle`: giữ **giấy mờ không foil (`none`)** cho `Common`, `Uncommon` và `Rare` non-holo tiền Scarlet & Violet; phân tách riêng 10 chất liệu thật gồm `holo-regular` (gương sọc), `holo-cosmos` (sao vũ trụ Base/Cosmos), `holo-v` (lăng kính chéo V / Double Rare `ex`), `holo-vmax` (vân nổi VMAX/VSTAR), `holo-fullart` (Full Art/Illustration Rare), `holo-shiny` (lưới ánh kim chéo Shiny/Radiant/Amazing), `holo-sir` (SIR lăng kính vân nổi), `holo-rainbow` (cầu vồng pastel Rainbow), `holo-gold` (vàng ánh kim 24K Secret/Hyper) và `holo-acespec` (pha lê hồng ACE SPEC).
+  - Bổ sung 3 lớp shader CSS đáp ứng theo tọa độ `--pk-px/--pk-py/--pk-bgx/--pk-bgy/--pk-hyp` (`.pk-holo-foil`, `.pk-holo-glitter`, `.pk-holo-glare`), nhãn loại foil trong khung lật & hộp thoại phóng to 3D, cùng ánh glint `.pk-mini-glint` chỉ hiện trên thẻ có foil thật trong lưới 10 thẻ & Bộ sưu tập.
+- **Kiểm chứng sau chỉnh sửa**:
+  - `TS_COMMENTS=0`, `impeccable detect --json` trả về `[]` và `cmd /c "npm run verify"` thoát `0`.
+  - Playwright kiểm chứng hồi quy chống chớp lộ thẻ (`frontImgPresentBeforeFlip: false`, `frontVisibilityBeforeFlip: "hidden"` xuyên suốt lúc chuyển sang thẻ #2), xác nhận thẻ Common mang `data-foil="none"` còn thẻ hit mang đúng `data-foil` thực tế và kiểm tra ảnh chụp soi foil 3D ở Dark/Light Mode, `0` lỗi console/page và `0` tràn ngang.
+
 

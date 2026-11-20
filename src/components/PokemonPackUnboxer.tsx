@@ -17,6 +17,7 @@ import {
   BOOSTER_BOX_OPTIONS,
   BoxThemeId,
   CARDS_PER_PACK,
+  FOIL_STYLE_LABELS,
   PACKS_PER_BOX,
   POKEMON_CARD_BACK_URL,
   POKEMON_UNBOXER_LABELS,
@@ -28,6 +29,7 @@ import {
   generateBoosterPack,
   getBoxOption,
   getBoxPool,
+  getCardFoilStyle,
   getCardImageUrl,
   getCardPower,
   isHitTier,
@@ -159,11 +161,35 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   const applyTiltVars = useCallback((s: StageTiltState) => {
     const el = tiltElRef.current;
     if (!el) return;
+    const bgx = 37 + (s.px / 100) * 26;
+    const bgy = 37 + (s.py / 100) * 26;
+    const hyp = Math.min(1, Math.hypot((s.px - 50) / 50, (s.py - 50) / 50));
     el.style.setProperty('--pk-rx', `${s.rx.toFixed(2)}deg`);
     el.style.setProperty('--pk-ry', `${s.ry.toFixed(2)}deg`);
     el.style.setProperty('--pk-px', `${s.px.toFixed(2)}%`);
     el.style.setProperty('--pk-py', `${s.py.toFixed(2)}%`);
+    el.style.setProperty('--pk-bgx', `${bgx.toFixed(2)}%`);
+    el.style.setProperty('--pk-bgy', `${bgy.toFixed(2)}%`);
+    el.style.setProperty('--pk-hyp', hyp.toFixed(3));
   }, []);
+
+  const resetTiltImmediately = useCallback(() => {
+    if (rafRef.current !== null) {
+      window.cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    const s = tiltRef.current;
+    s.rx = 0;
+    s.ry = 0;
+    s.px = 50;
+    s.py = 50;
+    s.trx = 0;
+    s.tryVal = 0;
+    s.tpx = 50;
+    s.tpy = 50;
+    setIsTiltActive(false);
+    applyTiltVars(s);
+  }, [applyTiltVars]);
 
   const stepTilt = useCallback(() => {
     const s = tiltRef.current;
@@ -371,6 +397,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     }
 
     if (shouldReduceMotion) {
+      resetTiltImmediately();
       setRevealIndex((prev) => prev + 1);
       setIsCardFlipped(false);
       return;
@@ -379,6 +406,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     clearScheduledTimers();
     setCardTransition('exiting');
     scheduleTimeout(() => {
+      resetTiltImmediately();
       setRevealIndex((prev) => prev + 1);
       setIsCardFlipped(false);
       setCardTransition('entering');
@@ -442,6 +470,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
 
   const activeCard =
     phase === 'revealing' ? currentPack[revealIndex] ?? null : null;
+  const activeFoilStyle = activeCard ? getCardFoilStyle(activeCard) : 'none';
 
   const packHitsCount = useMemo(
     () => currentPack.filter((card) => isHitTier(card.tier)).length,
@@ -815,6 +844,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
               )}
 
               <div
+                key={`${openedPackNumber}-${revealIndex}-${activeCard.id}`}
                 ref={stageRef}
                 onPointerMove={handleStagePointerMove}
                 onPointerLeave={resetStageTilt}
@@ -836,10 +866,11 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                 data-transition={cardTransition}
                 className="pk-tilt-stage pk-deck-top relative z-10 h-full w-full cursor-pointer select-none"
               >
-                {isCardFlipped && isHitTier(activeCard.tier) && (
+                {isCardFlipped && activeFoilStyle !== 'none' && (
                   <div
                     key={`burst-${activeCard.id}-${revealIndex}`}
                     data-tier={activeCard.tier}
+                    data-foil={activeFoilStyle}
                     className="pk-reveal-burst"
                     aria-hidden="true"
                   />
@@ -849,6 +880,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                   ref={tiltElRef}
                   data-active={isTiltActive && isCardFlipped ? 'true' : 'false'}
                   data-tier={activeCard.tier}
+                  data-foil={isCardFlipped ? activeFoilStyle : 'none'}
                   data-flipped={isCardFlipped ? 'true' : 'false'}
                   className="pk-tilt-card pk-flip-card relative h-full w-full"
                 >
@@ -862,31 +894,36 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                   </div>
 
                   <div className="pk-flip-face pk-flip-front overflow-hidden rounded-[11px] border border-folio-border bg-folio-elevated shadow-soft">
-                    {failedImages[activeCard.id] ? (
-                      <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 p-3 text-center">
-                        <span className="font-serif text-sm font-bold text-folio-ink">
-                          {activeCard.name}
-                        </span>
-                        <span className="font-mono text-[10px] text-folio-muted">
-                          {activeCard.rarity}
-                        </span>
-                      </div>
-                    ) : (
-                      <img
-                        src={getCardImageUrl(activeCard, false)}
-                        alt={activeCard.name}
-                        decoding="async"
-                        onError={() =>
-                          setFailedImages((prev) => ({
-                            ...prev,
-                            [activeCard.id]: true,
-                          }))
-                        }
-                        className="h-full w-full object-cover"
-                      />
+                    {isCardFlipped && (
+                      <>
+                        {failedImages[activeCard.id] ? (
+                          <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 p-3 text-center">
+                            <span className="font-serif text-sm font-bold text-folio-ink">
+                              {activeCard.name}
+                            </span>
+                            <span className="font-mono text-[10px] text-folio-muted">
+                              {activeCard.rarity}
+                            </span>
+                          </div>
+                        ) : (
+                          <img
+                            src={getCardImageUrl(activeCard, false)}
+                            alt={activeCard.name}
+                            decoding="async"
+                            onError={() =>
+                              setFailedImages((prev) => ({
+                                ...prev,
+                                [activeCard.id]: true,
+                              }))
+                            }
+                            className="h-full w-full object-cover"
+                          />
+                        )}
+                        <div className="pk-holo-foil" aria-hidden="true" />
+                        <div className="pk-holo-glitter" aria-hidden="true" />
+                        <div className="pk-holo-glare" aria-hidden="true" />
+                      </>
                     )}
-                    <div className="pk-holo-shine" aria-hidden="true" />
-                    <div className="pk-holo-glare" aria-hidden="true" />
                   </div>
                 </div>
               </div>
@@ -899,14 +936,20 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                     <div className="truncate font-serif text-sm font-bold leading-snug text-folio-ink">
                       {activeCard.name}
                     </div>
-                    <div className="flex items-center gap-1.5 font-mono text-[10px] tabular-nums text-folio-faint">
-                      <span className="truncate">
-                        {formatCardPrice(activeCard.price)}
-                      </span>
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] tabular-nums text-folio-faint">
+                      <span>{formatCardPrice(activeCard.price)}</span>
                       {getCardPower(activeCard) > 0 && (
                         <>
                           <span>·</span>
                           <span>PWR {getCardPower(activeCard)}</span>
+                        </>
+                      )}
+                      {activeFoilStyle !== 'none' && (
+                        <>
+                          <span>·</span>
+                          <span className="text-folio-muted">
+                            {FOIL_STYLE_LABELS[locale][activeFoilStyle]}
+                          </span>
                         </>
                       )}
                     </div>
@@ -976,36 +1019,43 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
               aria-label={t.summaryTitle(openedPackNumber)}
               className="grid grid-cols-5 gap-1.5"
             >
-              {currentPack.map((card) => (
-                <button
-                  key={card.id}
-                  type="button"
-                  onClick={() => setInspectedCard(card)}
-                  title={`${card.name} · ${card.set.toUpperCase()} #${card.num} · ${formatCardPrice(card.price)} (${card.rarity})`}
-                  data-card-id={card.id}
-                  data-tier={card.tier}
-                  className="pk-mini-card group relative aspect-[63/88] w-full overflow-hidden rounded-[5px] border border-folio-border bg-folio-elevated transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong"
-                >
-                  {failedImages[card.id] ? (
-                    <span className="flex h-full w-full items-center justify-center p-1 text-center font-mono text-[8px] leading-tight text-folio-ink">
-                      {card.name}
-                    </span>
-                  ) : (
-                    <img
-                      src={getCardImageUrl(card, false)}
-                      alt={card.name}
-                      decoding="async"
-                      onError={() =>
-                        setFailedImages((prev) => ({
-                          ...prev,
-                          [card.id]: true,
-                        }))
-                      }
-                      className="h-full w-full object-cover"
-                    />
-                  )}
-                </button>
-              ))}
+              {currentPack.map((card) => {
+                const miniFoil = getCardFoilStyle(card);
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => setInspectedCard(card)}
+                    title={`${card.name} · ${card.set.toUpperCase()} #${card.num} · ${formatCardPrice(card.price)} (${card.rarity})`}
+                    data-card-id={card.id}
+                    data-tier={card.tier}
+                    data-foil={miniFoil}
+                    className="pk-mini-card group relative aspect-[63/88] w-full overflow-hidden rounded-[5px] border border-folio-border bg-folio-elevated transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong"
+                  >
+                    {failedImages[card.id] ? (
+                      <span className="flex h-full w-full items-center justify-center p-1 text-center font-mono text-[8px] leading-tight text-folio-ink">
+                        {card.name}
+                      </span>
+                    ) : (
+                      <img
+                        src={getCardImageUrl(card, false)}
+                        alt={card.name}
+                        decoding="async"
+                        onError={() =>
+                          setFailedImages((prev) => ({
+                            ...prev,
+                            [card.id]: true,
+                          }))
+                        }
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                    {miniFoil !== 'none' && (
+                      <span className="pk-mini-glint" aria-hidden="true" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             <button

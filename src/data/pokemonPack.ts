@@ -12,6 +12,19 @@ export type PokemonCardTier =
   | 'ultra'
   | 'secret';
 
+export type PokemonFoilStyle =
+  | 'none'
+  | 'holo-regular'
+  | 'holo-cosmos'
+  | 'holo-v'
+  | 'holo-vmax'
+  | 'holo-fullart'
+  | 'holo-shiny'
+  | 'holo-sir'
+  | 'holo-rainbow'
+  | 'holo-gold'
+  | 'holo-acespec';
+
 export type BoxThemeId =
   | 'all'
   | 'sv3pt5'
@@ -150,6 +163,76 @@ export const TIER_LABELS: Record<Locale, Record<PokemonCardTier, string>> = {
   },
 };
 
+export const FOIL_STYLE_LABELS: Record<Locale, Record<PokemonFoilStyle, string>> = {
+  vi: {
+    none: 'Giấy mờ (Non-Holo)',
+    'holo-regular': 'Holo ánh gương',
+    'holo-cosmos': 'Holo sao vũ trụ',
+    'holo-v': 'Holo lăng kính V / ex',
+    'holo-vmax': 'Vân nổi VMAX / VSTAR',
+    'holo-fullart': 'Full Art vân nổi',
+    'holo-shiny': 'Ánh kim lưới Shiny',
+    'holo-sir': 'Lăng kính vân nổi SIR',
+    'holo-rainbow': 'Cầu vồng Rainbow',
+    'holo-gold': 'Vàng ánh kim 24K',
+    'holo-acespec': 'Pha lê hồng ACE SPEC',
+  },
+  en: {
+    none: 'Matte (Non-Holo)',
+    'holo-regular': 'Classic Mirror Holo',
+    'holo-cosmos': 'Cosmos Galaxy Holo',
+    'holo-v': 'Prism Foil (V / ex)',
+    'holo-vmax': 'Etched VMAX / VSTAR',
+    'holo-fullart': 'Textured Full Art',
+    'holo-shiny': 'Crosshatch Shiny Foil',
+    'holo-sir': 'Etched Prism SIR',
+    'holo-rainbow': 'Iridescent Rainbow',
+    'holo-gold': '24K Etched Gold',
+    'holo-acespec': 'Magenta Crystal ACE',
+  },
+};
+
+export function getCardFoilStyle(card: PokemonCatalogCard): PokemonFoilStyle {
+  const r = card.rarity.trim().toLowerCase();
+  if (!r || r === 'common' || r === 'uncommon' || r === 'none') {
+    return 'none';
+  }
+  if (r === 'rare') {
+    return card.set.toLowerCase().startsWith('sv') ? 'holo-regular' : 'none';
+  }
+  if (r.includes('rainbow')) {
+    return 'holo-rainbow';
+  }
+  if (r.includes('hyper') || r.includes('secret') || r.includes('gold')) {
+    return 'holo-gold';
+  }
+  if (r.includes('ace spec')) {
+    return 'holo-acespec';
+  }
+  if (r.includes('special illustration') || r.includes('shiny ultra')) {
+    return 'holo-sir';
+  }
+  if (r.includes('radiant') || r.includes('shiny') || r.includes('amazing')) {
+    return 'holo-shiny';
+  }
+  if (r.includes('vmax') || r.includes('vstar')) {
+    return 'holo-vmax';
+  }
+  if (r.includes('illustration') || r.includes('ultra')) {
+    return 'holo-fullart';
+  }
+  if (r.includes('double rare') || r.includes('holo v') || r.includes('holo ex') || r.includes('holo gx')) {
+    return 'holo-v';
+  }
+  if (r.includes('cosmos') || (r === 'rare holo' && card.set.toLowerCase() === 'base1')) {
+    return 'holo-cosmos';
+  }
+  if (r.includes('holo') || r.includes('trainer gallery')) {
+    return 'holo-regular';
+  }
+  return 'none';
+}
+
 export const POKEMON_UNBOXER_LABELS = {
   vi: {
     kicker: 'POKÉMON BOX',
@@ -214,6 +297,7 @@ export const POKEMON_UNBOXER_LABELS = {
     atkLabel: 'Sát thương',
     powerLabel: 'Sức mạnh',
     valueLabel: 'Giá thị trường',
+    foilLabel: 'Hiệu ứng foil',
     tiltHint: 'Rê chuột hoặc chạm kéo để soi ánh foil 3D',
   },
   en: {
@@ -279,6 +363,7 @@ export const POKEMON_UNBOXER_LABELS = {
     atkLabel: 'Max ATK',
     powerLabel: 'Power',
     valueLabel: 'Market value',
+    foilLabel: 'Card finish',
     tiltHint: 'Hover or drag to inspect 3D holo foil',
   },
 } as const;

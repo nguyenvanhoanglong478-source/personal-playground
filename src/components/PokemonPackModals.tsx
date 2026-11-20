@@ -4,6 +4,7 @@ import { RotateCcw, Search, Sparkles, Trash2, X } from 'lucide-react';
 import { Locale } from '../data/profile';
 import {
   BinderSortMode,
+  FOIL_STYLE_LABELS,
   POKEMON_CARD_BACK_URL,
   POKEMON_UNBOXER_LABELS,
   PokemonCardTier,
@@ -13,6 +14,7 @@ import {
   TIER_LIST,
   TIER_ORDER,
   formatCardPrice,
+  getCardFoilStyle,
   getCardImageUrl,
   getCardPower,
   isHitTier,
@@ -106,10 +108,16 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
   const applyVars = useCallback((s: HoloTiltState) => {
     const el = cardRef.current;
     if (!el) return;
+    const bgx = 37 + (s.px / 100) * 26;
+    const bgy = 37 + (s.py / 100) * 26;
+    const hyp = Math.min(1, Math.hypot((s.px - 50) / 50, (s.py - 50) / 50));
     el.style.setProperty('--pk-rx', `${s.rx.toFixed(2)}deg`);
     el.style.setProperty('--pk-ry', `${s.ry.toFixed(2)}deg`);
     el.style.setProperty('--pk-px', `${s.px.toFixed(2)}%`);
     el.style.setProperty('--pk-py', `${s.py.toFixed(2)}%`);
+    el.style.setProperty('--pk-bgx', `${bgx.toFixed(2)}%`);
+    el.style.setProperty('--pk-bgy', `${bgy.toFixed(2)}%`);
+    el.style.setProperty('--pk-hyp', hyp.toFixed(3));
   }, []);
 
   const stepTilt = useCallback(() => {
@@ -200,6 +208,7 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
 
   const setName = setsMap[card.set] ?? card.set.toUpperCase();
   const powerVal = getCardPower(card);
+  const foilStyle = getCardFoilStyle(card);
 
   return createPortal(
     <div
@@ -240,6 +249,7 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
               ref={cardRef}
               data-active={isActive ? 'true' : 'false'}
               data-tier={card.tier}
+              data-foil={foilStyle}
               className="pk-tilt-card relative h-full w-full overflow-hidden rounded-[12px] border border-folio-border bg-folio-elevated shadow-soft"
             >
               {imgStage === 'fallback' ? (
@@ -270,7 +280,8 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
                   className="h-full w-full select-none object-cover"
                 />
               )}
-              <div className="pk-holo-shine" aria-hidden="true" />
+              <div className="pk-holo-foil" aria-hidden="true" />
+              <div className="pk-holo-glitter" aria-hidden="true" />
               <div className="pk-holo-glare" aria-hidden="true" />
             </div>
           </div>
@@ -290,6 +301,10 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
               )}
               <span>{TIER_LABELS[locale][card.tier]}</span>
+            </span>
+
+            <span className="rounded-full border border-folio-border bg-folio-elevated px-2.5 py-0.5 font-mono text-[10.5px] font-medium text-folio-muted">
+              {FOIL_STYLE_LABELS[locale][foilStyle]}
             </span>
 
             {ownedCount > 0 && (
@@ -739,12 +754,14 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 md:grid-cols-6">
               {shownEntries.map(({ card, count }) => {
                 const powerVal = getCardPower(card);
+                const miniFoil = getCardFoilStyle(card);
                 return (
                   <button
                     key={card.id}
                     type="button"
                     onClick={() => onSelectCard(card)}
                     data-tier={card.tier}
+                    data-foil={miniFoil}
                     data-card-id={card.id}
                     className="pk-mini-card group relative flex flex-col gap-1 rounded-[8px] border border-folio-border bg-folio-elevated/60 p-1.5 text-left transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong"
                   >
@@ -756,8 +773,11 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
                         decoding="async"
                         className="h-full w-full object-cover"
                       />
+                      {miniFoil !== 'none' && (
+                        <span className="pk-mini-glint" aria-hidden="true" />
+                      )}
                       {count > 1 && (
-                        <span className="absolute right-1 top-1 rounded bg-black/80 px-1 py-0.5 font-mono text-[9.5px] font-bold leading-none text-white">
+                        <span className="absolute right-1 top-1 z-10 rounded bg-black/80 px-1 py-0.5 font-mono text-[9.5px] font-bold leading-none text-white">
                           ×{count}
                         </span>
                       )}

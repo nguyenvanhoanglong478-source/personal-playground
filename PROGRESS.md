@@ -491,4 +491,15 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_COMMENTS=0`, `impeccable detect --json` trả về `[]` và `cmd /c "npm run verify"` thoát `0` (`dist/games/` chứa đủ `8` tệp logo).
   - Playwright `vite preview` kiểm chứng cả `8` thẻ `<img>` đều tải thành công (`complete: true`, `naturalWidth > 0`), `clippedCount: 0`, `0` lỗi console/page và `0` tràn ngang trên `1440×900`, `820×1180` và `375×812`.
 
+## 34. Thay Thế Vé 3D Bằng Mini-Game Mở Hộp Thẻ Pokémon TCG (12 Pack × 10 Thẻ) (`PokemonPackUnboxer.tsx`, `PokemonPackModals.tsx`, `pokemonPack.ts`)
+
+- **Dọn bỏ vé 3D cũ**: Xóa hoàn toàn `src/components/AboutFoilPass.tsx`, `src/components/aboutPassTextures.ts` và các quy tắc `.about-foil-*` trong `src/index.css`; thay thế bằng `LazyPokemonPackUnboxer` (`React.lazy` + `Suspense`) tại cột trái `02. Về tôi` (`src/components/About.tsx`), giữ nguyên cột phải nội dung giới thiệu & 4 nguyên tắc làm việc.
+- **Kho dữ liệu `1.288` thẻ Pokémon thật (`public/data/pokemon-cards.json`, `public/pokemon/card-back.jpg`)**:
+  - Hợp nhất không trùng lặp toàn bộ `91` thẻ từ `simeydotme/pokemon-cards-css` cùng 7 bộ kinh điển từ `PokemonTCG/pokemon-tcg-data` (`sv3pt5` 151, `swsh12pt5` + `swsh12pt5gg` Crown Zenith, `swsh7` Evolving Skies, `sv4pt5` Paldean Fates, `sv8pt5` Prismatic Evolutions, `base1` Base Set 1999) đạt `1.288` thẻ thuộc `27` bộ (`166 KB` JSON tải trễ theo nhu cầu) kèm mặt sau thẻ chính thức `public/pokemon/card-back.jpg` (`62 KB`).
+- **Trải nghiệm mở hộp (`src/data/pokemonPack.ts`, `PokemonPackUnboxer.tsx`, `PokemonPackModals.tsx`, `src/index.css`)**:
+  - Mỗi hộp gồm **12 pack** (`PACKS_PER_BOX = 12`), mỗi pack sinh **10 thẻ ngẫu nhiên không trùng lặp** (`CARDS_PER_PACK = 10`) phân tầng tỷ lệ thực tế (`common`, `uncommon`, `rare`, `ultra`, `secret`), hỗ trợ chọn 7 loại hộp bài, xé pack bằng bấm hoặc vuốt ngang, lật từng thẻ 3D hoặc **Lật nhanh** xem đủ lưới `5×2`, soi ánh foil 3D phóng to `_hires.png` (`CardInspectorModal`) và **Bộ sưu tập** (`CollectionBinderModal`) lưu cục bộ qua `localStorage` kèm lọc thẻ hiếm / tìm kiếm song ngữ `VI / EN`.
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_COMMENTS=0`, `impeccable detect --json` trả về `[]` và `cmd /c "npm run verify"` thoát `0` (`1608` modules, `PokemonPackUnboxer-*.js 33.56 kB | gzip: 9.47 kB` nhẹ hơn vé WebGL cũ `41.35 kB`).
+  - Playwright `vite preview` trên `1440×900` (Dark/Light, `VI` & `EN`), `820×1180` (Light) và `375×812` (Dark): nạp đủ `1.288` thẻ, xé Pack #1 giảm còn `11/12 pack`, hiển thị đủ `10/10` ảnh thẻ thật (`naturalWidth > 0`, `unique: 10`), mở/đóng hộp thoại phóng to 3D và Bộ sưu tập `10` thẻ, `0` lỗi console/page và `0` tràn ngang.
+
 

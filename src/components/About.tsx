@@ -2,8 +2,10 @@ import React, { Suspense, lazy } from 'react';
 import { Compass, Sparkles, UserCheck } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 
-const LazyAboutFoilPass = lazy(() =>
-  import('./AboutFoilPass').then((module) => ({ default: module.AboutFoilPass }))
+const LazyPokemonPackUnboxer = lazy(() =>
+  import('./PokemonPackUnboxer').then((module) => ({
+    default: module.PokemonPackUnboxer,
+  }))
 );
 
 interface AboutProps {
@@ -11,16 +13,21 @@ interface AboutProps {
   theme: 'light' | 'dark';
 }
 
-const AboutFoilPassFallback: React.FC = () => (
+const PokemonPackUnboxerFallback: React.FC = () => (
   <div
     aria-hidden="true"
-    className="mx-auto flex w-full max-w-[300px] flex-col items-center gap-3 lg:mx-0"
+    className="mx-auto w-full max-w-[330px] lg:mx-0"
   >
-    <div className="aspect-[360/560] w-full rounded-[14px] border border-folio-border bg-folio-surface" />
-    <div className="h-[15px] w-48 rounded bg-folio-elevated" />
-    <div className="flex w-full justify-center gap-2">
-      <div className="h-[36px] w-[112px] rounded-full border border-folio-border bg-folio-surface" />
-      <div className="h-[36px] w-[124px] rounded-full border border-folio-border bg-folio-surface" />
+    <div className="folio-card flex flex-col gap-3 !p-4">
+      <div className="h-5 w-full rounded bg-folio-elevated" />
+      <div className="h-8 w-full rounded-[var(--radius-control)] bg-folio-elevated" />
+      <div className="grid grid-cols-12 gap-1">
+        {Array.from({ length: 12 }).map((_, idx) => (
+          <span key={idx} className="h-1.5 rounded-full bg-folio-border" />
+        ))}
+      </div>
+      <div className="mx-auto aspect-[63/88] w-[212px] rounded-[12px] border border-folio-border bg-folio-elevated" />
+      <div className="h-9 w-full rounded-full bg-folio-elevated" />
     </div>
   </div>
 );
@@ -53,8 +60,8 @@ export const About: React.FC<AboutProps> = ({ locale, theme }) => {
 
         <div className="grid grid-cols-1 items-start gap-6 overflow-visible lg:grid-cols-12 lg:gap-8">
           <div className="relative z-20 overflow-visible lg:col-span-4">
-            <Suspense fallback={<AboutFoilPassFallback />}>
-              <LazyAboutFoilPass locale={locale} theme={theme} />
+            <Suspense fallback={<PokemonPackUnboxerFallback />}>
+              <LazyPokemonPackUnboxer locale={locale} theme={theme} />
             </Suspense>
           </div>
 

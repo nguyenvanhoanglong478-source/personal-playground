@@ -51,6 +51,8 @@ export function useCardTilt({
     }
     const bgx = 37 + (s.px / 100) * 26;
     const bgy = 37 + (s.py / 100) * 26;
+    const gx = (s.px - 50) * 0.72;
+    const gy = (s.py - 50) * 0.5;
     const hyp = Math.min(1, Math.hypot((s.px - 50) / 50, (s.py - 50) / 50));
     el.style.setProperty('--pk-rx', `${s.rx.toFixed(2)}deg`);
     el.style.setProperty('--pk-ry', `${s.ry.toFixed(2)}deg`);
@@ -58,6 +60,8 @@ export function useCardTilt({
     el.style.setProperty('--pk-py', `${s.py.toFixed(2)}%`);
     el.style.setProperty('--pk-bgx', `${bgx.toFixed(2)}%`);
     el.style.setProperty('--pk-bgy', `${bgy.toFixed(2)}%`);
+    el.style.setProperty('--pk-gx', `${gx.toFixed(2)}%`);
+    el.style.setProperty('--pk-gy', `${gy.toFixed(2)}%`);
     el.style.setProperty('--pk-hyp', hyp.toFixed(3));
   }, []);
 

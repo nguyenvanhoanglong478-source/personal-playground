@@ -58,7 +58,7 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
     resetTilt,
     resetTiltImmediately,
   } = useCardTilt({
-    maxDeg: 14,
+    maxDeg: 11,
     lerp: 0.28,
     disabled: shouldReduceMotion || phase !== 'sealed',
   });
@@ -85,12 +85,16 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
     dragMovedRef.current = false;
     didRipRef.current = false;
     lastTickStepRef.current = 0;
-    updateTiltFromPointer(event.clientX, event.clientY);
+    if (event.pointerType === 'mouse') {
+      updateTiltFromPointer(event.clientX, event.clientY);
+    }
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (phase !== 'sealed') return;
-    updateTiltFromPointer(event.clientX, event.clientY);
+    if (event.pointerType === 'mouse') {
+      updateTiltFromPointer(event.clientX, event.clientY);
+    }
 
     if (dragStartXRef.current === null || didRipRef.current) return;
 
@@ -145,19 +149,24 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
     onRipTrigger();
   };
 
-  const lidDragStyle: React.CSSProperties | undefined =
-    phase === 'sealed' && tearProgress > 0
-      ? {
-          transform: `translate3d(${(tearProgress * 14).toFixed(1)}px, ${(-tearProgress * 10).toFixed(1)}px, 0) rotate(${(-tearProgress * 6.5).toFixed(1)}deg)`,
-        }
-      : undefined;
+  const lidX = (tearProgress * 14).toFixed(1);
+  const lidY = (-tearProgress * 10).toFixed(1);
+  const lidRot = (-tearProgress * 6.5).toFixed(1);
 
   const packVars = {
     '--pk-tear': tearProgress.toFixed(3),
+    '--pk-lid-x': `${lidX}px`,
+    '--pk-lid-y': `${lidY}px`,
+    '--pk-lid-rot': `${lidRot}deg`,
     '--pk-pack-accent': option.accentColor,
     '--pk-pack-glow': option.glowColor,
     '--pk-pack-stripe': option.foilStripeColor,
   } as React.CSSProperties;
+
+  const setFoilOverlay = `linear-gradient(180deg, rgba(${option.foilBaseRgb}, 0.96) 0%, rgba(${option.foilBaseRgb}, 0.64) 12%, rgba(${option.foilBaseRgb}, 0.04) 24%, rgba(${option.foilBaseRgb}, 0.04) 42%, rgba(${option.foilBaseRgb}, 0.96) 55%, rgb(${option.foilBaseRgb}) 61%, rgb(${option.foilBaseRgb}) 100%)`;
+
+  const showTearBlade =
+    (phase === 'sealed' && tearProgress > 0) || phase === 'ripping';
 
   return (
     <div className="relative flex justify-center py-1">
@@ -253,17 +262,17 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
             >
               <polygon
                 points="0,8 0,3 14,0 26,5 40,1 55,4 71,0 88,5 104,1 122,4 139,0 156,5 174,1 190,4 202,1 214,4 214,8"
-                fill="rgba(255,255,255,0.22)"
+                fill="rgba(255,255,255,0.26)"
               />
               <polygon
                 points="0,8 0,5 14,2 26,6 40,3 55,6 71,2 88,6 104,3 122,6 139,2 156,6 174,3 190,6 202,3 214,6 214,8"
-                fill="#0D1017"
+                fill={`rgb(${option.foilBaseRgb})`}
               />
             </svg>
 
             <div className="relative flex flex-1 flex-col justify-between overflow-hidden">
               {artStage !== 'fallback' && (
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[72%] overflow-hidden">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[66%] overflow-hidden">
                   <img
                     src={
                       artStage === 'hires'
@@ -283,18 +292,21 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
                         prev === 'hires' ? 'small' : 'fallback'
                       )
                     }
-                    className="h-full w-full object-cover opacity-85 saturate-[1.08]"
+                    className="h-full w-full object-cover saturate-[1.06]"
                   />
                 </div>
               )}
 
               <div
                 aria-hidden="true"
-                style={{
-                  background:
-                    'linear-gradient(180deg, rgba(8,10,16,0.74) 0%, rgba(8,10,16,0.08) 20%, rgba(8,10,16,0.06) 40%, rgba(8,10,16,0.9) 58%, rgba(8,10,16,0.98) 74%, rgba(8,10,16,0.99) 100%)',
-                }}
+                style={{ background: setFoilOverlay }}
                 className="pointer-events-none absolute inset-0"
+              />
+
+              <div
+                aria-hidden="true"
+                style={{ borderColor: option.accentColor }}
+                className="pk-pack-foil-frame"
               />
 
               <div className="relative z-10 flex items-center justify-between gap-2 px-3 pt-2.5">
@@ -303,7 +315,7 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
                     borderColor: option.accentColor,
                     color: option.accentColor,
                   }}
-                  className="rounded-full border bg-black/70 px-2 py-0.5 font-mono text-[9px] font-bold tracking-[0.12em]"
+                  className="rounded-full border bg-black/65 px-2 py-0.5 font-mono text-[8.5px] font-bold tracking-[0.12em]"
                 >
                   {option.seriesCode}
                 </span>
@@ -311,7 +323,7 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
                 <svg
                   viewBox="0 0 28 28"
                   aria-hidden="true"
-                  className="h-5 w-5 text-white/85 drop-shadow"
+                  className="h-5 w-5 text-white/90 drop-shadow"
                 >
                   <circle
                     cx="14"
@@ -391,14 +403,46 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
                 </div>
               )}
 
-              <div className="relative z-10 px-3 pb-2.5 text-center">
-                <div className="font-serif text-[1.15rem] font-bold leading-tight tracking-tight text-white drop-shadow">
+              <div className="relative z-10 px-3.5 pb-3 pt-1 text-center">
+                <div
+                  aria-hidden="true"
+                  className="mb-1.5 flex items-center justify-center gap-1.5"
+                >
+                  <span
+                    style={{
+                      background: `linear-gradient(90deg, transparent, ${option.accentColor})`,
+                    }}
+                    className="h-px flex-1 opacity-75"
+                  />
+                  <span
+                    style={{ backgroundColor: option.accentColor }}
+                    className="h-1.5 w-1.5 rotate-45"
+                  />
+                  <span
+                    style={{
+                      background: `linear-gradient(270deg, transparent, ${option.accentColor})`,
+                    }}
+                    className="h-px flex-1 opacity-75"
+                  />
+                </div>
+
+                <div
+                  style={{ color: option.accentColor }}
+                  className="font-mono text-[8px] font-bold tracking-[0.22em]"
+                >
+                  POKÉMON TCG
+                </div>
+
+                <div className="mt-0.5 font-serif text-[1.15rem] font-bold leading-tight tracking-tight text-white drop-shadow">
                   {option.title}
                 </div>
-                <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-white/25 bg-black/65 px-2.5 py-0.5 font-mono text-[9.5px] font-medium text-white/90">
-                  <span>{t.cardsPerPack}</span>
+
+                <div className="mt-1 font-mono text-[8.5px] font-medium tracking-[0.12em] text-white/75">
+                  {t.packSpecLine}
                 </div>
               </div>
+
+              <div className="pk-mylar-glare" aria-hidden="true" />
             </div>
 
             <div
@@ -407,15 +451,12 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
               aria-hidden="true"
             />
 
-            <div className="pk-mylar-sheen" aria-hidden="true" />
+            <div className="pk-mylar-cylinder" aria-hidden="true" />
           </div>
 
           {phase !== 'drawing' && (
             <div
-              style={{
-                background: option.accentGradient,
-                ...lidDragStyle,
-              }}
+              style={{ background: option.accentGradient }}
               className="pk-pack-lid"
             >
               <div
@@ -424,13 +465,13 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
                 aria-hidden="true"
               />
 
-              <div className="relative z-10 flex flex-1 items-center justify-between gap-1.5 px-2.5">
-                <span className="font-mono text-[9px] font-bold tracking-[0.1em] text-white/95">
+              <div className="relative z-10 flex flex-1 items-center justify-between gap-1.5 px-3">
+                <span className="font-mono text-[9px] font-bold tabular-nums tracking-[0.12em] text-white/95">
                   {t.packBadge(packNumber)}
                 </span>
 
                 <span className="flex items-center gap-0.5 font-mono text-[8.5px] font-semibold text-white/80">
-                  <span>{t.dragTearLabel}</span>
+                  <span>{t.dragTearShort}</span>
                   <ChevronRight className="h-2.5 w-2.5" aria-hidden="true" />
                   <Scissors className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
@@ -438,11 +479,13 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
 
               <span className="pk-tear-notch-left" aria-hidden="true" />
               <span className="pk-tear-notch-right" aria-hidden="true" />
-              <div className="pk-mylar-sheen" aria-hidden="true" />
+              <div className="pk-mylar-cylinder" aria-hidden="true" />
             </div>
           )}
 
-          <div className="pk-tear-seam-blade" aria-hidden="true" />
+          {showTearBlade && (
+            <div className="pk-tear-seam-blade" aria-hidden="true" />
+          )}
 
           {phase === 'ripping' &&
             SPARKLE_VECTORS.map((sp, idx) => (

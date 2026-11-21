@@ -250,10 +250,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
       }
       scheduleTimeout(() => {
         setPhase('revealing');
-        setCardTransition('entering');
-        scheduleTimeout(() => {
-          setCardTransition('idle');
-        }, 220);
+        setCardTransition('idle');
       }, 680);
     }, 520);
   }, [
@@ -270,6 +267,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   const handleStagePointerMove = (
     event: React.PointerEvent<HTMLDivElement>
   ) => {
+    if (event.pointerType !== 'mouse') return;
     updateTiltFromPointer(event.clientX, event.clientY);
   };
 
@@ -346,6 +344,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
 
   const handlePrepareNextPack = () => {
     clearScheduledTimers();
+    resetTiltImmediately();
     if (boxState.packsRemaining <= 0) {
       handleOpenNewBox(boxState.boxId);
       return;
@@ -362,6 +361,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
 
   const handleOpenNewBox = (targetBoxId: BoxThemeId = boxState.boxId) => {
     clearScheduledTimers();
+    resetTiltImmediately();
     recordedCardCountRef.current = 0;
     packCountedRef.current = false;
     setBoxState((prev) => ({
@@ -562,25 +562,27 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                   />
                 </div>
 
-                {phase === 'sealed' ? (
-                  <>
-                    <p className="text-center font-mono text-[10.5px] text-folio-faint">
-                      {t.tearHint}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleRipPack}
-                      className="folio-btn-primary w-full justify-center"
-                    >
-                      <PackageOpen className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>{t.ripButton}</span>
-                    </button>
-                  </>
-                ) : (
-                  <div className="flex min-h-[38px] w-full items-center justify-center rounded-full border border-folio-border bg-folio-elevated px-3 font-mono text-[11px] font-medium text-folio-muted">
-                    {phase === 'ripping' ? t.rippingLabel : t.drawingLabel}
-                  </div>
-                )}
+                <div className="flex min-h-[64px] w-full flex-col justify-end gap-2">
+                  {phase === 'sealed' ? (
+                    <>
+                      <p className="text-center font-mono text-[10.5px] leading-none text-folio-faint">
+                        {t.tearHint}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleRipPack}
+                        className="folio-btn-primary w-full justify-center"
+                      >
+                        <PackageOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>{t.ripButton}</span>
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex min-h-[38px] w-full items-center justify-center rounded-full border border-folio-border bg-folio-elevated px-3 font-mono text-[11px] font-medium text-folio-muted">
+                      {phase === 'ripping' ? t.rippingLabel : t.drawingLabel}
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <div className="flex min-h-[360px] w-full flex-col items-center justify-center gap-3 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/60 p-5 text-center">
@@ -676,15 +678,17 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                 data-transition={cardTransition}
                 className="pk-tilt-stage pk-deck-top relative z-10 h-full w-full cursor-pointer select-none"
               >
-                {isCardFlipped && activeFoilStyle !== 'none' && (
-                  <div
-                    key={`burst-${activeCard.id}-${revealIndex}`}
-                    data-tier={activeCard.tier}
-                    data-foil={activeFoilStyle}
-                    className="pk-reveal-burst"
-                    aria-hidden="true"
-                  />
-                )}
+                {isCardFlipped &&
+                  (activeCard.tier === 'ultra' ||
+                    activeCard.tier === 'secret') && (
+                    <div
+                      key={`burst-${activeCard.id}-${revealIndex}`}
+                      data-tier={activeCard.tier}
+                      data-foil={activeFoilStyle}
+                      className="pk-reveal-burst"
+                      aria-hidden="true"
+                    />
+                  )}
 
                 <div
                   ref={tiltElRef}

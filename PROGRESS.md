@@ -587,6 +587,23 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_CSS_COMMENTS=0`, `UNUSED_CSS_CLASSES=[]`, `UNUSED_POKE_VARS=[]` và `cmd /c "npm run verify"` thoát `0`.
   - Playwright `verify_hero_card.py` (`device_scale_factor=2`) thoát `0` trên `1440×900` (Light/Dark/Hover) và `375×812` (Mobile touch): xác nhận `badBlend: []`, `badMask: []`, `badFilter: []`, PC hover nghiêng mượt (`data-tilting="true"`) rồi trả phẳng (`transform: "none"`) khi rời chuột, Mobile chạm không kích hoạt tilt (`transform: "none"`), đủ `5` chip dự án, `0` lỗi console/page và `0` tràn ngang.
 
+## 41. Nâng Tầm 7 Vỏ Pack Sưu Tầm Kim Loại & Diệt Triệt Để 6 Lỗi Hiệu Ứng / Hoạt Ảnh Thừa
+
+- **Nâng cấp diện mạo cả 7 vỏ Booster Pack chuẩn sưu tầm (`src/data/pokemonPack.ts`, `src/components/PokemonBoosterPack.tsx`, `src/index.css`)**:
+  - Bổ sung `foilBaseRgb` riêng cho từng bộ thay cho lớp phủ đen chung để giữ trọn sắc kim loại đặc trưng của cả 7 dòng: *All-Star Vault* (Obsidian/Vàng), *Pokémon 151* (Đỏ Crimson/Vàng), *Crown Zenith* (Xanh Navy/Vàng), *Evolving Skies* (Xanh Ngọc Lục Bảo/Bạc Hà), *Prismatic Evolutions* (Thép Xám/Xanh Băng), *Paldean Fates* (Thép Sương/Xanh Trời), *Base Set 1999* (Đồng Cổ/Vàng).
+  - Bổ sung khung chỉ kim loại `.pk-pack-foil-frame`, rãnh ép nhiệt lõm 3D trên/dưới `.pk-foil-crimp-top/bottom`, ánh trụ Mylar tĩnh `.pk-mylar-cylinder`, tấm bảng tên in nổi có đường kẻ & dấu kim cương (`POKÉMON TCG` + tiêu đề + `10 THẺ · BOOSTER PACK`), nhãn số thứ tự cân đối `PACK 01/12` và nút gợi ý `Kéo xé`.
+  - Căn chỉnh lại `coverArtPosition`, `coverArtScale` và độ cắt nền foil (`55% → 61%`) cho từng bộ để **7/7 vỏ pack không lọt bất kỳ chữ kỹ năng / hộp luật thẻ nào**, đồng thời tôn rõ chân dung biểu tượng (Arceus VSTAR, Charizard 151, Giratina VSTAR, khuôn mặt Umbreon VMAX Moonbreon, Tera Umbreon ex, Shiny Bubble Mew, Holo Charizard 1999).
+- **Loại bỏ toàn bộ 6 lỗi hiệu ứng & hoạt ảnh thừa (`PokemonBoosterPack.tsx`, `PokemonPackUnboxer.tsx`, `useCardTilt.ts`, `src/index.css`)**:
+  - **Không còn hộp tối mồ côi lúc rút thẻ**: đồng bộ `.pk-pouch-interior` chạy chung `pk-body-drop-away` (`520ms`, trượt gọn `34px` và mờ dần `opacity: 0` mà không đè lên thanh trạng thái phía dưới) cùng `.pk-pack-body-shell`.
+  - **Không kẹt thanh sáng `.pk-tear-seam-blade` sau khi kéo xé tay**: chỉ mount đường cắt sáng khi `(phase === 'sealed' && tearProgress > 0) || phase === 'ripping'`.
+  - **Không giật lùi nắp pack 1 khung hình lúc chuyển từ kéo tay sang xé**: truyền `--pk-lid-x`, `--pk-lid-y`, `--pk-lid-rot` trực tiếp vào điểm `0%` của `@keyframes pk-lid-fly-off`.
+  - **0.00px giật chiều cao hộp bài giữa 3 pha `sealed → ripping → drawing`**: khóa vùng nút đáy ở `min-h-[64px]` đồng nhất (`643.88px` không đổi qua mọi pha).
+  - **Không chớp mờ trùng lặp ở thẻ #1 sau khi rút từ pack**: bỏ nhịp `cardTransition = 'entering'` (`opacity: 0.65`) sau pha `drawing → revealing` (giữ `data-transition="idle"`), đồng thời giới hạn vòng `.pk-reveal-burst` chỉ nổ cho thẻ `ultra` / `secret`.
+  - **Thuần GPU compositor & tách biệt chuột PC / cảm ứng di động**: thay `.pk-mylar-sheen` vẽ lại `radial-gradient` mỗi khung hình bằng `.pk-mylar-glare` chạy `transform: translate3d(var(--pk-gx), var(--pk-gy), 0)` + `opacity` từ `useCardTilt.ts`, chỉ bật tilt 3D khi `pointerType === 'mouse'` và gọi `resetTiltImmediately()` sạch khi đổi pack / mở hộp mới.
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]` và `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 61.14 kB | gzip: 16.48 kB`, `index-*.css 69.48 kB | gzip: 14.32 kB`).
+  - Playwright `verify_pokemon_unboxer.py` (`device_scale_factor=2`) kiểm chứng toàn bộ 7 ảnh bìa `_hires.png` (`600px`–`734px`), soi trực quan 7/7 vỏ pack sạch tuyệt đối chữ thẻ, xác nhận `heightSealed === heightRipping === heightDrawingPack2 === 643.88px` (`0.00px` jump), `drawingBladeCount: 0`, `drawingPouchAnim: "pk-body-drop-away"`, `firstCardTransition: "idle"`, `pack2Card1Transition: "idle"`, `.pk-mylar-glare` chạy `matrix(...)` thuần GPU, Mobile `packActiveRest: "false"`, bảo toàn chống spoil Bộ sưu tập (`0 → 1 → 2 → 10`) và chống chớp lộ mặt thẻ, `0` lỗi console/page và `0` tràn ngang trên `1440px`, `820px`, `375px`.
+
 
 
 

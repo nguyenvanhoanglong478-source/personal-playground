@@ -604,6 +604,18 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]` và `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 61.14 kB | gzip: 16.48 kB`, `index-*.css 69.48 kB | gzip: 14.32 kB`).
   - Playwright `verify_pokemon_unboxer.py` (`device_scale_factor=2`) kiểm chứng toàn bộ 7 ảnh bìa `_hires.png` (`600px`–`734px`), soi trực quan 7/7 vỏ pack sạch tuyệt đối chữ thẻ, xác nhận `heightSealed === heightRipping === heightDrawingPack2 === 643.88px` (`0.00px` jump), `drawingBladeCount: 0`, `drawingPouchAnim: "pk-body-drop-away"`, `firstCardTransition: "idle"`, `pack2Card1Transition: "idle"`, `.pk-mylar-glare` chạy `matrix(...)` thuần GPU, Mobile `packActiveRest: "false"`, bảo toàn chống spoil Bộ sưu tập (`0 → 1 → 2 → 10`) và chống chớp lộ mặt thẻ, `0` lỗi console/page và `0` tràn ngang trên `1440px`, `820px`, `375px`.
 
+## 42. Nâng Cấp Chất Liệu 3D Phồng & Hiệu Ứng "Bọc Nhựa Bóng" Cho 7 Vỏ Booster Pack
+
+- **Phom túi ép nhiệt chuẩn vật lý & độ phồng 3D (`PokemonBoosterPack.tsx`, `src/index.css`)**:
+  - Chuyển góc bo vỏ gói và chồng gói nền từ bo tròn kiểu thẻ (`12px`) sang góc cắt máy ép nhiệt sắc nét **`5px`**, mở rộng 2 mép ép nhiệt răng cưa `.pk-foil-crimp-top/bottom` lên `18px` với gờ hàn nhựa bóng + rãnh răng cưa 3D sắc nét, và khớp màu khía xé chữ V (`.pk-tear-notch-left/right`) theo `var(--bg-surface)` hòa liền mạch trên cả Light & Dark Mode.
+  - Nâng cấp `.pk-mylar-cylinder` (bo tối sâu hai bên sườn gói, viền sáng Fresnel nhựa bóng tại `2.4%` và `97.6%`, khối phồng trụ lệch tâm) kết hợp `.pk-pillow-bulge` (bóng kẹp lõm sát 2 mép ép nhiệt và gờ cong phản sáng trên/dưới) và bóng tiếp đất 3D `.pk-pack-ground-shadow` cùng đổ bóng đa tầng.
+- **Lớp bọc nhựa bóng Cellophane & cặp vệt sáng ngược chiều thuần GPU (`PokemonBoosterPack.tsx`, `src/index.css`)**:
+  - Bổ sung `.pk-plastic-wrap` và `.pk-plastic-wrap-lid` mô phỏng lớp màng bọc nhựa BOPP/Cellophane bóng loáng ngay cả ở trạng thái tĩnh (Mobile lẫn Desktop lúc nghỉ): 2 dải phản chiếu ánh sáng chéo sắc cạnh `118deg`, 4 điểm căng nếp nhựa ở 4 góc và viền khúc xạ nhựa trong (`inset` rim bevel), tuyệt đối không dùng `feTurbulence`, `backdrop-filter` hay vòng lặp chạy ngầm.
+  - Khi rê chuột trên PC (`pointerType === 'mouse'`), tăng nhẹ góc nghiêng 3D lên `±13deg` kèm 2 vệt lóe nhựa di chuyển ngược chiều nhau thuần GPU compositor (`.pk-mylar-glare` và `.pk-mylar-glare-alt` chạy `transform: translate3d(...)` + `opacity`), tự ẩn ở `prefers-reduced-motion: reduce` và giữ phẳng hoàn toàn trên cảm ứng di động.
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]`, `impeccable detect --json src/components/PokemonBoosterPack.tsx src/index.css` trả về `0` lỗi trên toàn bộ mã vỏ pack mới, và `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 61.51 kB | gzip: 16.53 kB`, `index-*.css 71.87 kB | gzip: 14.82 kB`).
+  - Playwright `verify_pokemon_unboxer.py` (`device_scale_factor=2`) kiểm chứng toàn bộ 7/7 vỏ pack + trạng thái nghiêng 3D hover (`shellTransform: matrix3d(...)`, `.pk-mylar-glare` `opacity: 0.52` và `.pk-mylar-glare-alt` `opacity: 0.3` trượt ngược chiều), `heightSealed = heightRipping = heightDrawingPack2 = 643.88px` (`0.00px` jump), `drawingBladeCount: 0`, `drawingPouchAnim: "pk-body-drop-away"`, `firstCardTransition: "idle"`, Mobile `packActiveRest: "false"`, `0` lỗi console/page và `0` tràn ngang trên `1440px`, `820px`, `375px`.
+
 
 
 

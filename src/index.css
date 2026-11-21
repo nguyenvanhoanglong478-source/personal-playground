@@ -811,16 +811,42 @@ html[data-theme='dark'] .pk-stage-mat {
   --pk-pack-stripe: rgba(236, 201, 106, 0.24);
 }
 
+.pk-pack-ground-shadow {
+  pointer-events: none;
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 196px;
+  height: 20px;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.42) 0%,
+    rgba(0, 0, 0, 0.16) 54%,
+    transparent 78%
+  );
+}
+
+html[data-theme='dark'] .pk-pack-ground-shadow {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.72) 0%,
+    rgba(0, 0, 0, 0.28) 54%,
+    transparent 78%
+  );
+}
+
 .pk-pouch-interior {
   pointer-events: none;
   position: absolute;
   left: 4px;
   right: 4px;
-  top: 44px;
+  top: 46px;
   bottom: 8px;
   z-index: 5;
   overflow: hidden;
-  border-radius: 0 0 11px 11px;
+  border-radius: 0 0 5px 5px;
   background: linear-gradient(180deg, #090b10 0%, #141923 42%, #080a0e 100%);
   box-shadow: inset 0 10px 20px rgba(0, 0, 0, 0.85);
   opacity: 0;
@@ -895,19 +921,23 @@ html[data-theme='dark'] .pk-stage-mat {
   position: absolute;
   left: 0;
   right: 0;
-  top: 44px;
+  top: 46px;
   bottom: 0;
   z-index: 20;
   display: flex;
   flex-direction: column;
   overflow: visible;
-  border-radius: 0 0 12px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  border-top: 1px dashed rgba(255, 255, 255, 0.38);
+  border-radius: 0 0 5px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-top: 1px dashed rgba(255, 255, 255, 0.42);
   color: #ffffff;
   box-shadow:
-    0 18px 34px -12px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    0 2px 4px rgba(0, 0, 0, 0.44),
+    0 12px 24px -6px rgba(0, 0, 0, 0.56),
+    0 24px 38px -12px rgba(0, 0, 0, 0.44),
+    inset 1px 0 0 rgba(255, 255, 255, 0.32),
+    inset -1px 0 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.24);
 }
 
 .pk-pack-shell[data-phase='ripping'] .pk-pack-body-shell,
@@ -937,11 +967,11 @@ html[data-theme='dark'] .pk-stage-mat {
 .pk-pack-foil-frame {
   pointer-events: none;
   position: absolute;
-  inset: 6px 7px;
+  inset: 7px 8px;
   z-index: 15;
-  border-radius: 7px;
+  border-radius: 5px;
   border: 1px solid;
-  opacity: 0.32;
+  opacity: 0.34;
 }
 
 .pk-torn-top-lip {
@@ -957,21 +987,27 @@ html[data-theme='dark'] .pk-stage-mat {
 .pk-foil-crimp-top,
 .pk-foil-crimp-bottom {
   position: relative;
-  height: 15px;
+  height: 18px;
   width: 100%;
   flex-shrink: 0;
 }
 
 .pk-foil-crimp-top {
-  border-radius: 11px 11px 0 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
-  box-shadow: inset 0 -2px 2px rgba(0, 0, 0, 0.38);
+  border-radius: 4px 4px 0 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -3px 3px rgba(0, 0, 0, 0.56),
+    0 2px 4px rgba(0, 0, 0, 0.38);
 }
 
 .pk-foil-crimp-bottom {
-  border-radius: 0 0 11px 11px;
-  border-top: 1px solid rgba(255, 255, 255, 0.28);
-  box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.38);
+  border-radius: 0 0 4px 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.42);
+  box-shadow:
+    inset 0 -1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 3px 3px rgba(0, 0, 0, 0.56),
+    0 -2px 5px rgba(0, 0, 0, 0.44);
 }
 
 .pk-foil-crimp-top::after,
@@ -981,15 +1017,23 @@ html[data-theme='dark'] .pk-stage-mat {
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background-image: repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.26) 0px,
-    rgba(255, 255, 255, 0.26) 1px,
-    rgba(0, 0, 0, 0.38) 1px,
-    rgba(0, 0, 0, 0.38) 3px,
-    rgba(255, 255, 255, 0.08) 3px,
-    rgba(255, 255, 255, 0.08) 4px
-  );
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.24) 0%,
+      rgba(255, 255, 255, 0.04) 36%,
+      rgba(0, 0, 0, 0.24) 78%,
+      rgba(255, 255, 255, 0.18) 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.36) 0px,
+      rgba(255, 255, 255, 0.36) 1px,
+      rgba(0, 0, 0, 0.48) 1px,
+      rgba(0, 0, 0, 0.48) 2.5px,
+      rgba(255, 255, 255, 0.14) 2.5px,
+      rgba(255, 255, 255, 0.14) 4px
+    );
 }
 
 .pk-pack-lid {
@@ -997,18 +1041,21 @@ html[data-theme='dark'] .pk-stage-mat {
   left: 0;
   right: 0;
   top: 0;
-  height: 44px;
+  height: 46px;
   z-index: 30;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 12px 12px 0 0;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.44);
+  border-radius: 5px 5px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.48);
   color: #ffffff;
   transform-origin: left bottom;
   transform: translate3d(var(--pk-lid-x), var(--pk-lid-y), 0) rotate(var(--pk-lid-rot));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.56),
+    inset 1px 0 0 rgba(255, 255, 255, 0.3),
+    inset -1px 0 0 rgba(255, 255, 255, 0.18);
   transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1039,7 +1086,7 @@ html[data-theme='dark'] .pk-stage-mat {
   z-index: 32;
   width: 8px;
   height: 10px;
-  background-color: var(--bg-primary);
+  background-color: var(--bg-surface);
 }
 
 .pk-tear-notch-left {
@@ -1052,6 +1099,86 @@ html[data-theme='dark'] .pk-stage-mat {
   clip-path: polygon(100% 0, 0 50%, 100% 100%);
 }
 
+.pk-pillow-bulge {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 18;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.44) 0%,
+      rgba(0, 0, 0, 0.12) 4.5%,
+      rgba(255, 255, 255, 0.14) 8%,
+      rgba(255, 255, 255, 0.02) 15%,
+      rgba(0, 0, 0, 0) 48%,
+      rgba(255, 255, 255, 0.08) 84%,
+      rgba(0, 0, 0, 0.2) 92%,
+      rgba(0, 0, 0, 0.54) 100%
+    );
+}
+
+.pk-plastic-wrap {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background-image:
+    linear-gradient(
+      118deg,
+      transparent 11%,
+      rgba(255, 255, 255, 0.04) 16%,
+      rgba(255, 255, 255, 0.28) 19.2%,
+      rgba(255, 255, 255, 0.11) 23.5%,
+      transparent 28.5%,
+      transparent 59%,
+      rgba(255, 255, 255, 0.04) 62%,
+      rgba(255, 255, 255, 0.15) 64.5%,
+      transparent 69%
+    ),
+    radial-gradient(
+      ellipse 34% 16% at 10% 8%,
+      rgba(255, 255, 255, 0.2) 0%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 34% 16% at 90% 8%,
+      rgba(255, 255, 255, 0.16) 0%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 36% 14% at 12% 94%,
+      rgba(255, 255, 255, 0.14) 0%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 36% 14% at 88% 94%,
+      rgba(255, 255, 255, 0.12) 0%,
+      transparent 72%
+    );
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.28),
+    inset -1px 0 0 rgba(255, 255, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.pk-plastic-wrap-lid {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background-image: linear-gradient(
+    118deg,
+    transparent 8%,
+    rgba(255, 255, 255, 0.24) 16%,
+    rgba(255, 255, 255, 0.06) 24%,
+    transparent 32%,
+    transparent 62%,
+    rgba(255, 255, 255, 0.14) 68%,
+    transparent 76%
+  );
+}
+
 .pk-mylar-cylinder {
   pointer-events: none;
   position: absolute;
@@ -1060,36 +1187,65 @@ html[data-theme='dark'] .pk-stage-mat {
   border-radius: inherit;
   background-image: linear-gradient(
     90deg,
-    rgba(0, 0, 0, 0.34) 0%,
-    rgba(255, 255, 255, 0.16) 7%,
-    var(--pk-pack-stripe) 16%,
-    rgba(255, 255, 255, 0.02) 30%,
-    rgba(255, 255, 255, 0.1) 50%,
-    rgba(0, 0, 0, 0.04) 72%,
-    var(--pk-pack-stripe) 84%,
-    rgba(255, 255, 255, 0.18) 93%,
-    rgba(0, 0, 0, 0.38) 100%
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(255, 255, 255, 0.42) 2.4%,
+    rgba(0, 0, 0, 0.28) 6.5%,
+    rgba(255, 255, 255, 0.06) 13%,
+    rgba(255, 255, 255, 0.22) 21%,
+    var(--pk-pack-stripe) 26%,
+    rgba(255, 255, 255, 0.05) 37%,
+    rgba(0, 0, 0, 0.06) 52%,
+    rgba(255, 255, 255, 0.04) 68%,
+    rgba(255, 255, 255, 0.16) 81%,
+    var(--pk-pack-stripe) 86%,
+    rgba(0, 0, 0, 0.26) 93.5%,
+    rgba(255, 255, 255, 0.34) 97.6%,
+    rgba(0, 0, 0, 0.66) 100%
   );
 }
 
-.pk-mylar-glare {
+.pk-mylar-glare,
+.pk-mylar-glare-alt {
   pointer-events: none;
   position: absolute;
   inset: -45%;
   z-index: 22;
-  background: linear-gradient(
-    120deg,
-    transparent 34%,
-    rgba(255, 255, 255, 0.38) 50%,
-    transparent 66%
-  );
   opacity: 0;
-  transform: translate3d(var(--pk-gx), var(--pk-gy), 0);
   transition: opacity 220ms ease;
 }
 
+.pk-mylar-glare {
+  background: linear-gradient(
+    118deg,
+    transparent 36%,
+    rgba(255, 255, 255, 0.14) 44%,
+    rgba(255, 255, 255, 0.56) 49.5%,
+    rgba(255, 255, 255, 0.18) 54%,
+    transparent 62%
+  );
+  transform: translate3d(var(--pk-gx), var(--pk-gy), 0);
+}
+
+.pk-mylar-glare-alt {
+  background: linear-gradient(
+    118deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.34) 50%,
+    transparent 59%
+  );
+  transform: translate3d(
+    calc(var(--pk-gx) * -0.52),
+    calc(var(--pk-gy) * -0.38),
+    0
+  );
+}
+
 .pk-pack-shell[data-active='true'] .pk-mylar-glare {
-  opacity: 0.42;
+  opacity: 0.52;
+}
+
+.pk-pack-shell[data-active='true'] .pk-mylar-glare-alt {
+  opacity: 0.3;
 }
 
 .pk-tear-seam-blade {
@@ -1097,7 +1253,7 @@ html[data-theme='dark'] .pk-stage-mat {
   position: absolute;
   left: 2px;
   right: 2px;
-  top: 43px;
+  top: 45px;
   height: 3px;
   z-index: 35;
   border-radius: 9999px;
@@ -1135,7 +1291,7 @@ html[data-theme='dark'] .pk-stage-mat {
 .pk-tear-sparkle {
   pointer-events: none;
   position: absolute;
-  top: 43px;
+  top: 45px;
   z-index: 36;
   width: 6px;
   height: 6px;
@@ -1859,7 +2015,8 @@ html[data-theme='dark'] .pk-stage-mat {
   .pk-pack-lid,
   .pk-pouch-interior,
   .pk-emerging-deck,
-  .pk-mylar-glare {
+  .pk-mylar-glare,
+  .pk-mylar-glare-alt {
     transition: none !important;
   }
   .pk-emerging-deck,
@@ -1874,7 +2031,8 @@ html[data-theme='dark'] .pk-stage-mat {
   .pk-tear-sparkle {
     display: none !important;
   }
-  .pk-mylar-glare {
+  .pk-mylar-glare,
+  .pk-mylar-glare-alt {
     opacity: 0 !important;
   }
   .pk-tilt-card {

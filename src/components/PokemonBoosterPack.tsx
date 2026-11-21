@@ -58,7 +58,7 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
     resetTilt,
     resetTiltImmediately,
   } = useCardTilt({
-    maxDeg: 11,
+    maxDeg: 13,
     lerp: 0.28,
     disabled: shouldReduceMotion || phase !== 'sealed',
   });
@@ -170,11 +170,18 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
 
   return (
     <div className="relative flex justify-center py-1">
+      {phase === 'sealed' && (
+        <div
+          aria-hidden="true"
+          className="pk-pack-ground-shadow"
+        />
+      )}
+
       {phase === 'sealed' && packsRemaining > 2 && (
         <div
           aria-hidden="true"
           style={{ background: option.accentGradient }}
-          className="pointer-events-none absolute top-1 aspect-[63/98] w-[214px] translate-x-2.5 translate-y-2 rotate-[2.2deg] rounded-[12px] border border-white/15 opacity-40 shadow-soft"
+          className="pointer-events-none absolute top-1 aspect-[63/98] w-[214px] translate-x-2.5 translate-y-2 rotate-[2.2deg] rounded-[5px] border border-white/15 opacity-40 shadow-soft"
         />
       )}
 
@@ -182,7 +189,7 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
         <div
           aria-hidden="true"
           style={{ background: option.accentGradient }}
-          className="pointer-events-none absolute top-1 aspect-[63/98] w-[214px] translate-x-1 translate-y-1 rotate-[1deg] rounded-[12px] border border-white/20 opacity-70 shadow-soft"
+          className="pointer-events-none absolute top-1 aspect-[63/98] w-[214px] translate-x-1 translate-y-1 rotate-[1deg] rounded-[5px] border border-white/25 opacity-72 shadow-soft"
         />
       )}
 
@@ -442,7 +449,10 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
                 </div>
               </div>
 
+              <div className="pk-pillow-bulge" aria-hidden="true" />
+              <div className="pk-plastic-wrap" aria-hidden="true" />
               <div className="pk-mylar-glare" aria-hidden="true" />
+              <div className="pk-mylar-glare-alt" aria-hidden="true" />
             </div>
 
             <div
@@ -466,11 +476,11 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
               />
 
               <div className="relative z-10 flex flex-1 items-center justify-between gap-1.5 px-3">
-                <span className="font-mono text-[9px] font-bold tabular-nums tracking-[0.12em] text-white/95">
+                <span className="font-mono text-[9px] font-bold tabular-nums tracking-[0.12em] text-white/95 drop-shadow">
                   {t.packBadge(packNumber)}
                 </span>
 
-                <span className="flex items-center gap-0.5 font-mono text-[8.5px] font-semibold text-white/80">
+                <span className="flex items-center gap-0.5 font-mono text-[8.5px] font-semibold text-white/85 drop-shadow">
                   <span>{t.dragTearShort}</span>
                   <ChevronRight className="h-2.5 w-2.5" aria-hidden="true" />
                   <Scissors className="h-2.5 w-2.5" aria-hidden="true" />
@@ -479,6 +489,7 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
 
               <span className="pk-tear-notch-left" aria-hidden="true" />
               <span className="pk-tear-notch-right" aria-hidden="true" />
+              <div className="pk-plastic-wrap-lid" aria-hidden="true" />
               <div className="pk-mylar-cylinder" aria-hidden="true" />
             </div>
           )}

@@ -10,18 +10,14 @@ interface PokemonProfileCardProps {
 }
 
 interface CardMotionState {
-  pointerX: number;
-  pointerY: number;
-  centerDist: number;
-  rotateX: number;
-  rotateY: number;
-  scale: number;
-  targetPointerX: number;
-  targetPointerY: number;
-  targetCenterDist: number;
-  targetRotateX: number;
-  targetRotateY: number;
-  targetScale: number;
+  rx: number;
+  ry: number;
+  gx: number;
+  gy: number;
+  trx: number;
+  tryVal: number;
+  tgx: number;
+  tgy: number;
 }
 
 const LERP_FACTOR = 0.28;
@@ -71,23 +67,17 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
   const stageRef = useRef<HTMLDivElement | null>(null);
   const rotatorRef = useRef<HTMLElement | null>(null);
   const rafRef = useRef<number | null>(null);
-  const isInteractingRef = useRef(false);
   const [isHoloActive, setIsHoloActive] = useState(false);
-  const [isInteracting, setIsInteracting] = useState(false);
 
   const motionRef = useRef<CardMotionState>({
-    pointerX: 50,
-    pointerY: 50,
-    centerDist: 0,
-    rotateX: 0,
-    rotateY: 0,
-    scale: 1,
-    targetPointerX: 50,
-    targetPointerY: 50,
-    targetCenterDist: 0,
-    targetRotateX: 0,
-    targetRotateY: 0,
-    targetScale: 1,
+    rx: 0,
+    ry: 0,
+    gx: 0,
+    gy: 0,
+    trx: 0,
+    tryVal: 0,
+    tgx: 0,
+    tgy: 0,
   });
 
   const t = UI_LABELS[locale].hero;
@@ -112,39 +102,40 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
     (s: CardMotionState) => {
       const el = rotatorRef.current;
       if (!el) return;
-      el.style.setProperty('--pointer-x', `${s.pointerX.toFixed(2)}%`);
-      el.style.setProperty('--pointer-y', `${s.pointerY.toFixed(2)}%`);
-      el.style.setProperty('--pointer-from-center', s.centerDist.toFixed(3));
-      el.style.setProperty('--rotate-x', shouldReduceMotion ? '0deg' : `${s.rotateX.toFixed(2)}deg`);
-      el.style.setProperty('--rotate-y', shouldReduceMotion ? '0deg' : `${s.rotateY.toFixed(2)}deg`);
-      el.style.setProperty('--card-scale', shouldReduceMotion ? '1' : s.scale.toFixed(4));
+      const isTilting =
+        !shouldReduceMotion &&
+        (Math.abs(s.rx) > 0.02 || Math.abs(s.ry) > 0.02);
+      if (isTilting) {
+        el.setAttribute('data-tilting', 'true');
+      } else {
+        el.removeAttribute('data-tilting');
+      }
+      el.style.setProperty('--rotate-x', shouldReduceMotion ? '0deg' : `${s.rx.toFixed(2)}deg`);
+      el.style.setProperty('--rotate-y', shouldReduceMotion ? '0deg' : `${s.ry.toFixed(2)}deg`);
+      el.style.setProperty('--glare-x', `${s.gx.toFixed(2)}%`);
+      el.style.setProperty('--glare-y', `${s.gy.toFixed(2)}%`);
     },
     [shouldReduceMotion]
   );
 
   const stepAnimation = useCallback(() => {
     const s = motionRef.current;
-    s.pointerX += (s.targetPointerX - s.pointerX) * LERP_FACTOR;
-    s.pointerY += (s.targetPointerY - s.pointerY) * LERP_FACTOR;
-    s.centerDist += (s.targetCenterDist - s.centerDist) * LERP_FACTOR;
-    s.rotateX += (s.targetRotateX - s.rotateX) * LERP_FACTOR;
-    s.rotateY += (s.targetRotateY - s.rotateY) * LERP_FACTOR;
-    s.scale += (s.targetScale - s.scale) * LERP_FACTOR;
+    s.rx += (s.trx - s.rx) * LERP_FACTOR;
+    s.ry += (s.tryVal - s.ry) * LERP_FACTOR;
+    s.gx += (s.tgx - s.gx) * LERP_FACTOR;
+    s.gy += (s.tgy - s.gy) * LERP_FACTOR;
 
     const delta =
-      Math.abs(s.targetPointerX - s.pointerX) +
-      Math.abs(s.targetPointerY - s.pointerY) +
-      Math.abs(s.targetRotateX - s.rotateX) +
-      Math.abs(s.targetRotateY - s.rotateY) +
-      Math.abs(s.targetScale - s.scale);
+      Math.abs(s.trx - s.rx) +
+      Math.abs(s.tryVal - s.ry) +
+      Math.abs(s.tgx - s.gx) +
+      Math.abs(s.tgy - s.gy);
 
     if (delta < 0.04) {
-      s.pointerX = s.targetPointerX;
-      s.pointerY = s.targetPointerY;
-      s.centerDist = s.targetCenterDist;
-      s.rotateX = s.targetRotateX;
-      s.rotateY = s.targetRotateY;
-      s.scale = s.targetScale;
+      s.rx = s.trx;
+      s.ry = s.tryVal;
+      s.gx = s.tgx;
+      s.gy = s.tgy;
       applyMotionVars(s);
       rafRef.current = null;
       return;
@@ -157,12 +148,10 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
   const scheduleAnimation = useCallback(() => {
     if (shouldReduceMotion) {
       const s = motionRef.current;
-      s.pointerX = s.targetPointerX;
-      s.pointerY = s.targetPointerY;
-      s.centerDist = s.targetCenterDist;
-      s.rotateX = 0;
-      s.rotateY = 0;
-      s.scale = 1;
+      s.rx = 0;
+      s.ry = 0;
+      s.gx = 0;
+      s.gy = 0;
       applyMotionVars(s);
       return;
     }
@@ -180,104 +169,42 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
     };
   }, []);
 
-  const updateCardPointer = useCallback(
-    (clientX: number, clientY: number, isTouchInput: boolean) => {
-      const stage = stageRef.current;
-      if (!stage) return;
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse' || shouldReduceMotion) return;
+    const stage = stageRef.current;
+    if (!stage) return;
 
-      const rect = stage.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
+    const rect = stage.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
 
-      const nx = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
-      const ny = Math.min(Math.max((clientY - rect.top) / rect.height, 0), 1);
-      const dx = nx - 0.5;
-      const dy = ny - 0.5;
-      const centerDist = Math.min(1, Math.hypot(dx * 2, dy * 2));
-
-      const s = motionRef.current;
-      s.targetPointerX = nx * 100;
-      s.targetPointerY = ny * 100;
-      s.targetCenterDist = centerDist;
-
-      if (shouldReduceMotion) {
-        s.targetRotateX = 0;
-        s.targetRotateY = 0;
-        s.targetScale = 1;
-      } else if (isTouchInput) {
-        s.targetRotateX = -dy * 15;
-        s.targetRotateY = dx * 15;
-        s.targetScale = 1.01;
-      } else {
-        s.targetRotateX = -dy * 20;
-        s.targetRotateY = dx * 20;
-        s.targetScale = 1.015;
-      }
-      scheduleAnimation();
-    },
-    [scheduleAnimation, shouldReduceMotion]
-  );
-
-  const resetCard = useCallback(() => {
-    isInteractingRef.current = false;
-    setIsInteracting(false);
-    setIsHoloActive(false);
+    const nx = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
+    const ny = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
 
     const s = motionRef.current;
-    s.targetPointerX = 50;
-    s.targetPointerY = 50;
-    s.targetCenterDist = 0;
-    s.targetRotateX = 0;
-    s.targetRotateY = 0;
-    s.targetScale = 1;
-    scheduleAnimation();
-  }, [scheduleAnimation]);
-
-  useEffect(() => {
-    if (!isInteracting) return;
-    const handleWindowRelease = () => resetCard();
-    window.addEventListener('pointerup', handleWindowRelease);
-    window.addEventListener('pointercancel', handleWindowRelease);
-    return () => {
-      window.removeEventListener('pointerup', handleWindowRelease);
-      window.removeEventListener('pointercancel', handleWindowRelease);
-    };
-  }, [isInteracting, resetCard]);
-
-  const handlePointerEnter = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType !== 'mouse') return;
-    setIsHoloActive(true);
-  };
-
-  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLElement | null;
-    if (target?.closest('a')) return;
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-
-    const isTouchInput = event.pointerType !== 'mouse';
-    isInteractingRef.current = true;
-    setIsInteracting(true);
-    setIsHoloActive(true);
-    updateCardPointer(event.clientX, event.clientY, isTouchInput);
-  };
-
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const isTouchInput = event.pointerType !== 'mouse';
-    if (isTouchInput && !isInteractingRef.current) return;
-
+    s.trx = -(ny - 0.5) * 12;
+    s.tryVal = (nx - 0.5) * 12;
+    s.tgx = (nx - 0.5) * 36;
+    s.tgy = (ny - 0.5) * 24;
     if (!isHoloActive) {
       setIsHoloActive(true);
     }
-    updateCardPointer(event.clientX, event.clientY, isTouchInput);
+    scheduleAnimation();
+  };
+
+  const resetCard = () => {
+    setIsHoloActive(false);
+    const s = motionRef.current;
+    s.trx = 0;
+    s.tryVal = 0;
+    s.tgx = 0;
+    s.tgy = 0;
+    scheduleAnimation();
   };
 
   return (
     <div
       ref={stageRef}
-      onPointerEnter={handlePointerEnter}
-      onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerUp={resetCard}
-      onPointerCancel={resetCard}
       onPointerLeave={resetCard}
       className="pokemon-card-stage relative w-full max-w-[350px]"
     >
@@ -286,25 +213,10 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
           ref={rotatorRef}
           aria-label={`${PROFILE_DATA.name} EX Pokémon Profile Card`}
           data-holo-active={isHoloActive ? 'true' : 'false'}
-          data-interacting={isInteracting ? 'true' : 'false'}
           className="pokemon-card-rotator pokemon-card-shell group relative w-full p-[7px] sm:p-[9px]"
         >
-          <div
-            aria-hidden="true"
-            className="pokemon-card-bezel-sheen pointer-events-none absolute inset-0 rounded-[18px]"
-          />
-
           <div className="pokemon-card-inner relative">
-            <div
-              aria-hidden="true"
-              className="pokemon-card-stock pointer-events-none absolute inset-0 overflow-hidden rounded-[8px]"
-            >
-              <div className="pokemon-card__shine pokemon-card__shine--surface" />
-              <div className="pokemon-card__sparkle pokemon-card__sparkle--surface" />
-              <div className="pokemon-card__glare pokemon-card__glare--surface" />
-            </div>
-
-            <header className="pokemon-card-layer-elevated relative z-20 flex items-center justify-between gap-1 pb-1.5 sm:gap-1.5">
+            <header className="relative z-20 flex items-center justify-between gap-1 pb-1.5 sm:gap-1.5">
               <div className="flex min-w-0 items-center gap-1 sm:gap-1.5">
                 <div className="pokemon-stage-pill inline-flex shrink-0 items-center gap-1 py-0.5 pl-0.5 pr-1.5 sm:pr-2">
                   <span className="pokemon-stage-socket inline-flex h-5 w-5 items-center justify-center rounded-full sm:h-[22px] sm:w-[22px]">
@@ -346,7 +258,7 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
                     alt={PROFILE_DATA.name}
                     decoding="async"
                     fetchPriority="high"
-                    className="h-full w-full object-cover object-[50%_18%] filter contrast-[1.04] transition-transform duration-300 group-hover:scale-[1.02]"
+                    className="h-full w-full object-cover object-[50%_18%]"
                   />
                   <div
                     aria-hidden="true"
@@ -356,13 +268,11 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
                     }}
                     className="pointer-events-none absolute inset-0"
                   />
-                  <div className="pokemon-card__shine pokemon-card__shine--art" aria-hidden="true" />
-                  <div className="pokemon-card__sparkle pokemon-card__sparkle--art" aria-hidden="true" />
-                  <div className="pokemon-card__glare pokemon-card__glare--art" aria-hidden="true" />
+                  <div className="pokemon-card__glare" aria-hidden="true" />
                 </div>
               </div>
 
-              <div className="pokemon-card-layer-elevated relative z-20 -mt-1.5 px-1">
+              <div className="relative z-20 -mt-1.5 px-1">
                 <div className="pokemon-dex-ribbon px-1.5 py-0.5 text-center font-mono text-[7px] font-medium leading-tight tracking-tight text-folio-muted sm:px-2 sm:text-[7.5px]">
                   {statsLabels.dex}
                 </div>
@@ -371,7 +281,7 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
 
             <section
               aria-label={t.indexHeader}
-              className="pokemon-card-layer-elevated relative z-20 mt-2.5 pt-0.5"
+              className="relative z-20 mt-2.5 pt-0.5"
             >
               <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-1.5">
                 <div className="flex shrink-0 items-center gap-1">
@@ -402,7 +312,7 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
               </div>
             </section>
 
-            <div className="pokemon-card-layer-elevated relative z-20 mt-2.5 grid grid-cols-3 divide-x divide-folio-border rounded-[6px] border border-folio-border py-1 text-center">
+            <div className="relative z-20 mt-2.5 grid grid-cols-3 divide-x divide-folio-border rounded-[6px] border border-folio-border py-1 text-center">
               <div className="flex items-center justify-center gap-1 px-1">
                 <span className="font-mono text-[8.5px] uppercase tracking-wider text-folio-faint">
                   {statsLabels.weakness}
@@ -430,7 +340,7 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
               </div>
             </div>
 
-            <footer className="pokemon-card-layer-elevated relative z-20 mt-2 flex items-center justify-between gap-2 pt-0.5">
+            <footer className="relative z-20 mt-2 flex items-center justify-between gap-2 pt-0.5">
               <span className="font-mono text-[9.5px] italic text-folio-muted">
                 Illus. {PROFILE_DATA.name}
               </span>

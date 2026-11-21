@@ -575,6 +575,19 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_CSS_COMMENTS=0`, `UNUSED_CSS_CLASSES=[]` và `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 59.82 kB | gzip: 16.15 kB`, `index-*.css 74.34 kB | gzip: 15.15 kB`).
   - Playwright `verify_pokemon_unboxer.py` (`device_scale_factor=2`) thoát `0` trên `1440×900`, `820×1180` và `375×812`: bìa `All-Star Mix` (`naturalWidth: 734`) & `SV: 151` (`naturalWidth: 733`) tải chuẩn, kéo ngang xé Pack #2 thành công (`dragRippedPack2: true`), kiểm chứng trực tiếp pha `ripping` & `drawing` liền mạch, `topPullCount: 1`, bảo toàn trọn vẹn chống chớp lộ thẻ / chống spoil Bộ sưu tập (`0 → 1 → 2 → 10`) và ảnh `_hires.png`, `0` lỗi console/page và `0` tràn ngang.
 
+## 40. Lược Bớt Hiệu Ứng Nặng GPU Cho Thẻ Hero `PokemonProfileCard` (Mượt Trên Cả PC & Mobile)
+
+- **Cắt bỏ triệt để các lớp sơn/blending nặng (`PokemonProfileCard.tsx`, `src/index.css`)**:
+  - Xóa 6 lớp phủ đa tầng (`.pokemon-card-bezel-sheen`, `.pokemon-card-stock`, `.pokemon-card__shine--surface/art`, `.pokemon-card__sparkle--surface/art`, `.pokemon-card__glare--surface`), xóa bóng đổ động tính theo tọa độ con trỏ `--poke-frame-shadow-active`, xóa `background-blend-mode: hard-light`, `mix-blend-mode: color-dodge` / `overlay`, `filter()`, `mask-image: radial-gradient(...)`, và 5 tầng `preserve-3d` / `translateZ(12px)` (`.pokemon-card-layer-elevated`).
+  - Xóa hoàn toàn 10 biến `--poke-*` và 12 lớp CSS không còn dùng khỏi `src/index.css` (`index-*.css` giảm `74.34 kB → 68.56 kB`, `index-*.js` giảm `115.22 kB → 112.67 kB`).
+- **Tương tác thuần GPU compositor & Tách biệt PC vs Mobile (`PokemonProfileCard.tsx`)**:
+  - Trên PC (`event.pointerType === 'mouse'`): giữ nghiêng nhẹ `±6deg` kèm 1 vệt sáng chéo `.pokemon-card__glare` thuần `transform: translate3d(...)` + `opacity` khi rê chuột; tự động gỡ `data-tilting` khi nghỉ để chữ & ảnh nét ở độ phân giải gốc (`transform: none`, 0 layer GPU chờ).
+  - Trên thiết bị cảm ứng / di động (`pointerType !== 'mouse'`): bỏ qua toàn bộ vòng lặp `rAF` / xoay nghiêng để vuốt chạm và cuộn trang mượt tuyệt đối, giữ nguyên vẹn giao diện thẻ bạc `Long Hoàng EX` trên cả Light & Dark Mode.
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_CSS_COMMENTS=0`, `UNUSED_CSS_CLASSES=[]`, `UNUSED_POKE_VARS=[]` và `cmd /c "npm run verify"` thoát `0`.
+  - Playwright `verify_hero_card.py` (`device_scale_factor=2`) thoát `0` trên `1440×900` (Light/Dark/Hover) và `375×812` (Mobile touch): xác nhận `badBlend: []`, `badMask: []`, `badFilter: []`, PC hover nghiêng mượt (`data-tilting="true"`) rồi trả phẳng (`transform: "none"`) khi rời chuột, Mobile chạm không kích hoạt tilt (`transform: "none"`), đủ `5` chip dự án, `0` lỗi console/page và `0` tràn ngang.
+
+
 
 
 

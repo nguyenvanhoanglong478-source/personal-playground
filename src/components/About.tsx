@@ -18,7 +18,7 @@ const PokemonPackUnboxerFallback: React.FC = () => (
     className="mx-auto flex w-full max-w-[336px] flex-col items-center gap-3 lg:mx-0"
   >
     <div className="h-9 w-full rounded-full bg-folio-elevated" />
-    <div className="aspect-[780/1096] w-[310px] rounded-2xl bg-folio-elevated/40 sm:w-[328px]" />
+    <div className="aspect-[82/112] w-[310px] rounded-2xl bg-folio-elevated/40 sm:w-[328px]" />
     <div className="h-10 w-full rounded-full bg-folio-elevated" />
   </div>
 );

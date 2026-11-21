@@ -494,7 +494,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
         </div>
       ) : !catalog ? (
         <div className="flex min-h-[430px] w-full flex-col items-center justify-center gap-2.5 text-center">
-          <div className="aspect-[780/1096] w-[310px] rounded-2xl bg-folio-elevated/40 sm:w-[328px]" />
+          <div className="aspect-[82/112] w-[310px] rounded-2xl bg-folio-elevated/40 sm:w-[328px]" />
           <p className="font-mono text-[11px] text-folio-faint">
             {t.loadingCatalog}
           </p>

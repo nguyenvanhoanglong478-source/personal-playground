@@ -629,6 +629,16 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]`, `DOT_GLITTER_BLOCKS=0`, `impeccable detect --json` trả về `[]` và `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 67.62 kB | gzip: 17.54 kB`, `index-*.css 75.40 kB | gzip: 15.40 kB`).
   - Playwright `verify_pokemon_unboxer.py` (`device_scale_factor=2`) kiểm chứng trọn vẹn trên `1440×900`, `820×1180`, `375×812`: `chestCheck: { rootBg: "rgba(0, 0, 0, 0)", rootBorderW: "0px", chestCount: 2, chestLoaded: true }`, 7/7 bìa `_hires.png` (`600px`–`734px`) soi trực quan sạch 100% chữ thẻ, `heightSealed = heightRipping = heightDrawingPack2 = 581.5px` (`0.00px` jump), `drawingBladeCount: 0`, `drawingPouchAnim: "pk-body-drop-away"`, `firstCardTransition: "idle"`, `dragRippedPack2: true`, Mobile `packActiveRest: "false"`, `0` lỗi console/page và `0` tràn ngang.
 
+## 44. Tự Vẽ Tay Lại Rương Kho Báu Pixel Chuẩn Lưới `82×112` Siêu Nét (`chest-back.png`, `chest-front.png`)
+
+- **Thay thế hoàn toàn ảnh rương WebP mờ cũ bằng sprite pixel art tự vẽ tay từng ô điểm ảnh (`public/pokemon/chest-back.png`, `chest-front.png`, `src/data/pokemonPack.ts`, `PokemonBoosterPack.tsx`, `About.tsx`, `src/index.css`)**:
+  - Xóa 2 tệp WebP cũ (`chest-back.webp` `20.4 KB`, `chest-front.webp` `8.5 KB`) vốn bị nhòe từ ảnh JPEG nén không đồng lưới; vẽ tay hoàn toàn rương mới trên lưới điểm ảnh nguyên bản **`82×112`** với bảng màu chuyển sắc ấm/lạnh chuẩn 32-bit GBA/SNES (`Selout` viền đổ màu, gỗ óc chó vân ván, khung đồng vàng ánh nắng, góc ke chữ L đinh tán, 2 bản lề đồng, ổ khóa hình khiên đối xứng và lòng nắp lót nhung đỏ chần bông kèm dither Bayer 2×2).
+  - Xuất lossless nguyên khối tỷ lệ `8×` (`656×896` px, hiển thị chuẩn nguyên `4×` tại `328×448` trên desktop) với tổng dung lượng chỉ **`13.5 KB`** (`chest-back.png` `8.75 KB` + `chest-front.png` `4.81 KB`, **nhẹ hơn 53%** so với bản WebP cũ mà sắc nét tuyệt đối từng ô pixel trên cả màn hình Retina/4K lẫn di động).
+  - Căn lại tỷ lệ `.pk-chest-stage` (`aspect-ratio: 82 / 112`) và vị trí gói bài lồng khít sau mép gỗ trước rương (`row 76`).
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]` và `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 67.63 kB | gzip: 17.54 kB`, `index-*.css 75.42 kB | gzip: 15.41 kB`).
+  - Playwright `verify_pokemon_unboxer.py` (`device_scale_factor=2`) kiểm chứng trọn vẹn trên `1440×900` (Dark/Light/Hover), `820×1180`, `375×812`: soi ảnh thực tế từng ô pixel rương sắc nét tuyệt đối không viền mờ trên cả nền tối lẫn nền sáng, `heightSealed = heightRipping = heightDrawingPack2 = 568.62px` (`0.00px` jump), `chestLoaded: true`, `drawingBladeCount: 0`, `firstCardTransition: "idle"`, `0` lỗi console/page và `0` tràn ngang.
+
 
 
 

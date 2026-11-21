@@ -349,7 +349,7 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
       {phase === 'sealed' && packsRemaining > 1 && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-[72px] z-[9] origin-bottom -translate-x-[76%] -rotate-[9deg] scale-[0.74] brightness-[0.72]"
+          className="pointer-events-none absolute left-1/2 top-[56px] z-[9] origin-bottom -translate-x-[76%] -rotate-[9deg] scale-[0.72] brightness-[0.74]"
         >
           <SidePackPreview option={sideLeftOption} locale={locale} />
         </div>
@@ -358,7 +358,7 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
       {phase === 'sealed' && packsRemaining > 2 && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-[72px] z-[9] origin-bottom -translate-x-[24%] rotate-[9deg] scale-[0.74] brightness-[0.72]"
+          className="pointer-events-none absolute left-1/2 top-[56px] z-[9] origin-bottom -translate-x-[24%] rotate-[9deg] scale-[0.72] brightness-[0.74]"
         >
           <SidePackPreview option={sideRightOption} locale={locale} />
         </div>
@@ -394,7 +394,7 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
             ? `${t.ripButton} ${t.packBadge(packNumber)}`
             : undefined
         }
-        className={`pk-tilt-stage absolute left-1/2 top-[24px] z-[12] aspect-[63/106] w-[178px] -translate-x-1/2 select-none sm:w-[188px] ${
+        className={`pk-tilt-stage absolute left-1/2 top-[4px] z-[12] aspect-[63/106] w-[174px] -translate-x-1/2 select-none sm:top-[6px] sm:w-[186px] ${
           phase === 'sealed' ? 'cursor-pointer' : 'pointer-events-none'
         }`}
       >

@@ -42,31 +42,60 @@ function createNoiseBuffer(
   return buffer;
 }
 
+export function playPackCrinkleTick(progress: number): void {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+  const duration = 0.045;
+  const clamped = Math.min(1, Math.max(0, progress));
+
+  const noise = ctx.createBufferSource();
+  noise.buffer = createNoiseBuffer(ctx, duration, 2.2);
+
+  const bandpass = ctx.createBiquadFilter();
+  bandpass.type = 'bandpass';
+  bandpass.Q.setValueAtTime(2.4, now);
+  bandpass.frequency.setValueAtTime(1800 + clamped * 1600, now);
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.linearRampToValueAtTime(0.085, now + 0.008);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  noise.connect(bandpass);
+  bandpass.connect(gain);
+  gain.connect(ctx.destination);
+
+  noise.start(now);
+  noise.stop(now + duration);
+}
+
 export function playPackRipSound(): void {
   const ctx = getAudioContext();
   if (!ctx) return;
 
   const now = ctx.currentTime;
-  const duration = 0.42;
+  const duration = 0.46;
 
   const noise = ctx.createBufferSource();
-  noise.buffer = createNoiseBuffer(ctx, duration, 1.8);
+  noise.buffer = createNoiseBuffer(ctx, duration, 1.9);
 
   const bandpass = ctx.createBiquadFilter();
   bandpass.type = 'bandpass';
-  bandpass.Q.setValueAtTime(1.6, now);
-  bandpass.frequency.setValueAtTime(1350, now);
-  bandpass.frequency.exponentialRampToValueAtTime(4400, now + duration * 0.85);
+  bandpass.Q.setValueAtTime(1.5, now);
+  bandpass.frequency.setValueAtTime(1300, now);
+  bandpass.frequency.exponentialRampToValueAtTime(4600, now + duration * 0.85);
 
   const highpass = ctx.createBiquadFilter();
   highpass.type = 'highpass';
-  highpass.frequency.setValueAtTime(900, now);
+  highpass.frequency.setValueAtTime(880, now);
 
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0.001, now);
-  gain.gain.linearRampToValueAtTime(0.26, now + 0.03);
-  gain.gain.setValueAtTime(0.22, now + 0.14);
-  gain.gain.linearRampToValueAtTime(0.28, now + 0.28);
+  gain.gain.linearRampToValueAtTime(0.24, now + 0.03);
+  gain.gain.setValueAtTime(0.21, now + 0.16);
+  gain.gain.linearRampToValueAtTime(0.27, now + 0.3);
   gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
   noise.connect(bandpass);
@@ -77,18 +106,31 @@ export function playPackRipSound(): void {
   noise.start(now);
   noise.stop(now + duration);
 
-  const snapOsc = ctx.createOscillator();
-  const snapGain = ctx.createGain();
-  snapOsc.type = 'triangle';
-  snapOsc.frequency.setValueAtTime(340, now + 0.31);
-  snapOsc.frequency.exponentialRampToValueAtTime(110, now + 0.38);
-  snapGain.gain.setValueAtTime(0.001, now + 0.31);
-  snapGain.gain.linearRampToValueAtTime(0.14, now + 0.32);
-  snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.39);
-  snapOsc.connect(snapGain);
-  snapGain.connect(ctx.destination);
-  snapOsc.start(now + 0.31);
-  snapOsc.stop(now + 0.4);
+  const zipOsc = ctx.createOscillator();
+  const zipGain = ctx.createGain();
+  zipOsc.type = 'sawtooth';
+  zipOsc.frequency.setValueAtTime(2400, now + 0.04);
+  zipOsc.frequency.exponentialRampToValueAtTime(5600, now + 0.3);
+  zipGain.gain.setValueAtTime(0.001, now + 0.04);
+  zipGain.gain.linearRampToValueAtTime(0.035, now + 0.08);
+  zipGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.32);
+  zipOsc.connect(zipGain);
+  zipGain.connect(ctx.destination);
+  zipOsc.start(now + 0.04);
+  zipOsc.stop(now + 0.33);
+
+  const thudOsc = ctx.createOscillator();
+  const thudGain = ctx.createGain();
+  thudOsc.type = 'triangle';
+  thudOsc.frequency.setValueAtTime(190, now + 0.32);
+  thudOsc.frequency.exponentialRampToValueAtTime(82, now + 0.42);
+  thudGain.gain.setValueAtTime(0.001, now + 0.32);
+  thudGain.gain.linearRampToValueAtTime(0.16, now + 0.335);
+  thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.44);
+  thudOsc.connect(thudGain);
+  thudGain.connect(ctx.destination);
+  thudOsc.start(now + 0.32);
+  thudOsc.stop(now + 0.45);
 }
 
 export function playCardSlideSound(): void {

@@ -560,6 +560,22 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 51.34 kB | gzip: 13.96 kB`).
   - Playwright `verify_pokemon_unboxer.py` (`device_scale_factor=2`) thoát `0` trên `1440×900`, `820×1180`, `375×812`: xác nhận `binderBeforeFlip: 0`, cập nhật đúng `Bộ sưu tập (0) → (1) → (2) → (10)` (`10 mẫu · 10 thẻ · 1 pack`, không trùng), ảnh thẻ lật và cả 10 ảnh trong lưới & Bộ sưu tập đạt `naturalWidth >= 600` (`_hires.png`), `flipSettled: "true"`, `transform: "none"` khi nghỉ, `0` lỗi console/page và `0` tràn ngang.
 
+## 39. Thiết Kế Lại Giao Diện Pack Pokémon Mylar 3D & Nâng Cấp Hiệu Ứng Xé → Rút Thẻ Liền Mạch
+
+- **Vỏ Booster Pack Mylar 3D & 7 Bìa Bộ Thẻ Thật (`src/components/PokemonBoosterPack.tsx`, `src/data/pokemonPack.ts`, `src/index.css`)**:
+  - Tái tạo cấu tạo gói bài Pokémon TCG thật với tỷ lệ `63:98` (`214px`): 2 mép ép nhiệt răng cưa kim loại trên/dưới (`.pk-foil-crimp-top`, `.pk-foil-crimp-bottom`), 2 khía chữ V hai bên đường xé (`.pk-tear-notch-left/right`), lớp ánh kim trụ `.pk-mylar-sheen` đáp ứng theo con trỏ qua `useCardTilt` (không chạy ngầm lúc nghỉ) và chồng 1–2 bóng gói phía sau khi hộp còn nhiều pack.
+  - Bổ sung 7 bảng màu ánh kim, màu sáng trong túi (`glowColor` cố định theo từng bộ để không spoil độ hiếm) và ảnh Chase Card `_hires.png` cắt khung minh họa sắc nét cho từng bộ (`All-Star Vault`, `Pokémon 151`, `Crown Zenith`, `Evolving Skies`, `Prismatic Evolutions`, `Paldean Fates`, `Base Set 1999`), loại bỏ chữ kỹ năng thẻ chèn sau tiêu đề gói.
+- **Chuỗi Xé Pack Tương Tác & Rút Thẻ Liền Mạch (`PokemonBoosterPack.tsx`, `PokemonPackUnboxer.tsx`, `pokemonAudio.ts`)**:
+  - Khi kéo ngang qua đường xé (hoặc bấm `Xé pack ngay`): đường cắt ánh sáng `--pk-tear` chạy dọc theo tay kèm tiếng giấy bạc sột soạt (`playPackCrinkleTick`), tiếp nối liền mạch trong cùng một khối DOM: nắp ép nhiệt trên tách bật văng lên trên (`.pk-pack-lid`), 6 hạt tia foil bật một lần (`.pk-tear-sparkle`), miệng túi răng cưa phát sáng (`.pk-torn-top-lip`), rồi xấp 10 thẻ trồi thẳng từ bên trong túi lên trong khi thân gói tụt xuống biến mất (`sealed → ripping 520ms → drawing 680ms → revealing`).
+  - Nâng cấp `playPackRipSound()` với lớp rách giấy bạc theo dải tần rộng, tiếng zip kim loại nhẹ và tiếng tách mép đáy túi.
+- **Bố Cục Khung Pack Gọn Thoáng & Nổi Bật Lá Đắt Nhất (`PokemonPackUnboxer.tsx`, `About.tsx`)**:
+  - Sửa lỗi cắt chữ `POKÉMON BOX` ở phần đầu hộp; tách ô chọn hộp bài rộng 100% kèm chấm màu bộ thẻ, đưa nhãn tổng số thẻ (`1.288 thẻ`) cân đối cạnh thanh 12 vạch pack và đặt sân khấu `.pk-stage-mat` hài hòa trên cả Light/Dark Mode.
+  - Sửa điều kiện hiển thị để pack cuối `1/12` vẫn chạy đủ hiệu ứng xé và rút thẻ trước khi kết hộp; bổ sung viền nhấn `.pk-best-pull` và huy hiệu `★` cho lá giá trị cao nhất ở lưới kết quả 5×2.
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_CSS_COMMENTS=0`, `UNUSED_CSS_CLASSES=[]` và `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 59.82 kB | gzip: 16.15 kB`, `index-*.css 74.34 kB | gzip: 15.15 kB`).
+  - Playwright `verify_pokemon_unboxer.py` (`device_scale_factor=2`) thoát `0` trên `1440×900`, `820×1180` và `375×812`: bìa `All-Star Mix` (`naturalWidth: 734`) & `SV: 151` (`naturalWidth: 733`) tải chuẩn, kéo ngang xé Pack #2 thành công (`dragRippedPack2: true`), kiểm chứng trực tiếp pha `ripping` & `drawing` liền mạch, `topPullCount: 1`, bảo toàn trọn vẹn chống chớp lộ thẻ / chống spoil Bộ sưu tập (`0 → 1 → 2 → 10`) và ảnh `_hires.png`, `0` lỗi console/page và `0` tràn ngang.
+
+
 
 
 

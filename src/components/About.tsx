@@ -18,14 +18,14 @@ const PokemonPackUnboxerFallback: React.FC = () => (
     className="mx-auto w-full max-w-[330px] lg:mx-0"
   >
     <div className="folio-card flex flex-col gap-3 !p-4">
-      <div className="h-5 w-full rounded bg-folio-elevated" />
-      <div className="h-8 w-full rounded-[var(--radius-control)] bg-folio-elevated" />
+      <div className="h-6 w-full rounded bg-folio-elevated" />
+      <div className="h-9 w-full rounded-[var(--radius-control)] bg-folio-elevated" />
       <div className="grid grid-cols-12 gap-1">
         {Array.from({ length: 12 }).map((_, idx) => (
           <span key={idx} className="h-1.5 rounded-full bg-folio-border" />
         ))}
       </div>
-      <div className="mx-auto aspect-[63/88] w-[212px] rounded-[12px] border border-folio-border bg-folio-elevated" />
+      <div className="mx-auto aspect-[63/98] w-[214px] rounded-[12px] border border-folio-border bg-folio-elevated" />
       <div className="h-9 w-full rounded-full bg-folio-elevated" />
     </div>
   </div>

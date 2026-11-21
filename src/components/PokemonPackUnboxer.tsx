@@ -6,7 +6,6 @@ import {
   Layers,
   PackageOpen,
   RotateCcw,
-  Scissors,
   Sparkles,
   Volume2,
   VolumeX,
@@ -25,6 +24,7 @@ import {
   PokemonCatalogData,
   SavedBoxState,
   TIER_LABELS,
+  TIER_ORDER,
   formatCardPrice,
   generateBoosterPack,
   getBoxOption,
@@ -45,6 +45,7 @@ import {
   playPackRipSound,
   playRarityPullSound,
 } from '../utils/pokemonAudio';
+import { PokemonBoosterPack } from './PokemonBoosterPack';
 import {
   CardInspectorModal,
   CollectionBinderModal,
@@ -76,7 +77,6 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   const [isCardFlipped, setIsCardFlipped] = useState(false);
   const [isFlipSettled, setIsFlipSettled] = useState(false);
   const [cardTransition, setCardTransition] = useState<CardTransition>('idle');
-  const [tearDragRatio, setTearDragRatio] = useState(0);
   const [openedPackNumber, setOpenedPackNumber] = useState(1);
   const [imageStages, setImageStages] = useState<Record<string, CardImgStage>>(
     {}
@@ -86,8 +86,6 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   );
   const [binderOpen, setBinderOpen] = useState(false);
 
-  const dragStartXRef = useRef<number | null>(null);
-  const dragDidRipRef = useRef(false);
   const timersRef = useRef<number[]>([]);
   const recordedCardCountRef = useRef<number>(0);
   const packCountedRef = useRef<boolean>(false);
@@ -215,7 +213,6 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     if (boxState.packsRemaining <= 0) return;
 
     clearScheduledTimers();
-    setTearDragRatio(0);
 
     const pulled = generateBoosterPack(catalog.cards, boxState.boxId);
     const currentNum = PACKS_PER_BOX - boxState.packsRemaining + 1;
@@ -257,8 +254,8 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
         scheduleTimeout(() => {
           setCardTransition('idle');
         }, 220);
-      }, 640);
-    }, 460);
+      }, 680);
+    }, 520);
   }, [
     boxState.boxId,
     boxState.packsRemaining,
@@ -274,26 +271,9 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     event: React.PointerEvent<HTMLDivElement>
   ) => {
     updateTiltFromPointer(event.clientX, event.clientY);
-
-    if (
-      phase === 'sealed' &&
-      dragStartXRef.current !== null &&
-      !dragDidRipRef.current
-    ) {
-      const delta = Math.abs(event.clientX - dragStartXRef.current);
-      const ratio = Math.min(1, delta / 72);
-      setTearDragRatio(ratio);
-      if (delta > 56) {
-        dragDidRipRef.current = true;
-        dragStartXRef.current = null;
-        handleRipPack();
-      }
-    }
   };
 
   const resetStageTilt = () => {
-    dragStartXRef.current = null;
-    setTearDragRatio(0);
     resetTilt();
   };
 
@@ -427,6 +407,23 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     [currentPack]
   );
 
+  const bestCardId = useMemo(() => {
+    if (currentPack.length === 0) return null;
+    let best = currentPack[0];
+    for (const candidate of currentPack) {
+      const bestPrice = best.price ?? 0;
+      const candPrice = candidate.price ?? 0;
+      if (
+        candPrice > bestPrice ||
+        (candPrice === bestPrice &&
+          TIER_ORDER[candidate.tier] > TIER_ORDER[best.tier])
+      ) {
+        best = candidate;
+      }
+    }
+    return best.id;
+  }, [currentPack]);
+
   const openedCountInBox = PACKS_PER_BOX - boxState.packsRemaining;
   const remainingDeckUnderCard = Math.max(
     0,
@@ -437,12 +434,12 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     <div className="mx-auto w-full max-w-[330px] lg:mx-0">
       <div className="folio-card flex flex-col gap-3 !p-4">
         <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-2.5">
-          <div className="flex min-w-0 items-center gap-1.5 font-mono text-[10.5px] font-semibold tracking-wider text-folio-muted">
+          <div className="flex shrink-0 items-center gap-1.5 font-mono text-[10.5px] font-semibold tracking-wider text-folio-muted">
             <Layers
               className="h-3.5 w-3.5 shrink-0 text-folio-ink"
               aria-hidden="true"
             />
-            <span className="truncate">{t.kicker}</span>
+            <span>{t.kicker}</span>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
@@ -454,29 +451,34 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                 boxState.soundEnabled ? t.soundOnAria : t.soundOffAria
               }
               title={boxState.soundEnabled ? t.soundOnAria : t.soundOffAria}
-              className="flex h-6 w-6 items-center justify-center rounded-full border border-folio-border bg-folio-elevated text-folio-muted transition-colors duration-150 hover:border-folio-strong hover:text-folio-ink"
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-folio-border bg-folio-elevated text-folio-muted transition-colors duration-150 hover:border-folio-strong hover:text-folio-ink"
             >
               {boxState.soundEnabled ? (
-                <Volume2 className="h-3 w-3" aria-hidden="true" />
+                <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
               ) : (
-                <VolumeX className="h-3 w-3" aria-hidden="true" />
+                <VolumeX className="h-3.5 w-3.5" aria-hidden="true" />
               )}
             </button>
 
-            <span className="rounded-full border border-folio-border bg-folio-elevated px-2 py-0.5 font-mono text-[10.5px] font-semibold tabular-nums text-folio-ink">
+            <span className="rounded-full border border-folio-border bg-folio-elevated px-2.5 py-0.5 font-mono text-[10.5px] font-semibold tabular-nums text-folio-ink">
               {t.packsLeft(boxState.packsRemaining)}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="relative">
+          <span
+            aria-hidden="true"
+            style={{ backgroundColor: activeBoxOption.accentColor }}
+            className="pointer-events-none absolute left-3 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full"
+          />
           <select
             aria-label={t.boxSelectAria}
             value={boxState.boxId}
             onChange={(event) =>
               handleOpenNewBox(event.target.value as BoxThemeId)
             }
-            className="min-h-[34px] min-w-0 flex-1 cursor-pointer rounded-[var(--radius-control)] border border-folio-border bg-folio-elevated px-2.5 font-mono text-[11px] font-medium text-folio-ink focus:border-folio-strong focus:outline-none"
+            className="min-h-[36px] w-full cursor-pointer rounded-[var(--radius-control)] border border-folio-border bg-folio-elevated pl-7 pr-3 font-mono text-[11px] font-medium text-folio-ink focus:border-folio-strong focus:outline-none"
           >
             {BOOSTER_BOX_OPTIONS.map((opt) => (
               <option key={opt.id} value={opt.id}>
@@ -484,39 +486,46 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <div
+            aria-label={`${openedCountInBox}/${PACKS_PER_BOX}`}
+            className="grid flex-1 grid-cols-12 gap-1"
+          >
+            {Array.from({ length: PACKS_PER_BOX }).map((_, idx) => {
+              const isOpened = idx < openedCountInBox;
+              const isCurrent =
+                phase !== 'sealed' && idx === openedPackNumber - 1;
+              return (
+                <span
+                  key={idx}
+                  style={
+                    isCurrent
+                      ? { backgroundColor: activeBoxOption.accentColor }
+                      : undefined
+                  }
+                  className={`h-1.5 rounded-full transition-colors duration-200 ${
+                    isCurrent
+                      ? ''
+                      : isOpened
+                        ? 'bg-folio-ink/65'
+                        : 'bg-folio-border'
+                  }`}
+                />
+              );
+            })}
+          </div>
 
           {catalog && (
-            <span className="shrink-0 font-mono text-[10.5px] tabular-nums text-folio-faint">
+            <span className="shrink-0 font-mono text-[10px] tabular-nums text-folio-faint">
               {t.catalogCount(activePoolSize)}
             </span>
           )}
         </div>
 
-        <div
-          aria-label={`${openedCountInBox}/${PACKS_PER_BOX}`}
-          className="grid grid-cols-12 gap-1"
-        >
-          {Array.from({ length: PACKS_PER_BOX }).map((_, idx) => {
-            const isOpened = idx < openedCountInBox;
-            const isCurrent =
-              phase !== 'sealed' && idx === openedPackNumber - 1;
-            return (
-              <span
-                key={idx}
-                className={`h-1.5 rounded-full transition-colors duration-200 ${
-                  isCurrent
-                    ? 'bg-folio-gblue'
-                    : isOpened
-                      ? 'bg-folio-ink/70'
-                      : 'bg-folio-border'
-                }`}
-              />
-            );
-          })}
-        </div>
-
         {loadFailed ? (
-          <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/60 p-5 text-center">
+          <div className="flex min-h-[396px] flex-col items-center justify-center gap-3 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/60 p-5 text-center">
             <p className="font-mono text-xs text-folio-muted">{t.loadError}</p>
             <button
               type="button"
@@ -528,158 +537,53 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
             </button>
           </div>
         ) : !catalog ? (
-          <div className="flex min-h-[320px] flex-col items-center justify-center gap-2 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/50 p-5 text-center">
-            <div className="aspect-[63/88] w-[170px] rounded-[10px] border border-folio-border bg-folio-surface" />
+          <div className="flex min-h-[396px] flex-col items-center justify-center gap-2.5 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/50 p-5 text-center">
+            <div className="aspect-[63/98] w-[214px] rounded-[12px] border border-folio-border bg-folio-surface" />
             <p className="font-mono text-[11px] text-folio-faint">
               {t.loadingCatalog}
             </p>
           </div>
-        ) : phase === 'sealed' || phase === 'ripping' ? (
-          <div className="flex flex-col items-center gap-3 py-1">
-            {boxState.packsRemaining > 0 ? (
+        ) : phase === 'sealed' || phase === 'ripping' || phase === 'drawing' ? (
+          <div className="flex flex-col items-center gap-3">
+            {phase !== 'sealed' || boxState.packsRemaining > 0 ? (
               <>
-                <div
-                  ref={stageRef}
-                  onPointerDown={(event) => {
-                    dragStartXRef.current = event.clientX;
-                    dragDidRipRef.current = false;
-                  }}
-                  onPointerMove={handleStagePointerMove}
-                  onPointerUp={() => {
-                    dragStartXRef.current = null;
-                    setTearDragRatio(0);
-                  }}
-                  onPointerLeave={resetStageTilt}
-                  onPointerCancel={resetStageTilt}
-                  onClick={() => {
-                    if (!dragDidRipRef.current) {
-                      handleRipPack();
+                <div className="pk-stage-mat w-full rounded-[var(--radius-inner)] px-2 py-2.5">
+                  <PokemonBoosterPack
+                    option={activeBoxOption}
+                    phase={phase}
+                    packNumber={
+                      phase === 'sealed' ? nextPackNumber : openedPackNumber
                     }
-                    dragDidRipRef.current = false;
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      handleRipPack();
-                    }
-                  }}
-                  aria-label={`${t.ripButton} ${t.packBadge(nextPackNumber)}`}
-                  className="pk-tilt-stage aspect-[63/88] w-[212px] cursor-pointer select-none"
-                >
-                  <div
-                    ref={tiltElRef}
-                    data-active={isTiltActive ? 'true' : 'false'}
-                    data-ripping={phase === 'ripping' ? 'true' : 'false'}
-                    style={
-                      {
-                        background: activeBoxOption.accentGradient,
-                        '--pk-drag': `${(tearDragRatio * 100).toFixed(0)}%`,
-                      } as React.CSSProperties
-                    }
-                    className="pk-tilt-card pk-booster-pack relative flex h-full w-full flex-col justify-between overflow-visible rounded-[12px] border border-white/20 text-white shadow-soft"
-                  >
-                    <div
-                      style={
-                        phase === 'sealed' && tearDragRatio > 0
-                          ? {
-                              transform: `translate3d(${(tearDragRatio * 18).toFixed(1)}px, ${(-tearDragRatio * 8).toFixed(1)}px, 0) rotate(${(-tearDragRatio * 5).toFixed(1)}deg)`,
-                            }
-                          : undefined
-                      }
-                      className="pk-pack-top-strip relative z-20 flex items-center justify-between rounded-t-[11px] border-b border-dashed border-white/40 bg-white/10 px-3 py-2"
-                    >
-                      <span className="font-mono text-[9px] font-semibold tracking-[0.14em] text-white/90">
-                        {t.packBadge(nextPackNumber)}
-                      </span>
-                      <Scissors
-                        className="h-3 w-3 text-white/85"
-                        aria-hidden="true"
-                      />
-                    </div>
-
-                    <div className="pk-tear-spark" aria-hidden="true" />
-
-                    <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-2.5 overflow-hidden px-3 text-center">
-                      <svg
-                        viewBox="0 0 48 48"
-                        className="h-14 w-14 text-white/90"
-                        aria-hidden="true"
-                      >
-                        <circle
-                          cx="24"
-                          cy="24"
-                          r="20"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                        />
-                        <line
-                          x1="4"
-                          y1="24"
-                          x2="18"
-                          y2="24"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                        />
-                        <line
-                          x1="30"
-                          y1="24"
-                          x2="44"
-                          y2="24"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                        />
-                        <circle
-                          cx="24"
-                          cy="24"
-                          r="6"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                        />
-                        <circle cx="24" cy="24" r="2.5" fill="currentColor" />
-                      </svg>
-
-                      <div className="space-y-1">
-                        <div className="font-mono text-[9.5px] font-semibold tracking-[0.16em] text-white/70">
-                          {activeBoxOption.packTag}
-                        </div>
-                        <div className="font-serif text-lg font-bold leading-tight text-white">
-                          Pokémon TCG
-                        </div>
-                        <div className="font-mono text-[10px] text-white/75">
-                          {t.cardsPerPack}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pk-pack-crimp relative z-10 rounded-b-[11px] border-t border-white/20 bg-black/25 px-3 py-1.5 text-center font-mono text-[9.5px] tracking-wide text-white/80">
-                      {phase === 'ripping' ? t.rippingLabel : t.tearHint}
-                    </div>
-
-                    <div
-                      className="pk-pack-sheen rounded-[12px]"
-                      aria-hidden="true"
-                    />
-                  </div>
+                    packsRemaining={boxState.packsRemaining}
+                    locale={locale}
+                    shouldReduceMotion={shouldReduceMotion}
+                    soundEnabled={boxState.soundEnabled}
+                    onRipTrigger={handleRipPack}
+                  />
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleRipPack}
-                  disabled={phase === 'ripping'}
-                  className="folio-btn-primary w-full justify-center"
-                >
-                  <PackageOpen className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>
-                    {phase === 'ripping' ? t.rippingLabel : t.ripButton}
-                  </span>
-                </button>
+                {phase === 'sealed' ? (
+                  <>
+                    <p className="text-center font-mono text-[10.5px] text-folio-faint">
+                      {t.tearHint}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleRipPack}
+                      className="folio-btn-primary w-full justify-center"
+                    >
+                      <PackageOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{t.ripButton}</span>
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex min-h-[38px] w-full items-center justify-center rounded-full border border-folio-border bg-folio-elevated px-3 font-mono text-[11px] font-medium text-folio-muted">
+                    {phase === 'ripping' ? t.rippingLabel : t.drawingLabel}
+                  </div>
+                )}
               </>
             ) : (
-              <div className="flex min-h-[296px] w-full flex-col items-center justify-center gap-3 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/60 p-5 text-center">
+              <div className="flex min-h-[360px] w-full flex-col items-center justify-center gap-3 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/60 p-5 text-center">
                 <Sparkles
                   className="h-6 w-6 text-folio-ink"
                   aria-hidden="true"
@@ -697,45 +601,6 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                 </button>
               </div>
             )}
-          </div>
-        ) : phase === 'drawing' ? (
-          <div className="flex flex-col items-center gap-3 py-1">
-            <div className="pk-draw-stage relative aspect-[63/88] w-[212px] overflow-hidden rounded-[12px]">
-              <div className="pk-draw-deck absolute inset-x-2.5 bottom-3 top-2 z-10">
-                <div className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-[10px] border border-folio-border bg-folio-surface opacity-70" />
-                <div className="absolute inset-0 translate-x-0.5 translate-y-0.5 rounded-[10px] border border-folio-border bg-folio-surface opacity-85" />
-                <div className="relative h-full w-full overflow-hidden rounded-[10px] border border-folio-border bg-folio-elevated shadow-soft">
-                  <img
-                    src={POKEMON_CARD_BACK_URL}
-                    alt=""
-                    aria-hidden="true"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              </div>
-
-              <div
-                style={{ background: activeBoxOption.accentGradient }}
-                className="pk-draw-pouch absolute inset-x-0 bottom-0 z-20 flex h-[62%] flex-col justify-between overflow-hidden rounded-b-[12px] border border-white/25 text-white shadow-soft"
-              >
-                <div className="h-2 w-full bg-black/35" />
-                <div className="px-3 text-center">
-                  <div className="font-mono text-[9px] tracking-[0.16em] text-white/70">
-                    {activeBoxOption.packTag}
-                  </div>
-                  <div className="font-serif text-sm font-bold text-white/95">
-                    Pokémon TCG
-                  </div>
-                </div>
-                <div className="border-t border-white/20 bg-black/25 py-1 text-center font-mono text-[9px] text-white/75">
-                  {t.packBadge(openedPackNumber)}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex min-h-[38px] w-full items-center justify-center rounded-full border border-folio-border bg-folio-elevated px-3 font-mono text-[11px] font-medium text-folio-muted">
-              {t.drawingLabel}
-            </div>
           </div>
         ) : phase === 'revealing' && activeCard ? (
           <div className="flex flex-col items-center gap-2.5">
@@ -969,6 +834,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
               {currentPack.map((card) => {
                 const miniFoil = getCardFoilStyle(card);
                 const imgStage = imageStages[card.id] ?? 'hires';
+                const isTopPull = card.id === bestCardId;
                 return (
                   <button
                     key={card.id}
@@ -978,7 +844,10 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                     data-card-id={card.id}
                     data-tier={card.tier}
                     data-foil={miniFoil}
-                    className="pk-mini-card group relative aspect-[63/88] w-full overflow-hidden rounded-[5px] border border-folio-border bg-folio-elevated transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong"
+                    data-top-pull={isTopPull ? 'true' : undefined}
+                    className={`pk-mini-card group relative aspect-[63/88] w-full overflow-hidden rounded-[5px] border border-folio-border bg-folio-elevated transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong ${
+                      isTopPull ? 'pk-best-pull' : ''
+                    }`}
                   >
                     {imgStage === 'fallback' ? (
                       <span className="flex h-full w-full items-center justify-center p-1 text-center font-mono text-[8px] leading-tight text-folio-ink">
@@ -988,10 +857,17 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                       <img
                         src={getCardImageUrl(card, imgStage === 'hires')}
                         alt={card.name}
-                        decoding="async"
                         onError={() => advanceImageStage(card.id)}
                         className="h-full w-full object-cover"
                       />
+                    )}
+                    {isTopPull && (
+                      <span
+                        title={t.topPullBadge}
+                        className="pointer-events-none absolute left-0.5 top-0.5 z-10 inline-flex items-center rounded bg-black/80 px-1 py-0.5 text-[7.5px] font-bold leading-none text-amber-300"
+                      >
+                        ★
+                      </span>
                     )}
                     {miniFoil !== 'none' && (
                       <span className="pk-mini-glint" aria-hidden="true" />

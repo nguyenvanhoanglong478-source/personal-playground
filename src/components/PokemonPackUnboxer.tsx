@@ -3,7 +3,6 @@ import {
   BookOpen,
   ChevronRight,
   Eye,
-  Layers,
   PackageOpen,
   RotateCcw,
   Sparkles,
@@ -19,6 +18,7 @@ import {
   FOIL_STYLE_LABELS,
   PACKS_PER_BOX,
   POKEMON_CARD_BACK_URL,
+  POKEMON_CHEST_BACK_URL,
   POKEMON_UNBOXER_LABELS,
   PokemonCatalogCard,
   PokemonCatalogData,
@@ -424,49 +424,18 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     return best.id;
   }, [currentPack]);
 
-  const openedCountInBox = PACKS_PER_BOX - boxState.packsRemaining;
   const remainingDeckUnderCard = Math.max(
     0,
     currentPack.length - revealIndex - 1
   );
 
   return (
-    <div className="mx-auto w-full max-w-[330px] lg:mx-0">
-      <div className="folio-card flex flex-col gap-3 !p-4">
-        <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-2.5">
-          <div className="flex shrink-0 items-center gap-1.5 font-mono text-[10.5px] font-semibold tracking-wider text-folio-muted">
-            <Layers
-              className="h-3.5 w-3.5 shrink-0 text-folio-ink"
-              aria-hidden="true"
-            />
-            <span>{t.kicker}</span>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-1.5">
-            <button
-              type="button"
-              onClick={handleToggleSound}
-              aria-pressed={boxState.soundEnabled}
-              aria-label={
-                boxState.soundEnabled ? t.soundOnAria : t.soundOffAria
-              }
-              title={boxState.soundEnabled ? t.soundOnAria : t.soundOffAria}
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-folio-border bg-folio-elevated text-folio-muted transition-colors duration-150 hover:border-folio-strong hover:text-folio-ink"
-            >
-              {boxState.soundEnabled ? (
-                <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
-              ) : (
-                <VolumeX className="h-3.5 w-3.5" aria-hidden="true" />
-              )}
-            </button>
-
-            <span className="rounded-full border border-folio-border bg-folio-elevated px-2.5 py-0.5 font-mono text-[10.5px] font-semibold tabular-nums text-folio-ink">
-              {t.packsLeft(boxState.packsRemaining)}
-            </span>
-          </div>
-        </div>
-
-        <div className="relative">
+    <div
+      data-pk-unboxer="true"
+      className="mx-auto flex w-full max-w-[336px] flex-col items-center gap-3 lg:mx-0"
+    >
+      <div className="flex w-full items-center gap-1.5">
+        <div className="relative min-w-0 flex-1">
           <span
             aria-hidden="true"
             style={{ backgroundColor: activeBoxOption.accentColor }}
@@ -478,7 +447,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
             onChange={(event) =>
               handleOpenNewBox(event.target.value as BoxThemeId)
             }
-            className="min-h-[36px] w-full cursor-pointer rounded-[var(--radius-control)] border border-folio-border bg-folio-elevated pl-7 pr-3 font-mono text-[11px] font-medium text-folio-ink focus:border-folio-strong focus:outline-none"
+            className="min-h-[36px] w-full cursor-pointer truncate rounded-full border border-folio-border bg-folio-surface pl-7 pr-3 font-mono text-[11px] font-medium text-folio-ink transition-colors hover:border-folio-strong focus:border-folio-strong focus:outline-none"
           >
             {BOOSTER_BOX_OPTIONS.map((opt) => (
               <option key={opt.id} value={opt.id}>
@@ -488,441 +457,509 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
           </select>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <div
-            aria-label={`${openedCountInBox}/${PACKS_PER_BOX}`}
-            className="grid flex-1 grid-cols-12 gap-1"
-          >
-            {Array.from({ length: PACKS_PER_BOX }).map((_, idx) => {
-              const isOpened = idx < openedCountInBox;
-              const isCurrent =
-                phase !== 'sealed' && idx === openedPackNumber - 1;
-              return (
-                <span
-                  key={idx}
-                  style={
-                    isCurrent
-                      ? { backgroundColor: activeBoxOption.accentColor }
-                      : undefined
-                  }
-                  className={`h-1.5 rounded-full transition-colors duration-200 ${
-                    isCurrent
-                      ? ''
-                      : isOpened
-                        ? 'bg-folio-ink/65'
-                        : 'bg-folio-border'
-                  }`}
-                />
-              );
-            })}
-          </div>
+        <span
+          title={catalog ? t.catalogCount(activePoolSize) : undefined}
+          className="inline-flex min-h-[36px] shrink-0 items-center rounded-full border border-folio-border bg-folio-surface px-2.5 font-mono text-[10.5px] font-semibold tabular-nums text-folio-ink"
+        >
+          {t.packsLeft(boxState.packsRemaining)}
+        </span>
 
-          {catalog && (
-            <span className="shrink-0 font-mono text-[10px] tabular-nums text-folio-faint">
-              {t.catalogCount(activePoolSize)}
-            </span>
+        <button
+          type="button"
+          onClick={handleToggleSound}
+          aria-pressed={boxState.soundEnabled}
+          aria-label={boxState.soundEnabled ? t.soundOnAria : t.soundOffAria}
+          title={boxState.soundEnabled ? t.soundOnAria : t.soundOffAria}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-folio-border bg-folio-surface text-folio-muted transition-colors duration-150 hover:border-folio-strong hover:text-folio-ink"
+        >
+          {boxState.soundEnabled ? (
+            <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
+          ) : (
+            <VolumeX className="h-3.5 w-3.5" aria-hidden="true" />
           )}
+        </button>
+      </div>
+
+      {loadFailed ? (
+        <div className="flex min-h-[430px] w-full flex-col items-center justify-center gap-3 p-5 text-center">
+          <p className="font-mono text-xs text-folio-muted">{t.loadError}</p>
+          <button
+            type="button"
+            onClick={fetchCatalog}
+            className="folio-btn-compact"
+          >
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{t.retryBtn}</span>
+          </button>
         </div>
+      ) : !catalog ? (
+        <div className="flex min-h-[430px] w-full flex-col items-center justify-center gap-2.5 text-center">
+          <div className="aspect-[780/1096] w-[310px] rounded-2xl bg-folio-elevated/40 sm:w-[328px]" />
+          <p className="font-mono text-[11px] text-folio-faint">
+            {t.loadingCatalog}
+          </p>
+        </div>
+      ) : phase === 'sealed' || phase === 'ripping' || phase === 'drawing' ? (
+        <div className="flex w-full flex-col items-center gap-2.5">
+          {phase !== 'sealed' || boxState.packsRemaining > 0 ? (
+            <>
+              <PokemonBoosterPack
+                option={activeBoxOption}
+                phase={phase}
+                packNumber={
+                  phase === 'sealed' ? nextPackNumber : openedPackNumber
+                }
+                packsRemaining={boxState.packsRemaining}
+                locale={locale}
+                shouldReduceMotion={shouldReduceMotion}
+                soundEnabled={boxState.soundEnabled}
+                onRipTrigger={handleRipPack}
+              />
 
-        {loadFailed ? (
-          <div className="flex min-h-[396px] flex-col items-center justify-center gap-3 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/60 p-5 text-center">
-            <p className="font-mono text-xs text-folio-muted">{t.loadError}</p>
-            <button
-              type="button"
-              onClick={fetchCatalog}
-              className="folio-btn-compact"
-            >
-              <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{t.retryBtn}</span>
-            </button>
-          </div>
-        ) : !catalog ? (
-          <div className="flex min-h-[396px] flex-col items-center justify-center gap-2.5 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/50 p-5 text-center">
-            <div className="aspect-[63/98] w-[214px] rounded-[12px] border border-folio-border bg-folio-surface" />
-            <p className="font-mono text-[11px] text-folio-faint">
-              {t.loadingCatalog}
-            </p>
-          </div>
-        ) : phase === 'sealed' || phase === 'ripping' || phase === 'drawing' ? (
-          <div className="flex flex-col items-center gap-3">
-            {phase !== 'sealed' || boxState.packsRemaining > 0 ? (
-              <>
-                <div className="pk-stage-mat w-full rounded-[var(--radius-inner)] px-2 py-2.5">
-                  <PokemonBoosterPack
-                    option={activeBoxOption}
-                    phase={phase}
-                    packNumber={
-                      phase === 'sealed' ? nextPackNumber : openedPackNumber
-                    }
-                    packsRemaining={boxState.packsRemaining}
-                    locale={locale}
-                    shouldReduceMotion={shouldReduceMotion}
-                    soundEnabled={boxState.soundEnabled}
-                    onRipTrigger={handleRipPack}
-                  />
-                </div>
-
-                <div className="flex min-h-[64px] w-full flex-col justify-end gap-2">
-                  {phase === 'sealed' ? (
-                    <>
-                      <p className="text-center font-mono text-[10.5px] leading-none text-folio-faint">
-                        {t.tearHint}
-                      </p>
+              <div className="flex min-h-[64px] w-full flex-col justify-end gap-2">
+                {phase === 'sealed' ? (
+                  <>
+                    <p className="text-center font-mono text-[10.5px] leading-none text-folio-faint">
+                      {t.tearHint}
+                    </p>
+                    <div className="flex w-full items-center gap-2">
                       <button
                         type="button"
                         onClick={handleRipPack}
-                        className="folio-btn-primary w-full justify-center"
+                        className="folio-btn-primary flex-1 justify-center"
                       >
-                        <PackageOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                        <PackageOpen
+                          className="h-3.5 w-3.5"
+                          aria-hidden="true"
+                        />
                         <span>{t.ripButton}</span>
                       </button>
-                    </>
-                  ) : (
-                    <div className="flex min-h-[38px] w-full items-center justify-center rounded-full border border-folio-border bg-folio-elevated px-3 font-mono text-[11px] font-medium text-folio-muted">
+
+                      <button
+                        type="button"
+                        onClick={() => setBinderOpen(true)}
+                        className="folio-btn-secondary shrink-0 justify-center !px-3.5"
+                      >
+                        <BookOpen
+                          className="h-3.5 w-3.5"
+                          aria-hidden="true"
+                        />
+                        <span>{t.collectionBtn(uniqueOwnedCount)}</span>
+                      </button>
+
+                      {boxState.packsRemaining < PACKS_PER_BOX && (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenNewBox(boxState.boxId)}
+                          aria-label={t.freshBoxShort}
+                          title={t.freshBoxShort}
+                          className="folio-btn-icon shrink-0"
+                        >
+                          <RotateCcw
+                            className="h-3.5 w-3.5"
+                            aria-hidden="true"
+                          />
+                        </button>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex w-full items-center gap-2">
+                    <div className="flex min-h-[40px] flex-1 items-center justify-center rounded-full border border-folio-border bg-folio-surface px-3 font-mono text-[11px] font-medium text-folio-muted">
                       {phase === 'ripping' ? t.rippingLabel : t.drawingLabel}
                     </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="flex min-h-[360px] w-full flex-col items-center justify-center gap-3 rounded-[var(--radius-tag)] border border-folio-border bg-folio-elevated/60 p-5 text-center">
-                <Sparkles
-                  className="h-6 w-6 text-folio-ink"
+
+                    <button
+                      type="button"
+                      onClick={() => setBinderOpen(true)}
+                      className="folio-btn-secondary shrink-0 justify-center !px-3.5"
+                    >
+                      <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{t.collectionBtn(uniqueOwnedCount)}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex w-full flex-col items-center gap-3">
+              <div className="pk-chest-stage">
+                <div className="pk-chest-ground-shadow" aria-hidden="true" />
+                <img
+                  src={POKEMON_CHEST_BACK_URL}
+                  alt=""
                   aria-hidden="true"
+                  decoding="async"
+                  className="pk-pixel-art pointer-events-none absolute inset-0 z-[5] h-full w-full object-contain opacity-90"
                 />
-                <p className="font-serif text-base font-bold text-folio-ink">
-                  {t.boxDoneTitle}
-                </p>
+                <div className="relative z-10 flex flex-col items-center gap-2 rounded-2xl border border-folio-border bg-folio-surface/95 px-5 py-4 text-center shadow-soft">
+                  <Sparkles
+                    className="h-5 w-5 text-folio-ink"
+                    aria-hidden="true"
+                  />
+                  <p className="font-serif text-sm font-bold text-folio-ink">
+                    {t.boxDoneTitle}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex w-full items-center gap-2">
                 <button
                   type="button"
                   onClick={() => handleOpenNewBox(boxState.boxId)}
-                  className="folio-btn-primary"
+                  className="folio-btn-primary flex-1 justify-center"
                 >
                   <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>{t.newBoxBtn}</span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setBinderOpen(true)}
+                  className="folio-btn-secondary shrink-0 justify-center !px-3.5"
+                >
+                  <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{t.collectionBtn(uniqueOwnedCount)}</span>
+                </button>
               </div>
+            </div>
+          )}
+        </div>
+      ) : phase === 'revealing' && activeCard ? (
+        <div className="flex w-full flex-col items-center gap-3 py-1">
+          <div className="flex w-full items-center justify-between gap-2 font-mono text-[11px]">
+            <span className="rounded-full border border-folio-border bg-folio-surface px-2.5 py-0.5 font-semibold tabular-nums text-folio-ink">
+              {t.cardCounter(revealIndex + 1)}
+            </span>
+
+            {isCardFlipped ? (
+              <span
+                data-tier={activeCard.tier}
+                className="pk-tier-pill inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold"
+              >
+                {isHitTier(activeCard.tier) && (
+                  <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
+                )}
+                <span>{TIER_LABELS[locale][activeCard.tier]}</span>
+              </span>
+            ) : (
+              <span className="rounded-full border border-folio-border bg-folio-surface px-2.5 py-0.5 text-[10px] font-medium text-folio-muted">
+                {t.tapToFlip}
+              </span>
             )}
           </div>
-        ) : phase === 'revealing' && activeCard ? (
-          <div className="flex flex-col items-center gap-2.5">
-            <div className="flex w-full items-center justify-between gap-2 font-mono text-[11px]">
-              <span className="font-semibold tabular-nums text-folio-ink">
-                {t.cardCounter(revealIndex + 1)}
-              </span>
 
-              {isCardFlipped ? (
-                <span
-                  data-tier={activeCard.tier}
-                  className="pk-tier-pill inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold"
-                >
-                  {isHitTier(activeCard.tier) && (
-                    <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
-                  )}
-                  <span>{TIER_LABELS[locale][activeCard.tier]}</span>
-                </span>
-              ) : (
-                <span className="rounded-full border border-folio-border bg-folio-elevated px-2 py-0.5 text-[10px] font-medium text-folio-muted">
-                  {t.tapToFlip}
-                </span>
-              )}
-            </div>
+          <div className="relative aspect-[63/88] w-[224px]">
+            {remainingDeckUnderCard > 1 && (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 translate-x-2 translate-y-2 overflow-hidden rounded-[11px] border border-folio-border bg-folio-elevated opacity-55"
+              >
+                <img
+                  src={POKEMON_CARD_BACK_URL}
+                  alt=""
+                  className="h-full w-full object-cover opacity-80"
+                />
+              </div>
+            )}
 
-            <div className="relative aspect-[63/88] w-[212px]">
-              {remainingDeckUnderCard > 1 && (
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 translate-x-2 translate-y-2 overflow-hidden rounded-[11px] border border-folio-border bg-folio-elevated opacity-55"
-                >
-                  <img
-                    src={POKEMON_CARD_BACK_URL}
-                    alt=""
-                    className="h-full w-full object-cover opacity-80"
+            {remainingDeckUnderCard > 0 && (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 translate-x-1 translate-y-1 overflow-hidden rounded-[11px] border border-folio-border bg-folio-elevated opacity-80"
+              >
+                <img
+                  src={POKEMON_CARD_BACK_URL}
+                  alt=""
+                  className="h-full w-full object-cover opacity-90"
+                />
+              </div>
+            )}
+
+            <div
+              key={`${openedPackNumber}-${revealIndex}-${activeCard.id}`}
+              ref={stageRef}
+              onPointerMove={handleStagePointerMove}
+              onPointerLeave={resetStageTilt}
+              onPointerCancel={resetStageTilt}
+              onClick={handleCardAction}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  handleCardAction();
+                }
+              }}
+              aria-label={
+                isCardFlipped
+                  ? `${activeCard.name} - ${t.nextCard}`
+                  : t.flipCardBtn(revealIndex + 1)
+              }
+              data-transition={cardTransition}
+              className="pk-tilt-stage pk-deck-top relative z-10 h-full w-full cursor-pointer select-none"
+            >
+              {isCardFlipped &&
+                (activeCard.tier === 'ultra' ||
+                  activeCard.tier === 'secret') && (
+                  <div
+                    key={`burst-${activeCard.id}-${revealIndex}`}
+                    data-tier={activeCard.tier}
+                    data-foil={activeFoilStyle}
+                    className="pk-reveal-burst"
+                    aria-hidden="true"
                   />
-                </div>
-              )}
-
-              {remainingDeckUnderCard > 0 && (
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 translate-x-1 translate-y-1 overflow-hidden rounded-[11px] border border-folio-border bg-folio-elevated opacity-80"
-                >
-                  <img
-                    src={POKEMON_CARD_BACK_URL}
-                    alt=""
-                    className="h-full w-full object-cover opacity-90"
-                  />
-                </div>
-              )}
+                )}
 
               <div
-                key={`${openedPackNumber}-${revealIndex}-${activeCard.id}`}
-                ref={stageRef}
-                onPointerMove={handleStagePointerMove}
-                onPointerLeave={resetStageTilt}
-                onPointerCancel={resetStageTilt}
-                onClick={handleCardAction}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    handleCardAction();
-                  }
-                }}
-                aria-label={
-                  isCardFlipped
-                    ? `${activeCard.name} - ${t.nextCard}`
-                    : t.flipCardBtn(revealIndex + 1)
-                }
-                data-transition={cardTransition}
-                className="pk-tilt-stage pk-deck-top relative z-10 h-full w-full cursor-pointer select-none"
+                ref={tiltElRef}
+                data-active={isTiltActive && isCardFlipped ? 'true' : 'false'}
+                data-tier={activeCard.tier}
+                data-foil={isCardFlipped ? activeFoilStyle : 'none'}
+                data-flipped={isCardFlipped ? 'true' : 'false'}
+                data-flip-settled={isFlipSettled ? 'true' : 'false'}
+                className="pk-tilt-card pk-flip-card relative h-full w-full"
               >
-                {isCardFlipped &&
-                  (activeCard.tier === 'ultra' ||
-                    activeCard.tier === 'secret') && (
-                    <div
-                      key={`burst-${activeCard.id}-${revealIndex}`}
-                      data-tier={activeCard.tier}
-                      data-foil={activeFoilStyle}
-                      className="pk-reveal-burst"
-                      aria-hidden="true"
-                    />
+                <div className="pk-flip-face pk-flip-back overflow-hidden rounded-[11px] border border-folio-border bg-folio-elevated shadow-soft">
+                  <img
+                    src={POKEMON_CARD_BACK_URL}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+
+                <div className="pk-flip-face pk-flip-front overflow-hidden rounded-[11px] border border-folio-border bg-folio-elevated shadow-soft">
+                  {isCardFlipped && (
+                    <>
+                      {(imageStages[activeCard.id] ?? 'hires') ===
+                      'fallback' ? (
+                        <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 p-3 text-center">
+                          <span className="font-serif text-sm font-bold text-folio-ink">
+                            {activeCard.name}
+                          </span>
+                          <span className="font-mono text-[10px] text-folio-muted">
+                            {activeCard.rarity}
+                          </span>
+                        </div>
+                      ) : (
+                        <img
+                          src={getCardImageUrl(
+                            activeCard,
+                            (imageStages[activeCard.id] ?? 'hires') === 'hires'
+                          )}
+                          alt={activeCard.name}
+                          fetchPriority="high"
+                          decoding="async"
+                          onError={() => advanceImageStage(activeCard.id)}
+                          className="h-full w-full object-cover"
+                        />
+                      )}
+                      <div className="pk-holo-foil" aria-hidden="true" />
+                      <div className="pk-holo-glitter" aria-hidden="true" />
+                      <div className="pk-holo-glare" aria-hidden="true" />
+                    </>
                   )}
+                </div>
+              </div>
+            </div>
+          </div>
 
-                <div
-                  ref={tiltElRef}
-                  data-active={isTiltActive && isCardFlipped ? 'true' : 'false'}
-                  data-tier={activeCard.tier}
-                  data-foil={isCardFlipped ? activeFoilStyle : 'none'}
-                  data-flipped={isCardFlipped ? 'true' : 'false'}
-                  data-flip-settled={isFlipSettled ? 'true' : 'false'}
-                  className="pk-tilt-card pk-flip-card relative h-full w-full"
-                >
-                  <div className="pk-flip-face pk-flip-back overflow-hidden rounded-[11px] border border-folio-border bg-folio-elevated shadow-soft">
-                    <img
-                      src={POKEMON_CARD_BACK_URL}
-                      alt=""
-                      aria-hidden="true"
-                      className="h-full w-full object-cover"
-                    />
+          <div className="flex min-h-[40px] w-full items-center justify-between gap-2 px-1">
+            {isCardFlipped ? (
+              <>
+                <div className="min-w-0">
+                  <div className="truncate font-serif text-sm font-bold leading-snug text-folio-ink">
+                    {activeCard.name}
                   </div>
-
-                  <div className="pk-flip-face pk-flip-front overflow-hidden rounded-[11px] border border-folio-border bg-folio-elevated shadow-soft">
-                    {isCardFlipped && (
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] tabular-nums text-folio-faint">
+                    <span>{formatCardPrice(activeCard.price)}</span>
+                    {getCardPower(activeCard) > 0 && (
                       <>
-                        {(imageStages[activeCard.id] ?? 'hires') ===
-                        'fallback' ? (
-                          <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 p-3 text-center">
-                            <span className="font-serif text-sm font-bold text-folio-ink">
-                              {activeCard.name}
-                            </span>
-                            <span className="font-mono text-[10px] text-folio-muted">
-                              {activeCard.rarity}
-                            </span>
-                          </div>
-                        ) : (
-                          <img
-                            src={getCardImageUrl(
-                              activeCard,
-                              (imageStages[activeCard.id] ?? 'hires') ===
-                                'hires'
-                            )}
-                            alt={activeCard.name}
-                            fetchPriority="high"
-                            decoding="async"
-                            onError={() => advanceImageStage(activeCard.id)}
-                            className="h-full w-full object-cover"
-                          />
-                        )}
-                        <div className="pk-holo-foil" aria-hidden="true" />
-                        <div className="pk-holo-glitter" aria-hidden="true" />
-                        <div className="pk-holo-glare" aria-hidden="true" />
+                        <span>·</span>
+                        <span>PWR {getCardPower(activeCard)}</span>
+                      </>
+                    )}
+                    {activeFoilStyle !== 'none' && (
+                      <>
+                        <span>·</span>
+                        <span className="text-folio-muted">
+                          {FOIL_STYLE_LABELS[locale][activeFoilStyle]}
+                        </span>
                       </>
                     )}
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setInspectedCard(activeCard)}
+                  aria-label={t.inspectCard}
+                  title={t.inspectCard}
+                  className="folio-btn-icon !h-8 !w-8 shrink-0"
+                >
+                  <ZoomIn className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              </>
+            ) : (
+              <div className="w-full text-center font-mono text-[11px] text-folio-muted">
+                {t.tapToFlip}
               </div>
-            </div>
-
-            <div className="flex min-h-[38px] w-full items-center justify-between gap-2 px-0.5">
-              {isCardFlipped ? (
-                <>
-                  <div className="min-w-0">
-                    <div className="truncate font-serif text-sm font-bold leading-snug text-folio-ink">
-                      {activeCard.name}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] tabular-nums text-folio-faint">
-                      <span>{formatCardPrice(activeCard.price)}</span>
-                      {getCardPower(activeCard) > 0 && (
-                        <>
-                          <span>·</span>
-                          <span>PWR {getCardPower(activeCard)}</span>
-                        </>
-                      )}
-                      {activeFoilStyle !== 'none' && (
-                        <>
-                          <span>·</span>
-                          <span className="text-folio-muted">
-                            {FOIL_STYLE_LABELS[locale][activeFoilStyle]}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setInspectedCard(activeCard)}
-                    aria-label={t.inspectCard}
-                    title={t.inspectCard}
-                    className="folio-btn-icon !h-8 !w-8 shrink-0"
-                  >
-                    <ZoomIn className="h-3.5 w-3.5" aria-hidden="true" />
-                  </button>
-                </>
-              ) : (
-                <div className="w-full text-center font-mono text-[11px] text-folio-muted">
-                  {t.tapToFlip}
-                </div>
-              )}
-            </div>
-
-            <div className="flex w-full items-center gap-1.5">
-              <button
-                type="button"
-                onClick={handleCardAction}
-                disabled={cardTransition === 'exiting'}
-                className="folio-btn-primary flex-1 justify-center !min-h-[36px] !px-3"
-              >
-                <span>
-                  {!isCardFlipped
-                    ? t.flipCardBtn(revealIndex + 1)
-                    : revealIndex + 1 >= CARDS_PER_PACK
-                      ? t.finishPack
-                      : t.nextCard}
-                </span>
-                <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
-
-              <button
-                type="button"
-                onClick={handleRevealAll}
-                className="folio-btn-compact !min-h-[36px] !px-2.5"
-              >
-                <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>{t.revealAll}</span>
-              </button>
-            </div>
+            )}
           </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-1.5 font-mono text-[11px]">
-              <span className="truncate font-semibold text-folio-ink">
-                {t.summaryTitle(openedPackNumber)}
-              </span>
-              <div className="flex shrink-0 items-center gap-1">
-                <span className="rounded-full border border-folio-border bg-folio-elevated px-2 py-0.5 text-[10px] font-semibold tabular-nums text-folio-ink">
-                  {formatCardPrice(packTotalValue)}
-                </span>
-                <span className="rounded-full border border-folio-border bg-folio-elevated px-2 py-0.5 text-[10px] font-semibold text-folio-muted">
-                  {t.hitsLabel(packHitsCount)}
-                </span>
-              </div>
-            </div>
 
-            <div
-              aria-label={t.summaryTitle(openedPackNumber)}
-              className="grid grid-cols-5 gap-1.5"
+          <div className="flex w-full items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCardAction}
+              disabled={cardTransition === 'exiting'}
+              className="folio-btn-primary flex-1 justify-center !min-h-[38px] !px-3"
             >
-              {currentPack.map((card) => {
-                const miniFoil = getCardFoilStyle(card);
-                const imgStage = imageStages[card.id] ?? 'hires';
-                const isTopPull = card.id === bestCardId;
-                return (
-                  <button
-                    key={card.id}
-                    type="button"
-                    onClick={() => setInspectedCard(card)}
-                    title={`${card.name} · ${card.set.toUpperCase()} #${card.num} · ${formatCardPrice(card.price)} (${card.rarity})`}
-                    data-card-id={card.id}
-                    data-tier={card.tier}
-                    data-foil={miniFoil}
-                    data-top-pull={isTopPull ? 'true' : undefined}
-                    className={`pk-mini-card group relative aspect-[63/88] w-full overflow-hidden rounded-[5px] border border-folio-border bg-folio-elevated transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong ${
-                      isTopPull ? 'pk-best-pull' : ''
-                    }`}
-                  >
-                    {imgStage === 'fallback' ? (
-                      <span className="flex h-full w-full items-center justify-center p-1 text-center font-mono text-[8px] leading-tight text-folio-ink">
-                        {card.name}
-                      </span>
-                    ) : (
-                      <img
-                        src={getCardImageUrl(card, imgStage === 'hires')}
-                        alt={card.name}
-                        onError={() => advanceImageStage(card.id)}
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                    {isTopPull && (
-                      <span
-                        title={t.topPullBadge}
-                        className="pointer-events-none absolute left-0.5 top-0.5 z-10 inline-flex items-center rounded bg-black/80 px-1 py-0.5 text-[7.5px] font-bold leading-none text-amber-300"
-                      >
-                        ★
-                      </span>
-                    )}
-                    {miniFoil !== 'none' && (
-                      <span className="pk-mini-glint" aria-hidden="true" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+              <span>
+                {!isCardFlipped
+                  ? t.flipCardBtn(revealIndex + 1)
+                  : revealIndex + 1 >= CARDS_PER_PACK
+                    ? t.finishPack
+                    : t.nextCard}
+              </span>
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
 
             <button
               type="button"
-              onClick={handlePrepareNextPack}
-              className="folio-btn-primary w-full justify-center"
+              onClick={handleRevealAll}
+              className="folio-btn-secondary !min-h-[38px] !px-3"
             >
-              {boxState.packsRemaining > 0 ? (
-                <>
-                  <PackageOpen className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{t.nextPackBtn(nextPackNumber)}</span>
-                </>
-              ) : (
-                <>
-                  <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{t.newBoxBtn}</span>
-                </>
-              )}
+              <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{t.revealAll}</span>
             </button>
           </div>
-        )}
 
-        <div className="flex items-center justify-between gap-2 border-t border-folio-border pt-2.5">
-          <button
-            type="button"
-            onClick={() => setBinderOpen(true)}
-            className="folio-btn-compact flex-1 justify-center !min-h-[34px] !px-2.5"
-          >
-            <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>{t.collectionBtn(uniqueOwnedCount)}</span>
-          </button>
+          <div className="flex w-full items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setBinderOpen(true)}
+              className="folio-btn-compact flex-1 justify-center !min-h-[36px] !px-3"
+            >
+              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{t.collectionBtn(uniqueOwnedCount)}</span>
+            </button>
 
-          {boxState.packsRemaining < PACKS_PER_BOX && (
             <button
               type="button"
               onClick={() => handleOpenNewBox(boxState.boxId)}
-              className="folio-btn-compact !min-h-[34px] !px-2.5"
+              className="folio-btn-compact !min-h-[36px] !px-3"
             >
               <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
               <span>{t.freshBoxShort}</span>
             </button>
-          )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex w-full flex-col gap-3 py-1">
+          <div className="flex items-center justify-between gap-1.5 font-mono text-[11px]">
+            <span className="truncate font-semibold text-folio-ink">
+              {t.summaryTitle(openedPackNumber)}
+            </span>
+            <div className="flex shrink-0 items-center gap-1">
+              <span className="rounded-full border border-folio-border bg-folio-surface px-2.5 py-0.5 text-[10px] font-semibold tabular-nums text-folio-ink">
+                {formatCardPrice(packTotalValue)}
+              </span>
+              <span className="rounded-full border border-folio-border bg-folio-surface px-2.5 py-0.5 text-[10px] font-semibold text-folio-muted">
+                {t.hitsLabel(packHitsCount)}
+              </span>
+            </div>
+          </div>
+
+          <div
+            aria-label={t.summaryTitle(openedPackNumber)}
+            className="grid grid-cols-5 gap-1.5"
+          >
+            {currentPack.map((card) => {
+              const miniFoil = getCardFoilStyle(card);
+              const imgStage = imageStages[card.id] ?? 'hires';
+              const isTopPull = card.id === bestCardId;
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => setInspectedCard(card)}
+                  title={`${card.name} · ${card.set.toUpperCase()} #${card.num} · ${formatCardPrice(card.price)} (${card.rarity})`}
+                  data-card-id={card.id}
+                  data-tier={card.tier}
+                  data-foil={miniFoil}
+                  data-top-pull={isTopPull ? 'true' : undefined}
+                  className={`pk-mini-card group relative aspect-[63/88] w-full overflow-hidden rounded-[5px] border border-folio-border bg-folio-surface transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong ${
+                    isTopPull ? 'pk-best-pull' : ''
+                  }`}
+                >
+                  {imgStage === 'fallback' ? (
+                    <span className="flex h-full w-full items-center justify-center p-1 text-center font-mono text-[8px] leading-tight text-folio-ink">
+                      {card.name}
+                    </span>
+                  ) : (
+                    <img
+                      src={getCardImageUrl(card, imgStage === 'hires')}
+                      alt={card.name}
+                      onError={() => advanceImageStage(card.id)}
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+                  {isTopPull && (
+                    <span
+                      title={t.topPullBadge}
+                      className="pointer-events-none absolute left-0.5 top-0.5 z-10 inline-flex items-center rounded bg-black/80 px-1 py-0.5 text-[7.5px] font-bold leading-none text-amber-300"
+                    >
+                      ★
+                    </span>
+                  )}
+                  {miniFoil !== 'none' && (
+                    <span className="pk-mini-glint" aria-hidden="true" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={handlePrepareNextPack}
+            className="folio-btn-primary w-full justify-center"
+          >
+            {boxState.packsRemaining > 0 ? (
+              <>
+                <PackageOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{t.nextPackBtn(nextPackNumber)}</span>
+              </>
+            ) : (
+              <>
+                <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{t.newBoxBtn}</span>
+              </>
+            )}
+          </button>
+
+          <div className="flex w-full items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setBinderOpen(true)}
+              className="folio-btn-secondary flex-1 justify-center !min-h-[38px] !px-3"
+            >
+              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{t.collectionBtn(uniqueOwnedCount)}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleOpenNewBox(boxState.boxId)}
+              className="folio-btn-secondary !min-h-[38px] !px-3"
+            >
+              <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{t.freshBoxShort}</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <CollectionBinderModal
         isOpen={binderOpen}

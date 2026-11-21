@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ChevronRight, Scissors } from 'lucide-react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   BoosterBoxOption,
   POKEMON_CARD_BACK_URL,
+  POKEMON_CHEST_BACK_URL,
+  POKEMON_CHEST_FRONT_URL,
   POKEMON_UNBOXER_LABELS,
+  getBoxOption,
 } from '../data/pokemonPack';
 import { Locale } from '../data/profile';
 import { useCardTilt } from '../hooks/useCardTilt';
@@ -28,6 +30,156 @@ const SPARKLE_VECTORS = [
   { left: '82%', sx: '20px', sy: '-22px', delay: '200ms' },
   { left: '24%', sx: '-14px', sy: '14px', delay: '110ms' },
 ];
+
+const PokemonWordmark: React.FC = () => {
+  const uid = useId().replace(/:/g, '');
+  const gradId = `pkGold_${uid}`;
+  const arcId = `pkArc_${uid}`;
+
+  return (
+    <svg
+      className="pk-official-wordmark"
+      viewBox="0 0 240 62"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFF066" />
+          <stop offset="52%" stopColor="#FFD400" />
+          <stop offset="100%" stopColor="#EA9B00" />
+        </linearGradient>
+        <path id={arcId} d="M 10 51 Q 120 18 230 51" fill="none" />
+      </defs>
+      <text
+        fontFamily="'Arial Black', 'Impact', sans-serif"
+        fontWeight="900"
+        fontSize="39"
+        letterSpacing="-1.5"
+        textAnchor="middle"
+      >
+        <textPath
+          href={`#${arcId}`}
+          startOffset="50%"
+          stroke="#1B46A8"
+          strokeWidth="11.5"
+          strokeLinejoin="round"
+          fill="#1B46A8"
+        >
+          Pokémon
+        </textPath>
+      </text>
+      <text
+        fontFamily="'Arial Black', 'Impact', sans-serif"
+        fontWeight="900"
+        fontSize="39"
+        letterSpacing="-1.5"
+        textAnchor="middle"
+      >
+        <textPath
+          href={`#${arcId}`}
+          startOffset="50%"
+          stroke="#102C73"
+          strokeWidth="4.5"
+          strokeLinejoin="round"
+          fill={`url(#${gradId})`}
+          paintOrder="stroke fill"
+        >
+          Pokémon
+        </textPath>
+      </text>
+    </svg>
+  );
+};
+
+interface SidePackPreviewProps {
+  option: BoosterBoxOption;
+  locale: Locale;
+}
+
+const SidePackPreview: React.FC<SidePackPreviewProps> = ({ option, locale }) => {
+  const t = POKEMON_UNBOXER_LABELS[locale];
+  const fadeBg = `linear-gradient(180deg, rgb(${option.topFadeRgb}) 0%, rgba(${option.topFadeRgb}, 0.96) 20%, rgba(${option.topFadeRgb}, 0) 32%, rgba(${option.bottomFadeRgb}, 0) 58%, rgba(${option.bottomFadeRgb}, 0.96) 70%, rgb(${option.bottomFadeRgb}) 100%)`;
+  const ribbonBg = `linear-gradient(128deg, transparent 8%, ${option.ribbonColorA} 17%, transparent 26%, transparent 70%, ${option.ribbonColorB} 80%, transparent 90%)`;
+
+  return (
+    <div
+      style={{ background: option.bodyBackground }}
+      className="pk-official-side-pack"
+    >
+      <div
+        style={{ background: option.crimpGradient }}
+        className="pk-foil-crimp-top"
+      />
+      <div className="relative flex flex-1 flex-col justify-between overflow-hidden">
+        <div className="pk-official-art-window">
+          <img
+            src={option.coverArtUrl}
+            alt=""
+            decoding="async"
+            style={{
+              objectPosition: option.coverArtPosition,
+              transform: `scale(${option.coverArtScale})`,
+              transformOrigin: 'center 28%',
+            }}
+            className="h-full w-full object-cover saturate-[1.14]"
+          />
+        </div>
+        <div
+          style={{ background: fadeBg }}
+          className="pointer-events-none absolute inset-0 z-[3]"
+        />
+        <div
+          style={{ background: ribbonBg }}
+          className="pointer-events-none absolute inset-0 z-[4]"
+        />
+        <div className="pk-pack-peg-hole" />
+        <div className="pk-official-top-row">
+          <div className="pk-official-series">
+            <span className="pk-official-tcg-badge">POKÉMON TCG</span>
+            <span className="pk-official-era">{option.eraLabel}</span>
+          </div>
+          <div className="pk-official-specs">
+            <div className="flex items-center gap-0.5">
+              <span className="pk-official-10cards">{t.packCardsTag}</span>
+              <span className="pk-official-code">{option.packCode}</span>
+            </div>
+            <span className="pk-official-holo-note">{t.packHoloTag}</span>
+          </div>
+        </div>
+        <PokemonWordmark />
+        <div className="flex-1" />
+        <div className="pk-official-bottom">
+          <span className="pk-official-kicker">{option.kickerLabel}</span>
+          <div className="pk-official-title-top">{option.titleTop}</div>
+          <div className="pk-official-title-row">
+            <span
+              style={{ backgroundImage: option.titleGradient }}
+              className={`pk-official-title-main ${
+                option.titleMain.length >= 8
+                  ? 'pk-official-title-main-long'
+                  : ''
+              }`}
+            >
+              {option.titleMain}
+            </span>
+            <span
+              style={{ background: option.tagGradient }}
+              className="pk-official-tag"
+            >
+              {option.tagLabel}
+            </span>
+          </div>
+        </div>
+        <div className="pk-plastic-wrap" />
+      </div>
+      <div
+        style={{ background: option.crimpGradient }}
+        className="pk-foil-crimp-bottom"
+      />
+      <div className="pk-mylar-cylinder" />
+    </div>
+  );
+};
 
 export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
   option,
@@ -79,6 +231,16 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
     }
   }, [phase, resetTiltImmediately]);
 
+  const sideLeftOption = useMemo(
+    () => (option.id === 'all' ? getBoxOption('sv3pt5') : option),
+    [option]
+  );
+
+  const sideRightOption = useMemo(
+    () => (option.id === 'all' ? getBoxOption('swsh7') : option),
+    [option]
+  );
+
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (phase !== 'sealed') return;
     dragStartXRef.current = event.clientX;
@@ -98,13 +260,13 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
 
     if (dragStartXRef.current === null || didRipRef.current) return;
 
-    const width = stageRef.current?.getBoundingClientRect().width ?? 214;
+    const width = stageRef.current?.getBoundingClientRect().width ?? 196;
     const distance = Math.abs(event.clientX - dragStartXRef.current);
     if (distance > 8) {
       dragMovedRef.current = true;
     }
 
-    const thresholdDistance = Math.max(115, width * 0.62);
+    const thresholdDistance = Math.max(108, width * 0.6);
     const progress = Math.min(1, distance / thresholdDistance);
     setTearProgress(progress);
 
@@ -163,34 +325,43 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
     '--pk-pack-stripe': option.foilStripeColor,
   } as React.CSSProperties;
 
-  const setFoilOverlay = `linear-gradient(180deg, rgba(${option.foilBaseRgb}, 0.96) 0%, rgba(${option.foilBaseRgb}, 0.64) 12%, rgba(${option.foilBaseRgb}, 0.04) 24%, rgba(${option.foilBaseRgb}, 0.04) 42%, rgba(${option.foilBaseRgb}, 0.96) 55%, rgb(${option.foilBaseRgb}) 61%, rgb(${option.foilBaseRgb}) 100%)`;
+  const bodyFadeBg = `linear-gradient(180deg, rgb(${option.topFadeRgb}) 0%, rgba(${option.topFadeRgb}, 0.94) 11%, rgba(${option.topFadeRgb}, 0) 24%, rgba(${option.bottomFadeRgb}, 0) 50%, rgba(${option.bottomFadeRgb}, 0.96) 63%, rgb(${option.bottomFadeRgb}) 100%)`;
+  const ribbonBg = `linear-gradient(128deg, transparent 8%, ${option.ribbonColorA} 17%, transparent 26%, transparent 70%, ${option.ribbonColorB} 80%, transparent 90%)`;
+  const lidBg = `linear-gradient(180deg, rgb(${option.topFadeRgb}) 0%, rgba(${option.topFadeRgb}, 0.96) 100%)`;
 
   const showTearBlade =
     (phase === 'sealed' && tearProgress > 0) || phase === 'ripping';
 
   return (
-    <div className="relative flex justify-center py-1">
-      {phase === 'sealed' && (
+    <div className="pk-chest-stage">
+      <div className="pk-chest-ground-shadow" aria-hidden="true" />
+
+      <img
+        src={POKEMON_CHEST_BACK_URL}
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        className="pk-pixel-art pointer-events-none absolute inset-0 z-[5] h-full w-full object-contain"
+      />
+
+      <div className="pk-chest-inner-glow" aria-hidden="true" />
+
+      {phase === 'sealed' && packsRemaining > 1 && (
         <div
           aria-hidden="true"
-          className="pk-pack-ground-shadow"
-        />
+          className="pointer-events-none absolute left-1/2 top-[72px] z-[9] origin-bottom -translate-x-[76%] -rotate-[9deg] scale-[0.74] brightness-[0.72]"
+        >
+          <SidePackPreview option={sideLeftOption} locale={locale} />
+        </div>
       )}
 
       {phase === 'sealed' && packsRemaining > 2 && (
         <div
           aria-hidden="true"
-          style={{ background: option.accentGradient }}
-          className="pointer-events-none absolute top-1 aspect-[63/98] w-[214px] translate-x-2.5 translate-y-2 rotate-[2.2deg] rounded-[5px] border border-white/15 opacity-40 shadow-soft"
-        />
-      )}
-
-      {phase === 'sealed' && packsRemaining > 1 && (
-        <div
-          aria-hidden="true"
-          style={{ background: option.accentGradient }}
-          className="pointer-events-none absolute top-1 aspect-[63/98] w-[214px] translate-x-1 translate-y-1 rotate-[1deg] rounded-[5px] border border-white/25 opacity-72 shadow-soft"
-        />
+          className="pointer-events-none absolute left-1/2 top-[72px] z-[9] origin-bottom -translate-x-[24%] rotate-[9deg] scale-[0.74] brightness-[0.72]"
+        >
+          <SidePackPreview option={sideRightOption} locale={locale} />
+        </div>
       )}
 
       <div
@@ -223,7 +394,7 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
             ? `${t.ripButton} ${t.packBadge(packNumber)}`
             : undefined
         }
-        className={`pk-tilt-stage relative aspect-[63/98] w-[214px] select-none ${
+        className={`pk-tilt-stage absolute left-1/2 top-[24px] z-[12] aspect-[63/106] w-[178px] -translate-x-1/2 select-none sm:w-[188px] ${
           phase === 'sealed' ? 'cursor-pointer' : 'pointer-events-none'
         }`}
       >
@@ -242,7 +413,7 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
 
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-[11px] top-[34px] z-10 flex justify-center"
+            className="pointer-events-none absolute inset-x-[9px] top-[34px] z-10 flex justify-center"
           >
             <div className="pk-emerging-deck relative aspect-[63/88] w-full">
               <div className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-[10px] border border-folio-border bg-folio-surface opacity-70" />
@@ -258,28 +429,28 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
           </div>
 
           <div
-            style={{ background: option.accentGradient }}
+            style={{ background: option.bodyBackground }}
             className="pk-pack-body-shell"
           >
             <svg
-              viewBox="0 0 214 8"
+              viewBox="0 0 200 8"
               preserveAspectRatio="none"
               aria-hidden="true"
               className="pk-torn-top-lip pointer-events-none absolute inset-x-0 -top-[6px] z-30 h-[7px] w-full"
             >
               <polygon
-                points="0,8 0,3 14,0 26,5 40,1 55,4 71,0 88,5 104,1 122,4 139,0 156,5 174,1 190,4 202,1 214,4 214,8"
-                fill="rgba(255,255,255,0.26)"
+                points="0,8 0,3 13,0 25,5 38,1 52,4 67,0 82,5 98,1 114,4 130,0 146,5 162,1 178,4 189,1 200,4 200,8"
+                fill="rgba(255,255,255,0.34)"
               />
               <polygon
-                points="0,8 0,5 14,2 26,6 40,3 55,6 71,2 88,6 104,3 122,6 139,2 156,6 174,3 190,6 202,3 214,6 214,8"
-                fill={`rgb(${option.foilBaseRgb})`}
+                points="0,8 0,5 13,2 25,6 38,3 52,6 67,2 82,6 98,3 114,6 130,2 146,6 162,3 178,6 189,3 200,6 200,8"
+                fill={`rgb(${option.topFadeRgb})`}
               />
             </svg>
 
             <div className="relative flex flex-1 flex-col justify-between overflow-hidden">
               {artStage !== 'fallback' && (
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[66%] overflow-hidden">
+                <div className="pk-official-body-art-window">
                   <img
                     src={
                       artStage === 'hires'
@@ -292,160 +463,56 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
                     style={{
                       objectPosition: option.coverArtPosition,
                       transform: `scale(${option.coverArtScale})`,
-                      transformOrigin: 'center 24%',
+                      transformOrigin: 'center 28%',
                     }}
                     onError={() =>
                       setArtStage((prev) =>
                         prev === 'hires' ? 'small' : 'fallback'
                       )
                     }
-                    className="h-full w-full object-cover saturate-[1.06]"
+                    className="h-full w-full object-cover saturate-[1.16] contrast-[1.05]"
                   />
                 </div>
               )}
 
               <div
                 aria-hidden="true"
-                style={{ background: setFoilOverlay }}
-                className="pointer-events-none absolute inset-0"
+                style={{ background: bodyFadeBg }}
+                className="pointer-events-none absolute inset-0 z-[3]"
               />
 
               <div
                 aria-hidden="true"
-                style={{ borderColor: option.accentColor }}
-                className="pk-pack-foil-frame"
+                style={{ background: ribbonBg }}
+                className="pointer-events-none absolute inset-0 z-[4]"
               />
 
-              <div className="relative z-10 flex items-center justify-between gap-2 px-3 pt-2.5">
-                <span
-                  style={{
-                    borderColor: option.accentColor,
-                    color: option.accentColor,
-                  }}
-                  className="rounded-full border bg-black/65 px-2 py-0.5 font-mono text-[8.5px] font-bold tracking-[0.12em]"
-                >
-                  {option.seriesCode}
-                </span>
-
-                <svg
-                  viewBox="0 0 28 28"
-                  aria-hidden="true"
-                  className="h-5 w-5 text-white/90 drop-shadow"
-                >
-                  <circle
-                    cx="14"
-                    cy="14"
-                    r="11.5"
-                    fill="rgba(0,0,0,0.45)"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                  />
-                  <line
-                    x1="2.5"
-                    y1="14"
-                    x2="10.2"
-                    y2="14"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                  />
-                  <line
-                    x1="17.8"
-                    y1="14"
-                    x2="25.5"
-                    y2="14"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                  />
-                  <circle
-                    cx="14"
-                    cy="14"
-                    r="3.6"
-                    fill="rgba(0,0,0,0.65)"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                  />
-                </svg>
+              <div className="relative z-10 pt-0.5">
+                <PokemonWordmark />
               </div>
 
-              {artStage === 'fallback' && (
-                <div className="relative z-10 flex flex-1 items-center justify-center">
-                  <svg
-                    viewBox="0 0 48 48"
-                    aria-hidden="true"
-                    className="h-14 w-14 text-white/80"
+              <div className="flex-1" />
+
+              <div className="pk-official-bottom">
+                <span className="pk-official-kicker">{option.kickerLabel}</span>
+                <div className="pk-official-title-top">{option.titleTop}</div>
+                <div className="pk-official-title-row">
+                  <span
+                    style={{ backgroundImage: option.titleGradient }}
+                    className={`pk-official-title-main ${
+                      option.titleMain.length >= 8
+                        ? 'pk-official-title-main-long'
+                        : ''
+                    }`}
                   >
-                    <circle
-                      cx="24"
-                      cy="24"
-                      r="19"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <line
-                      x1="5"
-                      y1="24"
-                      x2="18"
-                      y2="24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <line
-                      x1="30"
-                      y1="24"
-                      x2="43"
-                      y2="24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <circle
-                      cx="24"
-                      cy="24"
-                      r="5.5"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                  </svg>
-                </div>
-              )}
-
-              <div className="relative z-10 px-3.5 pb-3 pt-1 text-center">
-                <div
-                  aria-hidden="true"
-                  className="mb-1.5 flex items-center justify-center gap-1.5"
-                >
+                    {option.titleMain}
+                  </span>
                   <span
-                    style={{
-                      background: `linear-gradient(90deg, transparent, ${option.accentColor})`,
-                    }}
-                    className="h-px flex-1 opacity-75"
-                  />
-                  <span
-                    style={{ backgroundColor: option.accentColor }}
-                    className="h-1.5 w-1.5 rotate-45"
-                  />
-                  <span
-                    style={{
-                      background: `linear-gradient(270deg, transparent, ${option.accentColor})`,
-                    }}
-                    className="h-px flex-1 opacity-75"
-                  />
-                </div>
-
-                <div
-                  style={{ color: option.accentColor }}
-                  className="font-mono text-[8px] font-bold tracking-[0.22em]"
-                >
-                  POKÉMON TCG
-                </div>
-
-                <div className="mt-0.5 font-serif text-[1.15rem] font-bold leading-tight tracking-tight text-white drop-shadow">
-                  {option.title}
-                </div>
-
-                <div className="mt-1 font-mono text-[8.5px] font-medium tracking-[0.12em] text-white/75">
-                  {t.packSpecLine}
+                    style={{ background: option.tagGradient }}
+                    className="pk-official-tag"
+                  >
+                    {option.tagLabel}
+                  </span>
                 </div>
               </div>
 
@@ -465,26 +532,28 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
           </div>
 
           {phase !== 'drawing' && (
-            <div
-              style={{ background: option.accentGradient }}
-              className="pk-pack-lid"
-            >
+            <div style={{ background: lidBg }} className="pk-pack-lid">
               <div
                 style={{ background: option.crimpGradient }}
                 className="pk-foil-crimp-top"
                 aria-hidden="true"
               />
 
-              <div className="relative z-10 flex flex-1 items-center justify-between gap-1.5 px-3">
-                <span className="font-mono text-[9px] font-bold tabular-nums tracking-[0.12em] text-white/95 drop-shadow">
-                  {t.packBadge(packNumber)}
-                </span>
+              <div className="pk-pack-peg-hole" aria-hidden="true" />
 
-                <span className="flex items-center gap-0.5 font-mono text-[8.5px] font-semibold text-white/85 drop-shadow">
-                  <span>{t.dragTearShort}</span>
-                  <ChevronRight className="h-2.5 w-2.5" aria-hidden="true" />
-                  <Scissors className="h-2.5 w-2.5" aria-hidden="true" />
-                </span>
+              <div className="pk-official-top-row">
+                <div className="pk-official-series">
+                  <span className="pk-official-tcg-badge">POKÉMON TCG</span>
+                  <span className="pk-official-era">{option.eraLabel}</span>
+                </div>
+
+                <div className="pk-official-specs">
+                  <div className="flex items-center gap-0.5">
+                    <span className="pk-official-10cards">{t.packCardsTag}</span>
+                    <span className="pk-official-code">{option.packCode}</span>
+                  </div>
+                  <span className="pk-official-holo-note">{t.packHoloTag}</span>
+                </div>
               </div>
 
               <span className="pk-tear-notch-left" aria-hidden="true" />
@@ -516,6 +585,14 @@ export const PokemonBoosterPack: React.FC<PokemonBoosterPackProps> = ({
             ))}
         </div>
       </div>
+
+      <img
+        src={POKEMON_CHEST_FRONT_URL}
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        className="pk-pixel-art pointer-events-none absolute inset-0 z-[20] h-full w-full object-contain"
+      />
     </div>
   );
 };

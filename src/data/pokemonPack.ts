@@ -3,6 +3,8 @@ import { Locale } from './profile';
 export const PACKS_PER_BOX = 12;
 export const CARDS_PER_PACK = 10;
 export const POKEMON_CARD_BACK_URL = './pokemon/card-back.jpg';
+export const POKEMON_CHEST_BACK_URL = './pokemon/chest-back.webp';
+export const POKEMON_CHEST_FRONT_URL = './pokemon/chest-front.webp';
 export const POKEMON_STORAGE_KEY = 'longhoang_pokemon_box_v1';
 
 export type PokemonCardTier =
@@ -66,14 +68,23 @@ export interface BoosterBoxOption {
   id: BoxThemeId;
   setIds: string[] | null;
   label: { vi: string; en: string };
-  seriesCode: string;
-  title: string;
-  accentGradient: string;
+  eraLabel: string;
+  packCode: string;
+  kickerLabel: string;
+  titleTop: string;
+  titleMain: string;
+  tagLabel: string;
+  bodyBackground: string;
   crimpGradient: string;
+  ribbonColorA: string;
+  ribbonColorB: string;
+  titleGradient: string;
+  tagGradient: string;
   accentColor: string;
   glowColor: string;
   foilStripeColor: string;
-  foilBaseRgb: string;
+  topFadeRgb: string;
+  bottomFadeRgb: string;
   coverArtUrl: string;
   coverArtFallbackUrl: string;
   coverArtPosition: string;
@@ -93,120 +104,204 @@ export const BOOSTER_BOX_OPTIONS: BoosterBoxOption[] = [
     id: 'all',
     setIds: null,
     label: { vi: 'All-Star Mix (Tất cả bộ)', en: 'All-Star Mix (All Sets)' },
-    seriesCode: 'ALL-STAR',
-    title: 'All-Star Vault',
-    accentGradient: 'linear-gradient(155deg, #161922 0%, #272D3B 48%, #101218 100%)',
-    crimpGradient: 'linear-gradient(180deg, #3A404D 0%, #1C2028 52%, #313643 100%)',
+    eraLabel: 'HIGH CLASS',
+    packCode: 'ALL',
+    kickerLabel: 'HIGH CLASS PACK',
+    titleTop: 'ALL-STAR',
+    titleMain: 'VAULT',
+    tagLabel: 'VSTAR',
+    bodyBackground:
+      'radial-gradient(circle at 50% 44%, #F59E0B 0%, #7C2D12 38%, #18141E 74%, #09090D 100%)',
+    crimpGradient:
+      'linear-gradient(180deg, #FDE047 0%, #CA8A04 54%, #FACC15 100%)',
+    ribbonColorA: 'rgba(250, 204, 21, 0.55)',
+    ribbonColorB: 'rgba(251, 113, 133, 0.45)',
+    titleGradient:
+      'linear-gradient(180deg, #FFFBEB 0%, #FDE047 50%, #EA580C 100%)',
+    tagGradient: 'linear-gradient(135deg, #FDE047, #EA580C)',
     accentColor: '#ECC96A',
     glowColor: '#F5C842',
     foilStripeColor: 'rgba(236, 201, 106, 0.24)',
-    foilBaseRgb: '18, 20, 27',
+    topFadeRgb: '24, 18, 12',
+    bottomFadeRgb: '16, 13, 20',
     coverArtUrl: 'https://images.pokemontcg.io/swsh12pt5gg/GG70_hires.png',
     coverArtFallbackUrl: 'https://images.pokemontcg.io/swsh12pt5gg/GG70.png',
-    coverArtPosition: '50% 24%',
-    coverArtScale: 1.56,
+    coverArtPosition: '50% 20%',
+    coverArtScale: 1.58,
   },
   {
     id: 'sv3pt5',
     setIds: ['sv3pt5'],
     label: { vi: 'Scarlet & Violet: 151', en: 'Scarlet & Violet: 151' },
-    seriesCode: 'SV3.5 · 151',
-    title: 'Pokémon 151',
-    accentGradient: 'linear-gradient(155deg, #521318 0%, #991E26 48%, #2F0A0E 100%)',
-    crimpGradient: 'linear-gradient(180deg, #7A1E25 0%, #420F14 52%, #68181F 100%)',
+    eraLabel: 'SCARLET & VIOLET',
+    packCode: 'SV3.5',
+    kickerLabel: 'SPECIAL EXPANSION',
+    titleTop: 'POKÉMON',
+    titleMain: '151',
+    tagLabel: 'EX',
+    bodyBackground:
+      'radial-gradient(circle at 54% 44%, #FB923C 0%, #B91C1C 42%, #450A0A 78%, #1C0507 100%)',
+    crimpGradient:
+      'linear-gradient(180deg, #FCA5A5 0%, #DC2626 52%, #EF4444 100%)',
+    ribbonColorA: 'rgba(253, 224, 71, 0.52)',
+    ribbonColorB: 'rgba(251, 146, 60, 0.48)',
+    titleGradient:
+      'linear-gradient(180deg, #FFFFFF 0%, #FEF08A 48%, #F97316 100%)',
+    tagGradient: 'linear-gradient(135deg, #FDE047, #DC2626)',
     accentColor: '#FCD34D',
     glowColor: '#F97316',
     foilStripeColor: 'rgba(252, 211, 77, 0.22)',
-    foilBaseRgb: '64, 14, 19',
+    topFadeRgb: '84, 15, 20',
+    bottomFadeRgb: '54, 10, 14',
     coverArtUrl: 'https://images.pokemontcg.io/sv3pt5/199_hires.png',
     coverArtFallbackUrl: 'https://images.pokemontcg.io/sv3pt5/199.png',
-    coverArtPosition: '60% 24%',
-    coverArtScale: 1.44,
+    coverArtPosition: '62% 28%',
+    coverArtScale: 1.52,
   },
   {
     id: 'swsh12pt5',
     setIds: ['swsh12pt5', 'swsh12pt5gg'],
     label: { vi: 'Crown Zenith + Gallery', en: 'Crown Zenith + Gallery' },
-    seriesCode: 'SWSH12.5',
-    title: 'Crown Zenith',
-    accentGradient: 'linear-gradient(155deg, #0E2244 0%, #1F4580 48%, #0A152B 100%)',
-    crimpGradient: 'linear-gradient(180deg, #2A4F8A 0%, #13274A 52%, #224276 100%)',
+    eraLabel: 'SWORD & SHIELD',
+    packCode: 'S12.5',
+    kickerLabel: 'GALARIAN GALLERY',
+    titleTop: 'CROWN',
+    titleMain: 'ZENITH',
+    tagLabel: 'GG',
+    bodyBackground:
+      'radial-gradient(circle at 50% 42%, #2563EB 0%, #1E3A8A 44%, #0C1938 78%, #060D1F 100%)',
+    crimpGradient:
+      'linear-gradient(180deg, #FDE047 0%, #CA8A04 52%, #EAB308 100%)',
+    ribbonColorA: 'rgba(250, 204, 21, 0.5)',
+    ribbonColorB: 'rgba(56, 189, 248, 0.48)',
+    titleGradient:
+      'linear-gradient(180deg, #FFFFFF 0%, #FDE047 54%, #D97706 100%)',
+    tagGradient: 'linear-gradient(135deg, #FDE047, #2563EB)',
     accentColor: '#F5C842',
     glowColor: '#FBBF24',
     foilStripeColor: 'rgba(245, 200, 66, 0.22)',
-    foilBaseRgb: '12, 28, 56',
+    topFadeRgb: '14, 30, 68',
+    bottomFadeRgb: '10, 20, 46',
     coverArtUrl: 'https://images.pokemontcg.io/swsh12pt5gg/GG69_hires.png',
     coverArtFallbackUrl: 'https://images.pokemontcg.io/swsh12pt5gg/GG69.png',
-    coverArtPosition: '50% 23%',
+    coverArtPosition: '50% 24%',
     coverArtScale: 1.66,
   },
   {
     id: 'swsh7',
     setIds: ['swsh7'],
     label: { vi: 'Evolving Skies', en: 'Evolving Skies' },
-    seriesCode: 'SWSH7',
-    title: 'Evolving Skies',
-    accentGradient: 'linear-gradient(155deg, #0B2C2B 0%, #165D58 48%, #071C1C 100%)',
-    crimpGradient: 'linear-gradient(180deg, #216762 0%, #0E3433 52%, #1A5551 100%)',
+    eraLabel: 'SWORD & SHIELD',
+    packCode: 'SWSH7',
+    kickerLabel: 'EXPANSION PACK',
+    titleTop: 'EVOLVING',
+    titleMain: 'SKIES',
+    tagLabel: 'VMAX',
+    bodyBackground:
+      'radial-gradient(circle at 46% 42%, #14B8A6 0%, #0F4C4A 44%, #072226 78%, #041316 100%)',
+    crimpGradient:
+      'linear-gradient(180deg, #5EEAD4 0%, #0D9488 52%, #2DD4BF 100%)',
+    ribbonColorA: 'rgba(94, 234, 212, 0.48)',
+    ribbonColorB: 'rgba(244, 114, 182, 0.42)',
+    titleGradient:
+      'linear-gradient(180deg, #F0FDFA 0%, #5EEAD4 54%, #0D9488 100%)',
+    tagGradient: 'linear-gradient(135deg, #5EEAD4, #EC4899)',
     accentColor: '#5EEAD4',
     glowColor: '#34D399',
     foilStripeColor: 'rgba(94, 234, 212, 0.22)',
-    foilBaseRgb: '9, 36, 35',
+    topFadeRgb: '8, 42, 42',
+    bottomFadeRgb: '7, 29, 31',
     coverArtUrl: 'https://images.pokemontcg.io/swsh7/215_hires.png',
     coverArtFallbackUrl: 'https://images.pokemontcg.io/swsh7/215.png',
-    coverArtPosition: '52% 28%',
-    coverArtScale: 1.54,
+    coverArtPosition: '54% 33%',
+    coverArtScale: 1.62,
   },
   {
     id: 'sv8pt5',
     setIds: ['sv8pt5'],
     label: { vi: 'Prismatic Evolutions', en: 'Prismatic Evolutions' },
-    seriesCode: 'SV8.5',
-    title: 'Prismatic Evolutions',
-    accentGradient: 'linear-gradient(155deg, #1B2936 0%, #30495D 48%, #111B24 100%)',
-    crimpGradient: 'linear-gradient(180deg, #405C72 0%, #1F303F 52%, #354E62 100%)',
+    eraLabel: 'SCARLET & VIOLET',
+    packCode: 'SV8.5',
+    kickerLabel: 'TERA CRYSTAL PACK',
+    titleTop: 'PRISMATIC',
+    titleMain: 'EVOLUTIONS',
+    tagLabel: 'TERA',
+    bodyBackground:
+      'radial-gradient(circle at 50% 42%, #38BDF8 0%, #1E3A5F 42%, #101D33 76%, #09111E 100%)',
+    crimpGradient:
+      'linear-gradient(180deg, #7DD3FC 0%, #0284C7 52%, #38BDF8 100%)',
+    ribbonColorA: 'rgba(125, 211, 252, 0.5)',
+    ribbonColorB: 'rgba(253, 224, 71, 0.44)',
+    titleGradient:
+      'linear-gradient(180deg, #FFFFFF 0%, #BAE6FD 48%, #38BDF8 100%)',
+    tagGradient: 'linear-gradient(135deg, #38BDF8, #F472B6)',
     accentColor: '#7DD3FC',
     glowColor: '#38BDF8',
     foilStripeColor: 'rgba(125, 211, 252, 0.24)',
-    foilBaseRgb: '19, 33, 45',
+    topFadeRgb: '16, 34, 54',
+    bottomFadeRgb: '12, 24, 40',
     coverArtUrl: 'https://images.pokemontcg.io/sv8pt5/161_hires.png',
     coverArtFallbackUrl: 'https://images.pokemontcg.io/sv8pt5/161.png',
-    coverArtPosition: '50% 44%',
-    coverArtScale: 1.72,
+    coverArtPosition: '50% 43%',
+    coverArtScale: 1.78,
   },
   {
     id: 'sv4pt5',
     setIds: ['sv4pt5'],
     label: { vi: 'Paldean Fates', en: 'Paldean Fates' },
-    seriesCode: 'SV4.5',
-    title: 'Paldean Fates',
-    accentGradient: 'linear-gradient(155deg, #172534 0%, #2E4B68 48%, #101A25 100%)',
-    crimpGradient: 'linear-gradient(180deg, #436484 0%, #203448 52%, #375571 100%)',
+    eraLabel: 'SCARLET & VIOLET',
+    packCode: 'SV4.5',
+    kickerLabel: 'SHINY TREASURE',
+    titleTop: 'PALDEAN',
+    titleMain: 'FATES',
+    tagLabel: 'SHINY',
+    bodyBackground:
+      'radial-gradient(circle at 50% 42%, #38BDF8 0%, #1D4ED8 40%, #112442 76%, #0A1526 100%)',
+    crimpGradient:
+      'linear-gradient(180deg, #E0F2FE 0%, #38BDF8 52%, #BAE6FD 100%)',
+    ribbonColorA: 'rgba(186, 230, 253, 0.5)',
+    ribbonColorB: 'rgba(253, 224, 71, 0.44)',
+    titleGradient:
+      'linear-gradient(180deg, #FFFFFF 0%, #E0F2FE 52%, #7DD3FC 100%)',
+    tagGradient: 'linear-gradient(135deg, #E0F2FE, #0284C7)',
     accentColor: '#BAE6FD',
     glowColor: '#7DD3FC',
     foilStripeColor: 'rgba(186, 230, 253, 0.24)',
-    foilBaseRgb: '17, 31, 46',
+    topFadeRgb: '18, 42, 74',
+    bottomFadeRgb: '12, 26, 46',
     coverArtUrl: 'https://images.pokemontcg.io/sv4pt5/232_hires.png',
     coverArtFallbackUrl: 'https://images.pokemontcg.io/sv4pt5/232.png',
     coverArtPosition: '50% 24%',
-    coverArtScale: 1.62,
+    coverArtScale: 1.66,
   },
   {
     id: 'base1',
     setIds: ['base1'],
     label: { vi: 'Base Set (1999)', en: 'Base Set (1999)' },
-    seriesCode: 'BASE · 1999',
-    title: 'Base Set 1999',
-    accentGradient: 'linear-gradient(155deg, #472510 0%, #8E4F1D 48%, #2A1508 100%)',
-    crimpGradient: 'linear-gradient(180deg, #8A5324 0%, #4B2910 52%, #74441D 100%)',
+    eraLabel: 'CLASSIC · 1999',
+    packCode: 'BASE1',
+    kickerLabel: 'ORIGINAL 1999',
+    titleTop: 'BASE SET',
+    titleMain: '1999',
+    tagLabel: '1ST',
+    bodyBackground:
+      'radial-gradient(circle at 50% 42%, #EA580C 0%, #7C2D12 42%, #361508 78%, #1A0A04 100%)',
+    crimpGradient:
+      'linear-gradient(180deg, #FCD34D 0%, #B45309 52%, #F59E0B 100%)',
+    ribbonColorA: 'rgba(252, 211, 77, 0.52)',
+    ribbonColorB: 'rgba(239, 68, 68, 0.48)',
+    titleGradient:
+      'linear-gradient(180deg, #FFFBEB 0%, #FCD34D 52%, #DC2626 100%)',
+    tagGradient: 'linear-gradient(135deg, #FCD34D, #B91C1C)',
     accentColor: '#FDE047',
     glowColor: '#F59E0B',
     foilStripeColor: 'rgba(253, 224, 71, 0.24)',
-    foilBaseRgb: '56, 27, 10',
+    topFadeRgb: '72, 30, 10',
+    bottomFadeRgb: '44, 18, 7',
     coverArtUrl: 'https://images.pokemontcg.io/base1/4_hires.png',
     coverArtFallbackUrl: 'https://images.pokemontcg.io/base1/4.png',
-    coverArtPosition: '50% 27%',
-    coverArtScale: 1.84,
+    coverArtPosition: '50% 26%',
+    coverArtScale: 1.92,
   },
 ];
 
@@ -322,12 +417,12 @@ export const POKEMON_UNBOXER_LABELS = {
     packsLeft: (left: number) => `${left}/${PACKS_PER_BOX} pack`,
     packBadge: (packNum: number) =>
       `PACK ${String(packNum).padStart(2, '0')}/${PACKS_PER_BOX}`,
-    packSpecLine: `${CARDS_PER_PACK} THẺ · BOOSTER PACK`,
-    dragTearShort: 'Kéo xé',
+    packCardsTag: `${CARDS_PER_PACK} THẺ`,
+    packHoloTag: '★ 1+ Holo',
     tearHint: 'Kéo đường xé hoặc bấm để mở pack',
     ripButton: 'Xé pack ngay',
-    rippingLabel: 'Đang xé mép pack...',
-    drawingLabel: 'Đang rút 10 thẻ ra khỏi pack...',
+    rippingLabel: 'Đang xé pack...',
+    drawingLabel: 'Đang rút 10 thẻ...',
     cardCounter: (idx: number) => `Thẻ ${idx} / ${CARDS_PER_PACK}`,
     tapToFlip: 'Bấm thẻ để lật',
     flipCardBtn: (idx: number) => `Lật thẻ #${idx}`,
@@ -391,12 +486,12 @@ export const POKEMON_UNBOXER_LABELS = {
     packsLeft: (left: number) => `${left}/${PACKS_PER_BOX} packs`,
     packBadge: (packNum: number) =>
       `PACK ${String(packNum).padStart(2, '0')}/${PACKS_PER_BOX}`,
-    packSpecLine: `${CARDS_PER_PACK} CARDS · BOOSTER PACK`,
-    dragTearShort: 'Tear',
+    packCardsTag: `${CARDS_PER_PACK} CARDS`,
+    packHoloTag: '★ 1+ Foil',
     tearHint: 'Slide across seam or tap to rip',
     ripButton: 'Rip pack',
-    rippingLabel: 'Ripping foil top...',
-    drawingLabel: 'Sliding 10 cards from pack...',
+    rippingLabel: 'Ripping pack...',
+    drawingLabel: 'Drawing 10 cards...',
     cardCounter: (idx: number) => `Card ${idx} / ${CARDS_PER_PACK}`,
     tapToFlip: 'Tap card to flip',
     flipCardBtn: (idx: number) => `Flip card #${idx}`,

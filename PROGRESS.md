@@ -616,6 +616,19 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]`, `impeccable detect --json src/components/PokemonBoosterPack.tsx src/index.css` trả về `0` lỗi trên toàn bộ mã vỏ pack mới, và `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 61.51 kB | gzip: 16.53 kB`, `index-*.css 71.87 kB | gzip: 14.82 kB`).
   - Playwright `verify_pokemon_unboxer.py` (`device_scale_factor=2`) kiểm chứng toàn bộ 7/7 vỏ pack + trạng thái nghiêng 3D hover (`shellTransform: matrix3d(...)`, `.pk-mylar-glare` `opacity: 0.52` và `.pk-mylar-glare-alt` `opacity: 0.3` trượt ngược chiều), `heightSealed = heightRipping = heightDrawingPack2 = 643.88px` (`0.00px` jump), `drawingBladeCount: 0`, `drawingPouchAnim: "pk-body-drop-away"`, `firstCardTransition: "idle"`, Mobile `packActiveRest: "false"`, `0` lỗi console/page và `0` tràn ngang trên `1440px`, `820px`, `375px`.
 
+## 43. Rương Kho Báu Pixel Đồng Nền Trang Chính, 7 Vỏ Pack Chuẩn Pokémon TCG & Thay Thế Toàn Bộ Hiệu Ứng Chấm Tròn Trên Thẻ Bài
+
+- **Rương kho báu GBA Pixel Art mở nắp đặt trực tiếp trên nền trang chính (`public/pokemon/chest-back.webp`, `chest-front.webp`, `PokemonPackUnboxer.tsx`, `PokemonBoosterPack.tsx`, `About.tsx`, `src/index.css`)**:
+  - Xuất và tối ưu 2 lớp rương pixel tách nền trong suốt (`390×548`, `chest-back.webp` `20.4 KB`, `chest-front.webp` `8.5 KB` — tổng chỉ `28.9 KB`), áp `image-rendering: pixelated` sắc nét đồng bộ với hệ đồ họa GBA của portfolio.
+  - Gỡ hoàn toàn khung `.folio-card` hộp text và `.pk-stage-mat` ở cột trái `#about` (`background-color: rgba(0, 0, 0, 0); border-width: 0px`) để chiếc rương pixel hòa trực tiếp lên nền trang chính ở cả Dark Mode (`#131314`) lẫn Light Mode (`#F8F9FA`), đặt xấp 1–3 pack lọt gọn bên trong khoang rương (pack chính ở giữa nhô cao rõ trọn huy hiệu bộ ngay phía trên ổ khóa đồng, mép đáy lồng sau thành rương; khi mở hết `12/12` pack hiện rương trống kèm nút mở hộp mới).
+- **Nâng cấp 7 vỏ pack chuẩn ngoại hình Booster Pack Pokémon TCG chính thức (`src/data/pokemonPack.ts`, `PokemonBoosterPack.tsx`, `src/index.css`)**:
+  - Tái dựng đầy đủ cấu tạo gói bài theo mẫu Pokémon TCG chính thức cho cả 7 bộ (*All-Star Vault*, *Pokémon 151*, *Crown Zenith*, *Evolving Skies*, *Prismatic Evolutions*, *Paldean Fates*, *Base Set 1999*): mép ép nhiệt vân kim cương ánh kim theo màu bộ, lỗ treo tròn `.pk-pack-peg-hole`, nhãn đỏ `POKÉMON TCG` + dòng phiên bản, `10 THẺ` + hộp mã bộ + `★ 1+ Holo`, logo `Pokémon` uốn vòm vàng viền xanh dương (`PokemonWordmark` dùng `useId()` chống trùng SVG ID), artwork Chase Card `_hires.png` cắt sạch 100% không lọt chữ thẻ, huy hiệu tên bộ in nổi kèm thẻ phân hạng (`VSTAR`, `EX`, `GG`, `VMAX`, `TERA`, `SHINY`, `1ST`) và lớp bọc nhựa bóng 3D + cặp vệt lóe thuần GPU.
+- **Loại bỏ 100% chấm tròn trên hiệu ứng thẻ bài (`src/index.css`)**:
+  - Xóa toàn bộ các lớp `radial-gradient(circle ...)` tạo chấm tròn trên `holo-cosmos`, `holo-v`, `holo-sir`, `holo-gold` (`DOT_GLITTER_BLOCKS=0`) và thay bằng sóng ánh kim cực quang lụa, lăng kính thép chéo sắc nét, vân khắc tinh thể chéo và ánh vàng 24K phay xước gương.
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]`, `DOT_GLITTER_BLOCKS=0`, `impeccable detect --json` trả về `[]` và `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 67.62 kB | gzip: 17.54 kB`, `index-*.css 75.40 kB | gzip: 15.40 kB`).
+  - Playwright `verify_pokemon_unboxer.py` (`device_scale_factor=2`) kiểm chứng trọn vẹn trên `1440×900`, `820×1180`, `375×812`: `chestCheck: { rootBg: "rgba(0, 0, 0, 0)", rootBorderW: "0px", chestCount: 2, chestLoaded: true }`, 7/7 bìa `_hires.png` (`600px`–`734px`) soi trực quan sạch 100% chữ thẻ, `heightSealed = heightRipping = heightDrawingPack2 = 581.5px` (`0.00px` jump), `drawingBladeCount: 0`, `drawingPouchAnim: "pk-body-drop-away"`, `firstCardTransition: "idle"`, `dragRippedPack2: true`, Mobile `packActiveRest: "false"`, `0` lỗi console/page và `0` tràn ngang.
+
 
 
 

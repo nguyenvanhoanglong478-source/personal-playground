@@ -1339,16 +1339,19 @@ html[data-theme='dark'] .pk-chest-ground-shadow {
 }
 
 .pk-holo-foil {
+  z-index: 10;
   opacity: 0;
   mix-blend-mode: color-dodge;
 }
 
 .pk-holo-glitter {
+  z-index: 11;
   opacity: 0;
   mix-blend-mode: overlay;
 }
 
 .pk-holo-glare {
+  z-index: 12;
   opacity: 0;
   mix-blend-mode: overlay;
   background: radial-gradient(

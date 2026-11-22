@@ -29,11 +29,18 @@ export type PokemonFoilStyle =
 
 export type BoxThemeId =
   | 'all'
+  | 'me2pt5'
+  | 'me2'
+  | 'sv10'
+  | 'sv8pt5'
+  | 'sv8'
+  | 'sv4pt5'
   | 'sv3pt5'
   | 'swsh12pt5'
+  | 'swsh11'
   | 'swsh7'
-  | 'sv8pt5'
-  | 'sv4pt5'
+  | 'sm9'
+  | 'ecard3'
   | 'base1';
 
 export type BinderSortMode =
@@ -91,6 +98,74 @@ export const BOOSTER_BOX_OPTIONS: BoosterBoxOption[] = [
     packArtUrls: ['./pokemon/packs/all-mega-dream.webp'],
   },
   {
+    id: 'me2pt5',
+    setIds: ['me2pt5'],
+    label: { vi: 'Mega: Ascended Heroes', en: 'Mega: Ascended Heroes' },
+    accentColor: '#FACC15',
+    glowColor: '#F472B6',
+    packArtUrls: ['./pokemon/packs/me2pt5-ascended.webp'],
+  },
+  {
+    id: 'me2',
+    setIds: ['me2'],
+    label: { vi: 'Mega: Phantasmal Flames', en: 'Mega: Phantasmal Flames' },
+    accentColor: '#38BDF8',
+    glowColor: '#EC4899',
+    packArtUrls: [
+      './pokemon/packs/me2-charizard.webp',
+      './pokemon/packs/me2-gengar.webp',
+      './pokemon/packs/me2-lopunny.webp',
+    ],
+  },
+  {
+    id: 'sv10',
+    setIds: ['sv10'],
+    label: { vi: 'SV: Destined Rivals', en: 'SV: Destined Rivals' },
+    accentColor: '#EF4444',
+    glowColor: '#A855F7',
+    packArtUrls: [
+      './pokemon/packs/sv10-mewtwo.webp',
+      './pokemon/packs/sv10-garchomp.webp',
+      './pokemon/packs/sv10-hooh.webp',
+    ],
+  },
+  {
+    id: 'sv8pt5',
+    setIds: ['sv8pt5'],
+    label: { vi: 'Prismatic Evolutions', en: 'Prismatic Evolutions' },
+    accentColor: '#7DD3FC',
+    glowColor: '#38BDF8',
+    packArtUrls: [
+      './pokemon/packs/sv8pt5-espeon-umbreon.webp',
+      './pokemon/packs/sv8pt5-eevee-sylveon.webp',
+      './pokemon/packs/sv8pt5-leafeon-glaceon.webp',
+    ],
+  },
+  {
+    id: 'sv8',
+    setIds: ['sv8'],
+    label: { vi: 'SV: Surging Sparks', en: 'SV: Surging Sparks' },
+    accentColor: '#FDE047',
+    glowColor: '#38BDF8',
+    packArtUrls: [
+      './pokemon/packs/sv8-pikachu.webp',
+      './pokemon/packs/sv8-latias.webp',
+      './pokemon/packs/sv8-exeggutor.webp',
+    ],
+  },
+  {
+    id: 'sv4pt5',
+    setIds: ['sv4pt5'],
+    label: { vi: 'Paldean Fates', en: 'Paldean Fates' },
+    accentColor: '#FDE047',
+    glowColor: '#FBBF24',
+    packArtUrls: [
+      './pokemon/packs/sv4pt5-pikachu.webp',
+      './pokemon/packs/sv4pt5-ceruledge.webp',
+      './pokemon/packs/sv4pt5-tinkaton.webp',
+    ],
+  },
+  {
     id: 'sv3pt5',
     setIds: ['sv3pt5'],
     label: { vi: 'Scarlet & Violet: 151', en: 'Scarlet & Violet: 151' },
@@ -107,6 +182,18 @@ export const BOOSTER_BOX_OPTIONS: BoosterBoxOption[] = [
     packArtUrls: ['./pokemon/packs/swsh12pt5-cz.webp'],
   },
   {
+    id: 'swsh11',
+    setIds: ['swsh11', 'swsh11tg'],
+    label: { vi: 'Lost Origin + Gallery', en: 'Lost Origin + Gallery' },
+    accentColor: '#F43F5E',
+    glowColor: '#22D3EE',
+    packArtUrls: [
+      './pokemon/packs/swsh11-giratina.webp',
+      './pokemon/packs/swsh11-zoroark.webp',
+      './pokemon/packs/swsh11-gardevoir.webp',
+    ],
+  },
+  {
     id: 'swsh7',
     setIds: ['swsh7'],
     label: { vi: 'Evolving Skies', en: 'Evolving Skies' },
@@ -119,27 +206,27 @@ export const BOOSTER_BOX_OPTIONS: BoosterBoxOption[] = [
     ],
   },
   {
-    id: 'sv8pt5',
-    setIds: ['sv8pt5'],
-    label: { vi: 'Prismatic Evolutions', en: 'Prismatic Evolutions' },
-    accentColor: '#7DD3FC',
-    glowColor: '#38BDF8',
+    id: 'sm9',
+    setIds: ['sm9'],
+    label: { vi: 'Team Up · 2019', en: 'Team Up · 2019' },
+    accentColor: '#22D3EE',
+    glowColor: '#FACC15',
     packArtUrls: [
-      './pokemon/packs/sv8pt5-espeon-umbreon.webp',
-      './pokemon/packs/sv8pt5-eevee-sylveon.webp',
-      './pokemon/packs/sv8pt5-leafeon-glaceon.webp',
+      './pokemon/packs/sm9-pikachu-zekrom.webp',
+      './pokemon/packs/sm9-gengar-mimikyu.webp',
+      './pokemon/packs/sm9-eevee-snorlax.webp',
     ],
   },
   {
-    id: 'sv4pt5',
-    setIds: ['sv4pt5'],
-    label: { vi: 'Paldean Fates', en: 'Paldean Fates' },
-    accentColor: '#FDE047',
-    glowColor: '#FBBF24',
+    id: 'ecard3',
+    setIds: ['ecard3'],
+    label: { vi: 'Skyridge · 2003', en: 'Skyridge · 2003' },
+    accentColor: '#4ADE80',
+    glowColor: '#F97316',
     packArtUrls: [
-      './pokemon/packs/sv4pt5-pikachu.webp',
-      './pokemon/packs/sv4pt5-ceruledge.webp',
-      './pokemon/packs/sv4pt5-tinkaton.webp',
+      './pokemon/packs/ecard3-hooh.webp',
+      './pokemon/packs/ecard3-kabutops.webp',
+      './pokemon/packs/ecard3-vaporeon.webp',
     ],
   },
   {
@@ -220,11 +307,12 @@ export const FOIL_STYLE_LABELS: Record<Locale, Record<PokemonFoilStyle, string>>
 
 export function getCardFoilStyle(card: PokemonCatalogCard): PokemonFoilStyle {
   const r = card.rarity.trim().toLowerCase();
+  const s = card.set.toLowerCase();
   if (!r || r === 'common' || r === 'uncommon' || r === 'none') {
     return 'none';
   }
   if (r === 'rare') {
-    return card.set.toLowerCase().startsWith('sv') ? 'holo-regular' : 'none';
+    return s.startsWith('sv') || s.startsWith('me') ? 'holo-regular' : 'none';
   }
   if (r.includes('rainbow')) {
     return 'holo-rainbow';
@@ -235,7 +323,11 @@ export function getCardFoilStyle(card: PokemonCatalogCard): PokemonFoilStyle {
   if (r.includes('ace spec')) {
     return 'holo-acespec';
   }
-  if (r.includes('special illustration') || r.includes('shiny ultra')) {
+  if (
+    r.includes('special illustration') ||
+    r.includes('mega attack') ||
+    r.includes('shiny ultra')
+  ) {
     return 'holo-sir';
   }
   if (r.includes('radiant') || r.includes('shiny') || r.includes('amazing')) {
@@ -247,10 +339,19 @@ export function getCardFoilStyle(card: PokemonCatalogCard): PokemonFoilStyle {
   if (r.includes('illustration') || r.includes('ultra')) {
     return 'holo-fullart';
   }
-  if (r.includes('double rare') || r.includes('holo v') || r.includes('holo ex') || r.includes('holo gx')) {
+  if (
+    r.includes('double rare') ||
+    r.includes('prism') ||
+    r.includes('holo v') ||
+    r.includes('holo ex') ||
+    r.includes('holo gx')
+  ) {
     return 'holo-v';
   }
-  if (r.includes('cosmos') || (r === 'rare holo' && card.set.toLowerCase() === 'base1')) {
+  if (
+    r.includes('cosmos') ||
+    (r === 'rare holo' && (s === 'base1' || s === 'ecard3'))
+  ) {
     return 'holo-cosmos';
   }
   if (r.includes('holo') || r.includes('trainer gallery')) {
@@ -501,7 +602,16 @@ export function getCardImageUrl(
   hires = false
 ): string {
   if (card.img) {
-    return hires ? card.img.replace(/\.png$/i, '_hires.png') : card.img;
+    if (hires) {
+      if (/\/small$/i.test(card.img)) {
+        return card.img.replace(/\/small$/i, '/large');
+      }
+      return card.img.replace(/\.png$/i, '_hires.png');
+    }
+    return card.img;
+  }
+  if (card.set === 'me2pt5') {
+    return `https://images.scrydex.com/pokemon/${encodeURIComponent(card.id)}/${hires ? 'large' : 'small'}`;
   }
   const suffix = hires ? '_hires.png' : '.png';
   return `https://images.pokemontcg.io/${encodeURIComponent(card.set)}/${encodeURIComponent(card.num)}${suffix}`;

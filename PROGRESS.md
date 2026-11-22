@@ -654,6 +654,18 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]`, `DOT_GLITTER_BLOCKS=0` và `cmd /c "npm run verify"` thoát `0`.
   - Playwright `verify_real_packs_live.py` (`device_scale_factor=2`) kiểm chứng đủ 7/7 hộp bài (`382–416 × 720`), xác nhận xoay mẫu thật (`base1-charizard.webp → base1-blastoise.webp`), kéo xé trực tiếp trên vỏ thật, `heightSealed = heightRipping = 568.62px` (`0.00px` jump), `0` lỗi console/page, `0` request lỗi và `0` tràn ngang trên `1440px`, `820px`, `375px` (Dark & Light Mode).
 
+## 46. Kiểm Định Đủ 100% Thẻ 7 Bộ Hiện Có & Bổ Sung 7 Bộ Pack Mới Đang Hot / Cực Hiếm (Nâng Lên 14 Hộp · 2.828 Thẻ)
+
+- **Kiểm định kho thẻ 7 bộ hiện tại (`public/data/pokemon-cards.json`)**:
+  - Đối chiếu 1:1 với dữ liệu chính thức `PokemonTCG/pokemon-tcg-data`: cả 6 bộ riêng lẻ đều **đủ 100% không thiếu bất kỳ lá bài nào** (*SV: 151* `207/207`, *Crown Zenith + Galarian Gallery* `160 + 70 = 230/230`, *Evolving Skies* `237/237`, *Prismatic Evolutions* `180/180`, *Paldean Fates* `245/245`, *Base Set 1999* `102/102`), và vá nốt 1 lá duy nhất thiếu giá của Base Set (`base1-8` Machamp → `$96.52` TCGCSV).
+- **Bổ sung 7 bộ pack chính hãng đang hot (2024–2026) & cực hiếm sưu tầm (19 ảnh WebP `720p` mới trong `public/pokemon/packs/`, `src/data/pokemonPack.ts`)**:
+  - **Nhóm đang hot 2024–2026**: *Mega: Ascended Heroes* (`me2pt5`, 295 thẻ — Mega Gengar ex, Mega Dragonite ex, Pikachu ex; hỗ trợ nguồn ảnh `images.scrydex.com`), *Mega: Phantasmal Flames* (`me2`, 130 thẻ — 3 vỏ xoay Mega Charizard X · Mega Gengar · Mega Lopunny), *SV: Destined Rivals* (`sv10`, 244 thẻ — 3 vỏ xoay Team Rocket's Mewtwo · Cynthia's Garchomp · Ethan's Ho-Oh), *SV: Surging Sparks* (`sv8`, 252 thẻ — 3 vỏ xoay Stellar Pikachu · Latias · Alolan Exeggutor).
+  - **Nhóm sưu tầm cực hiếm / grail**: *Lost Origin + Gallery* (`swsh11` + `swsh11tg`, 247 thẻ — 3 vỏ xoay Origin Giratina · Hisuian Zoroark · Radiant Gardevoir), *Team Up · 2019* (`sm9`, 198 thẻ — 3 vỏ xoay Pikachu & Zekrom · Gengar & Mimikyu · Eevee & Snorlax, chase Latias & Latios GX), *Skyridge · 2003* (`ecard3`, 182 thẻ — 3 vỏ xoay Ho-Oh · Kabutops · Vaporeon, bộ WotC cổ hiếm nhất với Crystal Charizard / Celebi).
+  - Bổ sung mapping hiệu ứng foil cho các độ hiếm mới (`Mega Attack Rare` → `holo-sir`, `Mega Hyper Rare` → `holo-gold`, `Rare Prism Star` → `holo-v`, `Rare` dòng `me*` → `holo-regular`, `Rare Holo` dòng `ecard3` → `holo-cosmos`). Tổng kho dữ liệu nâng từ `1.288` lên **`2.828` thẻ thật** (chỉ `149.8 KB` JSON nén `v: 2`).
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 58.81 kB | gzip: 15.80 kB`).
+  - Playwright `verify_real_packs_live.py` (`device_scale_factor=2`) kiểm chứng đủ **14/14 hộp bài** đúng số lượng thẻ từng bộ, tải ảnh mặt thẻ `me2pt5` từ Scrydex (`733×1024`), xác nhận xoay mẫu thật trên bộ mới (`me2-charizard.webp → me2-gengar.webp`), kéo xé `0.00px` jump, `0` lỗi console/page, `0` request lỗi và `0` tràn ngang trên `1440px`, `820px`, `375px`.
+
 
 
 

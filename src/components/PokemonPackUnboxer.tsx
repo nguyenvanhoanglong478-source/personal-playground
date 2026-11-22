@@ -41,10 +41,12 @@ import {
 import { useCardTilt } from '../hooks/useCardTilt';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import {
+  playCardFanSound,
   playCardFlipSound,
   playCardSlideSound,
   playPackRipSound,
   playRarityPullSound,
+  preloadPokemonSfx,
 } from '../utils/pokemonAudio';
 import { PokemonBoosterPack } from './PokemonBoosterPack';
 import {
@@ -144,6 +146,12 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   useEffect(() => {
     saveBoxState(boxState);
   }, [boxState]);
+
+  useEffect(() => {
+    if (boxState.soundEnabled) {
+      preloadPokemonSfx();
+    }
+  }, [boxState.soundEnabled]);
 
   useEffect(() => {
     return () => {
@@ -436,7 +444,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     cancelPackPreload();
     commitPackCardsUpTo(currentPack.length);
     if (boxState.soundEnabled) {
-      playCardSlideSound();
+      playCardFanSound();
     }
     setIsFlipSettled(false);
     setCardTransition('idle');

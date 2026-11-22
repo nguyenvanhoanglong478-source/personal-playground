@@ -681,6 +681,21 @@ Cập nhật lần cuối: 2026-11-14
   - Mobile `375px` (`has_touch=True, is_mobile=True`): thẻ #1 lật hiển thị sẵn trong **`111ms`** (`440×615` WebP nét căng), mở đủ cả 10 thẻ tổng kết trong **`683ms`** với tổng lưu lượng chỉ **`334.5 KB`** (giảm ~20× so với `~6–8 MB` trước đây), hộp Phóng to 3D dùng `w=640` WebP, Bộ sưu tập dùng `w=220` WebP.
   - Kiểm thử giả lập chặn `wsrv.nl` (`route.abort()`): tự động chuyển mạch dự phòng về `images.pokemontcg.io` mượt mà, `0` ảnh vỡ, `0` lỗi console/page, `UNUSED_PK_CLASSES=[]`, `npm run verify` thoát `0`.
 
+## 48. Khôi Phục Lớp Foil Thẻ (`z-index`) & Nâng Cấp Âm Thanh Mở Pack Gói A (Foley Thực Tế CC0 + Chuông Studio)
+
+- **Sửa lỗi lớp `<img>` đè mất hiệu ứng foil thẻ (`src/index.css`, Commit `08e1e75`)**:
+  - Đặt cố định `z-index: 10 / 11 / 12` cho `.pk-holo-foil`, `.pk-holo-glitter` và `.pk-holo-glare` để luôn nằm phía trên ảnh thẻ `z-index: 1` ở cả sân khấu lật bài lẫn hộp Phóng to 3D.
+- **Triển khai Bộ Âm Thanh Gói A (Foley Thực Tế + Chuông Studio, 100% CC0 Public Domain)**:
+  - Xuất chuẩn hóa, cắt sạch khoảng lặng đầu (`leadTrim`) và nén về **9 tệp MP3 `128 kbps`** tương thích 100% **iPhone Safari, Android và PC** trong `public/pokemon/sfx/` (tổng dung lượng chỉ **`98.4 KB`**):
+    - `pack-rip.mp3` (`4.9 KB`, BigSoundBank CC0 *Torn Paper #3*): tiếng xé mép vỏ pack sắc gọn tức thì.
+    - `pack-crinkle.mp3` (`5.7 KB`, Kenney RPG CC0 *cloth2*): tiếng rột xoạt khi kéo đường xé (tăng cao độ theo tiến độ kéo).
+    - `card-takeout.mp3` (`6.5 KB`, Kenney Casino CC0 *cardTakeOutPackage1*): tiếng rút xấp 10 thẻ ra khỏi gói.
+    - `card-flip-1.mp3` (`3.7 KB`) & `card-flip-2.mp3` (`2.0 KB`, Kenney Casino CC0 *cardSlide5* & *cardSlide1*): tiếng lật thẻ giấy thật đảo luân phiên kèm biến thiên cao độ tự nhiên.
+    - `card-fan.mp3` (`11.4 KB`, Kenney Casino CC0 *cardFan1*): tiếng xòe 10 thẻ khi bấm **Lật nhanh**.
+    - `rare-chime.mp3` (`28.2 KB`, *sfx-audio-library* Vibraphone Triad CC0), `ultra-chime.mp3` (`14.7 KB`, Kenney *jingles_STEEL10*), `secret-chime.mp3` (`21.2 KB`, Kenney *jingles_STEEL02*).
+  - Nâng cấp `src/utils/pokemonAudio.ts` & `src/components/PokemonPackUnboxer.tsx`: giải mã sẵn đa âm qua `AudioContext.decodeAudioData()` (`preloadPokemonSfx()`), phát không độ trễ chồng âm mượt và tự động dự phòng bằng Web Audio synth nếu mạng chậm.
+- **Kiểm chứng**: `npm run verify` thoát `0`, Playwright xác nhận nạp đủ `9/9` tệp MP3 (`HTTP 200`, `98.4 KB`), chạy trọn chu trình xé pack → lật thẻ → xòe nhanh không lỗi console/page và `0` tràn ngang trên `375px`.
+
 
 
 

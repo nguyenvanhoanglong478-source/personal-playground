@@ -78,6 +78,7 @@ export interface BoosterBoxOption {
   accentColor: string;
   glowColor: string;
   packArtUrls: string[];
+  cardsPerPack?: number;
 }
 
 export interface SavedBoxState {
@@ -223,6 +224,7 @@ export const BOOSTER_BOX_OPTIONS: BoosterBoxOption[] = [
     label: { vi: 'Skyridge · 2003', en: 'Skyridge · 2003' },
     accentColor: '#4ADE80',
     glowColor: '#F97316',
+    cardsPerPack: 9,
     packArtUrls: [
       './pokemon/packs/ecard3-hooh.webp',
       './pokemon/packs/ecard3-kabutops.webp',
@@ -235,6 +237,7 @@ export const BOOSTER_BOX_OPTIONS: BoosterBoxOption[] = [
     label: { vi: 'Base Set (1999)', en: 'Base Set (1999)' },
     accentColor: '#F59E0B',
     glowColor: '#EA580C',
+    cardsPerPack: 11,
     packArtUrls: [
       './pokemon/packs/base1-charizard.webp',
       './pokemon/packs/base1-blastoise.webp',
@@ -372,12 +375,12 @@ export const POKEMON_UNBOXER_LABELS = {
     tearHint: 'Kéo đường xé hoặc bấm để mở pack',
     ripButton: 'Xé pack ngay',
     rippingLabel: 'Đang xé pack...',
-    drawingLabel: 'Đang rút 10 thẻ...',
-    cardCounter: (idx: number) => `Thẻ ${idx} / ${CARDS_PER_PACK}`,
+    drawingLabel: (total: number) => `Đang rút ${total} thẻ...`,
+    cardCounter: (idx: number, total: number) => `Thẻ ${idx} / ${total}`,
     tapToFlip: 'Bấm thẻ để lật',
     flipCardBtn: (idx: number) => `Lật thẻ #${idx}`,
     nextCard: 'Thẻ tiếp',
-    finishPack: 'Xem 10 thẻ',
+    finishPack: (total: number) => `Xem ${total} thẻ`,
     revealAll: 'Lật nhanh',
     inspectCard: 'Phóng to 3D',
     summaryTitle: (packNum: number) => `Kết quả Pack #${packNum}`,
@@ -439,12 +442,12 @@ export const POKEMON_UNBOXER_LABELS = {
     tearHint: 'Slide across seam or tap to rip',
     ripButton: 'Rip pack',
     rippingLabel: 'Ripping pack...',
-    drawingLabel: 'Drawing 10 cards...',
-    cardCounter: (idx: number) => `Card ${idx} / ${CARDS_PER_PACK}`,
+    drawingLabel: (total: number) => `Drawing ${total} cards...`,
+    cardCounter: (idx: number, total: number) => `Card ${idx} / ${total}`,
     tapToFlip: 'Tap card to flip',
     flipCardBtn: (idx: number) => `Flip card #${idx}`,
     nextCard: 'Next card',
-    finishPack: 'View all 10',
+    finishPack: (total: number) => `View all ${total}`,
     revealAll: 'Reveal all',
     inspectCard: 'Inspect 3D',
     summaryTitle: (packNum: number) => `Pack #${packNum} Pulls`,
@@ -643,6 +646,10 @@ export function getBoxOption(boxId: BoxThemeId): BoosterBoxOption {
   );
 }
 
+export function getBoxCardsPerPack(boxId: BoxThemeId): number {
+  return getBoxOption(boxId).cardsPerPack ?? CARDS_PER_PACK;
+}
+
 export function getBoxPool(
   cards: PokemonCatalogCard[],
   boxId: BoxThemeId
@@ -651,7 +658,7 @@ export function getBoxPool(
   if (!option.setIds) return cards;
   const allowed = new Set(option.setIds);
   const filtered = cards.filter((card) => allowed.has(card.set));
-  return filtered.length >= CARDS_PER_PACK ? filtered : cards;
+  return filtered.length >= getBoxCardsPerPack(boxId) ? filtered : cards;
 }
 
 function pickRandomFrom(
@@ -698,10 +705,14 @@ export function generateBoosterPack(
     byTier[card.tier].push(card);
   }
 
+  const targetCount = getBoxCardsPerPack(boxId);
+  const commonCount = targetCount >= 11 ? 5 : 4;
+  const uncommonCount = targetCount <= 9 ? 2 : 3;
+
   const usedIds = new Set<string>();
   const pack: PokemonCatalogCard[] = [];
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < commonCount; i++) {
     pack.push(
       pickWithFallback(
         byTier,
@@ -712,7 +723,7 @@ export function generateBoosterPack(
     );
   }
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < uncommonCount; i++) {
     pack.push(
       pickWithFallback(
         byTier,

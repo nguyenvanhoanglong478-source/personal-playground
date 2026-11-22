@@ -14,7 +14,6 @@ import { Locale } from '../data/profile';
 import {
   BOOSTER_BOX_OPTIONS,
   BoxThemeId,
-  CARDS_PER_PACK,
   CardImageStage,
   FOIL_STYLE_LABELS,
   PACKS_PER_BOX,
@@ -28,6 +27,7 @@ import {
   TIER_ORDER,
   formatCardPrice,
   generateBoosterPack,
+  getBoxCardsPerPack,
   getBoxOption,
   getBoxPool,
   getCardFoilStyle,
@@ -507,6 +507,10 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   const activeCard =
     phase === 'revealing' ? currentPack[revealIndex] ?? null : null;
   const activeFoilStyle = activeCard ? getCardFoilStyle(activeCard) : 'none';
+  const activePackSize =
+    currentPack.length > 0
+      ? currentPack.length
+      : getBoxCardsPerPack(boxState.boxId);
 
   const packHitsCount = useMemo(
     () => currentPack.filter((card) => isHitTier(card.tier)).length,
@@ -677,7 +681,9 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                 ) : (
                   <div className="flex w-full items-center gap-2">
                     <div className="flex min-h-[40px] flex-1 items-center justify-center rounded-full border border-folio-border bg-folio-surface px-3 font-mono text-[11px] font-medium text-folio-muted">
-                      {phase === 'ripping' ? t.rippingLabel : t.drawingLabel}
+                      {phase === 'ripping'
+                        ? t.rippingLabel
+                        : t.drawingLabel(activePackSize)}
                     </div>
 
                     <button
@@ -740,7 +746,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
         <div className="flex w-full flex-col items-center gap-3 py-1">
           <div className="flex w-full items-center justify-between gap-2 font-mono text-[11px]">
             <span className="rounded-full border border-folio-border bg-folio-surface px-2.5 py-0.5 font-semibold tabular-nums text-folio-ink">
-              {t.cardCounter(revealIndex + 1)}
+              {t.cardCounter(revealIndex + 1, activePackSize)}
             </span>
 
             {isCardFlipped ? (
@@ -939,8 +945,8 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
               <span>
                 {!isCardFlipped
                   ? t.flipCardBtn(revealIndex + 1)
-                  : revealIndex + 1 >= CARDS_PER_PACK
-                    ? t.finishPack
+                  : revealIndex + 1 >= activePackSize
+                    ? t.finishPack(activePackSize)
                     : t.nextCard}
               </span>
               <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -994,13 +1000,23 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
 
           <div
             aria-label={t.summaryTitle(openedPackNumber)}
-            className="grid grid-cols-5 gap-1.5"
+            className={
+              currentPack.length === 10
+                ? 'grid grid-cols-5 gap-1.5'
+                : 'flex flex-wrap justify-center gap-1.5'
+            }
           >
             {currentPack.map((card) => {
               const miniFoil = getCardFoilStyle(card);
               const imgStage = imageStages[card.id] ?? 'webp';
               const isTopPull = card.id === bestCardId;
               const summaryVariant = loadedCardIds[card.id] ? 'card' : 'thumb';
+              const widthClass =
+                currentPack.length === 10
+                  ? 'w-full'
+                  : currentPack.length === 11
+                    ? 'w-[calc((100%-30px)/6)]'
+                    : 'w-[calc((100%-24px)/5)]';
               return (
                 <button
                   key={card.id}
@@ -1011,7 +1027,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                   data-tier={card.tier}
                   data-foil={miniFoil}
                   data-top-pull={isTopPull ? 'true' : undefined}
-                  className={`pk-mini-card group relative aspect-[63/88] w-full overflow-hidden rounded-[5px] border border-folio-border bg-folio-surface transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong ${
+                  className={`pk-mini-card group relative aspect-[63/88] ${widthClass} overflow-hidden rounded-[5px] border border-folio-border bg-folio-surface transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong ${
                     isTopPull ? 'pk-best-pull' : ''
                   }`}
                 >

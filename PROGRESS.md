@@ -639,6 +639,21 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]` và `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 67.63 kB | gzip: 17.54 kB`, `index-*.css 75.42 kB | gzip: 15.41 kB`).
   - Playwright `verify_pokemon_unboxer.py` (`device_scale_factor=2`) kiểm chứng trọn vẹn trên `1440×900` (Dark/Light/Hover), `820×1180`, `375×812`: soi ảnh thực tế từng ô pixel rương sắc nét tuyệt đối không viền mờ trên cả nền tối lẫn nền sáng, `heightSealed = heightRipping = heightDrawingPack2 = 568.62px` (`0.00px` jump), `chestLoaded: true`, `drawingBladeCount: 0`, `firstCardTransition: "idle"`, `0` lỗi console/page và `0` tràn ngang.
 
+## 45. Thay Toàn Bộ 7 Vỏ Pack Bằng Ảnh Vỏ Booster Pack Pokémon TCG Chính Hãng Ngoài Đời (`public/pokemon/packs/*.webp`)
+
+- **15 ảnh vỏ gói chính hãng tối ưu cục bộ (`public/pokemon/packs/`, `src/data/pokemonPack.ts`)**:
+  - Đối chiếu và thay toàn bộ vỏ CSS tự dựng trước đó bằng 15 ảnh chụp vỏ pack in thật ngoài đời từ kho mã nguồn mở `github.com/1niceroli/ptcg-assets`, nén WebP chuẩn `720p` sắc nét tự host cục bộ (~65–101 KB/ảnh, chỉ tải 1–3 ảnh của hộp đang chọn):
+    - *All-Star Mix*: **Mẫu A — `MEGA Dream ex (M2a)`** (High Class 10 thẻ), xòe kèm *Pokémon 151* & *Evolving Skies*.
+    - *Scarlet & Violet: 151*: vỏ trắng bạc Mew nguyên bản.
+    - *Crown Zenith + Gallery*: vỏ xanh-vàng Zacian & Zamazenta nguyên bản.
+    - *Evolving Skies* (`swsh7`), *Prismatic Evolutions* (`sv8pt5`), *Paldean Fates* (`sv4pt5`), *Base Set 1999* (`base1`): đủ **3 mẫu vỏ thật** cho mỗi bộ, xòe 3 mẫu khác nhau trong rương và tự xoay mẫu thật theo từng pack (`#01 → #12`).
+- **Hiệu ứng vỏ cong thật, màng bóng nhựa theo viền & tách mép xé `9%` (`PokemonBoosterPack.tsx`, `src/index.css`)**:
+  - Loại bỏ ~780 dòng mã CSS/TSX vỏ pack giả cũ (`index-*.css` giảm còn `69.47 kB` / gzip `14.25 kB`; `PokemonPackUnboxer-*.js` giảm còn `56.85 kB` / gzip `15.29 kB`).
+  - Dùng `drop-shadow` theo đúng viền alpha cong thắt eo của vỏ thật (bỏ khung chữ nhật), dùng `mask-image` khóa lớp bóng nhựa `.pk-real-plastic` cùng cặp vệt lóe chuột PC thuần GPU (`.pk-mylar-glare` / `.pk-mylar-glare-alt`) đúng trên bề mặt vỏ, và tách khớp `0.00px` dải mép ép nhiệt `9%` phía trên logo `Pokémon` (`draggable={false}` + chặn `dragstart` để kéo xé mượt trên mọi trình duyệt).
+- **Kiểm chứng sau chỉnh sửa cuối cùng**:
+  - `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]`, `DOT_GLITTER_BLOCKS=0` và `cmd /c "npm run verify"` thoát `0`.
+  - Playwright `verify_real_packs_live.py` (`device_scale_factor=2`) kiểm chứng đủ 7/7 hộp bài (`382–416 × 720`), xác nhận xoay mẫu thật (`base1-charizard.webp → base1-blastoise.webp`), kéo xé trực tiếp trên vỏ thật, `heightSealed = heightRipping = 568.62px` (`0.00px` jump), `0` lỗi console/page, `0` request lỗi và `0` tràn ngang trên `1440px`, `820px`, `375px` (Dark & Light Mode).
+
 
 
 

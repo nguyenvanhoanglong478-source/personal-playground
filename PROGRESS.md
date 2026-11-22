@@ -666,6 +666,21 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` thoát `0` (`PokemonPackUnboxer-*.js 58.81 kB | gzip: 15.80 kB`).
   - Playwright `verify_real_packs_live.py` (`device_scale_factor=2`) kiểm chứng đủ **14/14 hộp bài** đúng số lượng thẻ từng bộ, tải ảnh mặt thẻ `me2pt5` từ Scrydex (`733×1024`), xác nhận xoay mẫu thật trên bộ mới (`me2-charizard.webp → me2-gengar.webp`), kéo xé `0.00px` jump, `0` lỗi console/page, `0` request lỗi và `0` tràn ngang trên `1440px`, `820px`, `375px`.
 
+## 47. Tối Ưu Tốc Độ Tải Thẻ Pokémon Trên Di Động & PC (Giảm ~15–20× Dung Lượng Ảnh)
+
+- **Nguyên nhân gốc gây chậm trên di động**:
+  - Trước đây mọi thẻ bài (kể cả 10 thẻ preload đồng loạt khi xé pack, lưới thu nhỏ 5×2 và 24 thẻ trong Bộ sưu tập) đều tải trực tiếp ảnh PNG gốc chưa nén `733×1024` (`530–800 KB`/thẻ, tương đương `6–8 MB` cho 1 pack và `~15 MB` khi mở Bộ sưu tập), gây nghẽn băng thông 4G khiến thẻ #1 phải chờ các thẻ phía sau.
+- **Giải pháp tối ưu toàn diện (`index.html`, `src/data/pokemonPack.ts`, `PokemonPackUnboxer.tsx`, `PokemonPackModals.tsx`, `src/index.css`)**:
+  - **Nén WebP 3 cấp qua CDN Cloudflare Edge (`wsrv.nl`) kèm tự động dự phòng về link gốc (`'webp' → 'direct' → 'fallback'`)**:
+    - `thumb` (`w=220, q=76`, `~12–23 KB`/thẻ — nhẹ hơn **~40×**): dùng cho lưới **Bộ sưu tập** và các thẻ chưa lật khi bấm **Lật nhanh** sang lưới kết quả 5×2.
+    - `card` (`w=440, q=80`, `~45–80 KB`/thẻ — nét chuẩn 2× Retina trên khung `224px`, nhẹ hơn **~10×**): dùng cho sân khấu lật bài và tái sử dụng ngay từ bộ nhớ RAM ở lưới 5×2 không tải lại.
+    - `inspect` (`w=640, q=86`, `~85–130 KB`/thẻ): dùng cho hộp **Phóng to 3D**.
+  - **Hàng đợi nạp trước ưu tiên tối đa 2 luồng (`pumpPreloadQueue` + `img.decode()`)**: khi xé pack, chỉ nạp thẻ #1 & #2 trước trong `1.2s` hoạt ảnh xé (không bóp băng thông), tự đẩy thẻ hiện tại + 2 thẻ kế tiếp lên đầu hàng đợi khi lật, và hủy ngay hàng đợi cũ khi chuyển sang tổng kết/hộp mới.
+  - **Kết nối sớm `preconnect`** (`wsrv.nl`, `images.pokemontcg.io`, `dns-prefetch` `images.scrydex.com`) trong `index.html` và khung chờ mượt `.pk-card-skeleton` khi mạng quá chậm.
+- **Kiểm chứng thực tế (`verify_card_speed.py`)**:
+  - Mobile `375px` (`has_touch=True, is_mobile=True`): thẻ #1 lật hiển thị sẵn trong **`111ms`** (`440×615` WebP nét căng), mở đủ cả 10 thẻ tổng kết trong **`683ms`** với tổng lưu lượng chỉ **`334.5 KB`** (giảm ~20× so với `~6–8 MB` trước đây), hộp Phóng to 3D dùng `w=640` WebP, Bộ sưu tập dùng `w=220` WebP.
+  - Kiểm thử giả lập chặn `wsrv.nl` (`route.abort()`): tự động chuyển mạch dự phòng về `images.pokemontcg.io` mượt mà, `0` ảnh vỡ, `0` lỗi console/page, `UNUSED_PK_CLASSES=[]`, `npm run verify` thoát `0`.
+
 
 
 

@@ -4,6 +4,7 @@ import { RotateCcw, Search, Sparkles, Trash2, X } from 'lucide-react';
 import { Locale } from '../data/profile';
 import {
   BinderSortMode,
+  CardImageStage,
   FOIL_STYLE_LABELS,
   POKEMON_CARD_BACK_URL,
   POKEMON_UNBOXER_LABELS,
@@ -43,9 +44,8 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
 }) => {
   const shouldReduceMotion = usePrefersReducedMotion();
   const t = POKEMON_UNBOXER_LABELS[locale];
-  const [imgStage, setImgStage] = useState<'hires' | 'small' | 'fallback'>(
-    'hires'
-  );
+  const [imgStage, setImgStage] = useState<CardImageStage>('webp');
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   const {
     stageRef,
@@ -61,7 +61,8 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
   });
 
   useEffect(() => {
-    setImgStage('hires');
+    setImgStage('webp');
+    setImgLoaded(false);
     resetTiltImmediately();
   }, [card?.id, resetTiltImmediately]);
 
@@ -84,10 +85,10 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
   if (!card || typeof document === 'undefined') return null;
 
   const imgUrl =
-    imgStage === 'hires'
-      ? getCardImageUrl(card, true)
-      : imgStage === 'small'
-        ? getCardImageUrl(card, false)
+    imgStage === 'webp'
+      ? getCardImageUrl(card, 'inspect', false)
+      : imgStage === 'direct'
+        ? getCardImageUrl(card, 'inspect', true)
         : '';
 
   const setName = setsMap[card.set] ?? card.set.toUpperCase();
@@ -152,17 +153,32 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
                   </div>
                 </div>
               ) : (
-                <img
-                  src={imgUrl}
-                  alt={card.name}
-                  decoding="async"
-                  onError={() =>
-                    setImgStage((prev) =>
-                      prev === 'hires' ? 'small' : 'fallback'
-                    )
-                  }
-                  className="h-full w-full select-none object-cover"
-                />
+                <>
+                  {!imgLoaded && (
+                    <div className="pk-card-skeleton" aria-hidden="true" />
+                  )}
+                  <img
+                    ref={(el) => {
+                      if (el?.complete && el.naturalWidth > 0 && !imgLoaded) {
+                        setImgLoaded(true);
+                      }
+                    }}
+                    src={imgUrl}
+                    alt={card.name}
+                    fetchPriority="high"
+                    decoding="async"
+                    onLoad={() => setImgLoaded(true)}
+                    onError={() => {
+                      setImgLoaded(false);
+                      setImgStage((prev) =>
+                        prev === 'webp' ? 'direct' : 'fallback'
+                      );
+                    }}
+                    className={`relative z-[1] h-full w-full select-none object-cover transition-opacity duration-150 ${
+                      imgLoaded ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  />
+                </>
               )}
               <div className="pk-holo-foil" aria-hidden="true" />
               <div className="pk-holo-glitter" aria-hidden="true" />
@@ -301,9 +317,9 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
   const [sortBy, setSortBy] = useState<BinderSortMode>('rarity_desc');
   const [query, setQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(BINDER_PAGE_SIZE);
-  const [imgStages, setImgStages] = useState<
-    Record<string, 'hires' | 'small' | 'fallback'>
-  >({});
+  const [imgStages, setImgStages] = useState<Record<string, CardImageStage>>(
+    {}
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -642,7 +658,7 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
               {shownEntries.map(({ card, count }) => {
                 const powerVal = getCardPower(card);
                 const miniFoil = getCardFoilStyle(card);
-                const imgStage = imgStages[card.id] ?? 'hires';
+                const imgStage = imgStages[card.id] ?? 'webp';
                 return (
                   <button
                     key={card.id}
@@ -665,17 +681,21 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
                         </div>
                       ) : (
                         <img
-                          src={getCardImageUrl(card, imgStage === 'hires')}
+                          src={getCardImageUrl(
+                            card,
+                            'thumb',
+                            imgStage === 'direct'
+                          )}
                           alt={card.name}
                           loading="lazy"
                           decoding="async"
                           onError={() =>
                             setImgStages((prev) => {
-                              const current = prev[card.id] ?? 'hires';
+                              const current = prev[card.id] ?? 'webp';
                               return {
                                 ...prev,
                                 [card.id]:
-                                  current === 'hires' ? 'small' : 'fallback',
+                                  current === 'webp' ? 'direct' : 'fallback',
                               };
                             })
                           }

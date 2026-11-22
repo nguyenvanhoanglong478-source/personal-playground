@@ -1933,6 +1933,29 @@ html[data-theme='dark'] .pk-chest-ground-shadow {
   box-shadow: 0 0 0 1px rgba(245, 200, 66, 0.45);
 }
 
+.pk-card-skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    110deg,
+    var(--bg-elevated) 28%,
+    var(--border-subtle) 50%,
+    var(--bg-elevated) 72%
+  );
+  background-size: 220% 100%;
+  animation: pk-skeleton-sweep 1.2s ease-in-out infinite;
+}
+
+@keyframes pk-skeleton-sweep {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pk-tilt-card,
   .pk-flip-face,
@@ -1949,7 +1972,8 @@ html[data-theme='dark'] .pk-chest-ground-shadow {
   .pk-pack-lid,
   .pk-tear-seam-blade,
   .pk-deck-top,
-  .pk-reveal-burst {
+  .pk-reveal-burst,
+  .pk-card-skeleton {
     animation: none !important;
   }
   .pk-tear-sparkle {

@@ -15,6 +15,7 @@ import {
   BOOSTER_BOX_OPTIONS,
   BoxThemeId,
   CARDS_PER_PACK,
+  CardImageStage,
   FOIL_STYLE_LABELS,
   PACKS_PER_BOX,
   POKEMON_CARD_BACK_URL,
@@ -57,7 +58,6 @@ export interface PokemonPackUnboxerProps {
 
 type UnboxPhase = 'sealed' | 'ripping' | 'drawing' | 'revealing' | 'summary';
 type CardTransition = 'idle' | 'exiting' | 'entering';
-type CardImgStage = 'hires' | 'small' | 'fallback';
 
 export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   locale,
@@ -78,7 +78,10 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   const [isFlipSettled, setIsFlipSettled] = useState(false);
   const [cardTransition, setCardTransition] = useState<CardTransition>('idle');
   const [openedPackNumber, setOpenedPackNumber] = useState(1);
-  const [imageStages, setImageStages] = useState<Record<string, CardImgStage>>(
+  const [imageStages, setImageStages] = useState<Record<string, CardImageStage>>(
+    {}
+  );
+  const [loadedCardIds, setLoadedCardIds] = useState<Record<string, boolean>>(
     {}
   );
   const [inspectedCard, setInspectedCard] = useState<PokemonCatalogCard | null>(
@@ -89,6 +92,11 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   const timersRef = useRef<number[]>([]);
   const recordedCardCountRef = useRef<number>(0);
   const packCountedRef = useRef<boolean>(false);
+  const preloadSessionRef = useRef<number>(0);
+  const preloadQueueRef = useRef<PokemonCatalogCard[]>([]);
+  const preloadStartedRef = useRef<Set<string>>(new Set());
+  const preloadInFlightRef = useRef<number>(0);
+  const loadedCardIdsRef = useRef<Set<string>>(new Set());
 
   const {
     stageRef,
@@ -165,14 +173,113 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
 
   const advanceImageStage = useCallback((cardId: string) => {
     setImageStages((prev) => {
-      const current = prev[cardId] ?? 'hires';
+      const current = prev[cardId] ?? 'webp';
       if (current === 'fallback') return prev;
       return {
         ...prev,
-        [cardId]: current === 'hires' ? 'small' : 'fallback',
+        [cardId]: current === 'webp' ? 'direct' : 'fallback',
       };
     });
   }, []);
+
+  const markCardLoaded = useCallback((cardId: string) => {
+    if (loadedCardIdsRef.current.has(cardId)) return;
+    loadedCardIdsRef.current.add(cardId);
+    setLoadedCardIds((prev) => (prev[cardId] ? prev : { ...prev, [cardId]: true }));
+  }, []);
+
+  const cancelPackPreload = useCallback(() => {
+    preloadSessionRef.current += 1;
+    preloadQueueRef.current = [];
+    preloadStartedRef.current.clear();
+    preloadInFlightRef.current = 0;
+  }, []);
+
+  const pumpPreloadQueue = useCallback(
+    (sessionId: number) => {
+      const MAX_CONCURRENT = 2;
+      while (
+        preloadSessionRef.current === sessionId &&
+        preloadInFlightRef.current < MAX_CONCURRENT &&
+        preloadQueueRef.current.length > 0
+      ) {
+        const nextCard = preloadQueueRef.current.shift();
+        if (!nextCard) break;
+        if (
+          loadedCardIdsRef.current.has(nextCard.id) ||
+          preloadStartedRef.current.has(nextCard.id)
+        ) {
+          continue;
+        }
+        preloadStartedRef.current.add(nextCard.id);
+        preloadInFlightRef.current += 1;
+
+        const finishSlot = () => {
+          if (preloadSessionRef.current !== sessionId) return;
+          preloadInFlightRef.current = Math.max(0, preloadInFlightRef.current - 1);
+          pumpPreloadQueue(sessionId);
+        };
+
+        const loadUrl = (useDirect: boolean) => {
+          const img = new Image();
+          img.decoding = 'async';
+          img.onload = () => {
+            if (preloadSessionRef.current !== sessionId) return;
+            markCardLoaded(nextCard.id);
+            if (typeof img.decode === 'function') {
+              img.decode().catch(() => undefined);
+            }
+            finishSlot();
+          };
+          img.onerror = () => {
+            if (preloadSessionRef.current !== sessionId) return;
+            if (!useDirect) {
+              advanceImageStage(nextCard.id);
+              loadUrl(true);
+            } else {
+              advanceImageStage(nextCard.id);
+              finishSlot();
+            }
+          };
+          img.src = getCardImageUrl(nextCard, 'card', useDirect);
+        };
+
+        loadUrl(false);
+      }
+    },
+    [advanceImageStage, markCardLoaded]
+  );
+
+  const preloadPackImages = useCallback(
+    (cards: PokemonCatalogCard[]) => {
+      cancelPackPreload();
+      const sessionId = preloadSessionRef.current;
+      preloadQueueRef.current = [...cards];
+      pumpPreloadQueue(sessionId);
+    },
+    [cancelPackPreload, pumpPreloadQueue]
+  );
+
+  useEffect(() => {
+    if (phase !== 'revealing' || currentPack.length === 0) return;
+    const priorityCards = currentPack.slice(revealIndex, revealIndex + 3);
+    if (priorityCards.length === 0) return;
+    const priorityIds = new Set(priorityCards.map((c) => c.id));
+    const rest = preloadQueueRef.current.filter((c) => !priorityIds.has(c.id));
+    const pendingPriority = priorityCards.filter(
+      (c) =>
+        !loadedCardIdsRef.current.has(c.id) &&
+        !preloadStartedRef.current.has(c.id)
+    );
+    preloadQueueRef.current = [...pendingPriority, ...rest];
+    pumpPreloadQueue(preloadSessionRef.current);
+  }, [currentPack, phase, pumpPreloadQueue, revealIndex]);
+
+  useEffect(() => {
+    return () => {
+      cancelPackPreload();
+    };
+  }, [cancelPackPreload]);
 
   const commitPackCardsUpTo = useCallback(
     (exclusiveEndIndex: number) => {
@@ -199,14 +306,6 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     },
     [currentPack]
   );
-
-  const preloadPackImages = (cards: PokemonCatalogCard[]) => {
-    for (const card of cards) {
-      const img = new Image();
-      img.decoding = 'async';
-      img.src = getCardImageUrl(card, true);
-    }
-  };
 
   const handleRipPack = useCallback(() => {
     if (!catalog || phase === 'ripping' || phase === 'drawing') return;
@@ -260,6 +359,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     catalog,
     clearScheduledTimers,
     phase,
+    preloadPackImages,
     scheduleTimeout,
     shouldReduceMotion,
   ]);
@@ -333,6 +433,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   const handleRevealAll = () => {
     if (phase !== 'revealing') return;
     clearScheduledTimers();
+    cancelPackPreload();
     commitPackCardsUpTo(currentPack.length);
     if (boxState.soundEnabled) {
       playCardSlideSound();
@@ -344,6 +445,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
 
   const handlePrepareNextPack = () => {
     clearScheduledTimers();
+    cancelPackPreload();
     resetTiltImmediately();
     if (boxState.packsRemaining <= 0) {
       handleOpenNewBox(boxState.boxId);
@@ -361,6 +463,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
 
   const handleOpenNewBox = (targetBoxId: BoxThemeId = boxState.boxId) => {
     clearScheduledTimers();
+    cancelPackPreload();
     resetTiltImmediately();
     recordedCardCountRef.current = 0;
     packCountedRef.current = false;
@@ -732,8 +835,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                 <div className="pk-flip-face pk-flip-front overflow-hidden rounded-[11px] border border-folio-border bg-folio-elevated shadow-soft">
                   {isCardFlipped && (
                     <>
-                      {(imageStages[activeCard.id] ?? 'hires') ===
-                      'fallback' ? (
+                      {(imageStages[activeCard.id] ?? 'webp') === 'fallback' ? (
                         <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 p-3 text-center">
                           <span className="font-serif text-sm font-bold text-folio-ink">
                             {activeCard.name}
@@ -743,17 +845,28 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                           </span>
                         </div>
                       ) : (
-                        <img
-                          src={getCardImageUrl(
-                            activeCard,
-                            (imageStages[activeCard.id] ?? 'hires') === 'hires'
+                        <>
+                          {!loadedCardIds[activeCard.id] && (
+                            <div className="pk-card-skeleton" aria-hidden="true" />
                           )}
-                          alt={activeCard.name}
-                          fetchPriority="high"
-                          decoding="async"
-                          onError={() => advanceImageStage(activeCard.id)}
-                          className="h-full w-full object-cover"
-                        />
+                          <img
+                            src={getCardImageUrl(
+                              activeCard,
+                              'card',
+                              (imageStages[activeCard.id] ?? 'webp') === 'direct'
+                            )}
+                            alt={activeCard.name}
+                            fetchPriority="high"
+                            decoding="async"
+                            onLoad={() => markCardLoaded(activeCard.id)}
+                            onError={() => advanceImageStage(activeCard.id)}
+                            className={`relative z-[1] h-full w-full object-cover transition-opacity duration-150 ${
+                              loadedCardIds[activeCard.id]
+                                ? 'opacity-100'
+                                : 'opacity-0'
+                            }`}
+                          />
+                        </>
                       )}
                       <div className="pk-holo-foil" aria-hidden="true" />
                       <div className="pk-holo-glitter" aria-hidden="true" />
@@ -877,8 +990,9 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
           >
             {currentPack.map((card) => {
               const miniFoil = getCardFoilStyle(card);
-              const imgStage = imageStages[card.id] ?? 'hires';
+              const imgStage = imageStages[card.id] ?? 'webp';
               const isTopPull = card.id === bestCardId;
+              const summaryVariant = loadedCardIds[card.id] ? 'card' : 'thumb';
               return (
                 <button
                   key={card.id}
@@ -899,8 +1013,13 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                     </span>
                   ) : (
                     <img
-                      src={getCardImageUrl(card, imgStage === 'hires')}
+                      src={getCardImageUrl(
+                        card,
+                        summaryVariant,
+                        imgStage === 'direct'
+                      )}
                       alt={card.name}
+                      decoding="async"
                       onError={() => advanceImageStage(card.id)}
                       className="h-full w-full object-cover"
                     />

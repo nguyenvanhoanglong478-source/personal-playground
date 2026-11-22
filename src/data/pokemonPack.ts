@@ -597,7 +597,10 @@ export function loadPokemonCatalog(): Promise<PokemonCatalogData> {
   return catalogCachePromise;
 }
 
-export function getCardImageUrl(
+export type CardImageVariant = 'thumb' | 'card' | 'inspect';
+export type CardImageStage = 'webp' | 'direct' | 'fallback';
+
+export function getRawCardImageUrl(
   card: PokemonCatalogCard,
   hires = false
 ): string {
@@ -615,6 +618,22 @@ export function getCardImageUrl(
   }
   const suffix = hires ? '_hires.png' : '.png';
   return `https://images.pokemontcg.io/${encodeURIComponent(card.set)}/${encodeURIComponent(card.num)}${suffix}`;
+}
+
+export function getCardImageUrl(
+  card: PokemonCatalogCard,
+  variant: CardImageVariant = 'card',
+  direct = false
+): string {
+  const useHiresUpstream = variant !== 'thumb';
+  const rawUrl = getRawCardImageUrl(card, useHiresUpstream);
+  if (direct) {
+    return rawUrl;
+  }
+  const stripped = rawUrl.replace(/^https?:\/\//i, '');
+  const width = variant === 'thumb' ? 220 : variant === 'inspect' ? 640 : 440;
+  const quality = variant === 'thumb' ? 76 : variant === 'inspect' ? 86 : 80;
+  return `https://wsrv.nl/?url=${encodeURIComponent(stripped)}&w=${width}&output=webp&q=${quality}`;
 }
 
 export function getBoxOption(boxId: BoxThemeId): BoosterBoxOption {

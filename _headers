@@ -1,0 +1,42 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://wsrv.nl https://images.pokemontcg.io https://images.scrydex.com https://*.scdn.co https://*.spotifycdn.com; media-src 'self' data: blob:; connect-src 'self' https://longhoang.pages.dev https://*.longhoang.pages.dev https://cloudflareinsights.com https://wsrv.nl https://images.pokemontcg.io https://images.scrydex.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/pokemon/packs/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/pokemon/sfx/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/pokemon/chest-back.png
+  Cache-Control: public, max-age=31536000, immutable
+
+/pokemon/chest-front.png
+  Cache-Control: public, max-age=31536000, immutable
+
+/pokemon/card-back.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+/games/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/projects/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/manifest.webmanifest
+  Cache-Control: public, max-age=3600

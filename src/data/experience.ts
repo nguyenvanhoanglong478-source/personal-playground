@@ -1,6 +1,6 @@
 import { BilingualText } from './profile';
 
-export interface ExperienceEntry {
+interface ExperienceEntry {
   id: string;
   index: string;
   title: BilingualText;

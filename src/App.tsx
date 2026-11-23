@@ -5,17 +5,19 @@ import { useSmoothScroll } from './hooks/useSmoothScroll';
 import { initCloudflareAnalytics } from './utils/analytics';
 import { registerServiceWorker } from './utils/pwa';
 import { runViewTransition } from './utils/viewTransition';
-import { AppTab, Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
-import { About } from './components/About';
-import { Experience } from './components/Experience';
-import { ProjectsBento } from './components/ProjectsBento';
-import { SkillsMatrix } from './components/SkillsMatrix';
-import { BuiltWithDiagram } from './components/BuiltWithDiagram';
-import { Contact } from './components/Contact';
-import { Footer } from './components/Footer';
+import { AppTab, Navbar } from './components/layout/Navbar';
+import { Footer } from './components/layout/Footer';
+import { Hero } from './components/sections/Hero';
+import { About } from './components/sections/About';
+import { Experience } from './components/sections/Experience';
+import { ProjectsBento } from './components/sections/ProjectsBento';
+import { SkillsMatrix } from './components/sections/SkillsMatrix';
+import { BuiltWithDiagram } from './components/sections/BuiltWithDiagram';
+import { Contact } from './components/sections/Contact';
 
-const LazyWorkspacePage = lazy(() => import('./components/WorkspacePage'));
+const LazyWorkspacePage = lazy(
+  () => import('./components/workspace/WorkspacePage')
+);
 
 const THEME_STORAGE_KEY = 'longhoang_folio_theme_v1';
 const LOCALE_STORAGE_KEY = 'longhoang_folio_locale_v1';

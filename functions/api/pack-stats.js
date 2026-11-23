@@ -1,15 +1,14 @@
+import {
+  jsonResponse,
+  preflightResponse,
+  resolveCorsOrigin,
+} from '../../lib/cfHttp.js';
+
 const STATS_KEY = 'global_stats_v1';
 const RATE_LIMIT_PREFIX = 'rl:';
 const RATE_LIMIT_MAX_PER_MIN = 30;
 const MAX_BODY_BYTES = 2048;
-
-const ALLOWED_EXACT_ORIGINS = new Set([
-  'https://longhoang.pages.dev',
-  'https://nguyenvanhoanglong478-source.github.io',
-]);
-
-const PREVIEW_ORIGIN_PATTERN = /^https:\/\/[a-z0-9-]+\.longhoang\.pages\.dev$/;
-const LOCAL_ORIGIN_PATTERN = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const ALLOWED_METHODS = 'GET, POST, HEAD, OPTIONS';
 
 const ALLOWED_BOX_IDS = new Set([
   'all',
@@ -36,41 +35,8 @@ const TIER_RANK = {
   secret: 4,
 };
 
-function resolveCorsOrigin(origin) {
-  if (!origin) return null;
-  if (ALLOWED_EXACT_ORIGINS.has(origin)) return origin;
-  if (PREVIEW_ORIGIN_PATTERN.test(origin)) return origin;
-  if (LOCAL_ORIGIN_PATTERN.test(origin)) return origin;
-  return null;
-}
-
-function createResponseHeaders(request, includeJsonContentType = true) {
-  const headers = new Headers({
-    'Cache-Control': 'no-store, max-age=0',
-    Vary: 'Origin',
-    'Access-Control-Allow-Methods': 'GET, POST, HEAD, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
-  });
-
-  if (includeJsonContentType) {
-    headers.set('Content-Type', 'application/json; charset=utf-8');
-  }
-
-  const corsOrigin = resolveCorsOrigin(request.headers.get('Origin'));
-  if (corsOrigin) {
-    headers.set('Access-Control-Allow-Origin', corsOrigin);
-  }
-
-  return headers;
-}
-
-function jsonResponse(request, payload, status = 200) {
-  const headers = createResponseHeaders(request, true);
-  if (request.method === 'HEAD') {
-    return new Response(null, { status, headers });
-  }
-  return new Response(JSON.stringify(payload), { status, headers });
+function respond(request, payload, status = 200) {
+  return jsonResponse(request, payload, status, ALLOWED_METHODS);
 }
 
 function createEmptyStats() {
@@ -132,17 +98,15 @@ function normalizeStoredStats(raw) {
     }
   }
 
-  const updatedAt =
-    typeof raw.updatedAt === 'number' && Number.isFinite(raw.updatedAt)
-      ? raw.updatedAt
-      : null;
-
   return {
     totalPacks,
     totalHits,
     topPull: sanitizeTopPull(raw.topPull),
     byBox,
-    updatedAt,
+    updatedAt:
+      typeof raw.updatedAt === 'number' && Number.isFinite(raw.updatedAt)
+        ? raw.updatedAt
+        : null,
   };
 }
 
@@ -156,13 +120,14 @@ function isBetterTopPull(candidate, current) {
 }
 
 async function readStats(kv) {
-  const raw = await kv.get(STATS_KEY, 'json');
-  return normalizeStoredStats(raw);
+  return normalizeStoredStats(await kv.get(STATS_KEY, 'json'));
 }
 
 async function hashClientKey(rawIp) {
-  const bytes = new TextEncoder().encode(rawIp);
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(rawIp)
+  );
   return Array.from(new Uint8Array(digest).slice(0, 8))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
@@ -181,8 +146,9 @@ async function checkRateLimit(kv, request) {
   if (Number.isFinite(count) && count >= RATE_LIMIT_MAX_PER_MIN) {
     return false;
   }
-  const nextCount = Number.isFinite(count) ? count + 1 : 1;
-  await kv.put(key, String(nextCount), { expirationTtl: 60 });
+  await kv.put(key, String(Number.isFinite(count) ? count + 1 : 1), {
+    expirationTtl: 60,
+  });
   return true;
 }
 
@@ -190,10 +156,7 @@ export async function onRequest(context) {
   const { request, env } = context;
 
   if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: createResponseHeaders(request, false),
-    });
+    return preflightResponse(request, ALLOWED_METHODS);
   }
 
   if (
@@ -201,27 +164,19 @@ export async function onRequest(context) {
     request.method !== 'HEAD' &&
     request.method !== 'POST'
   ) {
-    return jsonResponse(request, { error: 'method_not_allowed' }, 405);
+    return respond(request, { error: 'method_not_allowed' }, 405);
   }
 
   const kv = env?.PACK_STATS_KV;
   if (!kv || typeof kv.get !== 'function' || typeof kv.put !== 'function') {
-    return jsonResponse(
-      request,
-      {
-        configured: false,
-        ...createEmptyStats(),
-      },
-      200
-    );
+    return respond(request, { configured: false, ...createEmptyStats() }, 200);
   }
 
   if (request.method === 'GET' || request.method === 'HEAD') {
     try {
-      const stats = await readStats(kv);
-      return jsonResponse(request, { configured: true, ...stats }, 200);
+      return respond(request, { configured: true, ...(await readStats(kv)) }, 200);
     } catch {
-      return jsonResponse(
+      return respond(
         request,
         { configured: true, ...createEmptyStats(), error: 'kv_read_failed' },
         502
@@ -231,34 +186,33 @@ export async function onRequest(context) {
 
   const origin = request.headers.get('Origin');
   if (origin && !resolveCorsOrigin(origin)) {
-    return jsonResponse(request, { error: 'forbidden_origin' }, 403);
+    return respond(request, { error: 'forbidden_origin' }, 403);
   }
 
   try {
-    const allowed = await checkRateLimit(kv, request);
-    if (!allowed) {
-      return jsonResponse(request, { error: 'rate_limited' }, 429);
+    if (!(await checkRateLimit(kv, request))) {
+      return respond(request, { error: 'rate_limited' }, 429);
     }
 
     const rawText = await request.text();
     if (!rawText || rawText.length > MAX_BODY_BYTES) {
-      return jsonResponse(request, { error: 'invalid_payload_size' }, 400);
+      return respond(request, { error: 'invalid_payload_size' }, 400);
     }
 
     let body;
     try {
       body = JSON.parse(rawText);
     } catch {
-      return jsonResponse(request, { error: 'invalid_json' }, 400);
+      return respond(request, { error: 'invalid_json' }, 400);
     }
 
     if (!body || typeof body !== 'object') {
-      return jsonResponse(request, { error: 'invalid_body' }, 400);
+      return respond(request, { error: 'invalid_body' }, 400);
     }
 
     const boxId = typeof body.boxId === 'string' ? body.boxId.trim() : '';
     if (!ALLOWED_BOX_IDS.has(boxId)) {
-      return jsonResponse(request, { error: 'invalid_box_id' }, 400);
+      return respond(request, { error: 'invalid_box_id' }, 400);
     }
 
     const rawHits =
@@ -283,8 +237,8 @@ export async function onRequest(context) {
     };
 
     await kv.put(STATS_KEY, JSON.stringify(nextStats));
-    return jsonResponse(request, { configured: true, ...nextStats }, 200);
+    return respond(request, { configured: true, ...nextStats }, 200);
   } catch {
-    return jsonResponse(request, { error: 'kv_write_failed' }, 502);
+    return respond(request, { error: 'kv_write_failed' }, 502);
   }
 }

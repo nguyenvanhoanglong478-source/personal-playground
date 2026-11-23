@@ -5,7 +5,7 @@ export interface BilingualText {
   en: string;
 }
 
-export interface MethodologyPrinciple {
+interface MethodologyPrinciple {
   index: string;
   title: BilingualText;
   description: BilingualText;
@@ -13,14 +13,14 @@ export interface MethodologyPrinciple {
 
 export type SocialPlatform = 'github' | 'instagram' | 'facebook' | 'x';
 
-export interface SocialLinkItem {
+interface SocialLinkItem {
   id: SocialPlatform;
   label: string;
   href: string;
   displayText: string;
 }
 
-export interface ProfileInfo {
+interface ProfileInfo {
   name: string;
   birthYear: string;
   role: BilingualText;

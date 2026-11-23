@@ -1,7 +1,7 @@
 import rawPackageJson from '../../package.json';
 import { BilingualText } from './profile';
 
-export interface SiteStackNode {
+interface SiteStackNode {
   pkgName: string;
   displayName: string;
   version: string;
@@ -62,6 +62,14 @@ const KNOWN_PACKAGE_REASONS: Record<string, PackageMeta> = {
     reason: {
       vi: 'Cung cấp bộ biểu tượng vector nét mảnh đồng nhất trên toàn giao diện.',
       en: 'Supplies uniform stroke-based vector icons across all sections and controls.',
+    },
+  },
+  lenis: {
+    displayName: 'Lenis',
+    role: 'motion',
+    reason: {
+      vi: 'Tạo cảm giác cuộn trang quán tính mượt trên chuột máy tính, tự tắt trên màn hình cảm ứng và khi mở modal.',
+      en: 'Adds smooth inertial wheel scrolling on desktop pointers while staying off on touch devices and open modals.',
     },
   },
 };

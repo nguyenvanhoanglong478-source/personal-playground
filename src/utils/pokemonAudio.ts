@@ -23,17 +23,7 @@ const SFX_URLS: Record<SfxKey, string> = {
   'secret-chime': './pokemon/sfx/secret-chime.mp3',
 };
 
-const ALL_SFX_KEYS: SfxKey[] = [
-  'pack-rip',
-  'pack-crinkle',
-  'card-takeout',
-  'card-flip-1',
-  'card-flip-2',
-  'card-fan',
-  'rare-chime',
-  'ultra-chime',
-  'secret-chime',
-];
+const ALL_SFX_KEYS = Object.keys(SFX_URLS) as SfxKey[];
 
 let sharedAudioCtx: AudioContext | null = null;
 const rawBufferCache = new Map<SfxKey, ArrayBuffer>();
@@ -73,8 +63,7 @@ async function fetchAndDecodeKey(key: SfxKey): Promise<void> {
       }
       const ctx = getAudioContext();
       if (!ctx) return;
-      const decoded = await ctx.decodeAudioData(bytes.slice(0));
-      decodedBufferCache.set(key, decoded);
+      decodedBufferCache.set(key, await ctx.decodeAudioData(bytes.slice(0)));
     } catch {
       return;
     } finally {
@@ -118,18 +107,15 @@ function playSample(
 
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(volume, now);
+  src.connect(gain);
+  gain.connect(ctx.destination);
+  src.start(now);
+
   if (maxDurationSec && maxDurationSec < buffer.duration / playbackRate) {
     const endAt = now + maxDurationSec;
     gain.gain.setValueAtTime(volume, Math.max(now, endAt - 0.03));
     gain.gain.exponentialRampToValueAtTime(0.001, endAt);
-    src.connect(gain);
-    gain.connect(ctx.destination);
-    src.start(now);
     src.stop(endAt + 0.005);
-  } else {
-    src.connect(gain);
-    gain.connect(ctx.destination);
-    src.start(now);
   }
 
   return true;
@@ -140,113 +126,61 @@ function createNoiseBuffer(
   durationSec: number,
   crackleFactor: number
 ): AudioBuffer {
-  const sampleRate = ctx.sampleRate;
-  const length = Math.max(1, Math.floor(sampleRate * durationSec));
-  const buffer = ctx.createBuffer(1, length, sampleRate);
+  const length = Math.max(1, Math.floor(ctx.sampleRate * durationSec));
+  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
   const data = buffer.getChannelData(0);
 
   let prev = 0;
   for (let i = 0; i < length; i++) {
-    const white = Math.random() * 2 - 1;
-    const smooth = prev * 0.35 + white * 0.65;
+    const smooth = prev * 0.35 + (Math.random() * 2 - 1) * 0.65;
     prev = smooth;
-    const envelopeMod =
+    data[i] =
       crackleFactor > 0
-        ? 0.45 + 0.55 * Math.pow(Math.random(), crackleFactor)
-        : 1;
-    data[i] = smooth * envelopeMod;
+        ? smooth * (0.45 + 0.55 * Math.pow(Math.random(), crackleFactor))
+        : smooth;
   }
   return buffer;
 }
 
-function playSynthCrinkle(progress: number): void {
-  const ctx = getAudioContext();
-  if (!ctx) return;
-  const now = ctx.currentTime;
-  const duration = 0.045;
-  const clamped = Math.min(1, Math.max(0, progress));
-  const noise = ctx.createBufferSource();
-  noise.buffer = createNoiseBuffer(ctx, duration, 2.2);
-  const bandpass = ctx.createBiquadFilter();
-  bandpass.type = 'bandpass';
-  bandpass.Q.setValueAtTime(2.4, now);
-  bandpass.frequency.setValueAtTime(1800 + clamped * 1600, now);
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.001, now);
-  gain.gain.linearRampToValueAtTime(0.085, now + 0.008);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-  noise.connect(bandpass);
-  bandpass.connect(gain);
-  gain.connect(ctx.destination);
-  noise.start(now);
-  noise.stop(now + duration);
+interface FilteredNoiseOptions {
+  duration: number;
+  crackle: number;
+  q: number;
+  freqStart: number;
+  freqEnd?: number;
+  freqEndRatio?: number;
+  peak: number;
+  attack: number;
 }
 
-function playSynthRip(): void {
+function playFilteredNoise(opts: FilteredNoiseOptions): void {
   const ctx = getAudioContext();
   if (!ctx) return;
   const now = ctx.currentTime;
-  const duration = 0.42;
   const noise = ctx.createBufferSource();
-  noise.buffer = createNoiseBuffer(ctx, duration, 1.9);
-  const bandpass = ctx.createBiquadFilter();
-  bandpass.type = 'bandpass';
-  bandpass.Q.setValueAtTime(1.5, now);
-  bandpass.frequency.setValueAtTime(1300, now);
-  bandpass.frequency.exponentialRampToValueAtTime(4600, now + duration * 0.85);
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.001, now);
-  gain.gain.linearRampToValueAtTime(0.24, now + 0.03);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-  noise.connect(bandpass);
-  bandpass.connect(gain);
-  gain.connect(ctx.destination);
-  noise.start(now);
-  noise.stop(now + duration);
-}
+  noise.buffer = createNoiseBuffer(ctx, opts.duration, opts.crackle);
 
-function playSynthSlide(): void {
-  const ctx = getAudioContext();
-  if (!ctx) return;
-  const now = ctx.currentTime;
-  const duration = 0.22;
-  const noise = ctx.createBufferSource();
-  noise.buffer = createNoiseBuffer(ctx, duration, 0);
   const filter = ctx.createBiquadFilter();
   filter.type = 'bandpass';
-  filter.Q.setValueAtTime(1.1, now);
-  filter.frequency.setValueAtTime(720, now);
-  filter.frequency.exponentialRampToValueAtTime(2200, now + duration);
+  filter.Q.setValueAtTime(opts.q, now);
+  filter.frequency.setValueAtTime(opts.freqStart, now);
+  if (opts.freqEnd !== undefined) {
+    filter.frequency.exponentialRampToValueAtTime(
+      opts.freqEnd,
+      now + opts.duration * (opts.freqEndRatio ?? 1)
+    );
+  }
+
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0.001, now);
-  gain.gain.linearRampToValueAtTime(0.16, now + 0.04);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  gain.gain.linearRampToValueAtTime(opts.peak, now + opts.attack);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + opts.duration);
+
   noise.connect(filter);
   filter.connect(gain);
   gain.connect(ctx.destination);
   noise.start(now);
-  noise.stop(now + duration);
-}
-
-function playSynthFlip(): void {
-  const ctx = getAudioContext();
-  if (!ctx) return;
-  const now = ctx.currentTime;
-  const noise = ctx.createBufferSource();
-  noise.buffer = createNoiseBuffer(ctx, 0.09, 0.4);
-  const filter = ctx.createBiquadFilter();
-  filter.type = 'bandpass';
-  filter.frequency.setValueAtTime(1950, now);
-  filter.Q.setValueAtTime(1.4, now);
-  const nGain = ctx.createGain();
-  nGain.gain.setValueAtTime(0.001, now);
-  nGain.gain.linearRampToValueAtTime(0.15, now + 0.012);
-  nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
-  noise.connect(filter);
-  filter.connect(nGain);
-  nGain.connect(ctx.destination);
-  noise.start(now);
-  noise.stop(now + 0.09);
+  noise.stop(now + opts.duration);
 }
 
 function playSynthRarity(tier: PokemonCardTier): void {
@@ -279,38 +213,73 @@ function playSynthRarity(tier: PokemonCardTier): void {
 
 export function playPackCrinkleTick(progress: number): void {
   const clamped = Math.min(1, Math.max(0, progress));
-  const rate = 0.94 + clamped * 0.26;
-  if (!playSample('pack-crinkle', 0.32, rate, 0, 0.14)) {
-    playSynthCrinkle(clamped);
+  if (!playSample('pack-crinkle', 0.32, 0.94 + clamped * 0.26, 0, 0.14)) {
+    playFilteredNoise({
+      duration: 0.045,
+      crackle: 2.2,
+      q: 2.4,
+      freqStart: 1800 + clamped * 1600,
+      peak: 0.085,
+      attack: 0.008,
+    });
   }
 }
 
 export function playPackRipSound(): void {
-  const rate = 0.98 + Math.random() * 0.05;
-  if (!playSample('pack-rip', 0.85, rate)) {
-    playSynthRip();
+  if (!playSample('pack-rip', 0.85, 0.98 + Math.random() * 0.05)) {
+    playFilteredNoise({
+      duration: 0.42,
+      crackle: 1.9,
+      q: 1.5,
+      freqStart: 1300,
+      freqEnd: 4600,
+      freqEndRatio: 0.85,
+      peak: 0.24,
+      attack: 0.03,
+    });
   }
 }
 
 export function playCardSlideSound(): void {
-  const rate = 0.97 + Math.random() * 0.06;
-  if (!playSample('card-takeout', 0.72, rate)) {
-    playSynthSlide();
+  if (!playSample('card-takeout', 0.72, 0.97 + Math.random() * 0.06)) {
+    playFilteredNoise({
+      duration: 0.22,
+      crackle: 0,
+      q: 1.1,
+      freqStart: 720,
+      freqEnd: 2200,
+      peak: 0.16,
+      attack: 0.04,
+    });
   }
 }
 
 export function playCardFlipSound(): void {
   flipToggle = !flipToggle;
   const key: SfxKey = flipToggle ? 'card-flip-1' : 'card-flip-2';
-  const rate = 0.96 + Math.random() * 0.08;
-  if (!playSample(key, 0.68, rate)) {
-    playSynthFlip();
+  if (!playSample(key, 0.68, 0.96 + Math.random() * 0.08)) {
+    playFilteredNoise({
+      duration: 0.09,
+      crackle: 0.4,
+      q: 1.4,
+      freqStart: 1950,
+      peak: 0.15,
+      attack: 0.012,
+    });
   }
 }
 
 export function playCardFanSound(): void {
   if (!playSample('card-fan', 0.74, 1)) {
-    playSynthSlide();
+    playFilteredNoise({
+      duration: 0.22,
+      crackle: 0,
+      q: 1.1,
+      freqStart: 720,
+      freqEnd: 2200,
+      peak: 0.16,
+      attack: 0.04,
+    });
   }
 }
 

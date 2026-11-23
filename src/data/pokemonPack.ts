@@ -1,11 +1,11 @@
 import { Locale } from './profile';
 
 export const PACKS_PER_BOX = 12;
-export const CARDS_PER_PACK = 10;
+const CARDS_PER_PACK = 10;
 export const POKEMON_CARD_BACK_URL = './pokemon/card-back.jpg';
 export const POKEMON_CHEST_BACK_URL = './pokemon/chest-back.png';
 export const POKEMON_CHEST_FRONT_URL = './pokemon/chest-front.png';
-export const POKEMON_STORAGE_KEY = 'longhoang_pokemon_box_v1';
+const POKEMON_STORAGE_KEY = 'longhoang_pokemon_box_v1';
 
 export type PokemonCardTier =
   | 'common'
@@ -14,7 +14,7 @@ export type PokemonCardTier =
   | 'ultra'
   | 'secret';
 
-export type PokemonFoilStyle =
+type PokemonFoilStyle =
   | 'none'
   | 'holo-regular'
   | 'holo-cosmos'
@@ -621,10 +621,10 @@ export function loadPokemonCatalog(): Promise<PokemonCatalogData> {
   return catalogCachePromise;
 }
 
-export type CardImageVariant = 'thumb' | 'card' | 'inspect';
+type CardImageVariant = 'thumb' | 'card' | 'inspect';
 export type CardImageStage = 'webp' | 'direct' | 'fallback';
 
-export function getRawCardImageUrl(
+function getRawCardImageUrl(
   card: PokemonCatalogCard,
   hires = false
 ): string {

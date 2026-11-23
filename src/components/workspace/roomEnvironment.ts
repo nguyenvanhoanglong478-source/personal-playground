@@ -7,7 +7,7 @@ import {
 } from '../../data/workspace';
 import { RoomPalette } from './pixelPalette';
 
-export interface DeskSlot {
+interface DeskSlot {
   id: string;
   x: number;
   y: number;
@@ -18,7 +18,7 @@ export interface DeskSlot {
   monitorY: number;
 }
 
-export interface RestSlot {
+interface RestSlot {
   id: string;
   kind: 'sofa' | 'coffee' | 'bookshelf' | 'window' | 'plant';
   x: number;
@@ -26,7 +26,7 @@ export interface RestSlot {
   facing: 'up' | 'down' | 'left' | 'right';
 }
 
-export interface DrawRoomBaseLayerOptions {
+interface DrawRoomBaseLayerOptions {
   timeState: RoomTimeState;
   lampOn: boolean;
   isMusicActive: boolean;
@@ -36,7 +36,7 @@ export interface DrawRoomBaseLayerOptions {
   activeDeskIds?: Set<string> | readonly string[];
 }
 
-export interface DrawRoomForegroundLayerOptions {
+interface DrawRoomForegroundLayerOptions {
   timeState: RoomTimeState;
   lampOn: boolean;
   isMusicActive: boolean;
@@ -45,7 +45,7 @@ export interface DrawRoomForegroundLayerOptions {
   palette: RoomPalette;
 }
 
-export interface DrawLightingOverlayOptions {
+interface DrawLightingOverlayOptions {
   timeState: RoomTimeState;
   lampOn: boolean;
   isMusicActive: boolean;

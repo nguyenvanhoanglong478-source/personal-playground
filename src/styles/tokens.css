@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --google-blue: #4285F4;
+  --google-purple: #9B72CB;
+  --google-coral: #D96570;
+  --google-red: #EA4335;
+  --google-yellow: #FBBC04;
+  --google-green: #34A853;
+
+  --radius-card: 14px;
+  --radius-inner: 10px;
+  --radius-control: 9px;
+  --radius-tag: 7px;
+  --space-section-y: 2.5rem;
+  --pad-card: 1.25rem;
+  --pad-card-sm: 0.9rem;
+  --control-height: 38px;
+  --control-height-sm: 34px;
+
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-sans: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --space-section-y: 3.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --space-section-y: 4.25rem;
+  }
+}
+
+@media (pointer: coarse), (max-width: 1023px) {
+  :root {
+    --control-height: 44px;
+    --control-height-sm: 40px;
+  }
+}
+
+:root,
+html[data-theme='light'] {
+  --bg-primary: #F8F9FA;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #F0F4F9;
+  --bg-glass: rgba(248, 249, 250, 0.94);
+  --text-primary: #111111;
+  --text-secondary: #4B4E53;
+  --text-faint: #575B62;
+  --accent-primary: #111111;
+  --accent-primary-contrast: #FFFFFF;
+  --accent-secondary: #4B4E53;
+  --border-subtle: rgba(68, 71, 70, 0.14);
+  --border-strong: rgba(17, 17, 17, 0.42);
+  --shadow-soft: 0 2px 12px -2px rgba(17, 17, 17, 0.06), 0 1px 4px -1px rgba(17, 17, 17, 0.03);
+  --shadow-glow: 0 6px 20px -4px rgba(17, 17, 17, 0.10);
+  --mesh-lobe-blue: rgba(66, 133, 244, 0.10);
+  --mesh-lobe-purple: rgba(155, 114, 203, 0.10);
+  --poke-frame-bg: linear-gradient(
+    132deg,
+    #F5F7FA 0%,
+    #D6DBE4 22%,
+    #FFFFFF 46%,
+    #BCC3D0 70%,
+    #EEF1F6 100%
+  );
+  --poke-frame-border: rgba(17, 17, 17, 0.22);
+  --poke-frame-shadow:
+    0 18px 36px -14px rgba(17, 17, 17, 0.2),
+    0 6px 16px -6px rgba(66, 133, 244, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    inset 0 -1px 0 rgba(17, 17, 17, 0.16);
+  --poke-stock-bg: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(241, 244, 249, 0.95) 54%,
+    rgba(250, 251, 254, 0.97) 100%
+  );
+  --poke-inner-border: rgba(17, 17, 17, 0.15);
+  --poke-pill-bg: linear-gradient(135deg, #FFFFFF 0%, #DCE1EA 54%, #F7F8FB 100%);
+  --poke-socket-bg: #ECEFF5;
+  --poke-ex-bg: linear-gradient(135deg, #F8FAFC 0%, #CFD6E1 52%, #F1F4F8 100%);
+  --poke-metal-border: rgba(17, 17, 17, 0.24);
+  --poke-metal-bezel: linear-gradient(
+    135deg,
+    #E6EAF0 0%,
+    #FFFFFF 28%,
+    #B6BECB 56%,
+    #F5F7FA 82%,
+    #C4CCD9 100%
+  );
+  --poke-ribbon-bg: linear-gradient(180deg, #F7F8FB 0%, #DFE4ED 52%, #ECEFF4 100%);
+  --poke-chip-bg: rgba(255, 255, 255, 0.92);
+  --poke-chip-border: rgba(17, 17, 17, 0.20);
+  --poke-orb-bg: radial-gradient(
+    circle at 32% 28%,
+    #FFFFFF 0%,
+    #E5E8F0 46%,
+    #B4BBC7 82%,
+    #868D9B 100%
+  );
+  --poke-type-orb-bg: radial-gradient(
+    circle at 30% 25%,
+    #FFFFFF 0%,
+    #EBF0F7 38%,
+    #C1C9D6 74%,
+    #8E96A5 100%
+  );
+  --poke-orb-ink: #111111;
+}
+
+html[data-theme='dark'] {
+  --bg-primary: #131314;
+  --bg-surface: #1A1B1E;
+  --bg-elevated: #242629;
+  --bg-glass: rgba(19, 19, 20, 0.94);
+  --text-primary: #F5F5F7;
+  --text-secondary: #C4C7C5;
+  --text-faint: #A6ACB2;
+  --accent-primary: #F5F5F7;
+  --accent-primary-contrast: #131314;
+  --accent-secondary: #C4C7C5;
+  --border-subtle: rgba(227, 227, 227, 0.11);
+  --border-strong: rgba(255, 255, 255, 0.48);
+  --shadow-soft: 0 4px 18px -4px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 8px 24px -4px rgba(0, 0, 0, 0.62);
+  --mesh-lobe-blue: rgba(66, 133, 244, 0.12);
+  --mesh-lobe-purple: rgba(155, 114, 203, 0.11);
+  --poke-frame-bg: linear-gradient(
+    132deg,
+    #484D58 0%,
+    #9FA7B6 22%,
+    #ECEFF6 46%,
+    #585E6B 70%,
+    #BFC6D4 100%
+  );
+  --poke-frame-border: rgba(245, 245, 247, 0.30);
+  --poke-frame-shadow:
+    0 20px 42px -12px rgba(0, 0, 0, 0.68),
+    0 6px 18px -6px rgba(66, 133, 244, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.56),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+  --poke-stock-bg: linear-gradient(
+    155deg,
+    rgba(24, 25, 29, 0.97) 0%,
+    rgba(17, 18, 22, 0.99) 54%,
+    rgba(28, 29, 34, 0.97) 100%
+  );
+  --poke-inner-border: rgba(245, 245, 247, 0.16);
+  --poke-pill-bg: linear-gradient(135deg, #3A3E48 0%, #22242B 54%, #333741 100%);
+  --poke-socket-bg: #16171B;
+  --poke-ex-bg: linear-gradient(135deg, #424753 0%, #24262D 52%, #3A3F4B 100%);
+  --poke-metal-border: rgba(245, 245, 247, 0.28);
+  --poke-metal-bezel: linear-gradient(
+    135deg,
+    #454A56 0%,
+    #B0B8C7 28%,
+    #2A2D35 56%,
+    #939CAD 84%,
+    #3B404C 100%
+  );
+  --poke-ribbon-bg: linear-gradient(180deg, #2B2E35 0%, #1C1E23 52%, #25272E 100%);
+  --poke-chip-bg: rgba(38, 40, 46, 0.92);
+  --poke-chip-border: rgba(245, 245, 247, 0.16);
+  --poke-orb-bg: radial-gradient(
+    circle at 32% 28%,
+    #FFFFFF 0%,
+    #E1E5ED 46%,
+    #A6AEBC 82%,
+    #727988 100%
+  );
+  --poke-type-orb-bg: radial-gradient(
+    circle at 30% 25%,
+    #FFFFFF 0%,
+    #E7EBF3 38%,
+    #B2BAC9 74%,
+    #7A8294 100%
+  );
+  --poke-orb-ink: #111111;
+}

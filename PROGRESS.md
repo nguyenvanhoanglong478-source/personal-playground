@@ -756,6 +756,27 @@ Cập nhật lần cuối: 2026-11-14
   - Mỗi nhóm pack hiển thị tiêu đề gồm ảnh vỏ pack thu nhỏ, chấm màu bộ, tên bộ, tiến độ sưu tập (`số mẫu đã có / tổng thẻ bộ`, tổng số thẻ và tổng giá trị USD); các lá bài trong từng nhóm sắp theo độ hiếm và giá trị từ cao xuống thấp.
 - **Kiểm chứng**: `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` thoát `0`, Playwright xác nhận mặc định `pack_group` nhóm đúng `5/5` pack thử nghiệm (`Crown Zenith + Gallery`, `Evolving Skies`, `Skyridge · 2003`, `Base Set (1999)`, `All-Star Mix · Bộ mở rộng`), đổi sang `price_desc` và quay lại `pack_group` mượt mà, `0` lỗi trang và `0` tràn ngang trên Desktop `1440px` & Mobile `375px`.
 
+## 53. Rà Soát Toàn Diện, Tối Ưu Mã Nguồn & Tái Cấu Trúc Thư Mục (10/10 Hạng Mục)
+
+- **1. Dọn sạch tài nguyên thừa & tối ưu dung lượng ảnh vỏ pack**:
+  - Xóa thư mục `.agents/` bản sao cục bộ trùng hoàn toàn với plugin toàn hệ thống (`-1.884` tệp, **`-45.0 MB`**), bổ sung `.agents` vào `.gitignore`; xóa `.wrangler/` rỗng và `tsconfig.tsbuildinfo` thừa (giữ nguyên `.dev.vars` local).
+  - Nén lại toàn bộ `34/34` ảnh vỏ pack `public/pokemon/packs/*.webp` từ chiều cao `720px` xuống `540px` (`quality=82, method=6`, giữ nguyên alpha trong suốt sắc nét 2× Retina): **`2,507.3 KB` → `1,338.1 KB`** (**`-1,169.3 KB` / `-46.6%`**). Kiểm chứng `90/90` tệp trong `public/` đều đang dùng thực tế.
+- **2. Gom logic dùng chung & loại bỏ mã lặp / mã chết**:
+  - Tạo `lib/cfHttp.js` (`59` dòng, đặt ngoài `functions/` để Cloudflare Pages không lộ thành endpoint API) gộp chung `resolveCorsOrigin`, `createCorsHeaders`, `jsonResponse`, `preflightResponse` cho `functions/api/spotify.js` (`326 → 229` dòng) và `functions/api/pack-stats.js` (`290 → 244` dòng): tổng `616 → 532` dòng (`-84` dòng / `-13.6%`).
+  - Gộp vòng lặp nghiêng 3D `rAF` lerp của Hero `PokemonProfileCard.tsx` (`362 → 249` dòng) vào hook chung `src/hooks/useCardTilt.ts` (`variant: 'pokemon' | 'hero'`).
+  - Rút gọn `src/hooks/useSpotifyStatus.ts` (`581 → 368` dòng, `-213` dòng): gỡ tích hợp Lanyard không dùng (`parseLanyardSpotify`, `lanyardUserId` trong `workspace.ts`, `https://api.lanyard.rest` trong `public/_headers`), giữ nguyên 100% trạng thái đang phát / tạm dừng / nghỉ / nghe thử Lofi.
+  - Tách hàng đợi nạp trước ảnh thẻ tối đa 2 luồng (`img.decode()` + stage fallback) từ `PokemonPackUnboxer.tsx` (`1,219 → 1,085` dòng) sang `src/hooks/usePackImagePreloader.ts` (`139` dòng), đồng thời gom `findBestPackCard()` và `resetStageToSealed()`.
+  - Tách `PokemonPackModals.tsx` (`863` dòng) thành 2 tệp độc lập: `CardInspectorModal.tsx` (`280` dòng) và `CollectionBinderModal.tsx` (`597` dòng).
+  - Gộp 4 hàm synth dự phòng trong `src/utils/pokemonAudio.ts` (`330 → 299` dòng) thành 1 hàm `playFilteredNoise()`; dọn timer chết `hopResetTimerRef` và sửa lỗi `pose` làm ngắt sớm nhịp nghỉ `1.5–2.5s` trong `FooterPet.tsx` (`483 → 479` dòng) bằng `poseRef`; bổ sung mô tả `lenis` song ngữ VI/EN trong `src/data/siteStack.ts`; dọn `29` từ khóa `export` nội bộ không dùng ngoài tệp.
+- **3. Sắp xếp lại thư mục theo nhóm tính năng & tách CSS thành 3 module**:
+  - Phân nhóm `src/components/` thành 4 thư mục: `layout/` (`BrandLogo`, `SocialIcon`, `Navbar`, `Footer`, `FooterPet`), `sections/` (`Hero`, `About`, `Experience`, `ProjectsBento`, `SkillsMatrix`, `BuiltWithDiagram`, `Contact`), `pokemon/` (`PokemonProfileCard`, `PokemonBoosterPack`, `PokemonPackUnboxer`, `CardInspectorModal`, `CollectionBinderModal`), `workspace/` (`WorkspacePage`, `WorkspaceRoom`, `FavoriteGamesCard`, `pixelPalette`, `pixelSprites`, `roomEnvironment`).
+  - Tách `src/index.css` (`2,120` dòng) thành `src/index.css` (`3` dòng) nhập `src/styles/tokens.css` (`186` dòng), `src/styles/base.css` (`531` dòng) và `src/styles/pokemon.css` (`1,394` dòng), đồng thời gom gọn khối `:root` và `prefers-reduced-motion`.
+- **Kiểm chứng**:
+  - `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]`, `DOT_GLITTER_BLOCKS=0`, `DIST_HYGIENE (gmail/gfonts/lanyard)=False`, `cmd /c "npm run verify"` thoát `0` (tổng JS+CSS giảm `534.31 kB → 530.18 kB`, `PokemonPackUnboxer` `-3.34 kB`, `WorkspacePage` `-1.84 kB`).
+  - Unit test Node ESM cho cả `functions/api/pack-stats.js` & `functions/api/spotify.js` pass `100%`, và `npx wrangler pages functions build` biên dịch Worker thành công (`Compiled Worker successfully`).
+  - Playwright trên Desktop `1440px`, Tablet `820px`, Mobile `375px` và `/personal-playground/` dưới CSP nghiêm ngặt từ `dist/_headers`: `0` lỗi console/page/CSP, `0` tràn ngang, nghiêng thẻ Hero 3D hoạt động chuẩn, 34 vỏ pack `540px` nét đều, xé pack + mở Binder mặc định `pack_group` (`Mega: Ascended Heroes`), Lightbox 6 ảnh dự án, thẻ `Lenis` trong `BuiltWithDiagram`, tab `Không gian` & `FooterPet` vận hành trọn vẹn.
+
+
 
 
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import Lenis from 'lenis';
 
-export interface SmoothScrollApi {
+interface SmoothScrollApi {
   scrollTo: (
     target: number | HTMLElement,
     options?: { immediate?: boolean }

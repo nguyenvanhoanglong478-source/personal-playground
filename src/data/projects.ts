@@ -1,8 +1,8 @@
 import { BilingualText } from './profile';
 
-export type TechCategory = 'language' | 'framework' | 'tool' | 'deploy';
+type TechCategory = 'language' | 'framework' | 'tool' | 'deploy';
 
-export interface TechItem {
+interface TechItem {
   name: string;
   category: TechCategory;
   detail: BilingualText;

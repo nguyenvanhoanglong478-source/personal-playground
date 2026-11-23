@@ -7,7 +7,7 @@ import {
   WORKSPACE_UI_LABELS,
 } from '../../data/workspace';
 
-export interface FavoriteGamesCardProps {
+interface FavoriteGamesCardProps {
   locale: Locale;
 }
 

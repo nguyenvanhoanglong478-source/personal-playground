@@ -1,6 +1,6 @@
 import { flushSync } from 'react-dom';
 
-export type ViewTransitionKind = 'theme' | 'tab';
+type ViewTransitionKind = 'theme' | 'tab';
 
 interface ViewTransitionHandle {
   finished: Promise<void>;

@@ -31,7 +31,7 @@ import {
   findPath,
 } from './roomEnvironment';
 
-export interface WorkspaceRoomProps {
+interface WorkspaceRoomProps {
   timeState: RoomTimeState;
   lampOn: boolean;
   isMusicActive: boolean;

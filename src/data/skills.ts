@@ -2,14 +2,14 @@ import { BilingualText } from './profile';
 
 export type SkillGroupId = 'platforms' | 'design' | 'frontend' | 'backend' | 'workflow';
 
-export interface SkillChipItem {
+interface SkillChipItem {
   id: string;
   label: BilingualText;
   projects: string[];
   evidence: BilingualText;
 }
 
-export interface SkillGroup {
+interface SkillGroup {
   id: SkillGroupId;
   items: SkillChipItem[];
 }

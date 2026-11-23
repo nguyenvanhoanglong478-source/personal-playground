@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BoxThemeId, PokemonCardTier } from '../data/pokemonPack';
 
-export interface GlobalTopPull {
+interface GlobalTopPull {
   id: string;
   name: string;
   set: string;
@@ -9,14 +9,14 @@ export interface GlobalTopPull {
   tier: PokemonCardTier;
 }
 
-export interface GlobalPackStats {
+interface GlobalPackStats {
   configured: boolean;
   totalPacks: number;
   totalHits: number;
   topPull: GlobalTopPull | null;
 }
 
-export interface RecordPackPayload {
+interface RecordPackPayload {
   boxId: BoxThemeId;
   hits: number;
   bestCard?: GlobalTopPull | null;

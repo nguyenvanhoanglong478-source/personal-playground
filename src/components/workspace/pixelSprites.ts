@@ -57,7 +57,7 @@ const STATES: readonly CharacterAnimState[] = [
   'talk',
 ];
 
-export interface DrawCharacterOptions {
+interface DrawCharacterOptions {
   archetype: CharacterArchetype;
   seed: number;
   state: CharacterAnimState;
@@ -70,7 +70,7 @@ export interface DrawCharacterOptions {
   variant?: 'long';
 }
 
-export interface DrawDeskAndMusicEffectsOptions {
+interface DrawDeskAndMusicEffectsOptions {
   timeState: RoomTimeState;
   lampOn: boolean;
   isMusicActive: boolean;
@@ -84,7 +84,7 @@ export interface DrawDeskAndMusicEffectsOptions {
   capyAnchor?: { x: number; y: number } | null;
 }
 
-export interface DrawCapybaraPetOptions {
+interface DrawCapybaraPetOptions {
   timeState: RoomTimeState;
   isMusicActive: boolean;
   elapsedSec: number;

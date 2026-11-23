@@ -45,14 +45,13 @@ export interface FavoriteGameItem {
   genre: string;
 }
 
-export interface WorkspaceConfig {
+interface WorkspaceConfig {
   timezone: string;
-  lanyardUserId: string;
   spotifyEndpointUrl: string;
   pollIntervalMs: number;
 }
 
-export interface WorkspaceUiLabels {
+interface WorkspaceUiLabels {
   sectionTag: string;
   title: string;
   autoModeLabel: string;
@@ -145,7 +144,6 @@ export const FAVORITE_GAMES: FavoriteGameItem[] = [
 
 export const WORKSPACE_CONFIG: WorkspaceConfig = {
   timezone: 'Asia/Ho_Chi_Minh',
-  lanyardUserId: '',
   spotifyEndpointUrl: 'https://longhoang.pages.dev/api/spotify',
   pollIntervalMs: 5500,
 };
@@ -219,7 +217,7 @@ export const TIME_STATE_META: Record<
   },
 };
 
-export const HOTSPOT_DIALOGUES: Record<RoomHotspotId, Record<Locale, string[]>> = {
+const HOTSPOT_DIALOGUES: Record<RoomHotspotId, Record<Locale, string[]>> = {
   monitor: {
     vi: [
       'Bàn làm việc chính của Long mở song song bản vẽ giao diện và trình soạn code.',

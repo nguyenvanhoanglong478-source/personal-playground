@@ -748,6 +748,15 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` thoát `0`.
   - Playwright trên Desktop `1440px` (Light & Dark), subpath `/personal-playground/`, Tablet `820px` và Mobile `375px`: `6/6` ảnh tải chuẩn `1200×750`, Lightbox mở/chuyển ảnh bằng phím `ArrowRight` & đóng `Escape` mượt mà kèm `lenis-stopped` bật/tắt chuẩn, `0` vi phạm CSP, `0` tràn ngang.
 
+## 52. Phân Nhóm Mặc Định Theo Từng Loại Pack Trong Bộ Sưu Tập (Collection Binder)
+
+- **Phân loại & sắp xếp mặc định (`src/data/pokemonPack.ts`, `src/components/PokemonPackModals.tsx`)**:
+  - Thêm chế độ `pack_group` vào `BinderSortMode` và đặt làm sắp xếp mặc định (`Theo từng loại pack` / `Grouped by pack`), giữ nguyên 6 kiểu sắp xếp phẳng khác trong menu chọn.
+  - Bổ sung `resolveCardPackBox()` và `getPackBoxOrder()`: tự động gộp chuẩn các bộ phụ vào đúng hộp pack thực tế (`swsh12pt5gg` → `Crown Zenith + Gallery`, `swsh11tg` → `Lost Origin + Gallery`), đưa các thẻ lẻ từ `All-Star Mix` vào nhóm `All-Star Mix · Bộ mở rộng`, và mở rộng ô tìm kiếm khớp cả tên pack.
+  - Mỗi nhóm pack hiển thị tiêu đề gồm ảnh vỏ pack thu nhỏ, chấm màu bộ, tên bộ, tiến độ sưu tập (`số mẫu đã có / tổng thẻ bộ`, tổng số thẻ và tổng giá trị USD); các lá bài trong từng nhóm sắp theo độ hiếm và giá trị từ cao xuống thấp.
+- **Kiểm chứng**: `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` thoát `0`, Playwright xác nhận mặc định `pack_group` nhóm đúng `5/5` pack thử nghiệm (`Crown Zenith + Gallery`, `Evolving Skies`, `Skyridge · 2003`, `Base Set (1999)`, `All-Star Mix · Bộ mở rộng`), đổi sang `price_desc` và quay lại `pack_group` mượt mà, `0` lỗi trang và `0` tràn ngang trên Desktop `1440px` & Mobile `375px`.
+
+
 
 
 

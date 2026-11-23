@@ -4,6 +4,8 @@ import { RotateCcw, Search, Sparkles, Trash2, X } from 'lucide-react';
 import { Locale } from '../data/profile';
 import {
   BinderSortMode,
+  BoosterBoxOption,
+  BoxThemeId,
   CardImageStage,
   FOIL_STYLE_LABELS,
   POKEMON_CARD_BACK_URL,
@@ -18,7 +20,9 @@ import {
   getCardFoilStyle,
   getCardImageUrl,
   getCardPower,
+  getPackBoxOrder,
   isHitTier,
+  resolveCardPackBox,
 } from '../data/pokemonPack';
 import { useCardTilt } from '../hooks/useCardTilt';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
@@ -315,7 +319,7 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
   );
   const [minPrice, setMinPrice] = useState<number>(0);
   const [minPower, setMinPower] = useState<number>(0);
-  const [sortBy, setSortBy] = useState<BinderSortMode>('rarity_desc');
+  const [sortBy, setSortBy] = useState<BinderSortMode>('pack_group');
   const [query, setQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(BINDER_PAGE_SIZE);
   const [imgStages, setImgStages] = useState<Record<string, CardImageStage>>(
@@ -387,6 +391,17 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
     [ownedEntries]
   );
 
+  const packPoolSizes = useMemo(() => {
+    const counts = new Map<BoxThemeId, number>();
+    if (!catalog) return counts;
+    for (const card of catalog.cards) {
+      const box = resolveCardPackBox(card.set);
+      if (box.id === 'all') continue;
+      counts.set(box.id, (counts.get(box.id) ?? 0) + 1);
+    }
+    return counts;
+  }, [catalog]);
+
   const filteredEntries = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = ownedEntries.filter(({ card }) => {
@@ -395,15 +410,22 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
       if (minPower > 0 && getCardPower(card) < minPower) return false;
       if (!q) return true;
       const setName = (catalog?.sets[card.set] ?? card.set).toLowerCase();
+      const packLabel = resolveCardPackBox(card.set).label[locale].toLowerCase();
       return (
         card.name.toLowerCase().includes(q) ||
         setName.includes(q) ||
+        packLabel.includes(q) ||
         card.rarity.toLowerCase().includes(q)
       );
     });
 
     list.sort((a, b) => {
-      if (sortBy === 'price_desc') {
+      if (sortBy === 'pack_group') {
+        const packDiff =
+          getPackBoxOrder(resolveCardPackBox(a.card.set).id) -
+          getPackBoxOrder(resolveCardPackBox(b.card.set).id);
+        if (packDiff !== 0) return packDiff;
+      } else if (sortBy === 'price_desc') {
         const diff = (b.card.price ?? 0) - (a.card.price ?? 0);
         if (diff !== 0) return diff;
       } else if (sortBy === 'price_asc') {
@@ -428,6 +450,7 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
     return list;
   }, [
     catalog?.sets,
+    locale,
     minPower,
     minPrice,
     ownedEntries,
@@ -435,6 +458,22 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
     rarityFilter,
     sortBy,
   ]);
+
+  const packTotalsByBox = useMemo(() => {
+    const stats = new Map<
+      BoxThemeId,
+      { unique: number; copies: number; value: number }
+    >();
+    for (const { card, count } of filteredEntries) {
+      const boxId = resolveCardPackBox(card.set).id;
+      const prev = stats.get(boxId) ?? { unique: 0, copies: 0, value: 0 };
+      prev.unique += 1;
+      prev.copies += count;
+      prev.value += (card.price ?? 0) * count;
+      stats.set(boxId, prev);
+    }
+    return stats;
+  }, [filteredEntries]);
 
   const hasActiveFilters =
     rarityFilter !== 'all' ||
@@ -454,6 +493,85 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
 
   const shownEntries = filteredEntries.slice(0, visibleCount);
   const remainingCount = Math.max(0, filteredEntries.length - shownEntries.length);
+
+  const groupedShownPacks: Array<{
+    box: BoosterBoxOption;
+    entries: Array<{ card: PokemonCatalogCard; count: number }>;
+  }> = [];
+
+  if (sortBy === 'pack_group') {
+    for (const entry of shownEntries) {
+      const box = resolveCardPackBox(entry.card.set);
+      const last = groupedShownPacks[groupedShownPacks.length - 1];
+      if (last && last.box.id === box.id) {
+        last.entries.push(entry);
+      } else {
+        groupedShownPacks.push({ box, entries: [entry] });
+      }
+    }
+  }
+
+  const renderCardTile = (card: PokemonCatalogCard, count: number) => {
+    const powerVal = getCardPower(card);
+    const miniFoil = getCardFoilStyle(card);
+    const imgStage = imgStages[card.id] ?? 'webp';
+    return (
+      <button
+        key={card.id}
+        type="button"
+        onClick={() => onSelectCard(card)}
+        data-tier={card.tier}
+        data-foil={miniFoil}
+        data-card-id={card.id}
+        className="pk-mini-card group relative flex flex-col gap-1 rounded-[8px] border border-folio-border bg-folio-elevated/60 p-1.5 text-left transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong"
+      >
+        <div className="relative aspect-[63/88] w-full overflow-hidden rounded-[5px] bg-folio-bg">
+          {imgStage === 'fallback' ? (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center">
+              <span className="font-serif text-xs font-bold text-folio-ink">
+                {card.name}
+              </span>
+              <span className="font-mono text-[9px] text-folio-muted">
+                #{card.num}
+              </span>
+            </div>
+          ) : (
+            <img
+              src={getCardImageUrl(card, 'thumb', imgStage === 'direct')}
+              alt={card.name}
+              loading="lazy"
+              decoding="async"
+              onError={() =>
+                setImgStages((prev) => {
+                  const current = prev[card.id] ?? 'webp';
+                  return {
+                    ...prev,
+                    [card.id]: current === 'webp' ? 'direct' : 'fallback',
+                  };
+                })
+              }
+              className="h-full w-full object-cover"
+            />
+          )}
+          {miniFoil !== 'none' && (
+            <span className="pk-mini-glint" aria-hidden="true" />
+          )}
+          {count > 1 && (
+            <span className="absolute right-1 top-1 z-10 rounded bg-black/80 px-1 py-0.5 font-mono text-[9.5px] font-bold leading-none text-white">
+              ×{count}
+            </span>
+          )}
+        </div>
+        <span className="truncate font-sans text-[11px] font-semibold text-folio-ink">
+          {card.name}
+        </span>
+        <div className="flex items-center justify-between gap-1 font-mono text-[9.5px] tabular-nums text-folio-muted">
+          <span>{formatCardPrice(card.price)}</span>
+          <span>{powerVal > 0 ? `PWR ${powerVal}` : '—'}</span>
+        </div>
+      </button>
+    );
+  };
 
   return createPortal(
     <div
@@ -610,6 +728,7 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
                 }}
                 className="min-h-[34px] min-w-0 flex-1 cursor-pointer rounded-[var(--radius-control)] border border-folio-border bg-folio-elevated px-2.5 font-mono text-[11px] text-folio-ink focus:border-folio-strong focus:outline-none"
               >
+                <option value="pack_group">{t.sortPackGroup}</option>
                 <option value="rarity_desc">{t.sortRarityDesc}</option>
                 <option value="price_desc">{t.sortPriceDesc}</option>
                 <option value="price_asc">{t.sortPriceAsc}</option>
@@ -654,74 +773,74 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
                 </button>
               )}
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 md:grid-cols-6">
-              {shownEntries.map(({ card, count }) => {
-                const powerVal = getCardPower(card);
-                const miniFoil = getCardFoilStyle(card);
-                const imgStage = imgStages[card.id] ?? 'webp';
+          ) : sortBy === 'pack_group' ? (
+            <div className="flex flex-col gap-5">
+              {groupedShownPacks.map(({ box, entries }) => {
+                const totals = packTotalsByBox.get(box.id) ?? {
+                  unique: entries.length,
+                  copies: entries.reduce((sum, item) => sum + item.count, 0),
+                  value: entries.reduce(
+                    (sum, item) => sum + (item.card.price ?? 0) * item.count,
+                    0
+                  ),
+                };
+                const poolSize =
+                  box.id === 'all' ? 0 : (packPoolSizes.get(box.id) ?? 0);
+                const groupTitle =
+                  box.id === 'all' ? t.allStarOtherLabel : box.label[locale];
                 return (
-                  <button
-                    key={card.id}
-                    type="button"
-                    onClick={() => onSelectCard(card)}
-                    data-tier={card.tier}
-                    data-foil={miniFoil}
-                    data-card-id={card.id}
-                    className="pk-mini-card group relative flex flex-col gap-1 rounded-[8px] border border-folio-border bg-folio-elevated/60 p-1.5 text-left transition-transform duration-150 hover:-translate-y-0.5 hover:border-folio-strong"
+                  <section
+                    key={box.id}
+                    data-pack-group={box.id}
+                    className="flex flex-col gap-2.5"
                   >
-                    <div className="relative aspect-[63/88] w-full overflow-hidden rounded-[5px] bg-folio-bg">
-                      {imgStage === 'fallback' ? (
-                        <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center">
-                          <span className="font-serif text-xs font-bold text-folio-ink">
-                            {card.name}
-                          </span>
-                          <span className="font-mono text-[9px] text-folio-muted">
-                            #{card.num}
-                          </span>
-                        </div>
-                      ) : (
-                        <img
-                          src={getCardImageUrl(
-                            card,
-                            'thumb',
-                            imgStage === 'direct'
-                          )}
-                          alt={card.name}
-                          loading="lazy"
-                          decoding="async"
-                          onError={() =>
-                            setImgStages((prev) => {
-                              const current = prev[card.id] ?? 'webp';
-                              return {
-                                ...prev,
-                                [card.id]:
-                                  current === 'webp' ? 'direct' : 'fallback',
-                              };
-                            })
-                          }
-                          className="h-full w-full object-cover"
+                    <header className="flex flex-wrap items-center justify-between gap-2 border-b border-folio-border pb-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        {box.packArtUrls[0] && (
+                          <img
+                            src={box.packArtUrls[0]}
+                            alt=""
+                            aria-hidden="true"
+                            loading="lazy"
+                            decoding="async"
+                            className="h-7 w-5 shrink-0 object-contain"
+                          />
+                        )}
+                        <span
+                          aria-hidden="true"
+                          style={{ backgroundColor: box.accentColor }}
+                          className="h-2 w-2 shrink-0 rounded-full"
                         />
-                      )}
-                      {miniFoil !== 'none' && (
-                        <span className="pk-mini-glint" aria-hidden="true" />
-                      )}
-                      {count > 1 && (
-                        <span className="absolute right-1 top-1 z-10 rounded bg-black/80 px-1 py-0.5 font-mono text-[9.5px] font-bold leading-none text-white">
-                          ×{count}
-                        </span>
+                        <h4 className="truncate font-serif text-sm font-bold text-folio-ink sm:text-base">
+                          {groupTitle}
+                        </h4>
+                      </div>
+                      <span className="shrink-0 font-mono text-[10.5px] tabular-nums text-folio-muted">
+                        {t.packGroupMeta(
+                          totals.unique,
+                          poolSize,
+                          totals.copies,
+                          totals.value > 0
+                            ? formatCardPrice(totals.value)
+                            : '$0.00'
+                        )}
+                      </span>
+                    </header>
+
+                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 md:grid-cols-6">
+                      {entries.map(({ card, count }) =>
+                        renderCardTile(card, count)
                       )}
                     </div>
-                    <span className="truncate font-sans text-[11px] font-semibold text-folio-ink">
-                      {card.name}
-                    </span>
-                    <div className="flex items-center justify-between gap-1 font-mono text-[9.5px] tabular-nums text-folio-muted">
-                      <span>{formatCardPrice(card.price)}</span>
-                      <span>{powerVal > 0 ? `PWR ${powerVal}` : '—'}</span>
-                    </div>
-                  </button>
+                  </section>
                 );
               })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 md:grid-cols-6">
+              {shownEntries.map(({ card, count }) =>
+                renderCardTile(card, count)
+              )}
             </div>
           )}
 

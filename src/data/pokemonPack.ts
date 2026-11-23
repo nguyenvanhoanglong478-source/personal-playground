@@ -44,6 +44,7 @@ export type BoxThemeId =
   | 'base1';
 
 export type BinderSortMode =
+  | 'pack_group'
   | 'rarity_desc'
   | 'price_desc'
   | 'price_asc'
@@ -407,12 +408,18 @@ export const POKEMON_UNBOXER_LABELS = {
     valueMin: (v: number) => `Giá ≥ $${v}`,
     powerAny: 'Mọi sức mạnh',
     powerMin: (v: number) => `Sức mạnh ≥ ${v}`,
+    sortPackGroup: 'Theo từng loại pack',
     sortRarityDesc: 'Độ hiếm cao nhất',
     sortPriceDesc: 'Giá trị cao nhất',
     sortPriceAsc: 'Giá trị thấp nhất',
     sortPowerDesc: 'Sức mạnh cao nhất',
     sortHpDesc: 'HP cao nhất',
     sortNameAsc: 'Tên A → Z',
+    packGroupMeta: (unique: number, poolSize: number, copies: number, valStr: string) =>
+      poolSize > 0
+        ? `${unique}/${poolSize} mẫu · ${copies} thẻ · ${valStr}`
+        : `${unique} mẫu · ${copies} thẻ · ${valStr}`,
+    allStarOtherLabel: 'All-Star Mix · Bộ mở rộng',
     resetFilters: 'Xóa lọc',
     searchPlaceholder: 'Tìm tên Pokémon hoặc bộ thẻ...',
     emptyBinder: 'Chưa có thẻ nào. Hãy xé pack và lật thẻ để thêm vào bộ sưu tập.',
@@ -478,12 +485,18 @@ export const POKEMON_UNBOXER_LABELS = {
     valueMin: (v: number) => `Value ≥ $${v}`,
     powerAny: 'Any power',
     powerMin: (v: number) => `Power ≥ ${v}`,
+    sortPackGroup: 'Grouped by pack',
     sortRarityDesc: 'Highest rarity',
     sortPriceDesc: 'Highest value',
     sortPriceAsc: 'Lowest value',
     sortPowerDesc: 'Highest power',
     sortHpDesc: 'Highest HP',
     sortNameAsc: 'Name A → Z',
+    packGroupMeta: (unique: number, poolSize: number, copies: number, valStr: string) =>
+      poolSize > 0
+        ? `${unique}/${poolSize} unique · ${copies} cards · ${valStr}`
+        : `${unique} unique · ${copies} cards · ${valStr}`,
+    allStarOtherLabel: 'All-Star Mix · Bonus Sets',
     resetFilters: 'Reset',
     searchPlaceholder: 'Search Pokémon or set...',
     emptyBinder: 'No cards yet. Rip a pack and flip cards to add them to your binder.',
@@ -652,6 +665,24 @@ export function getBoxOption(boxId: BoxThemeId): BoosterBoxOption {
     BOOSTER_BOX_OPTIONS.find((opt) => opt.id === boxId) ??
     BOOSTER_BOX_OPTIONS[0]
   );
+}
+
+const SET_TO_PACK_BOX = new Map<string, BoosterBoxOption>();
+for (const opt of BOOSTER_BOX_OPTIONS) {
+  if (!opt.setIds) continue;
+  for (const sid of opt.setIds) {
+    SET_TO_PACK_BOX.set(sid, opt);
+  }
+}
+
+export function resolveCardPackBox(setId: string): BoosterBoxOption {
+  return SET_TO_PACK_BOX.get(setId) ?? BOOSTER_BOX_OPTIONS[0];
+}
+
+export function getPackBoxOrder(boxId: BoxThemeId): number {
+  if (boxId === 'all') return BOOSTER_BOX_OPTIONS.length;
+  const idx = BOOSTER_BOX_OPTIONS.findIndex((opt) => opt.id === boxId);
+  return idx >= 0 ? idx : BOOSTER_BOX_OPTIONS.length;
 }
 
 export function getBoxCardsPerPack(boxId: BoxThemeId): number {

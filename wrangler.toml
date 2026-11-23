@@ -1,0 +1,7 @@
+name = "longhoang"
+compatibility_date = "2026-11-12"
+pages_build_output_dir = "dist"
+
+[[kv_namespaces]]
+binding = "PACK_STATS_KV"
+id = "88526f160fa849709dc64d8e79208177"

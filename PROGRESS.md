@@ -726,7 +726,8 @@ Cập nhật lần cuối: 2026-11-14
   - Nén `avatar.jpg` (`75.2 KB`) sang `avatar.avif` (`35.2 KB`, giảm **53.2%**) và `avatar.webp` (`38.7 KB`, giảm **48.5%**), chuyển khung ảnh Hero sang `<picture>` kèm `<link rel="preload" as="image" type="image/avif" href="./avatar.avif" />`.
 - **4. PWA Nhẹ (`manifest.webmanifest`, `public/sw.js`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `src/utils/pwa.ts`)**:
   - Xuất bộ icon pixel Capybara sắc nét (`180×180`, `192×192`, `512×512`) và cấu hình Service Worker cache-first cho font/vỏ pack/âm thanh/assets, network-first cho HTML & JSON, tự dọn cache phiên bản cũ và bỏ qua hoàn toàn `/api/*`.
-- **5. Bộ Đếm Mở Pack Toàn Cầu Cloudflare KV (`functions/api/pack-stats.js`, `src/hooks/useGlobalPackStats.ts`, `PokemonPackUnboxer.tsx`, `src/data/pokemonPack.ts`)**:
+- **5. Bộ Đếm Mở Pack Toàn Cầu Cloudflare KV (`functions/api/pack-stats.js`, `wrangler.toml`, `src/hooks/useGlobalPackStats.ts`, `PokemonPackUnboxer.tsx`, `src/data/pokemonPack.ts`)**:
+  - Tạo KV namespace thật `PACK_STATS_KV` (`id = "88526f160fa849709dc64d8e79208177"`) và gắn vào project Cloudflare Pages `longhoang` qua `wrangler.toml`, giữ nguyên toàn vẹn 3 bí mật Spotify (`SPOTIFY_*`).
   - Triển khai endpoint edge `GET / POST /api/pack-stats` đọc/ghi `PACK_STATS_KV` (lưu `totalPacks`, `totalHits`, `byBox`, `topPull` lá đắt giá nhất), xác thực 14 mã hộp hợp lệ, CORS cho Cloudflare Pages & GitHub Pages, chống spam IP (30 pack/phút, TTL 60s) và fallback sạch `{ configured: false }` nếu chưa gắn KV.
   - Gắn thanh trạng thái đơn sắc gọn dưới hộp mở bài hiển thị số pack toàn cầu + nút kỷ lục lá đắt nhất (bấm mở ngay `CardInspectorModal` 3D) kèm cơ chế giữ `pendingTopPull` chống spoil trong lúc người dùng đang lật từng thẻ.
 - **Kiểm chứng**:

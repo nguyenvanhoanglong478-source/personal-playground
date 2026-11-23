@@ -15,6 +15,7 @@ import {
   getCardPower,
   isHitTier,
 } from '../../data/pokemonPack';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { useCardTilt } from '../../hooks/useCardTilt';
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 
@@ -57,19 +58,19 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
     resetTiltImmediately();
   }, [card?.id, resetTiltImmediately]);
 
+  useBodyScrollLock(Boolean(card));
+
   useEffect(() => {
     if (!card) return;
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        event.stopImmediatePropagation();
         onClose();
       }
     };
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.addEventListener('keydown', handleKey);
+    document.addEventListener('keydown', handleKey, true);
     return () => {
-      document.body.style.overflow = prevOverflow;
-      document.removeEventListener('keydown', handleKey);
+      document.removeEventListener('keydown', handleKey, true);
     };
   }, [card, onClose]);
 

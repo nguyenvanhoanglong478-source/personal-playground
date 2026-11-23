@@ -776,6 +776,21 @@ Cập nhật lần cuối: 2026-11-14
   - Unit test Node ESM cho cả `functions/api/pack-stats.js` & `functions/api/spotify.js` pass `100%`, và `npx wrangler pages functions build` biên dịch Worker thành công (`Compiled Worker successfully`).
   - Playwright trên Desktop `1440px`, Tablet `820px`, Mobile `375px` và `/personal-playground/` dưới CSP nghiêm ngặt từ `dist/_headers`: `0` lỗi console/page/CSP, `0` tràn ngang, nghiêng thẻ Hero 3D hoạt động chuẩn, 34 vỏ pack `540px` nét đều, xé pack + mở Binder mặc định `pack_group` (`Mega: Ascended Heroes`), Lightbox 6 ảnh dự án, thẻ `Lenis` trong `BuiltWithDiagram`, tab `Không gian` & `FooterPet` vận hành trọn vẹn.
 
+## 54. Sửa Lỗi Kẹt Cuộn/Vuốt Trang Khi Chồng Modal Mở Gói Thẻ (`useBodyScrollLock`)
+
+- **Nguyên nhân gốc rễ**:
+  - `CollectionBinderModal`, `CardInspectorModal` và `ProjectLightboxModal` trước đây khóa cuộn bằng cách tự lưu/khôi phục `prevOverflow = document.body.style.overflow` trong `useEffect` phụ thuộc `onClose` (mà `PokemonPackUnboxer` truyền dưới dạng hàm inline tạo mới mỗi lần render).
+  - Khi người dùng đang mở **Bộ sưu tập** (`overflow: hidden`) rồi bấm xem một thẻ bài (`CardInspectorModal` mở chồng lên, lưu `prevOverflow = 'hidden'`) và đóng lần lượt bằng nút `X` hoặc phím `Escape`, cleanup của `CardInspectorModal` ghi đè lại `'hidden'` đúng lúc `CollectionBinderModal` re-run effect và lưu nhầm `prevOverflow = 'hidden'`, làm `document.body.style.overflow` (và `html.lenis-stopped` trên Desktop) bị khóa vĩnh viễn dù không còn modal nào mở.
+  - Ngoài ra, phím `Escape` khi 2 modal chồng nhau chưa tách tầng rõ ràng và `CollectionBinderModal` bị reset `visibleCount` mỗi lần parent re-render.
+- **Khắc phục**:
+  - Tạo hook khóa cuộn có bộ đếm tham chiếu tập trung `src/hooks/useBodyScrollLock.ts` (`activeLockCount`): chỉ khóa `document.body.style.overflow = 'hidden'` khi chuyển `0 → 1` và chỉ nhả về giá trị gốc khi modal cuối cùng đóng (`1 → 0`), chỉ phụ thuộc biến boolean `locked` nên hoàn toàn miễn nhiễm với re-render hay thứ tự đóng modal.
+  - Áp dụng `useBodyScrollLock` cho cả `CollectionBinderModal.tsx`, `CardInspectorModal.tsx` và `ProjectsBento.tsx` (`ProjectLightboxModal`); bổ sung `lenis.resize()` sau `lenis.start()` trong `src/hooks/useSmoothScroll.ts`.
+  - Memoize `handleCloseBinder`, `handleCloseInspector`, `handleSelectInspectedCard` trong `PokemonPackUnboxer.tsx`, tách `setVisibleCount(BINDER_PAGE_SIZE)` theo `[isOpen]` và phân tầng phím `Escape` (`suspendEscape={inspectedCard !== null}` + capture-phase `stopImmediatePropagation()` trong `CardInspectorModal`) để nhấn `Esc` lần 1 chỉ đóng thẻ phóng to, lần 2 mới đóng Bộ sưu tập.
+- **Kiểm chứng**:
+  - `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` thoát `0`.
+  - Playwright 5 kịch bản hồi quy (`Desktop 1440px` + `Mobile 375px`): tái hiện trước khi sửa kẹt cứng `scrollY 742 → 742` (`bodyOverflow: 'hidden'`, `lenisStopped: True`); sau khi sửa vượt qua 5/5 kịch bản (đóng chồng bằng nút `X` cuộn `742 → 1225`, `Escape` phân tầng cuộn `355 → 794`, mở nhiều pack liên tiếp + re-render lúc chồng modal cuộn `842 → 1325`, Lightbox dự án và Mobile `375px` touch `1549 → 1999`), `0` lỗi console/page.
+
+
 
 
 

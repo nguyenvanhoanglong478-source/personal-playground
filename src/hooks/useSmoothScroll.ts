@@ -38,6 +38,7 @@ export function useSmoothScroll(disabled: boolean): SmoothScrollApi {
         lenis.stop();
       } else {
         lenis.start();
+        lenis.resize();
       }
     };
     syncModalLock();

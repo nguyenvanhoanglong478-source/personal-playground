@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Locale, UI_LABELS } from '../../data/profile';
 import { PROJECTS_DATA, ProjectItem } from '../../data/projects';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface ProjectsBentoProps {
   locale: Locale;
@@ -35,10 +36,10 @@ const ProjectLightboxModal: React.FC<ProjectLightboxProps> = ({
   const project =
     projectIndex !== null ? PROJECTS_DATA[projectIndex] ?? null : null;
 
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
     if (!isOpen || projectIndex === null) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -52,7 +53,6 @@ const ProjectLightboxModal: React.FC<ProjectLightboxProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.body.style.overflow = prevOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose, onSelectIndex, projectIndex, total]);

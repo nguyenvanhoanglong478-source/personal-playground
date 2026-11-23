@@ -414,14 +414,21 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     }));
   };
 
-  const handleResetCollection = () => {
+  const handleResetCollection = useCallback(() => {
     packCountedRef.current = false;
     setBoxState((prev) => ({
       ...prev,
       collection: {},
       totalPacksOpened: 0,
     }));
-  };
+  }, []);
+
+  const handleCloseBinder = useCallback(() => setBinderOpen(false), []);
+  const handleCloseInspector = useCallback(() => setInspectedCard(null), []);
+  const handleSelectInspectedCard = useCallback(
+    (card: PokemonCatalogCard) => setInspectedCard(card),
+    []
+  );
 
   const activeCard =
     phase === 'revealing' ? currentPack[revealIndex] ?? null : null;
@@ -1062,13 +1069,14 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
 
       <CollectionBinderModal
         isOpen={binderOpen}
+        suspendEscape={inspectedCard !== null}
         catalog={catalog}
         collection={boxState.collection}
         totalPacksOpened={boxState.totalPacksOpened}
         locale={locale}
-        onSelectCard={(card) => setInspectedCard(card)}
+        onSelectCard={handleSelectInspectedCard}
         onResetCollection={handleResetCollection}
-        onClose={() => setBinderOpen(false)}
+        onClose={handleCloseBinder}
       />
 
       <CardInspectorModal
@@ -1078,7 +1086,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
           inspectedCard ? (boxState.collection[inspectedCard.id] ?? 0) : 0
         }
         locale={locale}
-        onClose={() => setInspectedCard(null)}
+        onClose={handleCloseInspector}
       />
     </div>
   );

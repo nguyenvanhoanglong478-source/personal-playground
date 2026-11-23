@@ -21,6 +21,7 @@ import {
   getPackBoxOrder,
   resolveCardPackBox,
 } from '../../data/pokemonPack';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 const BINDER_PAGE_SIZE = 24;
 const VALUE_THRESHOLDS = [0, 1, 5, 20, 50];
@@ -28,6 +29,7 @@ const POWER_THRESHOLDS = [0, 150, 300, 450];
 
 interface CollectionBinderModalProps {
   isOpen: boolean;
+  suspendEscape?: boolean;
   catalog: PokemonCatalogData | null;
   collection: Record<string, number>;
   totalPacksOpened: number;
@@ -39,6 +41,7 @@ interface CollectionBinderModalProps {
 
 export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
   isOpen,
+  suspendEscape = false,
   catalog,
   collection,
   totalPacksOpened,
@@ -60,22 +63,26 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
     {}
   );
 
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
-    if (!isOpen) return;
-    setVisibleCount(BINDER_PAGE_SIZE);
+    if (isOpen) {
+      setVisibleCount(BINDER_PAGE_SIZE);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || suspendEscape) return;
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();
       }
     };
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     document.addEventListener('keydown', handleKey);
     return () => {
-      document.body.style.overflow = prevOverflow;
       document.removeEventListener('keydown', handleKey);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, suspendEscape, onClose]);
 
   const cardById = useMemo(() => {
     const map = new Map<string, PokemonCatalogCard>();

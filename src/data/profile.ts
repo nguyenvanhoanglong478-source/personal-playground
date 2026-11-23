@@ -26,6 +26,8 @@ export interface ProfileInfo {
   role: BilingualText;
   brandSubtitle: BilingualText;
   avatarUrl: string;
+  avatarAvifUrl: string;
+  avatarWebpUrl: string;
   slogan: BilingualText;
   heroIntro: BilingualText;
   aboutParagraphs: {
@@ -52,6 +54,8 @@ export const PROFILE_DATA: ProfileInfo = {
     en: 'Freelance Designer & Product Maker',
   },
   avatarUrl: './avatar.jpg',
+  avatarAvifUrl: './avatar.avif',
+  avatarWebpUrl: './avatar.webp',
   slogan: {
     vi: 'Mình thiết kế cho đẹp, rồi tự code cho nó chạy thật.',
     en: 'I design it to look right, then code it until it works.',

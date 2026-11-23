@@ -253,13 +253,19 @@ export const PokemonProfileCard: React.FC<PokemonProfileCardProps> = ({ locale }
             <div className="relative z-10">
               <div className="pokemon-art-bezel rounded-[8px] p-[3px]">
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[6px] bg-folio-bg">
-                  <img
-                    src={PROFILE_DATA.avatarUrl}
-                    alt={PROFILE_DATA.name}
-                    decoding="async"
-                    fetchPriority="high"
-                    className="h-full w-full object-cover object-[50%_18%]"
-                  />
+                  <picture className="block h-full w-full">
+                    <source srcSet={PROFILE_DATA.avatarAvifUrl} type="image/avif" />
+                    <source srcSet={PROFILE_DATA.avatarWebpUrl} type="image/webp" />
+                    <img
+                      src={PROFILE_DATA.avatarUrl}
+                      alt={PROFILE_DATA.name}
+                      width={720}
+                      height={787}
+                      decoding="async"
+                      fetchPriority="high"
+                      className="h-full w-full object-cover object-[50%_18%]"
+                    />
+                  </picture>
                   <div
                     aria-hidden="true"
                     style={{

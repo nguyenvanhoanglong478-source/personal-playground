@@ -3,6 +3,7 @@ import { Locale } from './data/profile';
 import { usePrefersReducedMotion } from './hooks/usePrefersReducedMotion';
 import { useSmoothScroll } from './hooks/useSmoothScroll';
 import { initCloudflareAnalytics } from './utils/analytics';
+import { registerServiceWorker } from './utils/pwa';
 import { runViewTransition } from './utils/viewTransition';
 import { AppTab, Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -85,6 +86,7 @@ export function App() {
 
   useEffect(() => {
     initCloudflareAnalytics();
+    registerServiceWorker();
   }, []);
 
   useEffect(() => {

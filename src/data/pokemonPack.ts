@@ -430,6 +430,10 @@ export const POKEMON_UNBOXER_LABELS = {
     valueLabel: 'Giá thị trường',
     foilLabel: 'Hiệu ứng foil',
     tiltHint: 'Rê chuột hoặc chạm kéo để soi ánh foil 3D',
+    globalPacks: (count: number) =>
+      `Toàn cầu: ${count.toLocaleString('vi-VN')} pack`,
+    globalTopPullAria: (name: string, price: string) =>
+      `Kỷ lục toàn cầu: ${name} (${price})`,
   },
   en: {
     kicker: 'POKÉMON BOX',
@@ -497,6 +501,10 @@ export const POKEMON_UNBOXER_LABELS = {
     valueLabel: 'Market value',
     foilLabel: 'Card finish',
     tiltHint: 'Hover or drag to inspect 3D holo foil',
+    globalPacks: (count: number) =>
+      `Global: ${count.toLocaleString('en-US')} ${count === 1 ? 'pack' : 'packs'}`,
+    globalTopPullAria: (name: string, price: string) =>
+      `Global top pull: ${name} (${price})`,
   },
 } as const;
 

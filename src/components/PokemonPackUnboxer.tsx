@@ -3,9 +3,11 @@ import {
   BookOpen,
   ChevronRight,
   Eye,
+  Globe,
   PackageOpen,
   RotateCcw,
   Sparkles,
+  Trophy,
   Volume2,
   VolumeX,
   ZoomIn,
@@ -39,6 +41,7 @@ import {
   saveBoxState,
 } from '../data/pokemonPack';
 import { useCardTilt } from '../hooks/useCardTilt';
+import { useGlobalPackStats } from '../hooks/useGlobalPackStats';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import {
   playCardFanSound,
@@ -90,6 +93,12 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     null
   );
   const [binderOpen, setBinderOpen] = useState(false);
+
+  const {
+    stats: globalStats,
+    recordPackOpened,
+    revealPendingTopPull,
+  } = useGlobalPackStats();
 
   const timersRef = useRef<number[]>([]);
   const recordedCardCountRef = useRef<number>(0);
@@ -152,6 +161,12 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
       preloadPokemonSfx();
     }
   }, [boxState.soundEnabled]);
+
+  useEffect(() => {
+    if (phase === 'summary' || phase === 'sealed') {
+      revealPendingTopPull();
+    }
+  }, [phase, revealPendingTopPull]);
 
   useEffect(() => {
     return () => {
@@ -324,6 +339,34 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     const pulled = generateBoosterPack(catalog.cards, boxState.boxId);
     const currentNum = PACKS_PER_BOX - boxState.packsRemaining + 1;
 
+    const pulledHits = pulled.filter((card) => isHitTier(card.tier)).length;
+    let packBestCard: PokemonCatalogCard | null = null;
+    for (const candidate of pulled) {
+      if (!candidate.price || candidate.price <= 0) continue;
+      if (
+        !packBestCard ||
+        candidate.price > (packBestCard.price ?? 0) ||
+        (candidate.price === (packBestCard.price ?? 0) &&
+          TIER_ORDER[candidate.tier] > TIER_ORDER[packBestCard.tier])
+      ) {
+        packBestCard = candidate;
+      }
+    }
+    recordPackOpened({
+      boxId: boxState.boxId,
+      hits: pulledHits,
+      bestCard:
+        packBestCard && packBestCard.price
+          ? {
+              id: packBestCard.id,
+              name: packBestCard.name,
+              set: packBestCard.set,
+              price: packBestCard.price,
+              tier: packBestCard.tier,
+            }
+          : null,
+    });
+
     recordedCardCountRef.current = 0;
     packCountedRef.current = false;
     preloadPackImages(pulled);
@@ -368,6 +411,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
     clearScheduledTimers,
     phase,
     preloadPackImages,
+    recordPackOpened,
     scheduleTimeout,
     shouldReduceMotion,
   ]);
@@ -1101,6 +1145,52 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
               <span>{t.freshBoxShort}</span>
             </button>
           </div>
+        </div>
+      )}
+
+      {globalStats.configured && (
+        <div
+          data-global-pack-stats="true"
+          className="flex w-full items-center justify-between gap-2 rounded-full border border-folio-border bg-folio-surface/90 px-3 py-1.5 font-mono text-[10.5px] text-folio-muted"
+        >
+          <span className="inline-flex shrink-0 items-center gap-1.5 tabular-nums text-folio-ink">
+            <span
+              aria-hidden="true"
+              className="h-1.5 w-1.5 rounded-full bg-emerald-500"
+            />
+            <Globe className="h-3 w-3 text-folio-muted" aria-hidden="true" />
+            <span>{t.globalPacks(globalStats.totalPacks)}</span>
+          </span>
+
+          {globalStats.topPull && (
+            <button
+              type="button"
+              onClick={() => {
+                if (!catalog || !globalStats.topPull) return;
+                const found = catalog.cards.find(
+                  (c) => c.id === globalStats.topPull?.id
+                );
+                if (found) {
+                  setInspectedCard(found);
+                }
+              }}
+              aria-label={t.globalTopPullAria(
+                globalStats.topPull.name,
+                formatCardPrice(globalStats.topPull.price)
+              )}
+              title={t.globalTopPullAria(
+                globalStats.topPull.name,
+                formatCardPrice(globalStats.topPull.price)
+              )}
+              className="inline-flex min-w-0 items-center gap-1 truncate text-folio-muted transition-colors hover:text-folio-ink"
+            >
+              <Trophy className="h-3 w-3 shrink-0 text-folio-ink" aria-hidden="true" />
+              <span className="truncate">{globalStats.topPull.name}</span>
+              <span className="shrink-0 font-semibold tabular-nums text-folio-ink">
+                {formatCardPrice(globalStats.topPull.price)}
+              </span>
+            </button>
+          )}
         </div>
       )}
 

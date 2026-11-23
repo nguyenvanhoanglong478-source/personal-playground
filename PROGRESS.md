@@ -715,6 +715,25 @@ Cập nhật lần cuối: 2026-11-14
   - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`) thoát `0` (`dist/index.html 8.96 kB`, `dist/assets/index-*.js 133.62 kB`).
   - Playwright trên Desktop `1440×900`, subpath `/personal-playground/`, Tablet `820×1180` (`has_touch=True`), Mobile `375×812` (`has_touch=True`): `0` request Google Fonts, `100%` `.woff2` `HTTP 200` (cả ở root `/` lẫn `/personal-playground/`), đủ cả 3 họ font loaded và hiển thị dấu Tiếng Việt sắc nét, View Transitions đổi theme & tab sạch lỗi, Lenis hoạt động trên Desktop (`has_lenis: True`, tự `lenis-stopped` khi mở Bộ sưu tập và nhả khi đóng) và tắt hoàn toàn trên Tablet/Mobile (`has_lenis: False`), `0` tràn ngang, `0` lỗi console/page.
 
+## 50. Tối Ưu Chuẩn Production (Headers/CSP, OG Card & SEO, AVIF/WebP, PWA) & Bộ Đếm Mở Pack Toàn Cầu Cloudflare KV
+
+- **1. Cloudflare `_headers` (Immutable Caching + Security Headers + CSP)**:
+  - Tạo `public/_headers` cấu hình `Cache-Control: public, max-age=31536000, immutable` cho `/assets/*`, `/fonts/*`, `/pokemon/packs/*`, `/pokemon/sfx/*`, `/pokemon/chest-*.png`, `/pokemon/card-back.jpg`, `/games/*`; `stale-while-revalidate` cho `/data/*`; `no-store` cho `/sw.js`; và bộ header bảo mật (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Content-Security-Policy`).
+- **2. Ảnh Chia Sẻ Open Graph `1200×630` & SEO Kỹ Thuật (`public/og-card.png`, `robots.txt`, `sitemap.xml`, `index.html`)**:
+  - Dựng thẻ ảnh `og-card.png` (`1200×630`, `247.6 KB`) dùng đúng bảng màu Gemini Dark, bộ font tự host (`Newsreader`, `Be Vietnam Pro`, `JetBrains Mono`) và thẻ bài Hero `Long Hoàng EX`.
+  - Bổ sung `<link rel="canonical">`, thẻ `og:image:width/height/alt`, `twitter:*`, dữ liệu có cấu trúc Schema.org `JSON-LD` (`Person` + `WebSite`, giữ sạch không chứa chuỗi email), `public/robots.txt` và `public/sitemap.xml`.
+- **3. Tối Ưu Ảnh Hero `AVIF / WebP` (`public/avatar.avif`, `avatar.webp`, `PokemonProfileCard.tsx`, `profile.ts`)**:
+  - Nén `avatar.jpg` (`75.2 KB`) sang `avatar.avif` (`35.2 KB`, giảm **53.2%**) và `avatar.webp` (`38.7 KB`, giảm **48.5%**), chuyển khung ảnh Hero sang `<picture>` kèm `<link rel="preload" as="image" type="image/avif" href="./avatar.avif" />`.
+- **4. PWA Nhẹ (`manifest.webmanifest`, `public/sw.js`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `src/utils/pwa.ts`)**:
+  - Xuất bộ icon pixel Capybara sắc nét (`180×180`, `192×192`, `512×512`) và cấu hình Service Worker cache-first cho font/vỏ pack/âm thanh/assets, network-first cho HTML & JSON, tự dọn cache phiên bản cũ và bỏ qua hoàn toàn `/api/*`.
+- **5. Bộ Đếm Mở Pack Toàn Cầu Cloudflare KV (`functions/api/pack-stats.js`, `src/hooks/useGlobalPackStats.ts`, `PokemonPackUnboxer.tsx`, `src/data/pokemonPack.ts`)**:
+  - Triển khai endpoint edge `GET / POST /api/pack-stats` đọc/ghi `PACK_STATS_KV` (lưu `totalPacks`, `totalHits`, `byBox`, `topPull` lá đắt giá nhất), xác thực 14 mã hộp hợp lệ, CORS cho Cloudflare Pages & GitHub Pages, chống spam IP (30 pack/phút, TTL 60s) và fallback sạch `{ configured: false }` nếu chưa gắn KV.
+  - Gắn thanh trạng thái đơn sắc gọn dưới hộp mở bài hiển thị số pack toàn cầu + nút kỷ lục lá đắt nhất (bấm mở ngay `CardInspectorModal` 3D) kèm cơ chế giữ `pendingTopPull` chống spoil trong lúc người dùng đang lật từng thẻ.
+- **Kiểm chứng**:
+  - Unit test `functions/api/pack-stats.js` (`7/7` kịch bản qua), `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]`, `DOT_GLITTER_BLOCKS=0`, `DIST_GMAIL_HITS=[]`, `DIST_GFONT_HITS=[]`, `cmd /c "npm run verify"` thoát `0`.
+  - Playwright bật thực thi trực tiếp `Content-Security-Policy` từ `dist/_headers` trên `1440px`, `820px`, `375px`: `0` vi phạm CSP, `0` lỗi console/page, `0` cảnh báo preload, Hero tải chuẩn `avatar.avif`, `JSON-LD` hợp lệ, Service Worker `activated`, GET/POST `/api/pack-stats` tăng từ `42 → 43 pack` và bấm mở 3D Inspector `Umbreon VMAX` thành công, `0` tràn ngang.
+
+
 
 
 

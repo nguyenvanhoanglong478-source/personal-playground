@@ -461,9 +461,9 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
   return (
     <div
       data-pk-unboxer="true"
-      className="mx-auto flex w-full max-w-[336px] flex-col items-center gap-3 lg:mx-0"
+      className="mx-auto flex w-full max-w-[540px] flex-col items-center gap-3.5"
     >
-      <div className="flex w-full items-center gap-1.5">
+      <div className="flex w-full max-w-[420px] items-center gap-1.5">
         <div className="relative min-w-0 flex-1">
           <span
             aria-hidden="true"
@@ -529,7 +529,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
           </p>
         </div>
       ) : phase === 'sealed' || phase === 'ripping' || phase === 'drawing' ? (
-        <div className="flex w-full flex-col items-center gap-2.5">
+        <div className="flex w-full max-w-[420px] flex-col items-center gap-2.5">
           {phase !== 'sealed' || boxState.packsRemaining > 0 ? (
             <>
               <PokemonBoosterPack
@@ -545,7 +545,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                 onRipTrigger={handleRipPack}
               />
 
-              <div className="flex min-h-[64px] w-full flex-col justify-end gap-2">
+              <div className="flex min-h-[64px] w-full max-w-[400px] flex-col justify-end gap-2">
                 {phase === 'sealed' ? (
                   <>
                     <p className="text-center font-mono text-[10.5px] leading-none text-folio-faint">
@@ -657,7 +657,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
           )}
         </div>
       ) : phase === 'revealing' && activeCard ? (
-        <div className="flex w-full flex-col items-center gap-3 py-1">
+        <div className="flex w-full max-w-[400px] flex-col items-center gap-3 py-1">
           <div className="flex w-full items-center justify-between gap-2 font-mono text-[11px]">
             <span className="rounded-full border border-folio-border bg-folio-surface px-2.5 py-0.5 font-semibold tabular-nums text-folio-ink">
               {t.cardCounter(revealIndex + 1, activePackSize)}
@@ -680,7 +680,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
             )}
           </div>
 
-          <div className="relative aspect-[63/88] w-[224px]">
+          <div className="relative aspect-[63/88] w-[224px] sm:w-[244px]">
             {remainingDeckUnderCard > 1 && (
               <div
                 aria-hidden="true"
@@ -897,8 +897,8 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
           </div>
         </div>
       ) : (
-        <div className="flex w-full flex-col gap-3 py-1">
-          <div className="flex items-center justify-between gap-1.5 font-mono text-[11px]">
+        <div className="flex w-full flex-col items-center gap-3.5 py-1">
+          <div className="flex w-full items-center justify-between gap-1.5 font-mono text-[11px]">
             <span className="truncate font-semibold text-folio-ink">
               {t.summaryTitle(openedPackNumber)}
             </span>
@@ -916,8 +916,8 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
             aria-label={t.summaryTitle(openedPackNumber)}
             className={
               currentPack.length === 10
-                ? 'grid grid-cols-5 gap-1.5'
-                : 'flex flex-wrap justify-center gap-1.5'
+                ? 'grid w-full grid-cols-5 gap-1.5 sm:gap-2.5'
+                : 'flex w-full flex-wrap justify-center gap-1.5 sm:gap-2.5'
             }
           >
             {currentPack.map((card) => {
@@ -929,8 +929,8 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
                 currentPack.length === 10
                   ? 'w-full'
                   : currentPack.length === 11
-                    ? 'w-[calc((100%-30px)/6)]'
-                    : 'w-[calc((100%-24px)/5)]';
+                    ? 'w-[calc((100%-30px)/6)] sm:w-[calc((100%-50px)/6)]'
+                    : 'w-[calc((100%-24px)/5)] sm:w-[calc((100%-40px)/5)]';
               return (
                 <button
                   key={card.id}
@@ -978,42 +978,44 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
             })}
           </div>
 
-          <button
-            type="button"
-            onClick={handlePrepareNextPack}
-            className="folio-btn-primary w-full justify-center"
-          >
-            {boxState.packsRemaining > 0 ? (
-              <>
-                <PackageOpen className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>{t.nextPackBtn(nextPackNumber)}</span>
-              </>
-            ) : (
-              <>
+          <div className="flex w-full max-w-[400px] flex-col gap-2">
+            <button
+              type="button"
+              onClick={handlePrepareNextPack}
+              className="folio-btn-primary w-full justify-center"
+            >
+              {boxState.packsRemaining > 0 ? (
+                <>
+                  <PackageOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{t.nextPackBtn(nextPackNumber)}</span>
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{t.newBoxBtn}</span>
+                </>
+              )}
+            </button>
+
+            <div className="flex w-full items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setBinderOpen(true)}
+                className="folio-btn-secondary flex-1 justify-center !min-h-[38px] !px-3"
+              >
+                <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{t.collectionBtn(uniqueOwnedCount)}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleOpenNewBox(boxState.boxId)}
+                className="folio-btn-secondary !min-h-[38px] !px-3"
+              >
                 <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>{t.newBoxBtn}</span>
-              </>
-            )}
-          </button>
-
-          <div className="flex w-full items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setBinderOpen(true)}
-              className="folio-btn-secondary flex-1 justify-center !min-h-[38px] !px-3"
-            >
-              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{t.collectionBtn(uniqueOwnedCount)}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleOpenNewBox(boxState.boxId)}
-              className="folio-btn-secondary !min-h-[38px] !px-3"
-            >
-              <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{t.freshBoxShort}</span>
-            </button>
+                <span>{t.freshBoxShort}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1021,7 +1023,7 @@ export const PokemonPackUnboxer: React.FC<PokemonPackUnboxerProps> = ({
       {globalStats.configured && (
         <div
           data-global-pack-stats="true"
-          className="flex w-full items-center justify-between gap-2 rounded-full border border-folio-border bg-folio-surface/90 px-3 py-1.5 font-mono text-[10.5px] text-folio-muted"
+          className="flex w-full max-w-[420px] items-center justify-between gap-2 rounded-full border border-folio-border bg-folio-surface/90 px-3 py-1.5 font-mono text-[10.5px] text-folio-muted"
         >
           <span className="inline-flex shrink-0 items-center gap-1.5 tabular-nums text-folio-ink">
             <span

@@ -790,6 +790,17 @@ Cập nhật lần cuối: 2026-11-14
   - `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` thoát `0`.
   - Playwright 5 kịch bản hồi quy (`Desktop 1440px` + `Mobile 375px`): tái hiện trước khi sửa kẹt cứng `scrollY 742 → 742` (`bodyOverflow: 'hidden'`, `lenisStopped: True`); sau khi sửa vượt qua 5/5 kịch bản (đóng chồng bằng nút `X` cuộn `742 → 1225`, `Escape` phân tầng cuộn `355 → 794`, mở nhiều pack liên tiếp + re-render lúc chồng modal cuộn `842 → 1325`, Lightbox dự án và Mobile `375px` touch `1549 → 1999`), `0` lỗi console/page.
 
+## 55. Tách Khu Mở Thẻ Pokémon Ra Giữa Trang Thành Phân Khu Riêng (`03 / #packs`)
+
+- **Phân khu độc lập căn giữa trang (`src/components/sections/PokemonPackSection.tsx`, `PokemonPackUnboxer.tsx`)**:
+  - Tạo section mới `03 / GÓC MỞ THẺ POKÉMON` (`id="packs"`, `scroll-mt-14`) nằm riêng ngay sau `02 / Về tôi`, đặt toàn bộ khu vực rương & mở gói vào chính giữa trang (`deltaPx = 0`).
+  - Nới rộng thanh chọn hộp + thanh bộ đếm toàn cầu lên `max-w-[420px]` (hiển thị trọn tên hộp bài không bị cắt ngắn), thẻ lật 3D `w-[224px] sm:w-[244px]`, và lưới kết quả 5×2 lên `max-w-[540px]` (hỗ trợ cả gói 9, 10 và 11 thẻ cân đối).
+- **Cân đối lại `About.tsx` & cập nhật điều hướng (`src/components/sections/About.tsx`, `Navbar.tsx`, `App.tsx`, `src/data/profile.ts`)**:
+  - Chuyển `02 / Về tôi` sang bố cục 2 cột ngang bằng `lg:col-span-6` / `lg:col-span-6` (bên trái 3 đoạn giới thiệu, bên phải 4 nguyên tắc làm việc).
+  - Đánh lại chỉ mục tuần tự `01 → 08`, bổ sung mục `Mở thẻ` / `Packs` (`#packs`) vào `Navbar.tsx` và scroll-spy trong `App.tsx`, tinh chỉnh padding & ẩn chữ thương hiệu ở ngưỡng `lg` (`1024px`) để 8 mục điều hướng giữ khoảng thở rộng không bao giờ đụng nút tab `Không gian`.
+- **Kiểm chứng**: `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` thoát `0`, Playwright xác nhận `secCenter = unboxCenter = 720px` (`deltaPx = 0`), Navbar không chồng chữ ở cả `1440px` và `1024px` (`leftGap = rightGap = 78px`), `0` tràn ngang và `0` lỗi console/page trên `1440px`, `1024px`, `820px`, `375px` (cả Sáng & Tối).
+
+
 
 
 

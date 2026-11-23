@@ -9,6 +9,7 @@ import { AppTab, Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { Hero } from './components/sections/Hero';
 import { About } from './components/sections/About';
+import { PokemonPackSection } from './components/sections/PokemonPackSection';
 import { Experience } from './components/sections/Experience';
 import { ProjectsBento } from './components/sections/ProjectsBento';
 import { SkillsMatrix } from './components/sections/SkillsMatrix';
@@ -142,6 +143,7 @@ export function App() {
     const sectionIds = [
       'hero',
       'about',
+      'packs',
       'experience',
       'projects',
       'skills',
@@ -266,6 +268,7 @@ export function App() {
           <>
             <Hero locale={locale} />
             <About locale={locale} />
+            <PokemonPackSection locale={locale} />
             <Experience locale={locale} />
             <ProjectsBento locale={locale} />
             <SkillsMatrix locale={locale} />

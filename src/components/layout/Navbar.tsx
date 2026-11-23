@@ -45,6 +45,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navItems = [
     { id: 'hero', label: t.hero },
     { id: 'about', label: t.about },
+    { id: 'packs', label: t.packs },
     { id: 'experience', label: t.experience },
     { id: 'projects', label: t.projects },
     { id: 'skills', label: t.skills },
@@ -114,12 +115,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             aria-label="Long Hoàng Logo"
           >
             <BrandLogo size={26} showAura={false} className="shrink-0 text-folio-ink" />
-            <span className="hidden whitespace-nowrap font-serif text-[0.95rem] font-semibold leading-none tracking-tight text-folio-ink sm:inline">
+            <span className="hidden whitespace-nowrap font-serif text-[0.92rem] font-semibold leading-none tracking-tight text-folio-ink sm:inline lg:hidden xl:inline">
               {PROFILE_DATA.name}
             </span>
           </a>
 
-          <span className="hidden h-3.5 w-px shrink-0 bg-folio-border sm:block" aria-hidden="true" />
+          <span className="hidden h-3.5 w-px shrink-0 bg-folio-border sm:block lg:hidden xl:block" aria-hidden="true" />
 
           <div
             role="tablist"
@@ -135,7 +136,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   role="tab"
                   aria-selected={isTabActive}
                   onClick={() => handleTabClick(tab)}
-                  className={`min-h-[32px] whitespace-nowrap rounded-full px-2 font-mono text-[11px] transition-colors duration-150 sm:min-h-[30px] sm:px-3 sm:text-xs ${
+                  className={`min-h-[32px] whitespace-nowrap rounded-full px-2 font-mono text-[11px] transition-colors duration-150 sm:min-h-[30px] sm:px-2.5 ${
                     isTabActive
                       ? 'border border-folio-border bg-folio-surface font-semibold text-folio-ink shadow-sm'
                       : 'border border-transparent text-folio-muted hover:text-folio-ink'
@@ -150,7 +151,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {activeTab === 'profile' && (
           <nav
-            className="hidden lg:flex lg:items-center lg:gap-0.5"
+            className="hidden lg:flex lg:min-w-0 lg:items-center lg:gap-0.5"
             aria-label={locale === 'vi' ? 'Điều hướng chính' : 'Primary Navigation'}
           >
             {navItems.map((item) => {
@@ -161,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   href={`#${item.id}`}
                   onClick={(event) => handleSectionLinkClick(event, item.id)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`whitespace-nowrap rounded-full px-2.5 py-1 font-mono text-[11.5px] transition-colors duration-150 ${
+                  className={`whitespace-nowrap rounded-full px-1.5 py-1 font-mono text-[11px] transition-colors duration-150 xl:px-2 ${
                     isActive
                       ? 'bg-folio-elevated font-semibold text-folio-ink ring-1 ring-folio-border'
                       : 'text-folio-muted hover:bg-folio-elevated/60 hover:text-folio-ink'

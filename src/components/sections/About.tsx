@@ -1,27 +1,10 @@
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { Compass, Sparkles, UserCheck } from 'lucide-react';
 import { Locale, PROFILE_DATA, UI_LABELS } from '../../data/profile';
-
-const LazyPokemonPackUnboxer = lazy(() =>
-  import('../pokemon/PokemonPackUnboxer').then((module) => ({
-    default: module.PokemonPackUnboxer,
-  }))
-);
 
 interface AboutProps {
   locale: Locale;
 }
-
-const PokemonPackUnboxerFallback: React.FC = () => (
-  <div
-    aria-hidden="true"
-    className="mx-auto flex w-full max-w-[336px] flex-col items-center gap-3 lg:mx-0"
-  >
-    <div className="h-9 w-full rounded-full bg-folio-elevated" />
-    <div className="aspect-[82/112] w-[310px] rounded-2xl bg-folio-elevated/40 sm:w-[328px]" />
-    <div className="h-10 w-full rounded-full bg-folio-elevated" />
-  </div>
-);
 
 export const About: React.FC<AboutProps> = ({ locale }) => {
   const t = UI_LABELS[locale].about;
@@ -49,15 +32,9 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 items-start gap-6 overflow-visible lg:grid-cols-12 lg:gap-8">
-          <div className="relative z-20 overflow-visible lg:col-span-4">
-            <Suspense fallback={<PokemonPackUnboxerFallback />}>
-              <LazyPokemonPackUnboxer locale={locale} />
-            </Suspense>
-          </div>
-
-          <div className="flex flex-col gap-4 lg:col-span-8 lg:border-l lg:border-folio-border lg:pl-8">
-            <div className="folio-card google-gradient-hover-border space-y-3">
+        <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-12 lg:gap-6">
+          <div className="folio-card google-gradient-hover-border flex flex-col justify-between space-y-3.5 lg:col-span-6">
+            <div className="space-y-3.5">
               <div className="flex flex-wrap items-center gap-2.5 border-b border-folio-border pb-3 font-mono text-[11.5px] text-folio-muted">
                 <UserCheck className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
                 <span className="font-semibold text-folio-ink">
@@ -71,7 +48,7 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
                 </span>
               </div>
 
-              {paragraphs.map((paragraph, idx) =>
+              {paragraphs.slice(0, -1).map((paragraph, idx) =>
                 idx === 0 ? (
                   <p
                     key={idx}
@@ -80,46 +57,45 @@ export const About: React.FC<AboutProps> = ({ locale }) => {
                     {paragraph}
                   </p>
                 ) : (
-                  <p
-                    key={idx}
-                    className={`text-sm leading-relaxed ${
-                      idx === paragraphs.length - 1
-                        ? 'border-t border-folio-border pt-3 font-medium text-folio-ink'
-                        : 'text-folio-muted'
-                    }`}
-                  >
+                  <p key={idx} className="text-sm leading-relaxed text-folio-muted">
                     {paragraph}
                   </p>
                 )
               )}
             </div>
 
-            <div className="folio-card google-gradient-hover-border">
-              <div className="mb-3 flex items-center gap-2 font-mono text-[11.5px] font-semibold text-folio-ink">
-                <Compass className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
-                <span>{t.methodTitle}</span>
-              </div>
+            {paragraphs.length > 1 && (
+              <p className="border-t border-folio-border pt-3 text-sm font-medium leading-relaxed text-folio-ink">
+                {paragraphs[paragraphs.length - 1]}
+              </p>
+            )}
+          </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {PROFILE_DATA.methodology.map((item) => (
-                  <div
-                    key={item.index}
-                    className="folio-card-inner flex flex-col gap-1.5"
-                  >
-                    <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-1.5">
-                      <span className="font-mono text-[10.5px] font-bold text-folio-faint">
-                        {item.index}
-                      </span>
-                    </div>
-                    <h3 className="font-serif text-[0.95rem] font-bold leading-snug text-folio-ink sm:text-base">
-                      {item.title[locale]}
-                    </h3>
-                    <p className="text-xs leading-relaxed text-folio-muted sm:text-[13px]">
-                      {item.description[locale]}
-                    </p>
+          <div className="folio-card google-gradient-hover-border flex flex-col lg:col-span-6">
+            <div className="mb-3 flex items-center gap-2 font-mono text-[11.5px] font-semibold text-folio-ink">
+              <Compass className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
+              <span>{t.methodTitle}</span>
+            </div>
+
+            <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+              {PROFILE_DATA.methodology.map((item) => (
+                <div
+                  key={item.index}
+                  className="folio-card-inner flex flex-col gap-1.5"
+                >
+                  <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-1.5">
+                    <span className="font-mono text-[10.5px] font-bold text-folio-faint">
+                      {item.index}
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <h3 className="font-serif text-[0.95rem] font-bold leading-snug text-folio-ink sm:text-base">
+                    {item.title[locale]}
+                  </h3>
+                  <p className="text-xs leading-relaxed text-folio-muted sm:text-[13px]">
+                    {item.description[locale]}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>

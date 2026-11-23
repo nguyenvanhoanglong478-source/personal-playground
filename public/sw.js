@@ -10,7 +10,7 @@ const PRECACHE_URLS = [
 ];
 
 const IMMUTABLE_PATH_PATTERN =
-  /\/(assets|fonts|games|pokemon\/packs|pokemon\/sfx)\/|\/pokemon\/(chest-back\.png|chest-front\.png|card-back\.jpg)$|\/(avatar\.(avif|webp|jpg)|icon-\d+\.png|apple-touch-icon\.png|favicon\.svg)$/;
+  /\/(assets|fonts|games|projects|pokemon\/packs|pokemon\/sfx)\/|\/pokemon\/(chest-back\.png|chest-front\.png|card-back\.jpg)$|\/(avatar\.(avif|webp|jpg)|icon-\d+\.png|apple-touch-icon\.png|favicon\.svg)$/;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

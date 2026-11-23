@@ -7,7 +7,7 @@ Trang cá nhân của **Long Hoàng** sử dụng phong cách **Editorial & Stag
 ### Kiến trúc Bố cục Biên tập
 - **Editorial Cover Hero**: Tên `Long Hoàng.` cỡ chữ tinh gọn (`clamp` tới `4.1rem` trên màn hình lớn) làm neo thị giác bên trái, cụm khẩu hiệu in nghiêng và phần dẫn lùi lề kèm đường kẻ phân cách mảnh, cân bằng đối trọng với thẻ bài Pokémon 3D gọn gàng (`max-w-[350px]`) đặt ở cột phải.
 - **Architectural Columns (`#experience`)**: Cột trái chứa tiêu đề và chỉ mục neo ghim mượt (`position: sticky`) khi cuộn trên màn hình rộng; cột phải trình bày 4 nhóm kinh nghiệm dọc theo trục kẻ mảnh.
-- **Staggered Zig-Zag Showcase (`#projects`)**: 6 dự án bố trí so le trái/phải theo nhịp Zig-Zag (`01, 03, 05` lệch trái; `02, 04, 06` lệch phải và hạ nhịp vừa phải `lg:mt-8`), tích hợp số thứ tự (`01`–`06`) dạng watermark đơn sắc mờ ở góc mỗi thẻ cùng hiệu ứng nâng nhẹ CSS thuần (`hover:-translate-y-0.5`, đã lược bỏ 3D Tilt và parallax cuộn để tối ưu độ mượt).
+- **Staggered Zig-Zag Showcase (`#projects`)**: 6 dự án bố trí so le trái/phải theo nhịp Zig-Zag (`01, 03, 05` lệch trái; `02, 04, 06` lệch phải và hạ nhịp vừa phải `lg:mt-8`), tích hợp số thứ tự (`01`–`06`) dạng watermark đơn sắc mờ ở góc mỗi thẻ cùng **ảnh giao diện sản phẩm thật tỷ lệ `16:10`** (`public/projects/*.webp`, `1200×750`, tổng `323 KB`, tải trễ `loading="lazy"`, tự phóng nhẹ `scale-[1.03]` khi di chuột và bấm mở hộp xem ảnh toàn màn hình `ProjectLightboxModal` hỗ trợ phím `← / → / Esc`, khóa cuộn Lenis và nút mở bản chạy thử cho 4 web app live).
 
 ## 2. Kiểu Chữ (Typography)
 

@@ -734,6 +734,21 @@ Cập nhật lần cuối: 2026-11-14
   - Unit test `functions/api/pack-stats.js` (`7/7` kịch bản qua), `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]`, `DOT_GLITTER_BLOCKS=0`, `DIST_GMAIL_HITS=[]`, `DIST_GFONT_HITS=[]`, `cmd /c "npm run verify"` thoát `0`.
   - Playwright bật thực thi trực tiếp `Content-Security-Policy` từ `dist/_headers` trên `1440px`, `820px`, `375px`: `0` vi phạm CSP, `0` lỗi console/page, `0` cảnh báo preload, Hero tải chuẩn `avatar.avif`, `JSON-LD` hợp lệ, Service Worker `activated`, GET/POST `/api/pack-stats` tăng từ `42 → 43 pack` và bấm mở 3D Inspector `Umbreon VMAX` thành công, `0` tràn ngang.
 
+## 51. Thay 6 Khung SVG Dự Án Bằng Ảnh Giao Diện Thật (16:10 WebP) & Hộp Phóng To Lightbox
+
+- **Tài nguyên ảnh sản phẩm thực tế (`public/projects/*.webp`, 6 tệp `1200×750`, tổng `323.0 KB`)**:
+  - Chụp trực tiếp màn hình hoạt động thực tế từ 3 web app live (`deliver-simulator.webp` `69.4 KB` màn nhận đơn pixel Honda Cub, `marginal.webp` `58.0 KB` màn đọc bài báo học thuật song ngữ, `agent-mesh.webp` `49.8 KB` mạng đa tác nhân đang chạy sự kiện & hạt).
+  - Dựng màn hình chuẩn theo đúng hệ token mã nguồn thật cho `snaptask-android.webp` (`48.7 KB`, bảng màu Ink & Flash `#0F0F0E` / `#F3F2EC` / `#D4FF3A` + logo chụp-tick từ `ic_launcher_foreground.xml`), `mini-tms-project.webp` (`50.3 KB`, bảng màu `#f4f6f9` / `#e94560` + bản đồ lộ trình Leaflet từ `dashboard.html`) và `team-quiz-battle.webp` (`46.7 KB`, phòng đấu trắc nghiệm hai đội trực tiếp Socket.IO).
+  - Bổ sung `/projects/*` vào cache bất biến `max-age=31536000, immutable` trong `public/_headers` và Service Worker `public/sw.js`.
+- **Nâng cấp `src/data/projects.ts` & `src/components/ProjectsBento.tsx`**:
+  - Gỡ bỏ hoàn toàn ~470 dòng SVG wireframe toàn chữ cũ (giảm bundle chính `index-*.js` từ `134.23 kB` xuống `125.83 kB`), thay bằng khung ảnh `aspect-[16/10]` tải trễ `loading="lazy"` kèm hiệu ứng phóng nhẹ `scale-[1.03]` khi di chuột.
+  - Thêm hộp xem ảnh `ProjectLightboxModal` (mở khi bấm vào bất kỳ ảnh dự án nào, khóa cuộn `body` đồng bộ tạm dừng Lenis, điều hướng bàn phím `← / → / Esc`, hiển thị nhãn công nghệ và nút mở thẳng bản chạy thử `liveUrl` cho 4 web app live cùng link GitHub).
+  - Rút gọn nhãn đường dẫn repo ở chân mỗi thẻ cho dễ đọc trên màn hình di động `375px`.
+- **Kiểm chứng**:
+  - `TS_CSS_COMMENTS=0`, `cmd /c "npm run verify"` thoát `0`.
+  - Playwright trên Desktop `1440px` (Light & Dark), subpath `/personal-playground/`, Tablet `820px` và Mobile `375px`: `6/6` ảnh tải chuẩn `1200×750`, Lightbox mở/chuyển ảnh bằng phím `ArrowRight` & đóng `Escape` mượt mà kèm `lenis-stopped` bật/tắt chuẩn, `0` vi phạm CSP, `0` tràn ngang.
+
+
 
 
 

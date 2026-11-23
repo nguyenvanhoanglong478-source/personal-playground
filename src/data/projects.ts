@@ -21,6 +21,9 @@ export interface ProjectItem {
   subtitle: BilingualText;
   description: BilingualText;
   repoUrl: string;
+  liveUrl?: string;
+  previewImage: string;
+  previewAlt: BilingualText;
   technologies: TechItem[];
 }
 
@@ -38,6 +41,12 @@ export const PROJECTS_DATA: ProjectItem[] = [
       en: 'A life-sim game where you take delivery orders and balance stamina, fuel, and family needs to save 100 million VND in 24 months. I drew the pixel art, coded the game loop, built the WebAudio sounds, and wrote automated tests.',
     },
     repoUrl: 'https://github.com/nguyenvanhoanglong478-source/Deliver-Simulator',
+    liveUrl: 'https://nguyenvanhoanglong478-source.github.io/Deliver-Simulator/',
+    previewImage: './projects/deliver-simulator.webp',
+    previewAlt: {
+      vi: 'Màn hình chơi game Một ngày làm shipper với xe máy pixel, danh sách đơn hàng và thanh thể lực',
+      en: 'Deliver Simulator live gameplay screen showing pixel motorbike, active delivery orders, and stamina gauges',
+    },
     technologies: [
       {
         name: 'HTML, CSS, JavaScript',
@@ -94,6 +103,12 @@ export const PROJECTS_DATA: ProjectItem[] = [
       en: 'A web app for studying foreign-language articles with writing practice, speech feedback, and an AI study chat. I designed the reading UI, wired the Cloudflare proxy to Gemini, and tuned the Vietnamese translations.',
     },
     repoUrl: 'https://github.com/nguyenvanhoanglong478-source/Marginal',
+    liveUrl: 'https://nguyenvanhoanglong478-source.github.io/Marginal/',
+    previewImage: './projects/marginal.webp',
+    previewAlt: {
+      vi: 'Giao diện đọc bài báo học thuật song ngữ cùng khung chú thích và hỏi AI trên Marginal',
+      en: 'Marginal academic article reader interface with highlighted sentences and AI annotation sidebar',
+    },
     technologies: [
       {
         name: 'React',
@@ -150,6 +165,11 @@ export const PROJECTS_DATA: ProjectItem[] = [
       en: 'A real-time two-team browser quiz where the host writes questions and sets timers from 5 to 300 seconds per round. I built the lobby and player UI, live scoring sync, and Node.js backend.',
     },
     repoUrl: 'https://github.com/nguyenvanhoanglong478-source',
+    previewImage: './projects/team-quiz-battle.webp',
+    previewAlt: {
+      vi: 'Giao diện phòng đấu trắc nghiệm hai đội trực tiếp với bảng điểm và đồng hồ đếm ngược trên Team Quiz Battle',
+      en: 'Team Quiz Battle live two-team arena showing scoreboard, countdown timer, and synced answer options',
+    },
     technologies: [
       {
         name: 'Node.js',
@@ -198,6 +218,11 @@ export const PROJECTS_DATA: ProjectItem[] = [
       en: 'An Android app that lets you snap a photo and turn it straight into a daily task. I designed its Ink & Flash visual identity, capture-tick logo, and light and dark screens.',
     },
     repoUrl: 'https://github.com/nguyenvanhoanglong478-source/snaptask-android',
+    previewImage: './projects/snaptask-android.webp',
+    previewAlt: {
+      vi: 'Ứng dụng SnapTask Android chế độ sáng và tối phong cách Ink & Flash kèm bảng streak và widget Glance',
+      en: 'SnapTask Android dark and light Ink & Flash screens with capture-tick shutter icon, streak heatmap, and Glance widget',
+    },
     technologies: [
       {
         name: 'Android',
@@ -238,6 +263,12 @@ export const PROJECTS_DATA: ProjectItem[] = [
       en: 'A fleet dispatch portal with dedicated screens for drivers and dispatchers. I designed and coded the trip status boards, interactive route map views, and delivery reports.',
     },
     repoUrl: 'https://github.com/nguyenvanhoanglong478-source/mini-tms-project',
+    liveUrl: 'https://nguyenvanhoanglong478-source.github.io/mini-tms-project/',
+    previewImage: './projects/mini-tms-project.webp',
+    previewAlt: {
+      vi: 'Màn hình điều phối đội xe TMS Mini v2.0 gồm bản đồ lộ trình Leaflet và danh sách chuyến hàng đang chạy',
+      en: 'TMS Mini v2.0 dispatch dashboard showing live fleet metrics, Leaflet route map, and active delivery trips',
+    },
     technologies: [
       {
         name: 'HTML & CSS',
@@ -278,6 +309,12 @@ export const PROJECTS_DATA: ProjectItem[] = [
       en: 'A browser tool simulating how multiple AI agents pass tasks and pause for human approval on risky steps. I built the Canvas node graph, live event log, and offline PWA mode.',
     },
     repoUrl: 'https://github.com/nguyenvanhoanglong478-source/AgentMesh',
+    liveUrl: 'https://nguyenvanhoanglong478-source.github.io/AgentMesh/',
+    previewImage: './projects/agent-mesh.webp',
+    previewAlt: {
+      vi: 'Giao diện trực quan hóa mạng đa tác nhân AI AgentMesh với đồ thị nút, dòng sự kiện và thông số bối cảnh',
+      en: 'AgentMesh multi-agent swarm visualizer showing live node graph, event stream, and agent telemetry',
+    },
     technologies: [
       {
         name: 'Canvas',

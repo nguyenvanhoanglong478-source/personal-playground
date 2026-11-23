@@ -1,5 +1,15 @@
-import React from 'react';
-import { ExternalLink, FolderGit2, Layers, Sparkles } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  FolderGit2,
+  Globe,
+  Layers,
+  Sparkles,
+  X,
+  ZoomIn,
+} from 'lucide-react';
 import { Locale, UI_LABELS } from '../data/profile';
 import { PROJECTS_DATA, ProjectItem } from '../data/projects';
 
@@ -7,500 +17,195 @@ interface ProjectsBentoProps {
   locale: Locale;
 }
 
-const ProjectVisualPreview: React.FC<{ projectId: ProjectItem['id'] }> = ({
-  projectId,
+interface ProjectLightboxProps {
+  projectIndex: number | null;
+  locale: Locale;
+  onClose: () => void;
+  onSelectIndex: (index: number) => void;
+}
+
+const ProjectLightboxModal: React.FC<ProjectLightboxProps> = ({
+  projectIndex,
+  locale,
+  onClose,
+  onSelectIndex,
 }) => {
-  if (projectId === 'deliver-simulator') {
-    return (
-      <svg
-        viewBox="0 0 560 180"
-        className="h-full w-full text-folio-ink"
-        role="img"
-        aria-label="Deliver Simulator preview"
-      >
-        <defs>
-          <linearGradient id="dsGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="var(--google-blue)" />
-            <stop offset="50%" stopColor="var(--google-purple)" />
-            <stop offset="100%" stopColor="var(--google-coral)" />
-          </linearGradient>
-        </defs>
-        <rect
-          x="12"
-          y="16"
-          width="536"
-          height="148"
-          rx="8"
-          fill="var(--bg-surface)"
-          stroke="var(--border-strong)"
-          strokeWidth="1.5"
-        />
-        <text x="28" y="42" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-primary)">
-          06:00 → 22:00 / MỤC TIÊU: 100M VND
-        </text>
-        <text x="412" y="42" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-secondary)">
-          PWA OFFLINE
-        </text>
+  const isOpen = projectIndex !== null;
+  const total = PROJECTS_DATA.length;
+  const project =
+    projectIndex !== null ? PROJECTS_DATA[projectIndex] ?? null : null;
 
-        <text x="28" y="74" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
-          STAMINA
-        </text>
-        <rect x="92" y="64" width="120" height="12" rx="3" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
-        <rect x="94" y="66" width="92" height="8" rx="2" fill="var(--google-green)" />
+  useEffect(() => {
+    if (!isOpen || projectIndex === null) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
 
-        <text x="28" y="100" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
-          SAVINGS
-        </text>
-        <rect x="92" y="90" width="120" height="12" rx="3" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
-        <rect x="94" y="92" width="76" height="8" rx="2" fill="url(#dsGrad)" />
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      } else if (event.key === 'ArrowLeft') {
+        onSelectIndex((projectIndex - 1 + total) % total);
+      } else if (event.key === 'ArrowRight') {
+        onSelectIndex((projectIndex + 1) % total);
+      }
+    };
 
-        <rect
-          x="244"
-          y="56"
-          width="284"
-          height="66"
-          rx="6"
-          fill="var(--bg-elevated)"
-          stroke="url(#dsGrad)"
-          strokeWidth="1.5"
-        />
-        <text x="258" y="78" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="currentColor">
-          HTML5 Canvas 2D + Web Audio API
-        </text>
-        <text x="258" y="98" fontFamily="var(--font-mono)" fontSize="9.5" fill="var(--text-secondary)">
-          Python Bundler + Playwright Tests
-        </text>
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose, onSelectIndex, projectIndex, total]);
 
-        <text x="28" y="142" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
-          JavaScript · Python · GitHub Pages
-        </text>
-      </svg>
-    );
-  }
+  if (!project || projectIndex === null) return null;
 
-  if (projectId === 'snaptask-android') {
-    return (
-      <svg
-        viewBox="0 0 360 210"
-        className="h-full w-full text-folio-ink"
-        role="img"
-        aria-label="SnapTask Android preview"
-      >
-        <defs>
-          <linearGradient id="stGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="var(--google-blue)" />
-            <stop offset="55%" stopColor="var(--google-purple)" />
-            <stop offset="100%" stopColor="var(--google-coral)" />
-          </linearGradient>
-        </defs>
-        <rect
-          x="20"
-          y="14"
-          width="135"
-          height="182"
-          rx="14"
-          fill="var(--bg-surface)"
-          stroke="var(--border-strong)"
-          strokeWidth="1.5"
-        />
-        <rect
-          x="32"
-          y="32"
-          width="111"
-          height="68"
-          rx="8"
-          fill="var(--bg-elevated)"
-          stroke="url(#stGrad)"
-          strokeWidth="1.5"
-        />
-        <circle cx="87.5" cy="66" r="16" fill="none" stroke="url(#stGrad)" strokeWidth="1.75" />
-        <text x="42" y="118" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
-          CameraX Capture
-        </text>
-        <rect x="32" y="128" width="111" height="22" rx="5" fill="var(--bg-elevated)" />
-        <text x="42" y="143" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
-          Room SQLite DB
-        </text>
-        <text x="38" y="174" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
-          Multi-ABI Split APK
-        </text>
-
-        <line x1="155" y1="68" x2="192" y2="68" stroke="var(--google-blue)" strokeWidth="1.5" />
-        <line x1="155" y1="138" x2="192" y2="138" stroke="var(--google-green)" strokeWidth="1.5" />
-
-        <rect
-          x="192"
-          y="28"
-          width="150"
-          height="74"
-          rx="8"
-          fill="var(--bg-surface)"
-          stroke="var(--border-strong)"
-          strokeWidth="1.5"
-        />
-        <text x="206" y="50" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-primary)">
-          Jetpack Glance
-        </text>
-        <text x="206" y="68" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
-          Focus Widget
-        </text>
-        <text x="206" y="84" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
-          Task Stack Widget
-        </text>
-
-        <rect
-          x="192"
-          y="114"
-          width="150"
-          height="70"
-          rx="8"
-          fill="var(--bg-surface)"
-          stroke="url(#stGrad)"
-          strokeWidth="1.5"
-        />
-        <text x="206" y="136" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-primary)">
-          Jetpack Compose
-        </text>
-        <text x="206" y="154" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
-          Material 3 UI
-        </text>
-        <text x="206" y="170" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
-          Kotlin + Coroutines
-        </text>
-      </svg>
-    );
-  }
-
-  if (projectId === 'mini-tms-project') {
-    return (
-      <svg
-        viewBox="0 0 420 175"
-        className="h-full w-full text-folio-ink"
-        role="img"
-        aria-label="TMS Mini preview"
-      >
-        <defs>
-          <linearGradient id="tmsGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="var(--google-green)" />
-            <stop offset="50%" stopColor="var(--google-blue)" />
-            <stop offset="100%" stopColor="var(--google-purple)" />
-          </linearGradient>
-        </defs>
-        <rect
-          x="12"
-          y="16"
-          width="396"
-          height="142"
-          rx="8"
-          fill="var(--bg-surface)"
-          stroke="var(--border-strong)"
-          strokeWidth="1.5"
-        />
-        <text x="28" y="38" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-primary)">
-          TMS MINI v2.0 · FLEET DISPATCH
-        </text>
-
-        <rect x="28" y="52" width="120" height="88" rx="6" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
-        <text x="38" y="72" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-primary)">
-          DRIVING
-        </text>
-        <text x="38" y="90" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
-          PAUSE / ISSUE
-        </text>
-        <text x="38" y="108" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
-          WAITING / DONE
-        </text>
-        <text x="38" y="128" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
-          Driver &amp; Manager Role
-        </text>
-
-        <rect x="164" y="52" width="228" height="88" rx="6" fill="var(--bg-elevated)" stroke="url(#tmsGrad)" strokeWidth="1.4" />
-        <path
-          d="M 184 122 C 224 72, 294 128, 368 68"
-          fill="none"
-          stroke="url(#tmsGrad)"
-          strokeWidth="2.2"
-          strokeDasharray="4 3"
-        />
-        <circle cx="184" cy="122" r="4" fill="var(--google-green)" />
-        <circle cx="368" cy="68" r="4" fill="var(--google-coral)" />
-        <text x="178" y="72" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
-          Leaflet Interactive Route Map
-        </text>
-      </svg>
-    );
-  }
-
-  if (projectId === 'agent-mesh') {
-    return (
-      <svg
-        viewBox="0 0 560 180"
-        className="h-full w-full text-folio-ink"
-        role="img"
-        aria-label="AgentMesh Swarm Visualizer preview"
-      >
-        <defs>
-          <linearGradient id="amGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="var(--google-blue)" />
-            <stop offset="50%" stopColor="var(--google-purple)" />
-            <stop offset="100%" stopColor="var(--google-coral)" />
-          </linearGradient>
-        </defs>
-        <rect
-          x="12"
-          y="16"
-          width="536"
-          height="148"
-          rx="8"
-          fill="var(--bg-surface)"
-          stroke="var(--border-strong)"
-          strokeWidth="1.5"
-        />
-        <rect x="28" y="34" width="132" height="112" rx="6" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
-        <text x="38" y="54" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--text-primary)">
-          EVENT STREAM
-        </text>
-        <text x="38" y="74" fontFamily="var(--font-mono)" fontSize="8.5" fill="currentColor">
-          AGENT_SPAWN
-        </text>
-        <text x="38" y="92" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
-          TOOL_CALL
-        </text>
-        <text x="38" y="110" fontFamily="var(--font-mono)" fontSize="8.5" fill="currentColor">
-          SUBAGENT_MSG
-        </text>
-        <text x="38" y="128" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
-          APPROVAL_GATE
-        </text>
-
-        <rect x="196" y="42" width="110" height="38" rx="6" fill="var(--bg-elevated)" stroke="url(#amGrad)" strokeWidth="1.6" />
-        <text x="210" y="65" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="currentColor">
-          ORCHESTRATOR
-        </text>
-
-        <line x1="251" y1="80" x2="215" y2="110" stroke="var(--google-blue)" strokeWidth="1.5" />
-        <line x1="251" y1="80" x2="295" y2="110" stroke="var(--google-purple)" strokeWidth="1.5" />
-
-        <rect x="176" y="110" width="84" height="32" rx="5" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1.2" />
-        <text x="192" y="130" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
-          WORKER
-        </text>
-
-        <rect x="272" y="110" width="84" height="32" rx="5" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1.2" />
-        <text x="290" y="130" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
-          CRITIC
-        </text>
-
-        <rect x="388" y="34" width="144" height="112" rx="6" fill="var(--bg-elevated)" stroke="url(#amGrad)" strokeWidth="1.2" />
-        <text x="400" y="54" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--text-primary)">
-          CONTEXT GAUGE
-        </text>
-        <rect x="400" y="68" width="118" height="10" rx="3" fill="var(--bg-surface)" stroke="var(--border-strong)" strokeWidth="1" />
-        <rect x="402" y="70" width="82" height="6" rx="2" fill="url(#amGrad)" />
-        <text x="400" y="102" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
-          HTML5 Canvas + PWA
-        </text>
-        <text x="400" y="122" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
-          Playwright Verified
-        </text>
-      </svg>
-    );
-  }
-
-  if (projectId === 'team-quiz-battle') {
-    return (
-      <svg
-        viewBox="0 0 460 175"
-        className="h-full w-full text-folio-ink"
-        role="img"
-        aria-label="Team Quiz Battle preview"
-      >
-        <defs>
-          <linearGradient id="tqbGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="var(--google-blue)" />
-            <stop offset="50%" stopColor="var(--google-yellow)" />
-            <stop offset="100%" stopColor="var(--google-green)" />
-          </linearGradient>
-        </defs>
-        <rect
-          x="12"
-          y="16"
-          width="436"
-          height="142"
-          rx="8"
-          fill="var(--bg-surface)"
-          stroke="var(--border-strong)"
-          strokeWidth="1.5"
-        />
-        <text x="28" y="38" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-primary)">
-          LIVE LOBBY · SOCKET.IO SYNC
-        </text>
-        <text x="336" y="38" fontFamily="var(--font-mono)" fontSize="9.5" fill="var(--text-secondary)">
-          TIMER: 5s – 300s
-        </text>
-
-        <rect x="28" y="54" width="136" height="84" rx="6" fill="var(--bg-elevated)" stroke="url(#tqbGrad)" strokeWidth="1.4" />
-        <text x="40" y="76" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--text-primary)">
-          TEAM ALPHA
-        </text>
-        <text x="40" y="96" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
-          Host Question Tab
-        </text>
-        <text x="40" y="116" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
-          Per-Question Clock
-        </text>
-
-        <rect x="180" y="66" width="100" height="60" rx="6" fill="var(--bg-elevated)" stroke="var(--border-strong)" strokeWidth="1.2" />
-        <text x="196" y="92" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="currentColor">
-          REAL-TIME
-        </text>
-        <text x="196" y="110" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--text-secondary)">
-          Node.js + Render
-        </text>
-
-        <line x1="164" y1="96" x2="180" y2="96" stroke="var(--google-blue)" strokeWidth="1.5" />
-        <line x1="280" y1="96" x2="296" y2="96" stroke="var(--google-green)" strokeWidth="1.5" />
-
-        <rect x="296" y="54" width="136" height="84" rx="6" fill="var(--bg-elevated)" stroke="url(#tqbGrad)" strokeWidth="1.4" />
-        <text x="308" y="76" fontFamily="var(--font-mono)" fontSize="9.5" fontWeight="600" fill="var(--text-primary)">
-          TEAM BETA
-        </text>
-        <text x="308" y="96" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
-          Browser Quiz Client
-        </text>
-        <text x="308" y="116" fontFamily="var(--font-mono)" fontSize="9" fill="currentColor">
-          VI / EN Guide
-        </text>
-      </svg>
-    );
-  }
+  const t = UI_LABELS[locale].projects;
+  const liveLabel = locale === 'vi' ? 'Mở bản chạy thử' : 'Live demo';
+  const prevLabel = locale === 'vi' ? 'Ảnh dự án trước' : 'Previous project';
+  const nextLabel = locale === 'vi' ? 'Ảnh dự án tiếp theo' : 'Next project';
+  const closeLabel = locale === 'vi' ? 'Đóng xem ảnh' : 'Close preview';
 
   return (
-    <svg
-      viewBox="0 0 560 180"
-      className="h-full w-full text-folio-ink"
-      role="img"
-      aria-label="Marginal preview"
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={project.title}
+      data-project-lightbox="true"
+      data-lenis-prevent=""
+      onClick={onClose}
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-6"
     >
-      <defs>
-        <linearGradient id="mgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="var(--google-blue)" />
-          <stop offset="50%" stopColor="var(--google-purple)" />
-          <stop offset="100%" stopColor="var(--google-coral)" />
-        </linearGradient>
-      </defs>
-      <rect
-        x="12"
-        y="22"
-        width="165"
-        height="136"
-        rx="8"
-        fill="var(--bg-surface)"
-        stroke="var(--border-strong)"
-        strokeWidth="1.5"
-      />
-      <text x="26" y="46" fontFamily="var(--font-mono)" fontSize="10" fill="var(--text-primary)">
-        ArticleReader.jsx
-      </text>
-      <line x1="26" y1="62" x2="155" y2="62" stroke="currentColor" strokeWidth="2" />
-      <line x1="26" y1="78" x2="140" y2="78" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.6" />
-      <rect x="26" y="92" width="135" height="24" rx="4" fill="var(--bg-elevated)" stroke="url(#mgGrad)" strokeWidth="1.2" />
-      <text x="34" y="108" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
-        Web Speech API
-      </text>
-      <text x="26" y="138" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
-        React + Tailwind CSS
-      </text>
+      <div
+        onClick={(event) => event.stopPropagation()}
+        className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[var(--radius-card)] border border-folio-border bg-folio-surface shadow-2xl"
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-folio-border px-4 py-3 sm:px-5">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 font-mono text-[11px] font-semibold text-folio-muted">
+              <span>
+                {project.indexNumber} / {String(total).padStart(2, '0')}
+              </span>
+              <span>·</span>
+              <span className="truncate">{project.subtitle[locale]}</span>
+            </div>
+            <h3 className="truncate font-serif text-lg font-bold text-folio-ink sm:text-xl">
+              {project.title}
+            </h3>
+          </div>
 
-      <line
-        x1="177"
-        y1="90"
-        x2="228"
-        y2="90"
-        stroke="var(--google-blue)"
-        strokeWidth="1.5"
-        strokeDasharray="4 4"
-      />
-      <circle cx="202" cy="90" r="4" fill="var(--google-blue)" />
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => onSelectIndex((projectIndex - 1 + total) % total)}
+              aria-label={prevLabel}
+              title={prevLabel}
+              className="folio-btn-icon !h-9 !w-9"
+            >
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectIndex((projectIndex + 1) % total)}
+              aria-label={nextLabel}
+              title={nextLabel}
+              className="folio-btn-icon !h-9 !w-9"
+            >
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={closeLabel}
+              title={closeLabel}
+              className="folio-btn-icon !h-9 !w-9"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
 
-      <rect
-        x="228"
-        y="32"
-        width="148"
-        height="116"
-        rx="8"
-        fill="var(--bg-surface)"
-        stroke="url(#mgGrad)"
-        strokeWidth="1.75"
-      />
-      <text x="242" y="56" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="currentColor">
-        Cloudflare Worker
-      </text>
-      <text x="242" y="78" fontFamily="var(--font-mono)" fontSize="9.5" fill="var(--text-secondary)">
-        Durable Object:
-      </text>
-      <text x="242" y="94" fontFamily="var(--font-mono)" fontSize="10" fill="var(--text-primary)">
-        GeminiProxy
-      </text>
-      <text x="242" y="118" fontFamily="var(--font-mono)" fontSize="9" fill="var(--text-secondary)">
-        CORS + API Key Proxy
-      </text>
+        <div className="flex-1 overflow-auto bg-folio-bg p-3 sm:p-5">
+          <div className="mx-auto aspect-[16/10] w-full overflow-hidden rounded-[10px] border border-folio-border bg-folio-surface">
+            <img
+              src={project.previewImage}
+              alt={project.previewAlt[locale]}
+              width={1200}
+              height={750}
+              decoding="async"
+              className="h-full w-full object-cover object-top"
+            />
+          </div>
+        </div>
 
-      <line
-        x1="376"
-        y1="90"
-        x2="418"
-        y2="90"
-        stroke="var(--google-purple)"
-        strokeWidth="1.5"
-        strokeDasharray="4 4"
-      />
-      <circle cx="397" cy="90" r="4" fill="var(--google-purple)" />
+        <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-folio-border px-4 py-3 sm:px-5">
+          <div className="flex flex-wrap gap-1.5">
+            {project.technologies.map((tech) => (
+              <span key={tech.name} className="folio-chip">
+                {tech.name}
+              </span>
+            ))}
+          </div>
 
-      <rect
-        x="418"
-        y="40"
-        width="130"
-        height="100"
-        rx="8"
-        fill="var(--bg-surface)"
-        stroke="var(--border-strong)"
-        strokeWidth="1.5"
-      />
-      <text x="432" y="68" fontFamily="var(--font-mono)" fontSize="10" fontWeight="600" fill="var(--text-primary)">
-        GEMINI API
-      </text>
-      <text x="432" y="88" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
-        Context Translate
-      </text>
-      <text x="432" y="106" fontFamily="var(--font-mono)" fontSize="9.5" fill="currentColor">
-        Writing Grammar
-      </text>
-    </svg>
+          <div className="flex shrink-0 items-center gap-2">
+            {project.liveUrl && (
+              <a
+                href={project.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="folio-btn-compact"
+              >
+                <Globe className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{liveLabel}</span>
+                <ExternalLink className="h-3 w-3" aria-hidden="true" />
+              </a>
+            )}
+            <a
+              href={project.repoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="google-btn-github group/btn"
+            >
+              <FolderGit2 className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="google-btn-github-label">{t.repoLabel}</span>
+              <ExternalLink
+                className="h-3 w-3 transition-transform duration-150 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5"
+                aria-hidden="true"
+              />
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
 interface ProjectCardProps {
   project: ProjectItem;
   locale: Locale;
-  isFullWidth: boolean;
   gridSpanClass: string;
+  onInspectPreview: () => void;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
   project,
   locale,
-  isFullWidth,
   gridSpanClass,
+  onInspectPreview,
 }) => {
   const t = UI_LABELS[locale].projects;
+  const zoomAria =
+    locale === 'vi'
+      ? `Phóng to ảnh giao diện ${project.title}`
+      : `Expand ${project.title} preview`;
+  const liveLabel = locale === 'vi' ? 'Chạy thử' : 'Live';
+  const repoPrefix = 'https://github.com/nguyenvanhoanglong478-source/';
+  const shortRepoLabel = project.repoUrl.startsWith(repoPrefix)
+    ? project.repoUrl.slice(repoPrefix.length)
+    : 'github.com/nguyenvanhoanglong478-source';
 
   return (
     <div className={gridSpanClass}>
-      <article
-        id={`project-${project.id}`}
-        className="scroll-mt-20"
-      >
+      <article id={`project-${project.id}`} className="scroll-mt-20">
         <div className="google-gradient-hover-border group relative flex h-full flex-col justify-between overflow-hidden rounded-[var(--radius-card)] border border-folio-border bg-folio-surface p-5 shadow-[var(--shadow-soft)] hover:-translate-y-0.5 hover:border-folio-strong hover:shadow-[var(--shadow-glow)]">
           <span
             aria-hidden="true"
@@ -509,48 +214,52 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             {project.indexNumber}
           </span>
 
-          <div
-            className={
-              isFullWidth
-                ? 'relative z-10 grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-center'
-                : 'relative z-10'
-            }
-          >
-            <div className={isFullWidth ? 'lg:col-span-6' : ''}>
-              <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-2.5">
-                <span className="font-mono text-[11.5px] font-bold text-folio-ink">
-                  {project.indexNumber}
-                </span>
-                <span className="font-mono text-[11px] font-semibold text-folio-muted">
-                  {project.technologies[0]?.name}
-                </span>
-              </div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between gap-2 border-b border-folio-border pb-2.5">
+              <span className="font-mono text-[11.5px] font-bold text-folio-ink">
+                {project.indexNumber}
+              </span>
+              <span className="font-mono text-[11px] font-semibold text-folio-muted">
+                {project.technologies[0]?.name}
+              </span>
+            </div>
 
-              <div className="mt-3">
-                <h3 className="font-serif text-xl font-bold leading-snug text-folio-ink sm:text-2xl">
-                  {project.title}
-                </h3>
-                <p className="mt-0.5 font-serif text-[13px] italic text-folio-muted lg:min-h-[2.25rem]">
-                  {project.subtitle[locale]}
-                </p>
-              </div>
-
-              {!isFullWidth && (
-                <div className="folio-card-inner my-3 h-36 w-full overflow-hidden !bg-folio-bg/70 p-2 shadow-inner">
-                  <ProjectVisualPreview projectId={project.id} />
-                </div>
-              )}
-
-              <p className="text-sm leading-relaxed text-folio-muted">
-                {project.description[locale]}
+            <div className="mt-3">
+              <h3 className="font-serif text-xl font-bold leading-snug text-folio-ink sm:text-2xl">
+                {project.title}
+              </h3>
+              <p className="mt-0.5 font-serif text-[13px] italic text-folio-muted lg:min-h-[2.25rem]">
+                {project.subtitle[locale]}
               </p>
             </div>
 
-            {isFullWidth && (
-              <div className="folio-card-inner h-40 w-full overflow-hidden !bg-folio-bg/70 p-2.5 shadow-inner lg:col-span-6">
-                <ProjectVisualPreview projectId={project.id} />
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={onInspectPreview}
+              aria-label={zoomAria}
+              data-project-preview-btn={project.id}
+              className="group/img relative my-3.5 block aspect-[16/10] w-full overflow-hidden rounded-[10px] border border-folio-border bg-folio-bg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-folio-ink"
+            >
+              <img
+                src={project.previewImage}
+                alt={project.previewAlt[locale]}
+                width={1200}
+                height={750}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover object-top transition-transform duration-300 ease-out group-hover/img:scale-[1.03]"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute bottom-2.5 right-2.5 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/65 text-white opacity-85 backdrop-blur-sm transition-all duration-200 group-hover/img:scale-105 group-hover/img:opacity-100"
+              >
+                <ZoomIn className="h-3.5 w-3.5" />
+              </span>
+            </button>
+
+            <p className="text-sm leading-relaxed text-folio-muted">
+              {project.description[locale]}
+            </p>
           </div>
 
           <div className="relative z-10 mt-4">
@@ -566,28 +275,44 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               ))}
             </div>
 
-            <div className="mt-4 flex items-center justify-between gap-3 border-t border-folio-border pt-3">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-folio-border pt-3">
               <a
                 href={project.repoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                title={project.repoUrl}
                 className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-folio-ink underline transition-colors hover:text-folio-muted"
               >
-                {project.repoUrl}
+                {shortRepoLabel}
               </a>
 
-              <a
-                href={project.repoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="google-btn-github group/btn shrink-0"
-              >
-                <FolderGit2 className="h-3.5 w-3.5" aria-hidden="true" />
-                <span className="google-btn-github-label">
-                  {t.repoLabel}
-                </span>
-                <ExternalLink className="h-3 w-3 transition-transform duration-150 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" aria-hidden="true" />
-              </a>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {project.liveUrl && (
+                  <a
+                    href={project.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="folio-btn-compact !min-h-[34px] !px-3"
+                  >
+                    <Globe className="h-3 w-3" aria-hidden="true" />
+                    <span>{liveLabel}</span>
+                  </a>
+                )}
+
+                <a
+                  href={project.repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="google-btn-github group/btn shrink-0"
+                >
+                  <FolderGit2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="google-btn-github-label">{t.repoLabel}</span>
+                  <ExternalLink
+                    className="h-3 w-3 transition-transform duration-150 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5"
+                    aria-hidden="true"
+                  />
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -598,6 +323,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
 export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
   const t = UI_LABELS[locale].projects;
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const getGridSpanClass = (idx: number) =>
     idx % 2 === 0
@@ -614,7 +340,10 @@ export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
         <div className="folio-section-header grid grid-cols-1 gap-3 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
             <div className="flex items-center gap-2 font-mono text-[11.5px] font-semibold text-folio-muted">
-              <Sparkles className="h-3.5 w-3.5 text-folio-muted" aria-hidden="true" />
+              <Sparkles
+                className="h-3.5 w-3.5 text-folio-muted"
+                aria-hidden="true"
+              />
               <span className="folio-index-label">{t.sectionIndex}</span>
             </div>
             <h2 id="projects-heading" className="folio-section-heading">
@@ -632,12 +361,19 @@ export const ProjectsBento: React.FC<ProjectsBentoProps> = ({ locale }) => {
               key={project.id}
               project={project}
               locale={locale}
-              isFullWidth={false}
               gridSpanClass={getGridSpanClass(idx)}
+              onInspectPreview={() => setLightboxIndex(idx)}
             />
           ))}
         </div>
       </div>
+
+      <ProjectLightboxModal
+        projectIndex={lightboxIndex}
+        locale={locale}
+        onClose={() => setLightboxIndex(null)}
+        onSelectIndex={setLightboxIndex}
+      />
     </section>
   );
 };

@@ -696,6 +696,26 @@ Cập nhật lần cuối: 2026-11-14
   - Nâng cấp `src/utils/pokemonAudio.ts` & `src/components/PokemonPackUnboxer.tsx`: giải mã sẵn đa âm qua `AudioContext.decodeAudioData()` (`preloadPokemonSfx()`), phát không độ trễ chồng âm mượt và tự động dự phòng bằng Web Audio synth nếu mạng chậm.
 - **Kiểm chứng**: `npm run verify` thoát `0`, Playwright xác nhận nạp đủ `9/9` tệp MP3 (`HTTP 200`, `98.4 KB`), chạy trọn chu trình xé pack → lật thẻ → xòe nhanh không lỗi console/page và `0` tràn ngang trên `375px`.
 
+## 49. Bốn Nâng Cấp Hiệu Năng & Trải Nghiệm (View Transitions, Font Tự Host, Chống Bot Email + CF Analytics, Lenis Desktop-Only)
+
+- **1. Native View Transitions API (`src/utils/viewTransition.ts`, `src/App.tsx`, `src/index.css`)**:
+  - Bọc `toggleTheme`, `handleSelectTab` và `handleNavigateSection` bằng `runViewTransition` (`document.startViewTransition` + `flushSync`, gắn `html[data-vt-kind='theme' | 'tab']`) để tạo hiệu ứng chuyển cảnh mượt khi đổi giao diện Sáng ↔ Tối (`240ms` crossfade) và chuyển tab `Hồ sơ` ↔ `Không gian` (`220ms` crossfade + dịch nhẹ `6px`).
+  - Tự động dự phòng sạch khi trình duyệt không hỗ trợ hoặc bật `prefers-reduced-motion: reduce`, đồng bộ `data-theme` trực tiếp trong callback để khung chụp mới khớp màu tức thì.
+- **2. Tự Host 100% Font `.woff2` (`public/fonts/`, `index.html`)**:
+  - Tải và tự host **16 tệp `.woff2` (`430.9 KB`)** hỗ trợ trọn vẹn tập ký tự `vietnamese` + `latin` cho cả 3 họ font (`Be Vietnam Pro` 400–700 + italic, `Newsreader` biến thiên 400–700 + italic, `JetBrains Mono` biến thiên 400–600).
+  - Loại bỏ hoàn toàn thẻ `<link>` / `preconnect` tới `fonts.googleapis.com` & `fonts.gstatic.com`, nhúng inline `@font-face` đường dẫn tương đối `./fonts/*.woff2` kèm 3 thẻ `<link rel="preload" as="font" type="font/woff2" crossorigin>` tương thích cả Cloudflare Pages lẫn subpath GitHub Pages `/personal-playground/`.
+- **3. Chống Bot Cào Email & Hook Cloudflare Web Analytics (`src/utils/contactProtection.ts`, `src/utils/analytics.ts`, `src/vite-env.d.ts`, `src/data/profile.ts`, `Contact.tsx`, `Footer.tsx`)**:
+  - Gỡ bỏ chuỗi email thô khỏi `src/data/profile.ts` và toàn bộ `<a href="mailto:...">` tĩnh trong `Contact.tsx` / `Footer.tsx`; chuyển sang giải mã mã ký tự ở phía client sau khi hydrate (`resolveContactEmail`) và mở hộp thư qua thao tác nút bấm (`openContactMailto`).
+  - Bổ sung `initCloudflareAnalytics()` tự nạp `static.cloudflareinsights.com/beacon.min.js` khi cấu hình `VITE_CF_ANALYTICS_TOKEN` (no-op sạch nếu để trống, sẵn sàng chạy song song với nút bật Web Analytics 1-click của Cloudflare Pages).
+- **4. Cuộn Mượt Lenis Chỉ Dành Cho Desktop (`lenis`, `src/hooks/useSmoothScroll.ts`, `PokemonPackModals.tsx`, `src/index.css`)**:
+  - Khởi chạy `Lenis` (`lerp: 0.11`, `smoothWheel: true`, `syncTouch: false`, `anchors: true`) độc quyền khi khớp `(hover: hover) and (pointer: fine)` và không bật `prefers-reduced-motion`, tắt hoàn toàn trên Mobile/Tablet cảm ứng.
+  - Gắn `MutationObserver` trên `document.body[style]` để tự gọi `lenis.stop()` / `lenis.start()` đồng bộ với khóa cuộn modal (`overflow: hidden`) và bổ sung `data-lenis-prevent` cho vùng cuộn trong `CardInspectorModal` và `CollectionBinderModal`.
+- **Kiểm chứng thực tế**:
+  - `TS_CSS_COMMENTS=0`, `UNUSED_PK_CLASSES=[]`, `DOT_GLITTER_BLOCKS=0`, `DIST_GOOGLE_FONTS_HITS=0`, `0` chuỗi `gmail.com` hay `<a href="mailto:">` trong `dist/` và DOM tĩnh.
+  - `cmd /c "npm run verify"` (`tsc -b --noEmit && tsc -b && vite build`) thoát `0` (`dist/index.html 8.96 kB`, `dist/assets/index-*.js 133.62 kB`).
+  - Playwright trên Desktop `1440×900`, subpath `/personal-playground/`, Tablet `820×1180` (`has_touch=True`), Mobile `375×812` (`has_touch=True`): `0` request Google Fonts, `100%` `.woff2` `HTTP 200` (cả ở root `/` lẫn `/personal-playground/`), đủ cả 3 họ font loaded và hiển thị dấu Tiếng Việt sắc nét, View Transitions đổi theme & tab sạch lỗi, Lenis hoạt động trên Desktop (`has_lenis: True`, tự `lenis-stopped` khi mở Bộ sưu tập và nhả khi đóng) và tắt hoàn toàn trên Tablet/Mobile (`has_lenis: False`), `0` tràn ngang, `0` lỗi console/page.
+
+
 
 
 

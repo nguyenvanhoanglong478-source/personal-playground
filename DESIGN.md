@@ -11,10 +11,10 @@ Trang cá nhân của **Long Hoàng** sử dụng phong cách **Editorial & Stag
 
 ## 2. Kiểu Chữ (Typography)
 
-Hỗ trợ trọn vẹn bảng mã dấu Tiếng Việt:
-- **Display & Editorial Serif**: `Newsreader` (Google Fonts) — dùng cho tiêu đề chính và các đề mục lớn.
-- **UI & Body Sans**: `Be Vietnam Pro` (Google Fonts) — tối ưu cho văn bản Tiếng Việt ở mọi kích thước màn hình.
-- **Code & Technical Mono**: `JetBrains Mono` (Google Fonts) — dùng cho chỉ mục, nhãn công nghệ, nút GitHub và đường dẫn kho lưu trữ.
+Tự host hoàn toàn **16 tệp `.woff2` (`430.9 KB`, phân mảnh `vietnamese` + `latin`)** ngay tại `public/fonts/` kèm `@font-face` inline và `<link rel="preload" as="font">` cho 3 tệp trọng yếu trong `index.html`, loại bỏ hoàn toàn kết nối ngoài `fonts.googleapis.com` / `fonts.gstatic.com` và chạy tương thích cả root Cloudflare Pages lẫn subpath GitHub Pages (`./fonts/*.woff2`):
+- **Display & Editorial Serif**: `Newsreader` (biến thiên `400–700` + italic, tự host) — dùng cho tiêu đề chính và các đề mục lớn.
+- **UI & Body Sans**: `Be Vietnam Pro` (`400–700` + italic, tự host) — tối ưu cho văn bản Tiếng Việt ở mọi kích thước màn hình.
+- **Code & Technical Mono**: `JetBrains Mono` (biến thiên `400–600`, tự host) — dùng cho chỉ mục, nhãn công nghệ, nút GitHub và đường dẫn kho lưu trữ.
 
 ## 3. Bảng Màu Kép & Dải Màu Google Signature Gradients
 
@@ -49,6 +49,9 @@ Toàn bộ token màu được khai báo tập trung tại `:root`, `html[data-t
 ## 4. Chuyển Động & Kiểm Chứng
 
 - Con trỏ chuột hệ thống nguyên bản được giữ trọn vẹn trên toàn trang (không dùng custom cursor, không dùng spotlight theo con trỏ); toàn bộ thẻ `a[href]`, `button`, `[role='button']` hiển thị `cursor: pointer`. Root `src/main.tsx` loại bỏ hoàn toàn runtime `framer-motion` (dùng hook thuần `usePrefersReducedMotion` lắng nghe `prefers-reduced-motion: reduce`), kết hợp inline script trong `index.html` đồng bộ `data-theme` / `lang` trước lần vẽ đầu tiên để loại bỏ nháy sáng/tối.
+- **Chuyển cảnh gốc View Transitions API (`src/utils/viewTransition.ts`, `src/App.tsx`, `src/index.css`)**: Áp dụng `document.startViewTransition` kết hợp `flushSync` và thuộc tính `data-vt-kind` (`theme` / `tab`) tạo chuyển cảnh crossfade / trượt dọc tinh tế khi đổi Sáng ↔ Tối hoặc chuyển tab `Hồ sơ` ↔ `Không gian`, bổ sung `0 KB` thư viện ngoài, tự động dự phòng mượt trên trình duyệt chưa hỗ trợ và tôn trọng `prefers-reduced-motion: reduce`.
+- **Cuộn mượt Lenis dành riêng cho chuột Desktop (`src/hooks/useSmoothScroll.ts`, `PokemonPackModals.tsx`, `src/index.css`)**: Chỉ khởi chạy `Lenis` (`lerp: 0.11`, `smoothWheel: true`, `syncTouch: false`, `anchors: true`) khi thỏa đồng thời `(hover: hover) and (pointer: fine)` và `!prefers-reduced-motion` — tắt hoàn toàn 100% trên Mobile/Tablet cảm ứng để giữ nguyên quán tính chạm gốc. Tự động theo dõi `document.body.style.overflow === 'hidden'` qua `MutationObserver` để tạm dừng/khôi phục cuộn nền khi mở modal và gắn `data-lenis-prevent` cho vùng cuộn nội bộ trong `CardInspectorModal` và `CollectionBinderModal`.
+- **Ẩn email chống bot cào & Cloudflare Web Analytics (`src/utils/contactProtection.ts`, `src/utils/analytics.ts`, `Contact.tsx`, `Footer.tsx`, `src/data/profile.ts`)**: Loại bỏ hoàn toàn chuỗi email thô và thẻ `<a href="mailto:...">` khỏi HTML/JS tĩnh (giải mã mã ký tự khi hydrate ở client và kích hoạt mailto theo tương tác nút bấm), đồng thời tích hợp sẵn hook nạp `static.cloudflareinsights.com/beacon.min.js` theo biến `VITE_CF_ANALYTICS_TOKEN` (tương thích song song với nút bật Web Analytics 1-click trên Cloudflare Pages).
 - Toàn bộ nút bấm tương tác (`.folio-btn-primary`, `.folio-btn-secondary`, `.folio-btn-compact`, `.folio-btn-icon`, `.google-btn-github`) chuyển sang **phong cách tối giản phẳng sắc nét** với bề mặt đặc sạch, viền tĩnh mảnh `--btn-border-static` và chuyển màu/nâng nhẹ `-1px` khi di chuột (loại bỏ `backdrop-filter: blur(14px)`, viền xoay `--btn-angle` và `.google-pill-aura`).
 - Bento Grid 6 dự án và thẻ nội dung (`.folio-card`, `.folio-chip`) dùng hiệu ứng nâng nhẹ CSS thuần (`hover:-translate-y-0.5`), viền đậm `--border-strong` và bóng đổ gọn không chồng `backdrop-filter` hay hiệu ứng 3D Tilt chuột / parallax cuộn; `SkillsMatrix.tsx` giữ bố cục thẻ lưới tĩnh (loại bỏ dải chạy chữ Marquee ngang).
 - Nền trang dùng **Google Aura Mesh** CSS thuần khu trú phần đầu trang (`position: absolute; height: 520px`, 2 quầng sáng trên `.google-aura-backdrop`), kết hợp hiệu ứng xuất hiện nhẹ khi vào khung nhìn và tự tắt khi `prefers-reduced-motion: reduce`.

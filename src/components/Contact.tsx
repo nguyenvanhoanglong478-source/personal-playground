@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowDown, Check, Clock, Copy, Mail, Send, Sparkles } from 'lucide-react';
-import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
+import { Locale, UI_LABELS } from '../data/profile';
+import {
+  openContactMailto,
+  resolveContactEmail,
+} from '../utils/contactProtection';
 
 interface ContactProps {
   locale: Locale;
@@ -11,9 +15,11 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [copied, setCopied] = useState(false);
+  const [emailDisplay, setEmailDisplay] = useState('');
   const copyTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
+    setEmailDisplay(resolveContactEmail());
     return () => {
       if (copyTimerRef.current !== null) {
         window.clearTimeout(copyTimerRef.current);
@@ -22,7 +28,7 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
   }, []);
 
   const handleCopyEmail = async () => {
-    const email = PROFILE_DATA.contacts.email;
+    const email = resolveContactEmail();
     let didCopy = false;
 
     if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
@@ -62,12 +68,15 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
     }, 2000);
   };
 
-  const mailtoHref = `mailto:${PROFILE_DATA.contacts.email}?subject=${encodeURIComponent(
-    subject ||
-      (locale === 'vi'
-        ? 'Trao đổi công việc với Long Hoàng'
-        : 'Project inquiry for Long Hoàng')
-  )}&body=${encodeURIComponent(body)}`;
+  const handleOpenComposedMail = () => {
+    openContactMailto(
+      subject ||
+        (locale === 'vi'
+          ? 'Trao đổi công việc với Long Hoàng'
+          : 'Project inquiry for Long Hoàng'),
+      body
+    );
+  };
 
   return (
     <section
@@ -99,18 +108,19 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
                 <span>{t.emailLabel}</span>
               </div>
               <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
-                <a
-                  href={`mailto:${PROFILE_DATA.contacts.email}`}
+                <button
+                  type="button"
+                  onClick={() => openContactMailto()}
                   className="google-btn-github group/btn w-fit max-w-full min-w-0"
                 >
                   <span className="google-btn-github-label min-w-0 truncate">
-                    {PROFILE_DATA.contacts.email}
+                    {emailDisplay}
                   </span>
                   <Mail
                     className="h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5"
                     aria-hidden="true"
                   />
-                </a>
+                </button>
                 <button
                   type="button"
                   onClick={handleCopyEmail}
@@ -211,10 +221,14 @@ export const Contact: React.FC<ContactProps> = ({ locale }) => {
             </div>
 
             <div className="mt-4">
-              <a href={mailtoHref} className="folio-btn-primary">
+              <button
+                type="button"
+                onClick={handleOpenComposedMail}
+                className="folio-btn-primary"
+              >
                 <Send className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>{t.mailtoButton}</span>
-              </a>
+              </button>
             </div>
           </div>
         </div>

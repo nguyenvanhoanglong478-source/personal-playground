@@ -34,7 +34,6 @@ export interface ProfileInfo {
   };
   methodology: MethodologyPrinciple[];
   contacts: {
-    email: string;
     githubUrl: string;
     githubHandle: string;
     socials: SocialLinkItem[];
@@ -120,7 +119,6 @@ export const PROFILE_DATA: ProfileInfo = {
     },
   ],
   contacts: {
-    email: 'nguyenvanhoanglong478@gmail.com',
     githubUrl: 'https://github.com/nguyenvanhoanglong478-source',
     githubHandle: 'nguyenvanhoanglong478-source',
     socials: [

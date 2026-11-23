@@ -1,5 +1,9 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { Locale } from './data/profile';
+import { usePrefersReducedMotion } from './hooks/usePrefersReducedMotion';
+import { useSmoothScroll } from './hooks/useSmoothScroll';
+import { initCloudflareAnalytics } from './utils/analytics';
+import { runViewTransition } from './utils/viewTransition';
 import { AppTab, Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { About } from './components/About';
@@ -76,6 +80,12 @@ export function App() {
   const [activeTab, setActiveTab] = useState<AppTab>(readInitialTab);
   const [activeSection, setActiveSection] = useState<string>('hero');
   const pendingSectionRef = useRef<string | null>(null);
+  const shouldReduceMotion = usePrefersReducedMotion();
+  const { scrollTo } = useSmoothScroll(shouldReduceMotion);
+
+  useEffect(() => {
+    initCloudflareAnalytics();
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -102,18 +112,15 @@ export function App() {
     }
   }, [locale]);
 
-  const scrollToSectionElement = useCallback((sectionId: string) => {
-    const target = document.getElementById(sectionId);
-    if (!target) return;
-    const prefersReduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    target.scrollIntoView({
-      behavior: prefersReduced ? 'auto' : 'smooth',
-      block: 'start',
-    });
-    setActiveSection(sectionId);
-  }, []);
+  const scrollToSectionElement = useCallback(
+    (sectionId: string) => {
+      const target = document.getElementById(sectionId);
+      if (!target) return;
+      scrollTo(target, { immediate: shouldReduceMotion });
+      setActiveSection(sectionId);
+    },
+    [scrollTo, shouldReduceMotion]
+  );
 
   useEffect(() => {
     if (activeTab !== 'profile') return;
@@ -179,12 +186,22 @@ export function App() {
     return () => observer.disconnect();
   }, [activeTab, scrollToSectionElement]);
 
-  const handleSelectTab = useCallback((nextTab: AppTab) => {
-    pendingSectionRef.current = null;
-    setActiveTab(nextTab);
-    syncTabQueryUrl(nextTab, true);
-    window.scrollTo({ top: 0, behavior: 'auto' });
-  }, []);
+  const handleSelectTab = useCallback(
+    (nextTab: AppTab) => {
+      if (nextTab === activeTab) return;
+      pendingSectionRef.current = null;
+      syncTabQueryUrl(nextTab, true);
+      runViewTransition(
+        () => {
+          setActiveTab(nextTab);
+          scrollTo(0, { immediate: true });
+        },
+        shouldReduceMotion,
+        'tab'
+      );
+    },
+    [activeTab, scrollTo, shouldReduceMotion]
+  );
 
   const handleNavigateSection = useCallback(
     (sectionId: string) => {
@@ -194,15 +211,29 @@ export function App() {
         return;
       }
       pendingSectionRef.current = sectionId;
-      setActiveTab('profile');
       syncTabQueryUrl('profile', true);
+      runViewTransition(
+        () => {
+          setActiveTab('profile');
+        },
+        shouldReduceMotion,
+        'tab'
+      );
     },
-    [activeTab, scrollToSectionElement]
+    [activeTab, scrollToSectionElement, shouldReduceMotion]
   );
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  const toggleTheme = useCallback(() => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    runViewTransition(
+      () => {
+        document.documentElement.setAttribute('data-theme', nextTheme);
+        setTheme(nextTheme);
+      },
+      shouldReduceMotion,
+      'theme'
+    );
+  }, [shouldReduceMotion, theme]);
 
   return (
     <div className="relative min-h-screen bg-folio-bg text-folio-ink selection:bg-folio-gblue selection:text-white">

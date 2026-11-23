@@ -4,6 +4,7 @@ import { Locale, PROFILE_DATA, UI_LABELS } from '../data/profile';
 import { BrandLogo } from './BrandLogo';
 import { FooterPet } from './FooterPet';
 import { SocialIcon } from './SocialIcon';
+import { openContactMailto } from '../utils/contactProtection';
 
 interface FooterProps {
   locale: Locale;
@@ -51,13 +52,14 @@ export const Footer: React.FC<FooterProps> = ({ locale, theme }) => {
         </a>
 
         <div className="flex flex-wrap items-center gap-2">
-          <a
-            href={`mailto:${PROFILE_DATA.contacts.email}`}
+          <button
+            type="button"
+            onClick={() => openContactMailto()}
             aria-label="Email"
             className="folio-btn-icon"
           >
             <Mail className="h-3.5 w-3.5 text-folio-ink" aria-hidden="true" />
-          </a>
+          </button>
 
           {PROFILE_DATA.contacts.socials.map((social) => (
             <a

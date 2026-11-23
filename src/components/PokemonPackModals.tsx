@@ -104,6 +104,7 @@ export const CardInspectorModal: React.FC<CardInspectorModalProps> = ({
       className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 p-4"
     >
       <div
+        data-lenis-prevent
         onClick={(event) => event.stopPropagation()}
         className="folio-card relative flex max-h-[92vh] w-full max-w-[680px] flex-col gap-4 overflow-y-auto !p-4 sm:flex-row sm:items-center sm:!p-6"
       >
@@ -632,7 +633,7 @@ export const CollectionBinderModal: React.FC<CollectionBinderModalProps> = ({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-1">
+        <div data-lenis-prevent className="flex-1 overflow-y-auto pr-1">
           {ownedEntries.length === 0 ? (
             <div className="flex min-h-[200px] items-center justify-center rounded-[var(--radius-card)] border border-dashed border-folio-border p-6 text-center font-mono text-xs text-folio-muted">
               {t.emptyBinder}
